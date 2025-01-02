@@ -28,7 +28,7 @@ Libre Metronome is a customizable metronome application built with Python and Py
   ```
 
 4. **ShortCuts**
-   
-	•	Spacebar: Start/Stop the metronome
-	•	T: Tap Tempo feature to set the tempo manually
-	•	1-9: Set rhythmic subdivisions
+
+- Spacebar: Start/Stop the metronome
+- T: Tap Tempo feature to set the tempo manually
+- 1-9: Set rhythmic subdivisions
