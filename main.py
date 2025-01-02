@@ -35,9 +35,9 @@ def main():
 
     # Improved loading of sounds with clearer error messages
     try:
-        sound_normal = pygame.mixer.Sound('assets/audio/metronome_click.mp3')
-        sound_accent = pygame.mixer.Sound('assets/audio/metronome_click_accent.mp3')
-        sound_first = pygame.mixer.Sound('assets/audio/metronome_click_first.mp3')
+        sound_normal = pygame.mixer.Sound('assets/audio/click_new.mp3')
+        sound_accent = pygame.mixer.Sound('assets/audio/click_new_accent.mp3')
+        sound_first = pygame.mixer.Sound('assets/audio/click_new_first.mp3')
     except pygame.error as e:
         print("Error loading sounds:", e)
         sound_normal = sound_accent = sound_first = None
