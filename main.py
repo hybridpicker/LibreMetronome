@@ -241,6 +241,15 @@ def main():
                             / (tempo_slider.max_value - tempo_slider.min_value)
                             * (tempo_slider.rect.width - tempo_slider.knob_size)
                         )
+                elif pygame.K_1 <= event.key <= pygame.K_9:
+                    # Change number of subdivisions
+                    new_subdiv = event.key - pygame.K_0
+                    metronome.set_subdivisions(new_subdiv)
+                    subdivision_positions = get_circle_positions(CENTER, RADIUS, new_subdiv)
+                    first_beats = {0}
+                    accented_beats.clear()
+                    metronome.first_beats = first_beats
+                    metronome.accented_beats = accented_beats
 
         # Update slider values
         metronome.set_swing(round(swing_slider.value, 2))
