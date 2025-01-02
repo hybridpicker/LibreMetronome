@@ -1,0 +1,22 @@
+# Byte-compiled Python files
+*.pyc
+__pycache__/
+
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Pygame build directories
+build/
+dist/
+
+# Virtual environment directories
+venv/
+.virtualenv/
+
+# IDE-specific directories (e.g., Visual Studio Code)
+.vscode/
+
+# Log and debug files
+*.log
