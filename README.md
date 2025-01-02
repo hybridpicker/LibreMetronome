@@ -9,6 +9,8 @@ Libre Metronome is a customizable metronome application built with Python and Py
 - Volume Control: Adjust the playback level.
 - Visual Beat Indicators: Synchronized visual feedback for each beat.
 
+https://github.com/user-attachments/assets/0a681e1b-dfaa-4e21-bb7c-4cc79cadee8f
+
 ## Installation
 
 1. **Clone the repository:**
