@@ -3,17 +3,10 @@
 import math
 from time import perf_counter
 
+
 def get_circle_positions(center, radius, steps):
     """
-    Calculate positions of points arranged in a circle.
-
-    Args:
-        center (tuple): The (x, y) coordinates of the circle's center.
-        radius (int): The radius of the circle.
-        steps (int): Number of points to calculate.
-
-    Returns:
-        list: A list of (x, y) tuples representing the positions.
+    Calculate positions of points arranged on a circle.
     """
     positions = []
     for step in range(steps):
@@ -23,40 +16,30 @@ def get_circle_positions(center, radius, steps):
         positions.append((x, y))
     return positions
 
+
 def get_clicked_point(pos, positions):
     """
     Determine which point was clicked based on the mouse position.
-
-    Args:
-        pos (tuple): The (x, y) coordinates of the mouse click.
-        positions (list): A list of (x, y) tuples representing points.
-
-    Returns:
-        int: The index of the clicked point, or -1 if none.
+    Returns index or -1 if none was clicked.
     """
     for idx, circle_pos in enumerate(positions):
         distance = math.hypot(pos[0] - circle_pos[0], pos[1] - circle_pos[1])
-        if distance < 20:  # Larger click area for better usability
+        if distance < 20:
             return idx
     return -1
 
+
 def get_subdivision_float(metronome):
     """
-    Calculate the current subdivision as a float for smooth animation.
-
-    Args:
-        metronome (MetronomeThread): The metronome thread instance.
-
-    Returns:
-        float: The current subdivision with fractional progress.
+    Calculate current subdivision as float for smooth animation.
     """
     if metronome.paused:
         return float(metronome.current_subdivision)
-    
+
     now = perf_counter()
     with metronome.lock:
         interval = metronome.intervals[metronome.current_subdivision]
     fraction = (now - metronome.last_tick_time) / interval
     fraction = min(max(fraction, 0.0), 1.0)
-    
+
     return metronome.current_subdivision + fraction
