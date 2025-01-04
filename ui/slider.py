@@ -1,12 +1,11 @@
-# slider.py
+# ui/slider.py
 
 import pygame
 from constants import BLACK, ACCENT_COLOR
 
-
 class Slider:
     """
-    A generic slider class supporting both horizontal and vertical orientation.
+    A generic slider class supporting both horizontal and vertical orientations.
     Displays a label above the slider (if horizontal) or to the left (if vertical).
     Also displays the current value near the slider.
     """
@@ -28,7 +27,7 @@ class Slider:
         self.knob_size = knob_size
         self.min_value = min_value
         self.max_value = max_value
-        self.value = max(min_value, min(max_value, initial_value))
+        self.value = max(self.min_value, min(self.max_value, initial_value))
 
         self.label = label
         self.font = font
@@ -38,6 +37,10 @@ class Slider:
         self.dragging = False
 
         # Compute the initial knob position
+        self.update_knob_position()
+
+    def update_knob_position(self):
+        """Updates the knob position based on the current value."""
         if self.orientation == 'horizontal':
             fraction = (self.value - self.min_value) / (self.max_value - self.min_value)
             self.knob_x = self.rect.x + int(fraction * (self.rect.width - self.knob_size))
@@ -69,7 +72,6 @@ class Slider:
                 new_val = self.min_value + fraction * (self.max_value - self.min_value)
                 self.value = round(new_val, 3)
                 self.value = max(self.min_value, min(self.max_value, self.value))
-
             else:  # 'vertical'
                 mouse_y = event.pos[1]
                 top_limit = self.rect.y
@@ -82,7 +84,10 @@ class Slider:
                 self.value = round(new_val, 3)
                 self.value = max(self.min_value, min(self.max_value, self.value))
 
+            self.update_knob_position()
+
     def get_knob_rect(self):
+        """Returns the rectangle area of the knob."""
         return pygame.Rect(self.knob_x, self.knob_y, self.knob_size, self.knob_size)
 
     def draw(self, screen, color_bg, color_border, color_knob, highlight=False):
@@ -100,9 +105,6 @@ class Slider:
         label_surface = self.font.render(self.label, True, BLACK)
 
         # Format the slider value according to user format.
-        # If your range is [0..1] for volume or swing, you might do: self.value_format.format(self.value*100)
-        # This is purely up to you. For example, if value_format="{:.0%}", that might
-        # show "0%" ... "100%". If value_format="{:.0f} BPM", it might show "120 BPM" etc.
         display_value_str = self.value_format.format(self.value)
         value_surface = self.font.render(display_value_str, True, BLACK)
 
@@ -119,15 +121,20 @@ class Slider:
 
         else:
             # Place label above the slider (centered horizontally)
-            # and the value just below the label, or to the right, etc.
+            # and the value just below the label
             label_x = self.rect.x + (self.rect.width // 2) - (label_surface.get_width() // 2)
             label_y = self.rect.y - label_surface.get_height() - 10
 
-            # Place the value below the label or to the right of the slider
+            # Place the value below the label
             value_x = self.rect.x + (self.rect.width // 2) - (value_surface.get_width() // 2)
             value_y = self.rect.y + self.rect.height + 5
 
             # Draw the label above
             screen.blit(label_surface, (label_x, label_y))
             # Draw the value below
-     
+            screen.blit(value_surface, (value_x, value_y))
+
+    def set_value(self, new_value):
+        """Set the slider value programmatically."""
+        self.value = max(self.min_value, min(self.max_value, new_value))
+        self.update_knob_position()
