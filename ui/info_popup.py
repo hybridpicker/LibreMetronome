@@ -1,13 +1,13 @@
 # ui/info_popup.py
 
 import pygame
-from constants import WHITE, BLACK, WIDTH, HEIGHT, CENTER
+from constants import WHITE, BLACK, WIDTH, HEIGHT
 
 def display_info_popup(font):
     """Displays a popup with keyboard shortcuts."""
     info_text = [
         "Shortcuts:",
-        "SPACE: Start/Pause (resets on unpause)",
+        "SPACE: Start/Pause",
         "1-9: Change subdivisions",
         "Click on a circle: Toggle accent",
         "T: Tap Tempo",
