@@ -3,10 +3,17 @@
 import math
 from time import perf_counter
 
-
 def get_circle_positions(center, radius, steps):
     """
     Calculate positions of points arranged on a circle.
+    
+    Args:
+        center (tuple): (x, y) coordinates of the circle center.
+        radius (int): Radius of the circle.
+        steps (int): Number of subdivisions.
+        
+    Returns:
+        list: List of (x, y) positions.
     """
     positions = []
     for step in range(steps):
@@ -16,11 +23,16 @@ def get_circle_positions(center, radius, steps):
         positions.append((x, y))
     return positions
 
-
 def get_clicked_point(pos, positions):
     """
     Determine which point was clicked based on the mouse position.
-    Returns index or -1 if none was clicked.
+    
+    Args:
+        pos (tuple): (x, y) coordinates of the mouse click.
+        positions (list): List of (x, y) positions to check.
+        
+    Returns:
+        int: Index of the clicked position or -1 if none was clicked.
     """
     for idx, circle_pos in enumerate(positions):
         distance = math.hypot(pos[0] - circle_pos[0], pos[1] - circle_pos[1])
@@ -28,10 +40,15 @@ def get_clicked_point(pos, positions):
             return idx
     return -1
 
-
 def get_subdivision_float(metronome):
     """
-    Calculate current subdivision as float for smooth animation.
+    Calculate current subdivision as a float for smooth animation.
+    
+    Args:
+        metronome (MetronomeThread): The metronome thread instance.
+        
+    Returns:
+        float: Current subdivision with fraction.
     """
     if metronome.paused:
         return float(metronome.current_subdivision)
