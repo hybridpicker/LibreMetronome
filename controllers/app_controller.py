@@ -6,7 +6,7 @@ from threading import Event
 from time import perf_counter
 
 from constants import (
-    WHITE, PRIMARY_COLOR, ACCENT_COLOR, GREY, LIGHT_GREY, BLACK,
+    WHITE, PRIMARY_COLOR, GREY, LIGHT_GREY, BLACK,
     WIDTH, HEIGHT, CENTER, RADIUS, TEMPO_MIN, TEMPO_MAX,
     SWING_MAX, VOLUME_MAX
 )

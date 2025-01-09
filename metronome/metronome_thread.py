@@ -2,7 +2,6 @@
 
 import threading
 from time import perf_counter, sleep
-import pygame
 from constants import TEMPO_MIN, TEMPO_MAX, SWING_MAX, VOLUME_MAX
 
 

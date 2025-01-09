@@ -2,7 +2,7 @@
 
 import pygame
 import math
-from constants import PRIMARY_COLOR, ACCENT_COLOR, GREY, LIGHT_GREY, BLACK, CENTER, RADIUS
+from constants import PRIMARY_COLOR, ACCENT_COLOR, GREY, CENTER, RADIUS
 from utils.helpers import get_subdivision_float
 
 def draw_subdivisions(screen, subdivision_positions, first_beats, accented_beats):

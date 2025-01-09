@@ -9,7 +9,7 @@ class SoundManager:
         self.load_sounds()
 
     def load_sounds(self):
-        """Lädt alle benötigten Sounds."""
+        """Loads all necessary sounds."""
         try:
             self.sounds['normal'] = pygame.mixer.Sound(SOUND_FILES['normal'])
             self.sounds['accent'] = pygame.mixer.Sound(SOUND_FILES['accent'])
@@ -19,11 +19,11 @@ class SoundManager:
             self.sounds['normal'] = self.sounds['accent'] = self.sounds['first'] = None
 
     def get_sound(self, sound_type):
-        """Gibt den gewünschten Sound zurück."""
+        """Returns the requested sound.""" 
         return self.sounds.get(sound_type, None)
 
     def set_volume(self, volume):
-        """Setzt die Lautstärke für alle Sounds."""
+        """Sets the volume for all sounds."""
         for sound in self.sounds.values():
             if sound:
                 sound.set_volume(volume)
