@@ -18,6 +18,7 @@ from ui import draw
 from utils.helpers import get_circle_positions
 from sound.sound_manager import SoundManager
 from ui.event_handler import EventHandler
+from utils.audio_processor import AudioProcessor
 
 class AppController:
     def __init__(self):
@@ -38,6 +39,9 @@ class AppController:
 
         # Sound Manager
         self.sound_manager = SoundManager()
+
+        # Audio Processor for BPM detection
+        self.audio_processor = AudioProcessor()
 
         # Metronome Thread
         self.metronome = MetronomeThread(
@@ -140,6 +144,17 @@ class AppController:
             new_tempo = min(max(int(60 / avg_interval), TEMPO_MIN), TEMPO_MAX)
 
             self.set_tempo(new_tempo)
+
+    def detect_bpm(self):
+        """Detect BPM using microphone input and set it in the application."""
+        self.audio_processor.stop_metronome_during_detection(self.metronome)
+        bpm = self.audio_processor.get_bpm_from_audio(duration=5)
+        if bpm > 0:
+            print(f"Detected BPM: {bpm:.2f}")
+            self.set_tempo(int(bpm))
+        else:
+            print("Could not detect BPM. Please try again.")
+        self.metronome.pause(False)  # Resume metronome after detection
 
     def set_tempo(self, new_tempo):
         self.metronome.set_tempo(new_tempo)

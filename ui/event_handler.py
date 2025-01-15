@@ -1,3 +1,5 @@
+# ui/event_handler.py
+
 import pygame
 from constants import TEMPO_MIN, TEMPO_MAX
 from utils.helpers import get_clicked_point
@@ -87,6 +89,10 @@ class EventHandler:
             # Decrease tempo by 5 BPM, respecting TEMPO_MIN
             new_tempo = max(self.app.metronome.tempo - 5, TEMPO_MIN)
             self.app.set_tempo(new_tempo)
+        
+        elif event.key == pygame.K_m:
+            print("M key pressed - Starting BPM detection")
+            self.app.detect_bpm()
 
         elif pygame.K_1 <= event.key <= pygame.K_9:
             new_subdiv = event.key - pygame.K_0
