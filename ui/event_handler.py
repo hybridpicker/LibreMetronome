@@ -1,5 +1,3 @@
-# ui/event_handler.py
-
 import pygame
 from constants import TEMPO_MIN, TEMPO_MAX
 from utils.helpers import get_clicked_point
@@ -79,6 +77,16 @@ class EventHandler:
 
         elif event.key == pygame.K_t:
             self.app.tap_tempo()
+
+        elif event.key == pygame.K_UP:
+            # Increase tempo by 5 BPM, respecting TEMPO_MAX
+            new_tempo = min(self.app.metronome.tempo + 5, TEMPO_MAX)
+            self.app.set_tempo(new_tempo)
+
+        elif event.key == pygame.K_DOWN:
+            # Decrease tempo by 5 BPM, respecting TEMPO_MIN
+            new_tempo = max(self.app.metronome.tempo - 5, TEMPO_MIN)
+            self.app.set_tempo(new_tempo)
 
         elif pygame.K_1 <= event.key <= pygame.K_9:
             new_subdiv = event.key - pygame.K_0
