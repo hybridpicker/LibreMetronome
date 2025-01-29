@@ -1,70 +1,80 @@
-# Getting Started with Create React App
+# Libre Metronome
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Libre Metronome is a full-stack metronome application utilizing **Django (Python)** for the backend and **React** for the frontend. It offers highly customizable tempo control, subdivisions, swing adjustments, volume management, and visual beat indicators, all powered by precise Web Audio scheduling.
 
-## Available Scripts
+## Features
+- **Adjustable Tempo (BPM)**: Set the speed between 30–240 BPM.
+- **Subdivisions**: Customize rhythmic subdivisions (1–9) via the UI or keyboard shortcuts.
+- **Swing Control**: Adjust swing feel for jazz and related styles (0–0.5 range).
+- **Volume Control**: Modify playback level in real-time.
+- **Tap Tempo**: Use the `T` key to set BPM by tapping.
+- **Visual Beat Indicators**: A circle-based visualization featuring an orange pointer and accent toggles for each subdivision.
+- **Keyboard Shortcuts**:
+  - `Spacebar`: Start/Stop the metronome
+  - `1–9`: Set subdivisions
+  - `T`: Tap tempo
 
-In the project directory, you can run:
+## Demo
+https://github.com/user-attachments/assets/9805c71c-a256-4e4d-af7a-14b9f1c5f99d
 
-### `npm start`
+## Installation & Setup
+Follow the steps below to install and run both the Django backend and the React frontend.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### 1. Clone the Repository
+```bash
+git clone https://github.com/hybridpicker/LibreMetronome.git
+cd LibreMetronome
+```
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### 2. Set Up the Django Backend
+```bash
+cd backend
 
-### `npm test`
+python -m venv env_name
+source env_name/bin/activate   # On Windows: env_name\Scripts\activate
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+pip install -r requirements.txt
 
-### `npm run build`
+python manage.py migrate
+python manage.py runserver
+```
+By default, Django runs on **http://localhost:8000**.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### 3. Set Up the React Frontend
+```bash
+cd ../frontend
+npm install
+npm start
+```
+This launches the React app in development mode on **http://localhost:3000**.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### 4. Ensure Backend-Frontend Communication
+If necessary, configure CORS or set up a proxy to enable smooth interaction between the frontend and backend. By default, the React UI runs on port 3000, while the Django API is hosted on port 8000.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### 5. Audio Files
+Place the following audio files in **frontend/public/assets/audio/**:
+- `click_new.mp3` (standard click sound)
+- `click_new_accent.mp3` (accented click sound)
+- `click_new_first.mp3` (first beat click sound)
 
-### `npm run eject`
+## Usage
+1. Open **http://localhost:3000** in a browser to access the React frontend.
+2. Start/stop the metronome using the **Spacebar** or the **Play/Pause** button.
+3. Adjust **Tempo, Swing, and Volume** using the UI sliders.
+4. Use the **T** key to tap a new tempo.
+5. Press **1–9** to change subdivisions on the fly.
+6. Click on the subdivision circles to toggle accent marks.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## Keyboard Shortcuts Overview
+| Shortcut | Function |
+|----------|----------|
+| `Spacebar` | Start/Stop metronome |
+| `T` | Tap tempo |
+| `1–9` | Set rhythmic subdivisions |
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Contributing
+We welcome contributions! If you encounter issues or have feature suggestions, feel free to open an issue or submit a pull request. Originally a **Pygame** prototype, Libre Metronome has evolved into a **Django + React** application for improved scalability and UX.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## License
+This project is licensed under the **MIT License**. See the `LICENSE` file for details.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
