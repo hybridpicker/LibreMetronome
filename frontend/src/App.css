@@ -1,0 +1,184 @@
+/* src/App.css */
+
+/* Root-level CSS variables for a material-like color scheme */
+:root {
+  --primary-color: #2196F3;  /* Blue for circle and slider tracks */
+  --accent-color:  #FF9800;  /* Orange for first beat or pointer */
+  --dark-gray:     #555;
+  --light-gray:    #f5f5f5;
+}
+
+/* Basic reset */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: sans-serif;
+  background: var(--light-gray);
+  color: var(--dark-gray);
+}
+
+h1 {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  text-align: center;
+  font-weight: 500;
+}
+
+/* Fixed 600x600 container so the circle doesn't move around
+   and there's guaranteed 110px margin left/right if the circle has radius=190. */
+.metronome-container {
+  position: relative;
+  width: 600px;
+  height: 600px;
+  margin: 1rem auto;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* The canvas takes up the entire container area; the circle 
+   we draw is smaller (radius=190) so there's space for sliders */
+.metronome-canvas {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  display: block;
+  margin: 0 auto;
+  cursor: pointer;
+}
+
+/* We do not rotate the entire container. Instead, we have
+   a normal label above (in normal orientation)
+   and only rotate the input range. */
+
+/* A wrapper for the vertical slider so we can place the label on top. */
+.vertical-slider-wrapper {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* The label is normal, the slider is rotated. */
+}
+
+/* The label above the slider */
+.vertical-slider-label {
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+}
+
+/* The container that holds the rotated slider */
+.rotated-slider {
+  transform: rotate(-90deg);
+  display: inline-block;
+}
+
+/* A narrower slider => 100px length (since we have less margin) */
+.rotated-slider input[type="range"] {
+  width: 100px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--primary-color);
+  height: 4px;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.rotated-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--primary-color);
+  box-shadow: 0 0 2px rgba(0,0,0,0.3);
+}
+
+.rotated-slider input[type="range"]::-moz-range-thumb {
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--primary-color);
+  box-shadow: 0 0 2px rgba(0,0,0,0.3);
+}
+
+/* The tempo slider (horizontal) at the bottom */
+.tempo-slider-container {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 250px;
+  text-align: center;
+}
+
+.tempo-label {
+  display: block;
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+.tempo-slider-container input[type="range"] {
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--primary-color);
+  height: 4px;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.tempo-slider-container input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--primary-color);
+  box-shadow: 0 0 2px rgba(0,0,0,0.3);
+}
+
+.tempo-slider-container input[type="range"]::-moz-range-thumb {
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--primary-color);
+  box-shadow: 0 0 2px rgba(0,0,0,0.3);
+}
+
+/* Play/Pause button */
+.play-pause-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: var(--primary-color);
+  color: #fff;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  margin-bottom: 2rem;
+}
+
+.play-pause-button:hover {
+  background: #1b7fcc;
+}
+
+.play-pause-button svg {
+  width: 30px;
+  height: 30px;
+  fill: currentColor;
+}

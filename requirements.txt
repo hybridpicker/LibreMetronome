@@ -1,3 +1,0 @@
-numpy
-sounddevice
-pygame==2.3.0
