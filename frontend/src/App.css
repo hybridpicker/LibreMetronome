@@ -1,9 +1,7 @@
-/* src/App.css */
-
-/* Root-level CSS variables for a material-like color scheme */
+/* Root variables */
 :root {
-  --primary-color: #2196F3;  /* Blue for circle and slider tracks */
-  --accent-color:  #FF9800;  /* Orange for first beat or pointer */
+  --primary-color: #2196F3;
+  --accent-color:  #FF9800;
   --dark-gray:     #555;
   --light-gray:    #f5f5f5;
 }
@@ -17,72 +15,62 @@
   box-sizing: border-box;
 }
 
+/* Body or app container styling */
 body {
   font-family: sans-serif;
-  background: var(--light-gray);
+  background: #fff;
   color: var(--dark-gray);
 }
 
-h1 {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-  text-align: center;
-  font-weight: 500;
-}
-
-/* Fixed 600x600 container so the circle doesn't move around
-   and there's guaranteed 110px margin left/right if the circle has radius=190. */
+/* Main container that holds the canvas and sliders */
 .metronome-container {
-  position: relative;
-  width: 600px;
-  height: 600px;
-  margin: 1rem auto;
-  background: #fff;
-  border-radius: 12px;
+  position: relative;  
+  width: 90vw;        
+  max-width: 600px;   
+  height: 90vw;       
+  max-height: 600px;  
+  margin: 2rem auto;  
   overflow: hidden;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
-/* The canvas takes up the entire container area; the circle 
-   we draw is smaller (radius=190) so there's space for sliders */
+/* The metronome canvas (circle) */
 .metronome-canvas {
   width: 100%;
   height: 100%;
-  background: transparent;
   display: block;
   margin: 0 auto;
+  background: transparent;
   cursor: pointer;
+  position: relative;
+  z-index: 1;
 }
 
-/* We do not rotate the entire container. Instead, we have
-   a normal label above (in normal orientation)
-   and only rotate the input range. */
-
-/* A wrapper for the vertical slider so we can place the label on top. */
+/* Shared wrapper for vertical sliders */
 .vertical-slider-wrapper {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
+  position: absolute; /* So we can use top/left etc. */
+  display: grid;
   align-items: center;
-  /* The label is normal, the slider is rotated. */
+  z-index: 10; /* Above the canvas */
+  height: 8rem;
+  width: 6rem;
 }
 
-/* The label above the slider */
+/* Shared label styling */
 .vertical-slider-label {
-  margin-bottom: 8px;
+  margin-bottom: 2rem;
   font-size: 0.9rem;
-  text-transform: uppercase;
+  font-weight: 500;
+  text-align: center;
 }
 
-/* The container that holds the rotated slider */
+/* Each vertical slider is rotated to appear vertical */
 .rotated-slider {
   transform: rotate(-90deg);
-  display: inline-block;
 }
 
-/* A narrower slider => 100px length (since we have less margin) */
+/* The <input> for vertical sliders */
 .rotated-slider input[type="range"] {
-  width: 100px;
+  width: 120px; /* Increase slider length for easier control */
   -webkit-appearance: none;
   appearance: none;
   background: var(--primary-color);
@@ -111,14 +99,32 @@ h1 {
   box-shadow: 0 0 2px rgba(0,0,0,0.3);
 }
 
-/* The tempo slider (horizontal) at the bottom */
+/* Positioning for the swing slider (left side) */
+.swing-wrapper {
+  /* Center vertically, place about 70px from the left edge */
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+}
+
+/* Positioning for the volume slider (right side) */
+.volume-wrapper {
+  /* Center vertically, place about 70px from the right edge */
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+}
+
+/* Horizontal tempo slider at the bottom */
 .tempo-slider-container {
   position: absolute;
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  width: 250px;
+  width: 60%;
+  max-width: 280px;
   text-align: center;
+  z-index: 10;
 }
 
 .tempo-label {
@@ -157,7 +163,7 @@ h1 {
   box-shadow: 0 0 2px rgba(0,0,0,0.3);
 }
 
-/* Play/Pause button */
+/* Example styling for a play/pause button, if needed */
 .play-pause-button {
   display: inline-flex;
   align-items: center;
@@ -181,4 +187,22 @@ h1 {
   width: 30px;
   height: 30px;
   fill: currentColor;
+}
+
+/* Media queries for smaller devices */
+@media (max-width: 500px) {
+  .metronome-container {
+    width: 90vw;
+    height: auto; /* Let it shrink on very small screens */
+    max-width: 400px;
+    max-height: none;
+  }
+
+  /* Adjust slider distances on smaller screens */
+  .swing-wrapper {
+    left: 20px;
+  }
+  .volume-wrapper {
+    right: 20px;
+  }
 }

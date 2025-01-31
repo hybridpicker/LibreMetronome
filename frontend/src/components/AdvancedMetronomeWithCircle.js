@@ -1,5 +1,4 @@
 // src/components/AdvancedMetronomeWithCircle.js
-
 import React, { useState, useEffect } from 'react';
 import MetronomeCanvas from './MetronomeCanvas';
 import useMetronomeLogic from './useMetronomeLogic';
@@ -16,25 +15,24 @@ export default function AdvancedMetronomeWithCircle({
   volume,
   setVolume
 }) {
-  // Local accents array
+  // Local array for accenting individual subdivisions
   const [accents, setAccents] = useState(
     Array.from({ length: subdivisions }, () => false)
   );
 
-  // Ensure accent array matches the current subdivisions length
+  // Adjust the accents array when subdivisions changes
   useEffect(() => {
     setAccents((prev) => {
-      const newArr = [...prev];
-      while (newArr.length < subdivisions) {
-        newArr.push(false);
+      const newArray = [...prev];
+      while (newArray.length < subdivisions) {
+        newArray.push(false);
       }
-      return newArr.slice(0, subdivisions);
+      return newArray.slice(0, subdivisions);
     });
   }, [subdivisions]);
 
-  // Toggle accent when clicking a circle
+  // Toggles the accent on a specific subdivision index
   const toggleAccent = (index) => {
-    // If you don't want to toggle the first beat, skip index=0
     setAccents((prev) => {
       const updated = [...prev];
       updated[index] = !updated[index];
@@ -42,7 +40,7 @@ export default function AdvancedMetronomeWithCircle({
     });
   };
 
-  // Use our hook for audio scheduling
+  // Custom hook for audio scheduling
   const {
     currentSubdivision,
     currentSubStartRef,
@@ -62,7 +60,7 @@ export default function AdvancedMetronomeWithCircle({
 
   return (
     <div className="metronome-container">
-      {/* Main canvas for the circle and pointer */}
+      {/* Main canvas for the metronome circle */}
       <MetronomeCanvas
         currentSubdivision={currentSubdivision}
         currentSubStartRef={currentSubStartRef}
@@ -73,15 +71,8 @@ export default function AdvancedMetronomeWithCircle({
         audioCtx={audioCtx}
       />
 
-      {/* Swing slider (vertical, left) with a wrapper so the label is above */}
-      <div
-        className="vertical-slider-wrapper"
-        style={{
-          top: '50%',
-          left: '40px', // place center ~ 40px from the left
-          transform: 'translateY(-50%)'
-        }}
-      >
+      {/* Swing slider (vertical, left side) */}
+      <div className="vertical-slider-wrapper swing-wrapper">
         <span className="vertical-slider-label">Swing</span>
         <div className="rotated-slider">
           <input
@@ -95,15 +86,8 @@ export default function AdvancedMetronomeWithCircle({
         </div>
       </div>
 
-      {/* Volume slider (vertical, right) */}
-      <div
-        className="vertical-slider-wrapper"
-        style={{
-          top: '50%',
-          right: '40px',
-          transform: 'translateY(-50%)'
-        }}
-      >
+      {/* Volume slider (vertical, right side) */}
+      <div className="vertical-slider-wrapper volume-wrapper">
         <span className="vertical-slider-label">Volume</span>
         <div className="rotated-slider">
           <input
