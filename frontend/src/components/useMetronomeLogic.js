@@ -1,3 +1,4 @@
+// src/components/useMetronomeLogic.js
 import { useEffect, useRef, useState, useCallback } from 'react';
 
 // Define tempo boundaries and scheduling parameters
@@ -84,19 +85,8 @@ export default function useMetronomeLogic({
     source.start(when);
   }
 
-  // Schedule a subdivision sound based on accent settings
-  function scheduleSubdivision(subIndex, when) {
-    if (subIndex === 0) {
-      schedulePlay(firstBufferRef.current, when);
-    } else if (accents[subIndex]) {
-      schedulePlay(accentBufferRef.current, when);
-    } else {
-      schedulePlay(normalBufferRef.current, when);
-    }
-  }
-
   // Calculate the duration of the current subdivision (applying swing)
-  function getCurrentSubIntervalSec() {
+  const getCurrentSubIntervalSec = useCallback(() => {
     const baseSec = (60 / tempo) / Math.max(subdivisions, 1);
     if (subdivisions > 1) {
       return currentSubRef.current % 2 === 0
@@ -104,7 +94,18 @@ export default function useMetronomeLogic({
         : baseSec * (1 - swing);
     }
     return baseSec;
-  }
+  }, [tempo, subdivisions, swing]);
+
+  // Schedule a subdivision sound based on accent settings
+  const scheduleSubdivision = useCallback((subIndex, when) => {
+    if (subIndex === 0) {
+      schedulePlay(firstBufferRef.current, when);
+    } else if (accents[subIndex]) {
+      schedulePlay(accentBufferRef.current, when);
+    } else {
+      schedulePlay(normalBufferRef.current, when);
+    }
+  }, [accents, volume]);
 
   // Scheduler function to schedule upcoming subdivision sounds
   const scheduler = useCallback(() => {
@@ -120,7 +121,26 @@ export default function useMetronomeLogic({
       currentSubRef.current = (currentSubRef.current + 1) % Math.max(subdivisions, 1);
       nextNoteTimeRef.current += currentSubIntervalRef.current;
     }
-  }, [tempo, subdivisions, swing, volume, accents]);
+  }, [tempo, subdivisions, swing, volume, accents, getCurrentSubIntervalSec, scheduleSubdivision]);
+
+  // Tap tempo: calculates the average interval between taps and adjusts the tempo accordingly
+  const tapTempo = useCallback(() => {
+    const now = performance.now();
+    tapTimesRef.current.push(now);
+    if (tapTimesRef.current.length > 5) {
+      tapTimesRef.current.shift();
+    }
+    if (tapTimesRef.current.length > 1) {
+      let sum = 0;
+      for (let i = 1; i < tapTimesRef.current.length; i++) {
+        sum += tapTimesRef.current[i] - tapTimesRef.current[i - 1];
+      }
+      const avg = sum / (tapTimesRef.current.length - 1);
+      const newTempo = Math.round(60000 / avg);
+      const clamped = Math.max(TEMPO_MIN, Math.min(TEMPO_MAX, newTempo));
+      setTempo(clamped);
+    }
+  }, [setTempo]);
 
   // Start the metronome scheduler
   function startScheduler() {
@@ -159,26 +179,7 @@ export default function useMetronomeLogic({
     }
     window.addEventListener('keydown', handleKeydown);
     return () => window.removeEventListener('keydown', handleKeydown);
-  }, [setIsPaused, setSubdivisions]);
-
-  // Tap tempo: calculates the average interval between taps and adjusts the tempo accordingly
-  function tapTempo() {
-    const now = performance.now();
-    tapTimesRef.current.push(now);
-    if (tapTimesRef.current.length > 5) {
-      tapTimesRef.current.shift();
-    }
-    if (tapTimesRef.current.length > 1) {
-      let sum = 0;
-      for (let i = 1; i < tapTimesRef.current.length; i++) {
-        sum += tapTimesRef.current[i] - tapTimesRef.current[i - 1];
-      }
-      const avg = sum / (tapTimesRef.current.length - 1);
-      const newTempo = Math.round(60000 / avg);
-      const clamped = Math.max(TEMPO_MIN, Math.min(TEMPO_MAX, newTempo));
-      setTempo(clamped);
-    }
-  }
+  }, [setIsPaused, setSubdivisions, tapTempo]);
 
   // Start or stop the scheduler based on the isPaused state
   useEffect(() => {
