@@ -1,0 +1,48 @@
+/* Styles for the main App component */
+.app-container {
+  text-align: center;
+  width: 100%;
+  padding: 20px;
+  position: relative;
+}
+
+.metronome-container {
+  position: relative;
+  max-width: 400px;
+  margin: auto;
+}
+
+.metronome-canvas {
+  width: 100%;
+  height: 400px;
+  display: block;
+  border: none;
+}
+
+/* Sliders container arranged horizontally */
+.sliders-container {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 20px;
+}
+
+.slider-item {
+  width: 150px;
+  text-align: center;
+}
+
+/* Play/Pause Button styles */
+.play-pause-button {
+  margin-top: 20px;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  fill: var(--primary-color);
+}
+
+.play-pause-button svg {
+  width: 48px;
+  height: 48px;
+}
