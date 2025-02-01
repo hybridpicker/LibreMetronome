@@ -1,4 +1,3 @@
-// src/components/AdvancedMetronomeWithCircle.js
 import React, { useState, useEffect } from 'react';
 import MetronomeCanvas from './MetronomeCanvas';
 import useMetronomeLogic from './useMetronomeLogic';
@@ -15,32 +14,33 @@ export default function AdvancedMetronomeWithCircle({
   volume,
   setVolume
 }) {
-  // Local array for accenting individual subdivisions
+  // Initialize accent state, ensuring first beat (index 0) is always accented
   const [accents, setAccents] = useState(
-    Array.from({ length: subdivisions }, () => false)
+    Array.from({ length: subdivisions }, (v, i) => i === 0 ? true : false)
   );
 
-  // Adjust the accents array when subdivisions changes
+  // Update the accents array when subdivisions change, ensuring first beat remains true
   useEffect(() => {
-    setAccents((prev) => {
-      const newArray = [...prev];
-      while (newArray.length < subdivisions) {
-        newArray.push(false);
+    setAccents(prev => {
+      const newArray = [];
+      for (let i = 0; i < subdivisions; i++) {
+        newArray[i] = (i === 0) ? true : (prev[i] || false);
       }
-      return newArray.slice(0, subdivisions);
+      return newArray;
     });
   }, [subdivisions]);
 
-  // Toggles the accent on a specific subdivision index
+  // Toggle accent for a specific subdivision index, but do not toggle first beat
   const toggleAccent = (index) => {
-    setAccents((prev) => {
+    if (index === 0) return; // First beat always accented
+    setAccents(prev => {
       const updated = [...prev];
       updated[index] = !updated[index];
       return updated;
     });
   };
 
-  // Custom hook for audio scheduling
+  // Custom hook for scheduling audio and metronome logic
   const {
     currentSubdivision,
     currentSubStartRef,
@@ -60,7 +60,7 @@ export default function AdvancedMetronomeWithCircle({
 
   return (
     <div className="metronome-container">
-      {/* Main canvas for the metronome circle */}
+      {/* Main canvas for the metronome display */}
       <MetronomeCanvas
         currentSubdivision={currentSubdivision}
         currentSubStartRef={currentSubStartRef}
@@ -71,10 +71,11 @@ export default function AdvancedMetronomeWithCircle({
         audioCtx={audioCtx}
       />
 
-      {/* Swing slider (vertical, left side) */}
-      <div className="vertical-slider-wrapper swing-wrapper">
-        <span className="vertical-slider-label">Swing</span>
-        <div className="rotated-slider">
+      {/* Sliders arranged horizontally */}
+      <div className="sliders-container">
+        <div className="slider-item">
+          {/* Display swing as a percentage (0-100%) */}
+          <label>Swing: {Math.round(swing * 200)}%</label>
           <input
             type="range"
             min={0}
@@ -84,12 +85,9 @@ export default function AdvancedMetronomeWithCircle({
             onChange={(e) => setSwing(parseFloat(e.target.value))}
           />
         </div>
-      </div>
-
-      {/* Volume slider (vertical, right side) */}
-      <div className="vertical-slider-wrapper volume-wrapper">
-        <span className="vertical-slider-label">Volume</span>
-        <div className="rotated-slider">
+        <div className="slider-item">
+          {/* Display volume as a percentage (0-100%) */}
+          <label>Volume: {Math.round(volume * 100)}%</label>
           <input
             type="range"
             min={0}
@@ -99,18 +97,17 @@ export default function AdvancedMetronomeWithCircle({
             onChange={(e) => setVolume(parseFloat(e.target.value))}
           />
         </div>
-      </div>
-
-      {/* Tempo slider (horizontal, bottom) */}
-      <div className="tempo-slider-container">
-        <span className="tempo-label">Tempo: {tempo} BPM</span>
-        <input
-          type="range"
-          min={30}
-          max={240}
-          value={tempo}
-          onChange={(e) => setTempo(parseFloat(e.target.value))}
-        />
+        <div className="slider-item">
+          <label>Tempo: {tempo} BPM</label>
+          {/* BPM slider now allows values down to 5 BPM */}
+          <input
+            type="range"
+            min={5}
+            max={240}
+            value={tempo}
+            onChange={(e) => setTempo(parseFloat(e.target.value))}
+          />
+        </div>
       </div>
     </div>
   );
