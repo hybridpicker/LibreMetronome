@@ -1,208 +1,48 @@
-/* Root variables */
-:root {
-  --primary-color: #2196F3;
-  --accent-color:  #FF9800;
-  --dark-gray:     #555;
-  --light-gray:    #f5f5f5;
+/* Styles for the main App component */
+.app-container {
+  text-align: center;
+  width: 100%;
+  padding: 20px;
+  position: relative;
 }
 
-/* Basic reset */
-*,
-*::before,
-*::after {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-/* Body or app container styling */
-body {
-  font-family: sans-serif;
-  background: #fff;
-  color: var(--dark-gray);
-}
-
-/* Main container that holds the canvas and sliders */
 .metronome-container {
-  position: relative;  
-  width: 90vw;        
-  max-width: 600px;   
-  height: 90vw;       
-  max-height: 600px;  
-  margin: 2rem auto;  
-  overflow: hidden;
+  position: relative;
+  max-width: 400px;
+  margin: auto;
 }
 
-/* The metronome canvas (circle) */
 .metronome-canvas {
   width: 100%;
-  height: 100%;
+  height: 400px;
   display: block;
-  margin: 0 auto;
-  background: transparent;
-  cursor: pointer;
-  position: relative;
-  z-index: 1;
-}
-
-/* Shared wrapper for vertical sliders */
-.vertical-slider-wrapper {
-  position: absolute; /* So we can use top/left etc. */
-  display: grid;
-  align-items: center;
-  z-index: 10; /* Above the canvas */
-  height: 8rem;
-  width: 6rem;
-}
-
-/* Shared label styling */
-.vertical-slider-label {
-  margin-bottom: 2rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-  text-align: center;
-}
-
-/* Each vertical slider is rotated to appear vertical */
-.rotated-slider {
-  transform: rotate(-90deg);
-}
-
-/* The <input> for vertical sliders */
-.rotated-slider input[type="range"] {
-  width: 120px; /* Increase slider length for easier control */
-  -webkit-appearance: none;
-  appearance: none;
-  background: var(--primary-color);
-  height: 4px;
-  border-radius: 2px;
-  outline: none;
-  cursor: pointer;
-}
-
-.rotated-slider input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  height: 16px;
-  width: 16px;
-  border-radius: 50%;
-  background: #fff;
-  border: 2px solid var(--primary-color);
-  box-shadow: 0 0 2px rgba(0,0,0,0.3);
-}
-
-.rotated-slider input[type="range"]::-moz-range-thumb {
-  height: 16px;
-  width: 16px;
-  border-radius: 50%;
-  background: #fff;
-  border: 2px solid var(--primary-color);
-  box-shadow: 0 0 2px rgba(0,0,0,0.3);
-}
-
-/* Positioning for the swing slider (left side) */
-.swing-wrapper {
-  /* Center vertically, place about 70px from the left edge */
-  top: 50%;
-  left: 0;
-  transform: translateY(-50%);
-}
-
-/* Positioning for the volume slider (right side) */
-.volume-wrapper {
-  /* Center vertically, place about 70px from the right edge */
-  top: 50%;
-  right: 0;
-  transform: translateY(-50%);
-}
-
-/* Horizontal tempo slider at the bottom */
-.tempo-slider-container {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60%;
-  max-width: 280px;
-  text-align: center;
-  z-index: 10;
-}
-
-.tempo-label {
-  display: block;
-  font-size: 1rem;
-  margin-bottom: 8px;
-}
-
-.tempo-slider-container input[type="range"] {
-  width: 100%;
-  -webkit-appearance: none;
-  appearance: none;
-  background: var(--primary-color);
-  height: 4px;
-  border-radius: 2px;
-  outline: none;
-  cursor: pointer;
-}
-
-.tempo-slider-container input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  height: 16px;
-  width: 16px;
-  border-radius: 50%;
-  background: #fff;
-  border: 2px solid var(--primary-color);
-  box-shadow: 0 0 2px rgba(0,0,0,0.3);
-}
-
-.tempo-slider-container input[type="range"]::-moz-range-thumb {
-  height: 16px;
-  width: 16px;
-  border-radius: 50%;
-  background: #fff;
-  border: 2px solid var(--primary-color);
-  box-shadow: 0 0 2px rgba(0,0,0,0.3);
-}
-
-/* Example styling for a play/pause button, if needed */
-.play-pause-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   border: none;
-  background: var(--primary-color);
-  color: #fff;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: background 0.2s ease;
-  margin-bottom: 2rem;
 }
 
-.play-pause-button:hover {
-  background: #1b7fcc;
+/* Sliders container arranged horizontally */
+.sliders-container {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 20px;
+}
+
+.slider-item {
+  width: 150px;
+  text-align: center;
+}
+
+/* Play/Pause Button styles */
+.play-pause-button {
+  margin-top: 20px;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  fill: var(--primary-color);
 }
 
 .play-pause-button svg {
-  width: 30px;
-  height: 30px;
-  fill: currentColor;
-}
-
-/* Media queries for smaller devices */
-@media (max-width: 500px) {
-  .metronome-container {
-    width: 90vw;
-    height: auto; /* Let it shrink on very small screens */
-    max-width: 400px;
-    max-height: none;
-  }
-
-  /* Adjust slider distances on smaller screens */
-  .swing-wrapper {
-    left: 20px;
-  }
-  .volume-wrapper {
-    right: 20px;
-  }
+  width: 48px;
+  height: 48px;
 }
