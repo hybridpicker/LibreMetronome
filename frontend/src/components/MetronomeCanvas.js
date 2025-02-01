@@ -1,3 +1,4 @@
+// src/components/MetronomeCanvas.js
 import React, { useEffect, useRef } from 'react';
 
 export default function MetronomeCanvas({
@@ -33,10 +34,11 @@ export default function MetronomeCanvas({
       ctx.shadowBlur = 6;
       ctx.beginPath();
       ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-      const circleColor = getComputedStyle(document.documentElement)
-        .getPropertyValue('--primary-color')
+      // Use the circle-outline variable for the outer circle
+      const circleOutline = getComputedStyle(document.documentElement)
+        .getPropertyValue('--circle-outline')
         .trim() || '#ffffff';
-      ctx.strokeStyle = circleColor;
+      ctx.strokeStyle = circleOutline;
       ctx.lineWidth = 3;
       ctx.stroke();
       ctx.shadowColor = 'transparent';
@@ -51,14 +53,20 @@ export default function MetronomeCanvas({
         ctx.beginPath();
         if (i === 0) {
           // First beat marker: draw a larger circle with a border to distinguish it
-          ctx.fillStyle = circleColor;  // white fill
+          ctx.fillStyle = getComputedStyle(document.documentElement)
+            .getPropertyValue('--primary-color')
+            .trim() || '#ffffff';
           ctx.arc(px, py, 12, 0, 2 * Math.PI);
           ctx.fill();
           ctx.lineWidth = 2;
           ctx.strokeStyle = '#999999';
           ctx.stroke();
         } else {
-          ctx.fillStyle = accents[i] ? circleColor : '#999999';
+          ctx.fillStyle = accents[i]
+            ? getComputedStyle(document.documentElement)
+                .getPropertyValue('--primary-color')
+                .trim() || '#ffffff'
+            : '#999999';
           ctx.arc(px, py, 10, 0, 2 * Math.PI);
           ctx.fill();
         }

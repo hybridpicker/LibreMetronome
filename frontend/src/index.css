@@ -1,8 +1,19 @@
 /* Global styles and CSS variables */
+
+/* Default: Dark Mode */
 :root {
-  --primary-color: #ffffff;    /* White for active elements and pointer */
-  --background-color: #121212;  /* Dark background */
+  --primary-color: #ffffff;      /* For active elements and pointer */
+  --background-color: #121212;    /* Dark background */
   --text-color: #ffffff;
+  --circle-outline: #ffffff;     /* Outer circle color in dark mode */
+}
+
+/* Light Mode Overrides */
+.light-mode {
+  --primary-color: #2196F3;      /* Blue for active elements and pointer in light mode */
+  --background-color: #f0f0f0;     /* Light background */
+  --text-color: #333333;
+  --circle-outline: #cccccc;     /* Soft gray for the outer circle in light mode */
 }
 
 body {
