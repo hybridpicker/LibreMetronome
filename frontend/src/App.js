@@ -4,22 +4,25 @@ import './App.css';
 import AdvancedMetronomeWithCircle from './components/AdvancedMetronomeWithCircle';
 
 function App() {
-  // State variables for tempo, subdivisions, pause status, swing, and volume
+  // State variables for metronome settings
   const [tempo, setTempo] = useState(120);
   const [subdivisions, setSubdivisions] = useState(4);
   const [isPaused, setIsPaused] = useState(true);
   const [swing, setSwing] = useState(0);
   const [volume, setVolume] = useState(1);
 
-  // Theme state: 'dark' or 'light'
-  const [theme, setTheme] = useState('dark');
+  // Default theme is light mode now
+  const [theme, setTheme] = useState('light');
+
+  // tapTempoFunc will be set by AdvancedMetronomeWithCircle via callback prop
+  const [tapTempoFunc, setTapTempoFunc] = useState(() => () => {});
 
   // Toggle theme when icon is clicked
   const toggleTheme = () => {
     setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
   };
 
-  // Update the document class based on the theme
+  // Update document class based on theme
   useEffect(() => {
     if (theme === 'light') {
       document.documentElement.classList.add('light-mode');
@@ -46,25 +49,21 @@ function App() {
     </svg>
   );
 
-  // Minimalist theme toggle icon: a half-filled circle with an outline.
+  // Theme toggle icon: a half-filled circle with outline.
   const ThemeIcon = () => {
     if (theme === 'dark') {
-      // In dark mode: both the outline and the half fill are white.
+      // In dark mode: outline and half fill are white.
       return (
         <svg viewBox="0 0 28 28" style={{ overflow: 'visible' }}>
-          {/* Outer circle (outline) */}
           <circle cx="14" cy="14" r="10" stroke="#ffffff" strokeWidth="2" fill="none" />
-          {/* Half-filled path (left half) */}
           <path d="M14 4 A10 10 0 0,0 14 24 L14 4 Z" fill="#ffffff" />
         </svg>
       );
     } else {
-      // In light mode: both the outline and the half fill are dark.
+      // In light mode: outline and half fill are dark (hier bleibt als Akzentfarbe "dunkel", aber Sie können auch Blau als Akzent definieren, falls gewünscht).
       return (
         <svg viewBox="0 0 28 28" style={{ overflow: 'visible' }}>
-          {/* Outer circle (outline) */}
           <circle cx="14" cy="14" r="10" stroke="#333333" strokeWidth="2" fill="none" />
-          {/* Half-filled path (left half) */}
           <path d="M14 4 A10 10 0 0,0 14 24 L14 4 Z" fill="#333333" />
         </svg>
       );
@@ -86,15 +85,20 @@ function App() {
         setSwing={setSwing}
         volume={volume}
         setVolume={setVolume}
+        setTapTempo={setTapTempoFunc}  // Pass callback to receive tapTempo function
       />
 
       <button onClick={togglePlay} className="play-pause-button">
         {isPaused ? <PlayIcon /> : <PauseIcon />}
       </button>
 
-      {/* Theme toggle icon (half-filled circle) positioned at top right */}
       <button onClick={toggleTheme} className="theme-toggle-icon" aria-label="Toggle Theme">
         <ThemeIcon />
+      </button>
+
+      {/* Tap Tempo button appears on small displays */}
+      <button className="tap-tempo-button" onClick={tapTempoFunc}>
+        Tap Tempo
       </button>
     </div>
   );

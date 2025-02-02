@@ -2,7 +2,8 @@
 
 /* Default: Dark Mode */
 :root {
-  --primary-color: #ffffff;      /* For active elements and pointer */
+  --accent-color: #2196F3;       /* Blue accent color for active markers */
+  --primary-color: #ffffff;      /* For non-accent elements and pointer in dark mode */
   --background-color: #121212;    /* Dark background */
   --text-color: #ffffff;
   --circle-outline: #ffffff;     /* Outer circle color in dark mode */
@@ -10,7 +11,8 @@
 
 /* Light Mode Overrides */
 .light-mode {
-  --primary-color: #2196F3;      /* Blue for active elements and pointer in light mode */
+  --accent-color: #2196F3;       /* Blue accent color also in light mode */
+  --primary-color: #333333;      /* For non-accent elements and pointer in light mode */
   --background-color: #f0f0f0;     /* Light background */
   --text-color: #333333;
   --circle-outline: #cccccc;     /* Soft gray for the outer circle in light mode */

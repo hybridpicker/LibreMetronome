@@ -16,25 +16,19 @@ export default function MetronomeCanvas({
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-
-    // Compute a dynamic radius based on the canvas dimensions with a margin
     const margin = 15;
     const radius = Math.min(canvas.width, canvas.height) / 2 - margin;
 
-    // Draw a single animation frame
     const drawFrame = () => {
-      // Clear the canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
 
-      // Draw the main metronome circle with a subtle shadow
+      // Draw main metronome circle
       ctx.shadowColor = 'rgba(0,0,0,0.1)';
       ctx.shadowBlur = 6;
       ctx.beginPath();
       ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-      // Use the circle-outline variable for the outer circle
       const circleOutline = getComputedStyle(document.documentElement)
         .getPropertyValue('--circle-outline')
         .trim() || '#ffffff';
@@ -44,18 +38,17 @@ export default function MetronomeCanvas({
       ctx.shadowColor = 'transparent';
       ctx.shadowBlur = 0;
 
-      // Draw subdivision markers as small circles around the main circle
+      // Draw subdivision markers
       for (let i = 0; i < subdivisions; i++) {
         const angle = (2 * Math.PI * i) / subdivisions - Math.PI / 2;
         const px = centerX + radius * Math.cos(angle);
         const py = centerY + radius * Math.sin(angle);
-
         ctx.beginPath();
         if (i === 0) {
-          // First beat marker: draw a larger circle with a border to distinguish it
+          // For active markers (including first beat) use the accent color (blue)
           ctx.fillStyle = getComputedStyle(document.documentElement)
-            .getPropertyValue('--primary-color')
-            .trim() || '#ffffff';
+            .getPropertyValue('--accent-color')
+            .trim() || '#2196F3';
           ctx.arc(px, py, 12, 0, 2 * Math.PI);
           ctx.fill();
           ctx.lineWidth = 2;
@@ -64,36 +57,31 @@ export default function MetronomeCanvas({
         } else {
           ctx.fillStyle = accents[i]
             ? getComputedStyle(document.documentElement)
-                .getPropertyValue('--primary-color')
-                .trim() || '#ffffff'
+                .getPropertyValue('--accent-color')
+                .trim() || '#2196F3'
             : '#999999';
           ctx.arc(px, py, 10, 0, 2 * Math.PI);
           ctx.fill();
         }
       }
 
-      // Draw the rotating pointer based on audio timing
+      // Draw rotating pointer
       if (audioCtx) {
         const now = audioCtx.currentTime;
         const elapsed = now - currentSubStartRef.current;
         let fraction = elapsed / currentSubIntervalRef.current;
         if (fraction > 1.0) fraction = 1.0;
-
         const totalAnglePerSub = (2 * Math.PI) / Math.max(subdivisions, 1);
         const currentIndex =
           (currentSubdivision - 1 + Math.max(subdivisions, 1)) %
           Math.max(subdivisions, 1);
         const baseAngle = totalAnglePerSub * currentIndex - Math.PI / 2;
         const lineAngle = baseAngle + fraction * totalAnglePerSub;
-
-        // Calculate a dynamic line width for visual dynamism
         const dynamicLineWidth = 2 + Math.sin(fraction * Math.PI);
         ctx.lineWidth = dynamicLineWidth;
         ctx.lineCap = 'round';
-        // Add a subtle glow effect to the pointer
         ctx.shadowColor = 'rgba(255, 255, 255, 0.7)';
         ctx.shadowBlur = 5;
-
         ctx.beginPath();
         ctx.moveTo(centerX, centerY);
         const lineX = centerX + radius * Math.cos(lineAngle);
@@ -104,26 +92,19 @@ export default function MetronomeCanvas({
         ctx.strokeStyle = pointerColor;
         ctx.lineTo(lineX, lineY);
         ctx.stroke();
-
-        // Reset shadow settings after drawing the pointer
         ctx.shadowColor = 'transparent';
         ctx.shadowBlur = 0;
       }
-
-      // Schedule the next frame
       animationFrameRef.current = requestAnimationFrame(drawFrame);
     };
 
-    // Resize the canvas to match its container
     function resizeCanvas() {
       canvas.width = canvas.clientWidth;
       canvas.height = canvas.clientHeight;
     }
 
-    // Initialize canvas size and start the drawing loop
     resizeCanvas();
     drawFrame();
-
     window.addEventListener('resize', resizeCanvas);
     return () => {
       window.removeEventListener('resize', resizeCanvas);
@@ -131,7 +112,6 @@ export default function MetronomeCanvas({
     };
   }, [currentSubdivision, currentSubStartRef, currentSubIntervalRef, subdivisions, accents, audioCtx]);
 
-  // Handle click events on the canvas for toggling accents
   function handleCanvasClick(e) {
     if (!onToggleAccent) return;
     const rect = e.currentTarget.getBoundingClientRect();
@@ -139,11 +119,8 @@ export default function MetronomeCanvas({
     const offsetY = e.clientY - rect.top;
     const centerX = e.currentTarget.width / 2;
     const centerY = e.currentTarget.height / 2;
-    // Use the same margin-based radius calculation as in drawFrame
     const margin = 15;
     const radius = Math.min(e.currentTarget.width, e.currentTarget.height) / 2 - margin;
-
-    // Check if a subdivision marker was clicked
     for (let i = 0; i < subdivisions; i++) {
       const angle = (2 * Math.PI * i) / subdivisions - Math.PI / 2;
       const px = centerX + radius * Math.cos(angle);

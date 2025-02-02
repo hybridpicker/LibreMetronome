@@ -13,27 +13,26 @@ export default function AdvancedMetronomeWithCircle({
   swing,
   setSwing,
   volume,
-  setVolume
+  setVolume,
+  setTapTempo  // Callback to expose tapTempo function to parent
 }) {
-  // Initialize accent state, ensuring first beat (index 0) is always accented
+  // Initialize accent state with first beat always accented
   const [accents, setAccents] = useState(
-    Array.from({ length: subdivisions }, (v, i) => i === 0 ? true : false)
+    Array.from({ length: subdivisions }, (v, i) => (i === 0 ? true : false))
   );
 
-  // Update the accents array when subdivisions change, ensuring first beat remains true
   useEffect(() => {
     setAccents(prev => {
       const newArray = [];
       for (let i = 0; i < subdivisions; i++) {
-        newArray[i] = (i === 0) ? true : (prev[i] || false);
+        newArray[i] = i === 0 ? true : (prev[i] || false);
       }
       return newArray;
     });
   }, [subdivisions]);
 
-  // Toggle accent for a specific subdivision index, but do not toggle first beat
   const toggleAccent = (index) => {
-    if (index === 0) return; // First beat always accented
+    if (index === 0) return; // First beat remains accented
     setAccents(prev => {
       const updated = [...prev];
       updated[index] = !updated[index];
@@ -41,13 +40,8 @@ export default function AdvancedMetronomeWithCircle({
     });
   };
 
-  // Custom hook for scheduling audio and metronome logic
-  const {
-    currentSubdivision,
-    currentSubStartRef,
-    currentSubIntervalRef,
-    audioCtx
-  } = useMetronomeLogic({
+  // Use the custom hook for metronome logic (which now returns tapTempo)
+  const logic = useMetronomeLogic({
     tempo,
     setTempo,
     subdivisions,
@@ -59,23 +53,27 @@ export default function AdvancedMetronomeWithCircle({
     setSubdivisions
   });
 
+  // Expose the tapTempo function to the parent via callback prop
+  useEffect(() => {
+    if (setTapTempo) {
+      setTapTempo(() => logic.tapTempo);
+    }
+  }, [logic.tapTempo, setTapTempo]);
+
   return (
     <div className="metronome-container">
-      {/* Main canvas for the metronome display */}
       <MetronomeCanvas
-        currentSubdivision={currentSubdivision}
-        currentSubStartRef={currentSubStartRef}
-        currentSubIntervalRef={currentSubIntervalRef}
+        currentSubdivision={logic.currentSubdivision}
+        currentSubStartRef={logic.currentSubStartRef}
+        currentSubIntervalRef={logic.currentSubIntervalRef}
         subdivisions={subdivisions}
         accents={accents}
         onToggleAccent={toggleAccent}
-        audioCtx={audioCtx}
+        audioCtx={logic.audioCtx}
       />
 
-      {/* Sliders arranged horizontally */}
       <div className="sliders-container">
         <div className="slider-item">
-          {/* Display swing as a percentage (0-100%) */}
           <label>Swing: {Math.round(swing * 200)}%</label>
           <input
             type="range"
@@ -87,7 +85,6 @@ export default function AdvancedMetronomeWithCircle({
           />
         </div>
         <div className="slider-item">
-          {/* Display volume as a percentage (0-100%) */}
           <label>Volume: {Math.round(volume * 100)}%</label>
           <input
             type="range"
@@ -100,7 +97,6 @@ export default function AdvancedMetronomeWithCircle({
         </div>
         <div className="slider-item">
           <label>Tempo: {tempo} BPM</label>
-          {/* BPM slider now allows values down to 5 BPM */}
           <input
             type="range"
             min={5}
