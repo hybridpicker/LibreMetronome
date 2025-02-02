@@ -1,4 +1,4 @@
-/* Styles for the main App component */
+/* Main container styling (nicht fullscreen, wie in der ursprünglichen Version) */
 .app-container {
   text-align: center;
   width: 100%;
@@ -6,12 +6,14 @@
   position: relative;
 }
 
+/* Metronome container with fixed maximum width */
 .metronome-container {
   position: relative;
   max-width: 400px;
   margin: auto;
 }
 
+/* Canvas styling */
 .metronome-canvas {
   width: 100%;
   height: 400px;
@@ -21,7 +23,7 @@
 
 /* Sliders container arranged horizontally */
 .sliders-container {
-  margin-top: 20px;
+  margin-top: 10px;
   display: flex;
   flex-direction: row;
   justify-content: center;
@@ -33,9 +35,9 @@
   text-align: center;
 }
 
-/* Play/Pause Button styles */
+/* Play/Pause Button styling */
 .play-pause-button {
-  margin-top: 20px;
+  margin-top: 10px;
   background-color: transparent;
   border: none;
   cursor: pointer;
@@ -47,13 +49,13 @@
   height: 48px;
 }
 
-/* Theme toggle icon styled as a half-filled circle, positioned at top right */
+/* Theme toggle icon styled as a half-filled circle with outline */
 .theme-toggle-icon {
   position: absolute;
   top: 15px;
-  right: 15px;
+  right: 30px;
   background: transparent;
-  border: none;
+  border: 1px solid var(--primary-color);
   border-radius: 50%;
   padding: 8px;
   cursor: pointer;
@@ -71,4 +73,25 @@
 .theme-toggle-icon svg {
   width: 24px;
   height: 24px;
+}
+
+/* Tap Tempo Button styling for small displays */
+.tap-tempo-button {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: var(--primary-color);
+  color: var(--background-color);
+  border: none;
+  border-radius: 5px;
+  padding: 10px 15px;
+  cursor: pointer;
+  font-size: 16px;
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .tap-tempo-button {
+    display: block;
+  }
 }

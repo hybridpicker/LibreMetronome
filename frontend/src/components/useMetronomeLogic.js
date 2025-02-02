@@ -1,7 +1,6 @@
 // src/components/useMetronomeLogic.js
 import { useEffect, useRef, useState, useCallback } from 'react';
 
-// Define tempo boundaries and scheduling parameters
 const TEMPO_MIN = 30;
 const TEMPO_MAX = 240;
 const SCHEDULE_AHEAD_TIME = 0.05; // Seconds to schedule ahead
@@ -30,10 +29,8 @@ export default function useMetronomeLogic({
   const currentSubIntervalRef = useRef(0);
   const lookaheadRef = useRef(null);
 
-  // For tap tempo functionality
   const tapTimesRef = useRef([]);
 
-  // Initialize AudioContext and load audio buffers
   useEffect(() => {
     try {
       audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
@@ -58,10 +55,8 @@ export default function useMetronomeLogic({
         audioCtxRef.current.close();
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Function to load and decode an audio file
   function loadSound(url, callback) {
     if (!audioCtxRef.current) return;
     fetch(url)
@@ -74,7 +69,6 @@ export default function useMetronomeLogic({
       .catch((err) => console.error(`Error loading ${url}:`, err));
   }
 
-  // Schedule playback for a given audio buffer
   function schedulePlay(buffer, when) {
     if (!buffer || !audioCtxRef.current) return;
     const source = audioCtxRef.current.createBufferSource();
@@ -85,7 +79,6 @@ export default function useMetronomeLogic({
     source.start(when);
   }
 
-  // Calculate the duration of the current subdivision (applying swing)
   const getCurrentSubIntervalSec = useCallback(() => {
     const baseSec = (60 / tempo) / Math.max(subdivisions, 1);
     if (subdivisions > 1) {
@@ -96,7 +89,6 @@ export default function useMetronomeLogic({
     return baseSec;
   }, [tempo, subdivisions, swing]);
 
-  // Schedule a subdivision sound based on accent settings
   const scheduleSubdivision = useCallback((subIndex, when) => {
     if (subIndex === 0) {
       schedulePlay(firstBufferRef.current, when);
@@ -107,23 +99,19 @@ export default function useMetronomeLogic({
     }
   }, [accents, volume]);
 
-  // Scheduler function to schedule upcoming subdivision sounds
   const scheduler = useCallback(() => {
     if (!audioCtxRef.current) return;
     const now = audioCtxRef.current.currentTime;
     while (nextNoteTimeRef.current < now + SCHEDULE_AHEAD_TIME) {
       scheduleSubdivision(currentSubRef.current, nextNoteTimeRef.current);
       setCurrentSubdivision(currentSubRef.current);
-
       currentSubStartRef.current = nextNoteTimeRef.current;
       currentSubIntervalRef.current = getCurrentSubIntervalSec();
-
       currentSubRef.current = (currentSubRef.current + 1) % Math.max(subdivisions, 1);
       nextNoteTimeRef.current += currentSubIntervalRef.current;
     }
   }, [tempo, subdivisions, swing, volume, accents, getCurrentSubIntervalSec, scheduleSubdivision]);
 
-  // Tap tempo: calculates the average interval between taps and adjusts the tempo accordingly
   const tapTempo = useCallback(() => {
     const now = performance.now();
     tapTimesRef.current.push(now);
@@ -142,9 +130,8 @@ export default function useMetronomeLogic({
     }
   }, [setTempo]);
 
-  // Start the metronome scheduler
   function startScheduler() {
-    stopScheduler(); // Clear any existing scheduler
+    stopScheduler();
     if (!audioCtxRef.current) return;
     currentSubRef.current = 0;
     nextNoteTimeRef.current = audioCtxRef.current.currentTime;
@@ -153,7 +140,6 @@ export default function useMetronomeLogic({
     lookaheadRef.current = setInterval(scheduler, 25);
   }
 
-  // Stop the metronome scheduler
   function stopScheduler() {
     if (lookaheadRef.current) {
       clearInterval(lookaheadRef.current);
@@ -161,7 +147,6 @@ export default function useMetronomeLogic({
     }
   }
 
-  // Handle keyboard events: Space to toggle play/pause, 1-9 to change subdivisions, T for tap tempo
   useEffect(() => {
     function handleKeydown(e) {
       if (e.code === 'Space') {
@@ -181,7 +166,6 @@ export default function useMetronomeLogic({
     return () => window.removeEventListener('keydown', handleKeydown);
   }, [setIsPaused, setSubdivisions, tapTempo]);
 
-  // Start or stop the scheduler based on the isPaused state
   useEffect(() => {
     if (isPaused) {
       stopScheduler();
@@ -189,13 +173,13 @@ export default function useMetronomeLogic({
       startScheduler();
     }
     return () => stopScheduler();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPaused, scheduler]);
 
   return {
     currentSubdivision,
     currentSubStartRef,
     currentSubIntervalRef,
-    audioCtx: audioCtxRef.current
+    audioCtx: audioCtxRef.current,
+    tapTempo
   };
 }
