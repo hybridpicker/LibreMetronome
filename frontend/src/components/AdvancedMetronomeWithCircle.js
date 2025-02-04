@@ -4,9 +4,9 @@ import MetronomeCanvas from './MetronomeCanvas';
 import useMetronomeLogic from './useMetronomeLogic';
 
 /*
- * Comments in English as required
- * This component handles UI (sliders, main state) for the metronome
- * and integrates the custom hook for the audio logic.
+ * Comments in English as requested
+ * This component manages the logic (sliders, accent toggles, etc.) and passes isPaused down to MetronomeCanvas
+ * so the pointer can disappear when paused.
  */
 
 export default function AdvancedMetronomeWithCircle({
@@ -20,36 +20,34 @@ export default function AdvancedMetronomeWithCircle({
   setSwing,
   volume,
   setVolume,
-  setTapTempo // Callback to expose tapTempo function to parent
+  setTapTempo
 }) {
-  // Initialize accent state with first beat always accented
+  // Accents with first beat always accented
   const [accents, setAccents] = useState(
-    Array.from({ length: subdivisions }, (v, i) => (i === 0 ? true : false))
+    Array.from({ length: subdivisions }, (_, i) => i === 0)
   );
 
-  // Whenever subdivisions changes, reset accent array so the first beat is always accented
+  // Update accents if subdivisions changes
   useEffect(() => {
-    setAccents(prev => {
-      const newArray = [];
+    setAccents((prev) => {
+      const newArr = [];
       for (let i = 0; i < subdivisions; i++) {
-        // first beat forced to accent
-        newArray[i] = i === 0 ? true : (prev[i] || false);
+        newArr[i] = i === 0 ? true : prev[i] || false;
       }
-      return newArray;
+      return newArr;
     });
   }, [subdivisions]);
 
-  // Toggle accent by clicking on canvas subdivisions, except for the first beat
   const toggleAccent = (index) => {
-    if (index === 0) return; // do not allow toggling first beat
-    setAccents(prev => {
+    if (index === 0) return;
+    setAccents((prev) => {
       const updated = [...prev];
       updated[index] = !updated[index];
       return updated;
     });
   };
 
-  // Use the custom hook for metronome logic
+  // Use the custom hook
   const logic = useMetronomeLogic({
     tempo,
     setTempo,
@@ -62,7 +60,7 @@ export default function AdvancedMetronomeWithCircle({
     setSubdivisions
   });
 
-  // Expose the tapTempo function to the parent via callback prop
+  // Pass tapTempo to parent
   useEffect(() => {
     if (setTapTempo) {
       setTapTempo(() => logic.tapTempo);
@@ -79,6 +77,8 @@ export default function AdvancedMetronomeWithCircle({
         accents={accents}
         onToggleAccent={toggleAccent}
         audioCtx={logic.audioCtx}
+        /* pass isPaused so we know whether to draw pointer or not */
+        isPaused={isPaused}
       />
 
       <div className="sliders-container">
@@ -113,7 +113,7 @@ export default function AdvancedMetronomeWithCircle({
           <label>Tempo: {tempo} BPM</label>
           <input
             type="range"
-            min={5}
+            min={30}
             max={240}
             value={tempo}
             onChange={(e) => setTempo(parseFloat(e.target.value))}

@@ -1,21 +1,30 @@
-/* Global styles and CSS variables */
+/* index.css (global CSS, or your main CSS file)
+   This file defines global CSS variables and default styling.
+   Make sure to import it somewhere in your React code (e.g. index.js).
+*/
 
-/* Default: Dark Mode */
+/* Dark Mode by default (example), override with .light-mode as needed */
 :root {
-  --accent-color: #2196F3;        /* Blue accent color for active markers */
-  --primary-color: #ffffff;       /* For non-accented elements and pointer in Dark Mode */
-  --background-color: #121212;    /* Dark background */
+  /* Colors you already had */
+  --accent-color: #2196F3;      /* Typically used for the first beat or user accents */
+  --primary-color: #ffffff;     /* For text or pointer in dark mode */
+  --background-color: #121212;  /* Dark background */
   --text-color: #ffffff;
-  --circle-outline: #ffffff;      /* Outer circle color in Dark Mode */
+  --circle-outline: #ffffff;    /* Outline of the circle in dark mode */
+
+  /* NEW highlight color for the active marker (instead of yellow) */
+  --active-color: #00e676;      /* fresh green highlight */
 }
 
-/* Light Mode Overrides */
+/* Light Mode overrides */
 .light-mode {
   --accent-color: #2196F3;
   --primary-color: #333333;
   --background-color: #f0f0f0;
   --text-color: #333333;
   --circle-outline: #cccccc;
+
+  --active-color: #00e676; /* can be the same or a different highlight if you want */
 }
 
 body {

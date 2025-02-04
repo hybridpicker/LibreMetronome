@@ -1,12 +1,8 @@
 // src/App.js
+
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import AdvancedMetronomeWithCircle from './components/AdvancedMetronomeWithCircle';
-
-/*
- * Comments in English as required
- * Main App component with theme toggle, info overlay, etc.
- */
 
 function InfoOverlay({ isOpen, onClose, theme }) {
   if (!isOpen) return null;
@@ -14,12 +10,10 @@ function InfoOverlay({ isOpen, onClose, theme }) {
   return (
     <div className="info-overlay">
       <div className="info-content">
-        {/* Minimal text, short instructions */}
         <p>Space = Start/Stop</p>
         <p>T = Tap Tempo</p>
         <p>1-9 = Subdivisions</p>
 
-        {/* "X" close button in top-right corner */}
         <button
           className="info-close"
           onClick={onClose}
@@ -33,28 +27,20 @@ function InfoOverlay({ isOpen, onClose, theme }) {
 }
 
 function App() {
-  // Metronome states
   const [tempo, setTempo] = useState(120);
   const [subdivisions, setSubdivisions] = useState(4);
   const [isPaused, setIsPaused] = useState(true);
   const [swing, setSwing] = useState(0);
   const [volume, setVolume] = useState(1);
 
-  // Default theme is light
   const [theme, setTheme] = useState('light');
-
-  // Tap tempo callback
   const [tapTempoFunc, setTapTempoFunc] = useState(() => () => {});
-
-  // Info overlay state
   const [infoOpen, setInfoOpen] = useState(false);
 
-  // Toggle theme
   const toggleTheme = () => {
-    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
-  // Update document class for theme
   useEffect(() => {
     if (theme === 'light') {
       document.documentElement.classList.add('light-mode');
@@ -63,12 +49,10 @@ function App() {
     }
   }, [theme]);
 
-  // Toggle play/pause
   const togglePlay = () => {
-    setIsPaused(prev => !prev);
+    setIsPaused((prev) => !prev);
   };
 
-  // SVG icons for play/pause
   const PlayIcon = () => (
     <svg viewBox="0 0 24 24">
       <path d="M8 5v14l11-7z" />
@@ -81,7 +65,6 @@ function App() {
     </svg>
   );
 
-  // Theme toggle icon (white in dark mode, #333 in light mode)
   const ThemeIcon = () => {
     if (theme === 'dark') {
       return (
@@ -100,7 +83,6 @@ function App() {
     }
   };
 
-  // Info icon also changes color with theme
   const InfoIcon = () => {
     if (theme === 'dark') {
       return (
@@ -129,6 +111,17 @@ function App() {
     <div className="app-container">
       <h1>Libre Metronome</h1>
 
+      <div className="subdivision-mobile-container">
+        <span className="subdivision-mobile-label">Subdivisions</span>
+        <div className="subdivision-buttons">
+          {Array.from({ length: 9 }, (_, i) => i + 1).map((num) => (
+            <button key={num} onClick={() => setSubdivisions(num)}>
+              {num}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <AdvancedMetronomeWithCircle
         tempo={tempo}
         setTempo={setTempo}
@@ -143,9 +136,17 @@ function App() {
         setTapTempo={setTapTempoFunc}
       />
 
-      <button onClick={togglePlay} className="play-pause-button">
-        {isPaused ? <PlayIcon /> : <PauseIcon />}
-      </button>
+      {/* Centered container with Play/Pause and Tap Tempo */}
+      <div className="center-buttons">
+        <button onClick={togglePlay} className="play-pause-button">
+          {isPaused ? <PlayIcon /> : <PauseIcon />}
+        </button>
+
+        {/* Tap Tempo button (now always visible and centered) */}
+        <button className="tap-tempo-button" onClick={tapTempoFunc}>
+          Tap Tempo
+        </button>
+      </div>
 
       <button onClick={toggleTheme} className="theme-toggle-icon" aria-label="Toggle Theme">
         <ThemeIcon />
@@ -159,23 +160,7 @@ function App() {
         <InfoIcon />
       </button>
 
-      <InfoOverlay
-        isOpen={infoOpen}
-        onClose={() => setInfoOpen(false)}
-        theme={theme}
-      />
-
-      <button className="tap-tempo-button" onClick={tapTempoFunc}>
-        Tap
-      </button>
-
-      <div className="subdivision-buttons">
-        {Array.from({ length: 9 }, (_, i) => i + 1).map(num => (
-          <button key={num} onClick={() => setSubdivisions(num)}>
-            {num}
-          </button>
-        ))}
-      </div>
+      <InfoOverlay isOpen={infoOpen} onClose={() => setInfoOpen(false)} theme={theme} />
     </div>
   );
 }
