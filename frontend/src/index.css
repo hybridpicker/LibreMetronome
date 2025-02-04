@@ -2,20 +2,20 @@
 
 /* Default: Dark Mode */
 :root {
-  --accent-color: #2196F3;       /* Blue accent color for active markers */
-  --primary-color: #ffffff;      /* For non-accent elements and pointer in dark mode */
+  --accent-color: #2196F3;        /* Blue accent color for active markers */
+  --primary-color: #ffffff;       /* For non-accented elements and pointer in Dark Mode */
   --background-color: #121212;    /* Dark background */
   --text-color: #ffffff;
-  --circle-outline: #ffffff;     /* Outer circle color in dark mode */
+  --circle-outline: #ffffff;      /* Outer circle color in Dark Mode */
 }
 
 /* Light Mode Overrides */
 .light-mode {
-  --accent-color: #2196F3;       /* Blue accent color also in light mode */
-  --primary-color: #333333;      /* For non-accent elements and pointer in light mode */
-  --background-color: #f0f0f0;     /* Light background */
+  --accent-color: #2196F3;
+  --primary-color: #333333;
+  --background-color: #f0f0f0;
   --text-color: #333333;
-  --circle-outline: #cccccc;     /* Soft gray for the outer circle in light mode */
+  --circle-outline: #cccccc;
 }
 
 body {

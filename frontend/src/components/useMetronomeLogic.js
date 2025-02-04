@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 
 const TEMPO_MIN = 30;
 const TEMPO_MAX = 240;
-const SCHEDULE_AHEAD_TIME = 0.05; // Seconds to schedule ahead
+const SCHEDULE_AHEAD_TIME = 0.05;
 
 export default function useMetronomeLogic({
   tempo,
@@ -31,6 +31,7 @@ export default function useMetronomeLogic({
 
   const tapTimesRef = useRef([]);
 
+  // Initialize audio context
   useEffect(() => {
     try {
       audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
@@ -79,42 +80,68 @@ export default function useMetronomeLogic({
     source.start(when);
   }
 
+  // Now we make the first of the two subdivisions longer, second shorter
+  // if swing > 0. This is typical jazz swing style.
   const getCurrentSubIntervalSec = useCallback(() => {
     const baseSec = (60 / tempo) / Math.max(subdivisions, 1);
-    if (subdivisions > 1) {
-      return currentSubRef.current % 2 === 0
-        ? baseSec * (1 + swing)
-        : baseSec * (1 - swing);
+
+    if (subdivisions >= 2) {
+      // If the sub is even, we use the longer fraction
+      // if the sub is odd, we use the shorter fraction
+      // so subIndex 0 = "long", subIndex 1 = "short", etc.
+      if (currentSubRef.current % 2 === 0) {
+        // longer
+        return baseSec * (1 + swing);
+      } else {
+        // shorter
+        return baseSec * (1 - swing);
+      }
     }
+
+    // If subdivisions < 2, just return baseSec
     return baseSec;
   }, [tempo, subdivisions, swing]);
 
-  const scheduleSubdivision = useCallback((subIndex, when) => {
-    if (subIndex === 0) {
-      schedulePlay(firstBufferRef.current, when);
-    } else if (accents[subIndex]) {
-      schedulePlay(accentBufferRef.current, when);
-    } else {
-      schedulePlay(normalBufferRef.current, when);
-    }
-  }, [accents, volume]);
+  const scheduleSubdivision = useCallback(
+    (subIndex, when) => {
+      if (subIndex === 0) {
+        schedulePlay(firstBufferRef.current, when);
+      } else if (accents[subIndex]) {
+        schedulePlay(accentBufferRef.current, when);
+      } else {
+        schedulePlay(normalBufferRef.current, when);
+      }
+    },
+    [accents, volume]
+  );
 
   const scheduler = useCallback(() => {
     if (!audioCtxRef.current) return;
     const now = audioCtxRef.current.currentTime;
+
     while (nextNoteTimeRef.current < now + SCHEDULE_AHEAD_TIME) {
       scheduleSubdivision(currentSubRef.current, nextNoteTimeRef.current);
       setCurrentSubdivision(currentSubRef.current);
+
       currentSubStartRef.current = nextNoteTimeRef.current;
       currentSubIntervalRef.current = getCurrentSubIntervalSec();
-      currentSubRef.current = (currentSubRef.current + 1) % Math.max(subdivisions, 1);
+
+      currentSubRef.current =
+        (currentSubRef.current + 1) % Math.max(subdivisions, 1);
+
       nextNoteTimeRef.current += currentSubIntervalRef.current;
     }
-  }, [tempo, subdivisions, swing, volume, accents, getCurrentSubIntervalSec, scheduleSubdivision]);
+  }, [
+    getCurrentSubIntervalSec,
+    scheduleSubdivision,
+    subdivisions
+  ]);
 
+  // Tap Tempo
   const tapTempo = useCallback(() => {
     const now = performance.now();
     tapTimesRef.current.push(now);
+
     if (tapTimesRef.current.length > 5) {
       tapTimesRef.current.shift();
     }
@@ -147,6 +174,7 @@ export default function useMetronomeLogic({
     }
   }
 
+  // Global keydown events
   useEffect(() => {
     function handleKeydown(e) {
       if (e.code === 'Space') {
@@ -166,6 +194,7 @@ export default function useMetronomeLogic({
     return () => window.removeEventListener('keydown', handleKeydown);
   }, [setIsPaused, setSubdivisions, tapTempo]);
 
+  // Start/stop the scheduler based on isPaused
   useEffect(() => {
     if (isPaused) {
       stopScheduler();
