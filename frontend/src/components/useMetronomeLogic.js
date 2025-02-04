@@ -2,13 +2,15 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 
 /*
- * Comments in English, as requested.
- * This custom hook manages audio scheduling, swing logic, and tap tempo.
+ * Comments in English as requested.
+ * This hook interprets "tempo" as normal BPM (beats per minute).
+ * Each beat is further subdivided by "subdivisions".
+ * => time per subdivision = (60 / tempo) / subdivisions.
  */
 
 const TEMPO_MIN = 30;
 const TEMPO_MAX = 240;
-const SCHEDULE_AHEAD_TIME = 0.05; // How far ahead to schedule in seconds
+const SCHEDULE_AHEAD_TIME = 0.05; // schedule 50ms ahead
 
 export default function useMetronomeLogic({
   tempo,
@@ -21,24 +23,28 @@ export default function useMetronomeLogic({
   accents = [],
   setSubdivisions
 }) {
+  // State: which subdivision is currently active
+  const [currentSubdivision, setCurrentSubdivision] = useState(0);
+
+  // Audio references
   const audioCtxRef = useRef(null);
   const normalBufferRef = useRef(null);
   const accentBufferRef = useRef(null);
   const firstBufferRef = useRef(null);
 
-  const [currentSubdivision, setCurrentSubdivision] = useState(0);
-
+  // Scheduling references
   const nextNoteTimeRef = useRef(0);
   const currentSubRef = useRef(0);
   const currentSubStartRef = useRef(0);
   const currentSubIntervalRef = useRef(0);
   const lookaheadRef = useRef(null);
 
+  // For Tap Tempo
   const tapTimesRef = useRef([]);
 
-  // ----------------------------------
-  // 1) LOAD AUDIO BUFFERS ON INIT
-  // ----------------------------------
+  // --------------------------------
+  // 1) Initialize AudioContext
+  // --------------------------------
   useEffect(() => {
     try {
       audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
@@ -47,6 +53,7 @@ export default function useMetronomeLogic({
       return;
     }
 
+    // Load audio samples
     loadSound('/assets/audio/click_new.mp3', (buffer) => {
       normalBufferRef.current = buffer;
     });
@@ -58,14 +65,13 @@ export default function useMetronomeLogic({
     });
 
     return () => {
-      stopScheduler(); // clean up intervals
+      stopScheduler();
       if (audioCtxRef.current) {
-        audioCtxRef.current.close(); // close audio context
+        audioCtxRef.current.close();
       }
     };
-  }, []); // runs once on mount
+  }, []);
 
-  // Helper for loading audio files
   function loadSound(url, callback) {
     if (!audioCtxRef.current) return;
     fetch(url)
@@ -78,10 +84,9 @@ export default function useMetronomeLogic({
       .catch((err) => console.error(`Error loading ${url}:`, err));
   }
 
-  // ----------------------------------
-  // 2) SCHEDULE AUDIO PLAYBACK
-  // ----------------------------------
-  // Wrap schedulePlay in useCallback, depending on volume
+  // --------------------------------
+  // 2) schedulePlay, scheduleSubdivision
+  // --------------------------------
   const schedulePlay = useCallback(
     (buffer, when) => {
       if (!buffer || !audioCtxRef.current) return;
@@ -95,11 +100,10 @@ export default function useMetronomeLogic({
     [volume]
   );
 
-  // Wrap scheduleSubdivision so that it depends on schedulePlay + accents
   const scheduleSubdivision = useCallback(
     (subIndex, when) => {
       if (subIndex === 0) {
-        schedulePlay(firstBufferRef.current, when);
+        schedulePlay(firstBufferRef.current, when); // first beat
       } else if (accents[subIndex]) {
         schedulePlay(accentBufferRef.current, when);
       } else {
@@ -109,63 +113,63 @@ export default function useMetronomeLogic({
     [schedulePlay, accents]
   );
 
-  // ----------------------------------
-  // 3) CALCULATE SUBDIVISION DURATIONS (SWING)
-  // ----------------------------------
+  // --------------------------------
+  // 3) getCurrentSubIntervalSec
+  // --------------------------------
+  // time per beat = 60/tempo
+  // time per sub  = (60/tempo)/subdivisions
   const getCurrentSubIntervalSec = useCallback(() => {
-    // base time for one subdivision if straight
-    const baseSec = (60 / tempo) / Math.max(subdivisions, 1);
+    if (!tempo) return 1;
+    const baseBeat = 60 / tempo; // seconds per beat
+    const baseSub = baseBeat / Math.max(subdivisions, 1); // seconds per subdivision
 
-    // typical "jazz swing": first sub is longer, second is shorter
+    // If we have at least 2 subdivisions, apply swing for even/odd
     if (subdivisions >= 2) {
       if (currentSubRef.current % 2 === 0) {
-        // longer portion
-        return baseSec * (1 + swing);
+        // "long" half
+        return baseSub * (1 + swing);
       } else {
-        // shorter portion
-        return baseSec * (1 - swing);
+        // "short" half
+        return baseSub * (1 - swing);
       }
     }
-    // If only 1 subdivision, just return baseSec
-    return baseSec;
+
+    return baseSub;
   }, [tempo, subdivisions, swing]);
 
-  // ----------------------------------
-  // 4) SCHEDULER: SCHEDULE WHILE AHEAD
-  // ----------------------------------
+  // --------------------------------
+  // 4) scheduler
+  // --------------------------------
   const scheduler = useCallback(() => {
     if (!audioCtxRef.current) return;
     const now = audioCtxRef.current.currentTime;
 
-    // keep scheduling ahead
     while (nextNoteTimeRef.current < now + SCHEDULE_AHEAD_TIME) {
-      // schedule the current subdivision
-      scheduleSubdivision(currentSubRef.current, nextNoteTimeRef.current);
-      // update React state for the UI pointer
-      setCurrentSubdivision(currentSubRef.current);
+      const subIndex = currentSubRef.current;
 
-      // update references for animation
+      // Schedule audio
+      scheduleSubdivision(subIndex, nextNoteTimeRef.current);
+
+      // Update UI pointer
+      setCurrentSubdivision(subIndex);
+
+      // Prepare next
       currentSubStartRef.current = nextNoteTimeRef.current;
       currentSubIntervalRef.current = getCurrentSubIntervalSec();
 
-      // increment subdivision
-      currentSubRef.current =
-        (currentSubRef.current + 1) % Math.max(subdivisions, 1);
-
-      // next note time
+      currentSubRef.current = (subIndex + 1) % Math.max(subdivisions, 1);
       nextNoteTimeRef.current += currentSubIntervalRef.current;
     }
   }, [
     scheduleSubdivision,
     getCurrentSubIntervalSec,
-    subdivisions,          // because we use it in the mod operation
-    setCurrentSubdivision  // state setter
+    subdivisions,
+    setCurrentSubdivision
   ]);
 
-  // ----------------------------------
-  // 5) SCHEDULER CONTROL
-  // ----------------------------------
-  // UseCallback for stopScheduler (no dependencies)
+  // --------------------------------
+  // 5) Start / Stop
+  // --------------------------------
   const stopScheduler = useCallback(() => {
     if (lookaheadRef.current) {
       clearInterval(lookaheadRef.current);
@@ -173,29 +177,31 @@ export default function useMetronomeLogic({
     }
   }, []);
 
-  // Also wrap startScheduler, referencing scheduler & getCurrentSubIntervalSec
   const startScheduler = useCallback(() => {
-    stopScheduler(); // ensure no old interval is running
+    stopScheduler();
     if (!audioCtxRef.current) return;
+
+    // Reset counters
     currentSubRef.current = 0;
+    setCurrentSubdivision(0);
+
     nextNoteTimeRef.current = audioCtxRef.current.currentTime;
     currentSubStartRef.current = nextNoteTimeRef.current;
     currentSubIntervalRef.current = getCurrentSubIntervalSec();
+
+    // start the "lookahead" loop
     lookaheadRef.current = setInterval(scheduler, 25);
   }, [stopScheduler, audioCtxRef, getCurrentSubIntervalSec, scheduler]);
 
-  // ----------------------------------
-  // 6) TAP TEMPO
-  // ----------------------------------
+  // --------------------------------
+  // 6) Tap Tempo
+  // --------------------------------
   const tapTempo = useCallback(() => {
     const now = performance.now();
     tapTimesRef.current.push(now);
-
-    // keep only last 5 taps
     if (tapTimesRef.current.length > 5) {
       tapTimesRef.current.shift();
     }
-    // compute average and set new tempo
     if (tapTimesRef.current.length > 1) {
       let sum = 0;
       for (let i = 1; i < tapTimesRef.current.length; i++) {
@@ -208,15 +214,15 @@ export default function useMetronomeLogic({
     }
   }, [setTempo]);
 
-  // ----------------------------------
-  // 7) KEYBOARD SHORTCUTS
-  // ----------------------------------
+  // --------------------------------
+  // 7) Keyboard shortcuts (optional)
+  // --------------------------------
   useEffect(() => {
     function handleKeydown(e) {
       if (e.code === 'Space') {
         e.preventDefault();
         if (setIsPaused) {
-          setIsPaused(prev => !prev);
+          setIsPaused((prev) => !prev);
         }
       } else if (e.key >= '1' && e.key <= '9') {
         if (setSubdivisions) {
@@ -230,23 +236,22 @@ export default function useMetronomeLogic({
     return () => window.removeEventListener('keydown', handleKeydown);
   }, [setIsPaused, setSubdivisions, tapTempo]);
 
-  // ----------------------------------
-  // 8) START / STOP WHEN isPaused CHANGES
-  // ----------------------------------
+  // --------------------------------
+  // 8) Start/Stop based on isPaused
+  // --------------------------------
   useEffect(() => {
     if (isPaused) {
       stopScheduler();
+      setCurrentSubdivision(0);
     } else {
       startScheduler();
     }
     return () => stopScheduler();
   }, [isPaused, startScheduler, stopScheduler]);
 
-  // ----------------------------------
-  // RETURN OBJECT
-  // ----------------------------------
+  // Return the needed references
   return {
-    currentSubdivision,
+    currentSubdivision,      // active index for the UI
     currentSubStartRef,
     currentSubIntervalRef,
     audioCtx: audioCtxRef.current,
