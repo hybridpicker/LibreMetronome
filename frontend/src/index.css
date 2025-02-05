@@ -1,43 +1,19 @@
-/* index.css (global CSS, or your main CSS file)
-   This file defines global CSS variables and default styling.
-   Make sure to import it somewhere in your React code (e.g. index.js).
-*/
+/* src/index.css */
 
-/* Dark Mode by default (example), override with .light-mode as needed */
-:root {
-  /* Colors you already had */
-  --accent-color: #2196F3;      /* Typically used for the first beat or user accents */
-  --primary-color: #ffffff;     /* For text or pointer in dark mode */
-  --background-color: #121212;  /* Dark background */
-  --text-color: #ffffff;
-  --circle-outline: #ffffff;    /* Outline of the circle in dark mode */
+ @import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
 
-  /* NEW highlight color for the active marker (instead of yellow) */
-  --active-color: #00e676;      /* fresh green highlight */
-}
-
-/* Light Mode overrides */
-.light-mode {
-  --accent-color: #2196F3;
-  --primary-color: #333333;
-  --background-color: #f0f0f0;
-  --text-color: #333333;
-  --circle-outline: #cccccc;
-
-  --active-color: #00e676; /* can be the same or a different highlight if you want */
-}
-
-body {
-  margin: 0;
-  padding: 0;
-  background-color: var(--background-color);
-  color: var(--text-color);
-  font-family: Arial, sans-serif;
-}
-
-#root {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 100vh;
-}
+ body {
+   margin: 0;
+   padding: 0;
+   font-family: 'Lato', sans-serif; /* use Lato everywhere */
+   background-color: #f5f5f5;       /* light background */
+   color: #333;                     /* dark text */
+ }
+ 
+ #root {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   min-height: 100vh;
+ }
+ 
