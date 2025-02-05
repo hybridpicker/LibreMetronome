@@ -1,4 +1,5 @@
 // src/components/useMetronomeLogic.js
+
 import { useEffect, useRef, useState, useCallback } from 'react';
 
 /*
@@ -42,6 +43,14 @@ export default function useMetronomeLogic({
   // Tap Tempo
   const tapTimesRef = useRef([]);
 
+  // stopScheduler: stops the scheduling interval
+  const stopScheduler = useCallback(() => {
+    if (lookaheadRef.current) {
+      clearInterval(lookaheadRef.current);
+      lookaheadRef.current = null;
+    }
+  }, []);
+
   useEffect(() => {
     try {
       audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
@@ -78,9 +87,9 @@ export default function useMetronomeLogic({
         audioCtxRef.current.close();
       }
     };
-  }, []);
+  }, [stopScheduler]);
 
-  // schedulePlay
+  // schedulePlay: schedules audio playback
   const schedulePlay = useCallback(
     (buffer, when) => {
       if (!buffer || !audioCtxRef.current) return;
@@ -94,7 +103,7 @@ export default function useMetronomeLogic({
     [volume]
   );
 
-  // scheduleSubdivision
+  // scheduleSubdivision: schedules the appropriate sound for the current subdivision
   const scheduleSubdivision = useCallback(
     (subIndex, when) => {
       // first beat
@@ -109,14 +118,16 @@ export default function useMetronomeLogic({
     [schedulePlay, accents]
   );
 
-  // getCurrentSubIntervalSec
+  // getCurrentSubIntervalSec: calculates the time interval for the current subdivision
   const getCurrentSubIntervalSec = useCallback(() => {
     if (!tempo) return 1;
     const beatSec = 60 / tempo;
     const baseSubSec = beatSec / Math.max(subdivisions, 1);
 
     if (subdivisions >= 2) {
-      // apply swing to even/odd
+      // Apply swing/shuffle:
+      // For even indices (first note in pair): use (1 + swing) => longer, dotted
+      // For odd indices (second note in pair): use (1 - swing) => shorter, sixteenth-like
       if (currentSubRef.current % 2 === 0) {
         return baseSubSec * (1 + swing);
       } else {
@@ -126,7 +137,7 @@ export default function useMetronomeLogic({
     return baseSubSec;
   }, [tempo, subdivisions, swing]);
 
-  // scheduler
+  // scheduler: schedules notes ahead of time
   const scheduler = useCallback(() => {
     if (!audioCtxRef.current) return;
     const now = audioCtxRef.current.currentTime;
@@ -149,15 +160,7 @@ export default function useMetronomeLogic({
     setCurrentSubdivision
   ]);
 
-  // stopScheduler
-  const stopScheduler = useCallback(() => {
-    if (lookaheadRef.current) {
-      clearInterval(lookaheadRef.current);
-      lookaheadRef.current = null;
-    }
-  }, []);
-
-  // startScheduler
+  // startScheduler: initializes the scheduling
   const startScheduler = useCallback(() => {
     stopScheduler();
     if (!audioCtxRef.current) return;
@@ -172,7 +175,7 @@ export default function useMetronomeLogic({
     lookaheadRef.current = setInterval(scheduler, 25);
   }, [stopScheduler, getCurrentSubIntervalSec, scheduler]);
 
-  // handleTapTempo
+  // handleTapTempo: calculates new tempo based on tap timings
   const handleTapTempo = useCallback(() => {
     const now = performance.now();
     tapTimesRef.current.push(now);
@@ -192,7 +195,7 @@ export default function useMetronomeLogic({
     }
   }, [setTempo]);
 
-  // optional keyboard shortcuts
+  // Optional keyboard shortcuts
   useEffect(() => {
     function handleKeydown(e) {
       if (e.code === 'Space') {
@@ -212,7 +215,7 @@ export default function useMetronomeLogic({
     return () => window.removeEventListener('keydown', handleKeydown);
   }, [setIsPaused, setSubdivisions, handleTapTempo]);
 
-  // start/stop if isPaused changes
+  // Start/stop scheduler based on isPaused
   useEffect(() => {
     if (isPaused) {
       stopScheduler();
@@ -229,3 +232,4 @@ export default function useMetronomeLogic({
     audioCtx: audioCtxRef.current
   };
 }
+
