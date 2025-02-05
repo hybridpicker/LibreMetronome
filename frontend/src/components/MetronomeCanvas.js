@@ -3,9 +3,8 @@ import React, { useEffect, useRef } from 'react';
 
 /*
  * Comments in English as required.
- * Instead of a rotating pointer, we highlight the active subdivision index
- * with a modern green color (--active-color).
- * Also, if subdivisions >= 3, connect the markers in a polygon.
+ * This was the old approach: drawing a circle and markers on a HTML canvas.
+ * If you use the new SVG approach from AdvancedMetronomeWithCircle, you can remove this file.
  */
 
 export default function MetronomeCanvas({
@@ -26,7 +25,6 @@ export default function MetronomeCanvas({
     const ctx = canvas.getContext('2d');
     const margin = 15;
     const radius = Math.min(canvas.width, canvas.height) / 2 - margin;
-
     const markerPositions = [];
 
     function drawFrame() {
@@ -57,7 +55,7 @@ export default function MetronomeCanvas({
         const py = centerY + radius * Math.sin(angle);
         markerPositions.push({ x: px, y: py });
 
-        // Decide the marker color
+        // color
         let fillColor = '#999999'; // default
         if (
           i === currentSubdivision &&
@@ -65,13 +63,11 @@ export default function MetronomeCanvas({
           audioCtx &&
           audioCtx.state === 'running'
         ) {
-          // highlight color
           fillColor =
             getComputedStyle(document.documentElement)
               .getPropertyValue('--active-color')
               .trim() || '#00e676';
         } else if (i === 0) {
-          // first beat
           fillColor =
             getComputedStyle(document.documentElement)
               .getPropertyValue('--accent-color')
@@ -90,7 +86,6 @@ export default function MetronomeCanvas({
         ctx.fill();
 
         if (i === 0 || i === currentSubdivision) {
-          // small stroke for first beat or active
           ctx.lineWidth = 2;
           ctx.strokeStyle = '#999999';
           ctx.stroke();
@@ -113,9 +108,6 @@ export default function MetronomeCanvas({
         ctx.stroke();
       }
 
-      // No pointer line: we rely on highlight-blink
-      // so there's nothing else to draw here.
-
       animationFrameRef.current = requestAnimationFrame(drawFrame);
     }
 
@@ -132,13 +124,7 @@ export default function MetronomeCanvas({
       window.removeEventListener('resize', resizeCanvas);
       cancelAnimationFrame(animationFrameRef.current);
     };
-  }, [
-    currentSubdivision,
-    subdivisions,
-    accents,
-    audioCtx,
-    isPaused
-  ]);
+  }, [currentSubdivision, subdivisions, accents, audioCtx, isPaused]);
 
   // On click => toggle accent
   function handleCanvasClick(e) {
