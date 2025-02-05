@@ -1,9 +1,6 @@
-/* src/App.css
- * Light Mode layout, Lato font, improved line/circle matching,
- * and a responsive Tap button (hidden on desktop, visible on mobile).
- */
+/* Global light mode styles and layout */
 
-/* (Optional) main container: .app-container */
+/* Main container */
 .app-container {
   text-align: center;
   width: 100%;
@@ -15,7 +12,7 @@
   font-family: 'Lato', sans-serif;
 }
 
-/* Circle forced 300×300 to prevent oversize. */
+/* Circle forced to 300x300 to prevent oversize */
 .metronome-circle {
   width: 300px;
   height: 300px;
@@ -27,7 +24,7 @@
   transform: translate(-50%, -50%);
 }
 
-/* Beat icons: 24×24, positioned absolutely. */
+/* Beat icons: 24x24, absolutely positioned */
 .beat-icon {
   width: 24px;
   height: 24px;
@@ -36,16 +33,16 @@
   cursor: pointer;
 }
 
-/* Lines as <div> with dynamic width in JS, 2px thick, teal color. */
+/* Lines connecting beats, 0.5px thick, teal color */
 .line-connection {
-  height: 1px;
-  background: #008080;
+  height: 0.5px;
+  background: #0ba3b2;
   position: absolute;
   pointer-events: none;
   transform-origin: center center;
 }
 
-/* Subdivision buttons: 36×36 each. */
+/* Subdivision buttons: 36x36 each */
 .subdivision-button {
   width: 36px;
   height: 36px;
@@ -54,8 +51,10 @@
   margin: 0 3px;
   transition: filter 0.15s ease;
 }
+
+/* Updated active subdivision button style */
 .subdivision-button.active {
-  filter: brightness(1.2);
+  filter: none;
 }
 
 /* Container for Swing/Volume/Tempo sliders */
@@ -72,43 +71,98 @@
   text-align: center;
 }
 
-/* 
- * Play/Pause button styling.
- * We'll place Tap as a sibling; see below.
- */
-.play-pause-button {
-  margin: 10px auto;
-  background-color: transparent;
-  border: none;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.play-pause-button img {
-  width: 36px;
-  height: 36px;
-  object-fit: contain;
+/* Ensure slider inputs are centered */
+input[type="range"] {
+  accent-color: #0ba3b2;
+  display: block;
+  margin: 0 auto;
 }
 
-/* The Tap button: hidden by default (desktop),
-   shown only on mobile via media query. */
+/* Play/Pause button overlay styling */
+.play-pause-button-overlay {
+  /* Already styled inline in the component; additional CSS can be added here if needed */
+}
+
+/* Tap button styling */
 .tap-tempo-button {
-  background: #008080; /* teal */
+  background: #0ba3b2;
   color: #fff;
   border: none;
   border-radius: 5px;
   padding: 8px 16px;
   cursor: pointer;
   font-size: 16px;
-  display: none; /* hidden by default */
-  margin-left: 12px; 
-  /* ^ some spacing from Play button if both are visible */
 }
 
-/* Show Tap button only on screens <= 600px (or your desired breakpoint) */
+/* Info button styling - positioned in top left */
+.info-button {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+.info-button img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+/* Hide info button on mobile screens */
 @media (max-width: 600px) {
-  .tap-tempo-button {
-    display: inline-block;
+  .info-button {
+    display: none;
   }
+}
+
+/* Info overlay styling */
+.info-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.info-modal {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 400px;
+  width: 90%;
+  position: relative;
+  text-align: left;
+}
+
+.info-modal h2 {
+  margin-top: 0;
+}
+
+.info-modal ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.info-modal li {
+  margin-bottom: 8px;
+}
+
+/* Info close button styling */
+.info-close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #0ba3b2;
+  cursor: pointer;
 }

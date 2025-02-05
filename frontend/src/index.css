@@ -1,11 +1,37 @@
 /* src/index.css */
+@font-face {
+  font-family: 'Lato';
+  src: url('./assets/fonts/Lato-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
 
- @import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
+@font-face {
+  font-family: 'Lato';
+  src: url('./assets/fonts/Lato-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Lato';
+  src: url('./assets/fonts/Lato-Thin.ttf') format('truetype');
+  font-weight: 100;
+  font-style: normal;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Lato', sans-serif;
+  background-color: #f5f5f5;
+  color: #333;
+}
 
  body {
    margin: 0;
    padding: 0;
-   font-family: 'Lato', sans-serif; /* use Lato everywhere */
+   font-family: 'Lato', sans-serif;
    background-color: #f5f5f5;       /* light background */
    color: #333;                     /* dark text */
  }

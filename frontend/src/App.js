@@ -1,7 +1,15 @@
-// src/App.js
 import React, { useState } from 'react';
-import './App.css'; // ensure the .metronome-container, .metronome-circle, etc.
+import './App.css';
 import AdvancedMetronomeWithCircle from './components/AdvancedMetronomeWithCircle';
+
+// Fonts
+import './assets/fonts/Lato-Regular.ttf';
+import './assets/fonts/Lato-Bold.ttf';
+import './assets/fonts/Lato-Thin.ttf';
+import './index.css';
+
+// Import info icon from assets; play/pause icons are now handled inside the metronome component
+import infoIcon from './assets/svg/info-button.svg';
 
 export default function App() {
   const [tempo, setTempo] = useState(120);
@@ -9,15 +17,48 @@ export default function App() {
   const [isPaused, setIsPaused] = useState(true);
   const [swing, setSwing] = useState(0);
   const [volume, setVolume] = useState(1);
-
   const [tapTempoFunc, setTapTempoFunc] = useState(() => () => {});
+  const [showInfo, setShowInfo] = useState(false);
 
-  const togglePlay = () => setIsPaused((p) => !p);
+  // Toggle play/pause state
+  const togglePlay = () => setIsPaused((prev) => !prev);
+
+  // Toggle display of info overlay
+  const toggleInfo = () => setShowInfo((prev) => !prev);
 
   return (
     <div style={{ textAlign: 'center', padding: '20px' }}>
+      {/* Info button in top left for desktop */}
+      <button className="info-button" onClick={toggleInfo}>
+        <img src={infoIcon} alt="Info" />
+      </button>
+
+      {/* Info overlay */}
+      {showInfo && (
+        <div className="info-overlay">
+          <div className="info-modal">
+            <button className="info-close-button" onClick={toggleInfo}>
+              X
+            </button>
+            <h2>Keyboard Shortcuts</h2>
+            <ul style={{ listStyleType: 'none', padding: 0 }}>
+              <li>
+                <strong>Space</strong>: Toggle Play/Pause
+              </li>
+              <li>
+                <strong>1 - 9</strong>: Set Subdivisions
+              </li>
+              <li>
+                <strong>T</strong>: Tap Tempo
+              </li>
+            </ul>
+          </div>
+        </div>
+      )}
+
       <h1 style={{ fontSize: '2rem', marginBottom: '30px' }}>
-        <span style={{ color: '#f8d38d' }}>Libre</span><span style={{ color: 'teal' }}>Metronome</span>
+        <span style={{ color: '#f8d38d' }}>Libre</span>
+        <span style={{ color: 'teal' }}>Metronome</span>
       </h1>
 
       <AdvancedMetronomeWithCircle
@@ -32,34 +73,12 @@ export default function App() {
         volume={volume}
         setVolume={setVolume}
         setTapTempo={setTapTempoFunc}
+        togglePlay={togglePlay} // Pass togglePlay to the metronome component
       />
 
+      {/* Tap button remains below the metronome */}
       <div style={{ marginTop: '20px' }}>
-        <button
-          onClick={togglePlay}
-          style={{
-            backgroundColor: 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-            fontSize: '1.4rem',
-            marginRight: '15px'
-          }}
-        >
-          {isPaused ? '▶' : '⏸'}
-        </button>
-
-        <button
-          onClick={tapTempoFunc}
-          style={{
-            backgroundColor: '#008080',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '6px',
-            padding: '8px 16px',
-            fontSize: '1rem',
-            cursor: 'pointer'
-          }}
-        >
+        <button onClick={tapTempoFunc} className="tap-tempo-button">
           Tap
         </button>
       </div>
