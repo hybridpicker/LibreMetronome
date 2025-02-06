@@ -1,74 +1,168 @@
-/* Styles for the main App component */
+/* Global light mode styles and layout */
+
+/* Main container */
 .app-container {
   text-align: center;
   width: 100%;
   padding: 20px;
   position: relative;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  color: #333;
+  font-family: 'Lato', sans-serif;
 }
 
-.metronome-container {
-  position: relative;
-  max-width: 400px;
-  margin: auto;
-}
-
-.metronome-canvas {
-  width: 100%;
-  height: 400px;
+/* Circle forced to 300x300 to prevent oversize */
+.metronome-circle {
+  width: 300px;
+  height: 300px;
+  object-fit: contain;
   display: block;
-  border: none;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
 }
 
-/* Sliders container arranged horizontally */
+/* Beat icons: 24x24, absolutely positioned */
+.beat-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  position: absolute;
+  cursor: pointer;
+}
+
+/* Lines connecting beats, 0.5px thick, teal color */
+.line-connection {
+  height: 0.5px;
+  background: #0ba3b2;
+  position: absolute;
+  pointer-events: none;
+  transform-origin: center center;
+}
+
+/* Subdivision buttons: 36x36 each */
+.subdivision-button {
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  object-fit: contain;
+  margin: 0 3px;
+  transition: filter 0.15s ease;
+}
+
+/* Updated active subdivision button style */
+.subdivision-button.active {
+  filter: none;
+}
+
+/* Container for Swing/Volume/Tempo sliders */
 .sliders-container {
-  margin-top: 20px;
+  margin-top: 10px;
   display: flex;
-  flex-direction: row;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
   gap: 20px;
 }
-
 .slider-item {
-  width: 150px;
+  width: 100%;
+  max-width: 300px;
   text-align: center;
 }
 
-/* Play/Pause Button styles */
-.play-pause-button {
-  margin-top: 20px;
-  background-color: transparent;
+/* Ensure slider inputs are centered */
+input[type="range"] {
+  accent-color: #0ba3b2;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Play/Pause button overlay styling */
+.play-pause-button-overlay {
+  /* Already styled inline in the component; additional CSS can be added here if needed */
+}
+
+/* Tap button styling */
+.tap-tempo-button {
+  background: #0ba3b2;
+  color: #fff;
   border: none;
+  border-radius: 5px;
+  padding: 8px 16px;
   cursor: pointer;
-  fill: var(--primary-color);
+  font-size: 16px;
 }
 
-.play-pause-button svg {
-  width: 48px;
-  height: 48px;
-}
-
-/* Theme toggle icon styled as a half-filled circle, positioned at top right */
-.theme-toggle-icon {
-  position: absolute;
-  top: 15px;
-  right: 15px;
+/* Info button styling - positioned in top left */
+.info-button {
+  position: fixed;
+  top: 10px;
+  left: 10px;
   background: transparent;
   border: none;
-  border-radius: 50%;
-  padding: 8px;
   cursor: pointer;
-  transition: background 0.3s ease, transform 0.2s ease;
+  padding: 0;
+}
+.info-button img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+/* Hide info button on mobile screens */
+@media (max-width: 600px) {
+  .info-button {
+    display: none;
+  }
+}
+
+/* Info overlay styling */
+.info-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.theme-toggle-icon:hover {
-  transform: scale(1.1);
-  background: rgba(255, 255, 255, 0.1);
+.info-modal {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 400px;
+  width: 90%;
+  position: relative;
+  text-align: left;
 }
 
-.theme-toggle-icon svg {
-  width: 24px;
-  height: 24px;
+.info-modal h2 {
+  margin-top: 0;
+}
+
+.info-modal ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.info-modal li {
+  margin-bottom: 8px;
+}
+
+/* Info close button styling */
+.info-close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #0ba3b2;
+  cursor: pointer;
 }

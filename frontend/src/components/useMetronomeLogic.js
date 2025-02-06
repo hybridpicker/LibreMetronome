@@ -1,10 +1,18 @@
 // src/components/useMetronomeLogic.js
+
 import { useEffect, useRef, useState, useCallback } from 'react';
 
-// Define tempo boundaries and scheduling parameters
+/*
+ * This hook handles:
+ * - Audio scheduling (Web Audio)
+ * - currentSubdivision index
+ * - Tap Tempo
+ * - Start/Stop logic
+ */
+
 const TEMPO_MIN = 30;
 const TEMPO_MAX = 240;
-const SCHEDULE_AHEAD_TIME = 0.05; // Seconds to schedule ahead
+const SCHEDULE_AHEAD_TIME = 0.05; // 50ms
 
 export default function useMetronomeLogic({
   tempo,
@@ -17,39 +25,60 @@ export default function useMetronomeLogic({
   accents = [],
   setSubdivisions
 }) {
+  const [currentSubdivision, setCurrentSubdivision] = useState(0);
+
+  // Audio references
   const audioCtxRef = useRef(null);
   const normalBufferRef = useRef(null);
   const accentBufferRef = useRef(null);
   const firstBufferRef = useRef(null);
 
-  const [currentSubdivision, setCurrentSubdivision] = useState(0);
-
+  // Scheduling references
   const nextNoteTimeRef = useRef(0);
   const currentSubRef = useRef(0);
   const currentSubStartRef = useRef(0);
   const currentSubIntervalRef = useRef(0);
   const lookaheadRef = useRef(null);
 
-  // For tap tempo functionality
+  // Tap Tempo
   const tapTimesRef = useRef([]);
 
-  // Initialize AudioContext and load audio buffers
+  // stopScheduler: stops the scheduling interval
+  const stopScheduler = useCallback(() => {
+    if (lookaheadRef.current) {
+      clearInterval(lookaheadRef.current);
+      lookaheadRef.current = null;
+    }
+  }, []);
+
   useEffect(() => {
     try {
       audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
     } catch (err) {
-      console.error('Web Audio API not supported:', err);
+      console.error("Web Audio API not supported:", err);
       return;
     }
 
-    loadSound('/assets/audio/click_new.mp3', (buffer) => {
-      normalBufferRef.current = buffer;
+    function loadSound(url, callback) {
+      fetch(url)
+        .then((res) => {
+          if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
+          return res.arrayBuffer();
+        })
+        .then((arr) => audioCtxRef.current.decodeAudioData(arr))
+        .then((decoded) => callback(decoded))
+        .catch((err) => console.error(`Error loading ${url}:`, err));
+    }
+
+    // Replace with your actual audio file paths
+    loadSound("/assets/audio/click_new.mp3", (buf) => {
+      normalBufferRef.current = buf;
     });
-    loadSound('/assets/audio/click_new_accent.mp3', (buffer) => {
-      accentBufferRef.current = buffer;
+    loadSound("/assets/audio/click_new_accent.mp3", (buf) => {
+      accentBufferRef.current = buf;
     });
-    loadSound('/assets/audio/click_new_first.mp3', (buffer) => {
-      firstBufferRef.current = buffer;
+    loadSound("/assets/audio/click_new_first.mp3", (buf) => {
+      firstBufferRef.current = buf;
     });
 
     return () => {
@@ -58,75 +87,99 @@ export default function useMetronomeLogic({
         audioCtxRef.current.close();
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [stopScheduler]);
 
-  // Function to load and decode an audio file
-  function loadSound(url, callback) {
-    if (!audioCtxRef.current) return;
-    fetch(url)
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
-        return res.arrayBuffer();
-      })
-      .then((arr) => audioCtxRef.current.decodeAudioData(arr))
-      .then((decoded) => callback(decoded))
-      .catch((err) => console.error(`Error loading ${url}:`, err));
-  }
+  // schedulePlay: schedules audio playback
+  const schedulePlay = useCallback(
+    (buffer, when) => {
+      if (!buffer || !audioCtxRef.current) return;
+      const source = audioCtxRef.current.createBufferSource();
+      source.buffer = buffer;
+      const gainNode = audioCtxRef.current.createGain();
+      gainNode.gain.value = volume;
+      source.connect(gainNode).connect(audioCtxRef.current.destination);
+      source.start(when);
+    },
+    [volume]
+  );
 
-  // Schedule playback for a given audio buffer
-  function schedulePlay(buffer, when) {
-    if (!buffer || !audioCtxRef.current) return;
-    const source = audioCtxRef.current.createBufferSource();
-    source.buffer = buffer;
-    const gainNode = audioCtxRef.current.createGain();
-    gainNode.gain.value = volume;
-    source.connect(gainNode).connect(audioCtxRef.current.destination);
-    source.start(when);
-  }
+  // scheduleSubdivision: schedules the appropriate sound for the current subdivision
+  const scheduleSubdivision = useCallback(
+    (subIndex, when) => {
+      // first beat
+      if (subIndex === 0) {
+        schedulePlay(firstBufferRef.current, when);
+      } else if (accents[subIndex]) {
+        schedulePlay(accentBufferRef.current, when);
+      } else {
+        schedulePlay(normalBufferRef.current, when);
+      }
+    },
+    [schedulePlay, accents]
+  );
 
-  // Calculate the duration of the current subdivision (applying swing)
+  // getCurrentSubIntervalSec: calculates the time interval for the current subdivision
   const getCurrentSubIntervalSec = useCallback(() => {
-    const baseSec = (60 / tempo) / Math.max(subdivisions, 1);
-    if (subdivisions > 1) {
-      return currentSubRef.current % 2 === 0
-        ? baseSec * (1 + swing)
-        : baseSec * (1 - swing);
+    if (!tempo) return 1;
+    const beatSec = 60 / tempo;
+    const baseSubSec = beatSec / Math.max(subdivisions, 1);
+
+    if (subdivisions >= 2) {
+      // Apply swing/shuffle:
+      // For even indices (first note in pair): use (1 + swing) => longer, dotted
+      // For odd indices (second note in pair): use (1 - swing) => shorter, sixteenth-like
+      if (currentSubRef.current % 2 === 0) {
+        return baseSubSec * (1 + swing);
+      } else {
+        return baseSubSec * (1 - swing);
+      }
     }
-    return baseSec;
+    return baseSubSec;
   }, [tempo, subdivisions, swing]);
 
-  // Schedule a subdivision sound based on accent settings
-  const scheduleSubdivision = useCallback((subIndex, when) => {
-    if (subIndex === 0) {
-      schedulePlay(firstBufferRef.current, when);
-    } else if (accents[subIndex]) {
-      schedulePlay(accentBufferRef.current, when);
-    } else {
-      schedulePlay(normalBufferRef.current, when);
-    }
-  }, [accents, volume]);
-
-  // Scheduler function to schedule upcoming subdivision sounds
+  // scheduler: schedules notes ahead of time
   const scheduler = useCallback(() => {
     if (!audioCtxRef.current) return;
     const now = audioCtxRef.current.currentTime;
+
     while (nextNoteTimeRef.current < now + SCHEDULE_AHEAD_TIME) {
-      scheduleSubdivision(currentSubRef.current, nextNoteTimeRef.current);
-      setCurrentSubdivision(currentSubRef.current);
+      const subIndex = currentSubRef.current;
+      scheduleSubdivision(subIndex, nextNoteTimeRef.current);
+      setCurrentSubdivision(subIndex);
 
       currentSubStartRef.current = nextNoteTimeRef.current;
       currentSubIntervalRef.current = getCurrentSubIntervalSec();
 
-      currentSubRef.current = (currentSubRef.current + 1) % Math.max(subdivisions, 1);
+      currentSubRef.current = (subIndex + 1) % Math.max(subdivisions, 1);
       nextNoteTimeRef.current += currentSubIntervalRef.current;
     }
-  }, [tempo, subdivisions, swing, volume, accents, getCurrentSubIntervalSec, scheduleSubdivision]);
+  }, [
+    scheduleSubdivision,
+    getCurrentSubIntervalSec,
+    subdivisions,
+    setCurrentSubdivision
+  ]);
 
-  // Tap tempo: calculates the average interval between taps and adjusts the tempo accordingly
-  const tapTempo = useCallback(() => {
+  // startScheduler: initializes the scheduling
+  const startScheduler = useCallback(() => {
+    stopScheduler();
+    if (!audioCtxRef.current) return;
+
+    currentSubRef.current = 0;
+    setCurrentSubdivision(0);
+
+    nextNoteTimeRef.current = audioCtxRef.current.currentTime;
+    currentSubStartRef.current = nextNoteTimeRef.current;
+    currentSubIntervalRef.current = getCurrentSubIntervalSec();
+
+    lookaheadRef.current = setInterval(scheduler, 25);
+  }, [stopScheduler, getCurrentSubIntervalSec, scheduler]);
+
+  // handleTapTempo: calculates new tempo based on tap timings
+  const handleTapTempo = useCallback(() => {
     const now = performance.now();
     tapTimesRef.current.push(now);
+
     if (tapTimesRef.current.length > 5) {
       tapTimesRef.current.shift();
     }
@@ -138,64 +191,45 @@ export default function useMetronomeLogic({
       const avg = sum / (tapTimesRef.current.length - 1);
       const newTempo = Math.round(60000 / avg);
       const clamped = Math.max(TEMPO_MIN, Math.min(TEMPO_MAX, newTempo));
-      setTempo(clamped);
+      if (setTempo) setTempo(clamped);
     }
   }, [setTempo]);
 
-  // Start the metronome scheduler
-  function startScheduler() {
-    stopScheduler(); // Clear any existing scheduler
-    if (!audioCtxRef.current) return;
-    currentSubRef.current = 0;
-    nextNoteTimeRef.current = audioCtxRef.current.currentTime;
-    currentSubStartRef.current = nextNoteTimeRef.current;
-    currentSubIntervalRef.current = getCurrentSubIntervalSec();
-    lookaheadRef.current = setInterval(scheduler, 25);
-  }
-
-  // Stop the metronome scheduler
-  function stopScheduler() {
-    if (lookaheadRef.current) {
-      clearInterval(lookaheadRef.current);
-      lookaheadRef.current = null;
-    }
-  }
-
-  // Handle keyboard events: Space to toggle play/pause, 1-9 to change subdivisions, T for tap tempo
+  // Optional keyboard shortcuts
   useEffect(() => {
     function handleKeydown(e) {
       if (e.code === 'Space') {
         e.preventDefault();
         if (setIsPaused) {
-          setIsPaused(prev => !prev);
+          setIsPaused((prev) => !prev);
         }
       } else if (e.key >= '1' && e.key <= '9') {
         if (setSubdivisions) {
           setSubdivisions(parseInt(e.key, 10));
         }
       } else if (e.key.toLowerCase() === 't') {
-        tapTempo();
+        handleTapTempo();
       }
     }
     window.addEventListener('keydown', handleKeydown);
     return () => window.removeEventListener('keydown', handleKeydown);
-  }, [setIsPaused, setSubdivisions, tapTempo]);
+  }, [setIsPaused, setSubdivisions, handleTapTempo]);
 
-  // Start or stop the scheduler based on the isPaused state
+  // Start/stop scheduler based on isPaused
   useEffect(() => {
     if (isPaused) {
       stopScheduler();
+      setCurrentSubdivision(0);
     } else {
       startScheduler();
     }
     return () => stopScheduler();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPaused, scheduler]);
+  }, [isPaused, startScheduler, stopScheduler]);
 
   return {
     currentSubdivision,
-    currentSubStartRef,
-    currentSubIntervalRef,
+    tapTempo: handleTapTempo,
     audioCtx: audioCtxRef.current
   };
 }
+

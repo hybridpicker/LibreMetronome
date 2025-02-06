@@ -1,80 +1,66 @@
-// src/App.js
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './App.css';
 import AdvancedMetronomeWithCircle from './components/AdvancedMetronomeWithCircle';
 
-function App() {
-  // State variables for tempo, subdivisions, pause status, swing, and volume
+// Fonts
+import './assets/fonts/Lato-Regular.ttf';
+import './assets/fonts/Lato-Bold.ttf';
+import './assets/fonts/Lato-Thin.ttf';
+import './index.css';
+
+// Import info icon from assets; play/pause icons are now handled inside the metronome component
+import infoIcon from './assets/svg/info-button.svg';
+
+export default function App() {
   const [tempo, setTempo] = useState(120);
   const [subdivisions, setSubdivisions] = useState(4);
   const [isPaused, setIsPaused] = useState(true);
   const [swing, setSwing] = useState(0);
   const [volume, setVolume] = useState(1);
-
-  // Theme state: 'dark' or 'light'
-  const [theme, setTheme] = useState('dark');
-
-  // Toggle theme when icon is clicked
-  const toggleTheme = () => {
-    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
-  };
-
-  // Update the document class based on the theme
-  useEffect(() => {
-    if (theme === 'light') {
-      document.documentElement.classList.add('light-mode');
-    } else {
-      document.documentElement.classList.remove('light-mode');
-    }
-  }, [theme]);
+  const [tapTempoFunc, setTapTempoFunc] = useState(() => () => {});
+  const [showInfo, setShowInfo] = useState(false);
 
   // Toggle play/pause state
-  const togglePlay = () => {
-    setIsPaused(prev => !prev);
-  };
+  const togglePlay = () => setIsPaused((prev) => !prev);
 
-  // SVG icons for play and pause buttons
-  const PlayIcon = () => (
-    <svg viewBox="0 0 24 24">
-      <path d="M8 5v14l11-7z" />
-    </svg>
-  );
-
-  const PauseIcon = () => (
-    <svg viewBox="0 0 24 24">
-      <path d="M6 19h4V5H6m8 0h4v14h-4" />
-    </svg>
-  );
-
-  // Minimalist theme toggle icon: a half-filled circle with an outline.
-  const ThemeIcon = () => {
-    if (theme === 'dark') {
-      // In dark mode: both the outline and the half fill are white.
-      return (
-        <svg viewBox="0 0 28 28" style={{ overflow: 'visible' }}>
-          {/* Outer circle (outline) */}
-          <circle cx="14" cy="14" r="10" stroke="#ffffff" strokeWidth="2" fill="none" />
-          {/* Half-filled path (left half) */}
-          <path d="M14 4 A10 10 0 0,0 14 24 L14 4 Z" fill="#ffffff" />
-        </svg>
-      );
-    } else {
-      // In light mode: both the outline and the half fill are dark.
-      return (
-        <svg viewBox="0 0 28 28" style={{ overflow: 'visible' }}>
-          {/* Outer circle (outline) */}
-          <circle cx="14" cy="14" r="10" stroke="#333333" strokeWidth="2" fill="none" />
-          {/* Half-filled path (left half) */}
-          <path d="M14 4 A10 10 0 0,0 14 24 L14 4 Z" fill="#333333" />
-        </svg>
-      );
-    }
-  };
+  // Toggle display of info overlay
+  const toggleInfo = () => setShowInfo((prev) => !prev);
 
   return (
-    <div className="app-container">
-      <h1>Libre Metronome</h1>
-      
+    <div style={{ textAlign: 'center', padding: '20px' }}>
+      {/* Info button in top left for desktop */}
+      <button className="info-button" onClick={toggleInfo}>
+        <img src={infoIcon} alt="Info" />
+      </button>
+
+      {/* Info overlay */}
+      {showInfo && (
+        <div className="info-overlay">
+          <div className="info-modal">
+            <button className="info-close-button" onClick={toggleInfo}>
+              X
+            </button>
+            <h2>Keyboard Shortcuts</h2>
+            <ul style={{ listStyleType: 'none', padding: 0 }}>
+              <li>
+                <strong>Space</strong>: Toggle Play/Pause
+              </li>
+              <li>
+                <strong>1 - 9</strong>: Set Subdivisions
+              </li>
+              <li>
+                <strong>T</strong>: Tap Tempo
+              </li>
+            </ul>
+          </div>
+        </div>
+      )}
+
+      <h1 style={{ fontSize: '2rem', marginBottom: '30px' }}>
+        <span style={{ color: '#f8d38d' }}>Libre</span>
+        <span style={{ color: 'teal' }}>Metronome</span>
+      </h1>
+
       <AdvancedMetronomeWithCircle
         tempo={tempo}
         setTempo={setTempo}
@@ -86,18 +72,16 @@ function App() {
         setSwing={setSwing}
         volume={volume}
         setVolume={setVolume}
+        setTapTempo={setTapTempoFunc}
+        togglePlay={togglePlay} // Pass togglePlay to the metronome component
       />
 
-      <button onClick={togglePlay} className="play-pause-button">
-        {isPaused ? <PlayIcon /> : <PauseIcon />}
-      </button>
-
-      {/* Theme toggle icon (half-filled circle) positioned at top right */}
-      <button onClick={toggleTheme} className="theme-toggle-icon" aria-label="Toggle Theme">
-        <ThemeIcon />
-      </button>
+      {/* Tap button remains below the metronome */}
+      <div style={{ marginTop: '20px' }}>
+        <button onClick={tapTempoFunc} className="tap-tempo-button">
+          Tap
+        </button>
+      </div>
     </div>
   );
 }
-
-export default App;
