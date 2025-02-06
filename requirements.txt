@@ -1,6 +1,7 @@
 asgiref
 cffi
 Django
+djangorestframework
 npm
 numpy
 optional-django
