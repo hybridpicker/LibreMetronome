@@ -1,7 +1,6 @@
-from django.contrib import admin
-from django.urls import path, include
+from django.urls import path
+from libremetronome_backend.views import dev_redirect
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/', include('metronome_api.urls')),
+    path('', dev_redirect),  # Redirect root to React Dev Server
 ]
