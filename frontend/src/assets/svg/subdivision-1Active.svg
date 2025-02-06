@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Ebene_2" data-name="Ebene 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52.2 52.2">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #00a6b5;
+        stroke: #fcfcfc;
+        stroke-miterlimit: 10;
+        stroke-width: 2px;
+      }
+
+      .cls-2 {
+        fill: #fff;
+        font-family: Lato-Bold, Lato;
+        font-size: 36px;
+        font-weight: 700;
+      }
+    </style>
+  </defs>
+  <g id="Export">
+    <g id="subdivision-1Active">
+      <rect class="cls-1" x="1" y="1" width="50.2" height="50.2" rx="6.65" ry="6.65"/>
+      <text class="cls-2" transform="translate(15.66 39.46)"><tspan x="0" y="0">1</tspan></text>
+    </g>
+  </g>
+</svg>

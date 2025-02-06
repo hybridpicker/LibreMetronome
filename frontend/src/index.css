@@ -1,32 +1,45 @@
-/* Global styles and CSS variables */
-
-/* Default: Dark Mode */
-:root {
-  --primary-color: #ffffff;      /* For active elements and pointer */
-  --background-color: #121212;    /* Dark background */
-  --text-color: #ffffff;
-  --circle-outline: #ffffff;     /* Outer circle color in dark mode */
+/* src/index.css */
+@font-face {
+  font-family: 'Lato';
+  src: url('./assets/fonts/Lato-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
 }
 
-/* Light Mode Overrides */
-.light-mode {
-  --primary-color: #2196F3;      /* Blue for active elements and pointer in light mode */
-  --background-color: #f0f0f0;     /* Light background */
-  --text-color: #333333;
-  --circle-outline: #cccccc;     /* Soft gray for the outer circle in light mode */
+@font-face {
+  font-family: 'Lato';
+  src: url('./assets/fonts/Lato-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Lato';
+  src: url('./assets/fonts/Lato-Thin.ttf') format('truetype');
+  font-weight: 100;
+  font-style: normal;
 }
 
 body {
   margin: 0;
   padding: 0;
-  background-color: var(--background-color);
-  color: var(--text-color);
-  font-family: Arial, sans-serif;
+  font-family: 'Lato', sans-serif;
+  background-color: #f5f5f5;
+  color: #333;
 }
 
-#root {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 100vh;
-}
+ body {
+   margin: 0;
+   padding: 0;
+   font-family: 'Lato', sans-serif;
+   background-color: #f5f5f5;       /* light background */
+   color: #333;                     /* dark text */
+ }
+ 
+ #root {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   min-height: 100vh;
+ }
+ 
