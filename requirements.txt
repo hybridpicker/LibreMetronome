@@ -1,6 +1,7 @@
 asgiref
 cffi
 Django
+django-cors-headers        
 djangorestframework
 npm
 numpy
