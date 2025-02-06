@@ -5,6 +5,7 @@ djangorestframework
 npm
 numpy
 optional-django
+psycopg2-binary
 pycparser
 sounddevice
 sqlparse
