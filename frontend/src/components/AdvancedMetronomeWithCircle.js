@@ -32,9 +32,13 @@ import subdivision7Active from '../assets/svg/subdivision-7Active.svg';
 import subdivision8Active from '../assets/svg/subdivision-8Active.svg';
 import subdivision9Active from '../assets/svg/subdivision-9Active.svg';
 
-// Import play/pause icons for overlay button
+// Play/Pause icons for the overlay button
 import playIcon from '../assets/svg/play.svg';
 import pauseIcon from '../assets/svg/pause.svg';
+
+// SVG buttons for BPM adjustment
+import plus5Button from '../assets/svg/plus5button.svg';
+import minus5Button from '../assets/svg/minus5button.svg';
 
 export default function AdvancedMetronomeWithCircle({
   tempo,
@@ -48,14 +52,14 @@ export default function AdvancedMetronomeWithCircle({
   volume,
   setVolume,
   setTapTempo,
-  togglePlay // New prop for toggling play/pause
+  togglePlay // Prop for toggling play/pause
 }) {
   // First beat is always accented
   const [accents, setAccents] = useState(
     Array.from({ length: subdivisions }, (_, i) => i === 0)
   );
 
-  // Update accents when subdivisions change
+  // Update accents when the number of subdivisions changes
   useEffect(() => {
     setAccents((prev) => {
       const newArr = [];
@@ -66,8 +70,9 @@ export default function AdvancedMetronomeWithCircle({
     });
   }, [subdivisions]);
 
+  // Toggle the accent for a beat (except for the first beat)
   const toggleAccent = (index) => {
-    if (index === 0) return; // Never toggle the first beat
+    if (index === 0) return; // Do not toggle the first beat
     setAccents((prev) => {
       const updated = [...prev];
       updated[index] = !updated[index];
@@ -88,16 +93,16 @@ export default function AdvancedMetronomeWithCircle({
     setSubdivisions
   });
 
-  // Pass tapTempo function to parent if provided
+  // Pass the tapTempo function to the parent component if provided
   useEffect(() => {
     if (setTapTempo) {
       setTapTempo(() => logic.tapTempo);
     }
   }, [logic.tapTempo, setTapTempo]);
 
-  // Determine which beat icon to display
+  // Determine which beat icon to display based on index and active state
   function getBeatIcon(beatIndex, isActive) {
-    const isFirst = (beatIndex === 0);
+    const isFirst = beatIndex === 0;
     const isAccented = accents[beatIndex];
 
     if (isFirst) {
@@ -109,10 +114,46 @@ export default function AdvancedMetronomeWithCircle({
     }
   }
 
-  // Define circle radius (used for calculation)
-  const radiusPx = 150;
+  // State to detect if the device is mobile
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
 
-  // Create beat data for each subdivision
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 600);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Set tempo minimum dynamically: 15 BPM on mobile, 30 BPM otherwise
+  const tempoMin = isMobile ? 15 : 30;
+
+  // Calculate container size dynamically based on viewport width
+  const getContainerSize = () => {
+    if (window.innerWidth < 600) {
+      // Mobile: max 300px, with 20px padding on each side
+      return Math.min(window.innerWidth - 40, 300);
+    } else if (window.innerWidth < 1024) {
+      // Tablet: max 400px
+      return Math.min(window.innerWidth - 40, 400);
+    } else {
+      // Desktop: fixed 300px as before
+      return 300;
+    }
+  };
+
+  const [containerSize, setContainerSize] = useState(getContainerSize());
+
+  useEffect(() => {
+    const handleResize = () => {
+      setContainerSize(getContainerSize());
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Calculate the radius based on the container size
+  const radiusPx = containerSize / 2;
+
+  // Create beat data for each subdivision using the dynamic radius
   const beatData = Array.from({ length: subdivisions }, (_, i) => {
     const angle = (2 * Math.PI * i) / subdivisions - Math.PI / 2;
     const xPos = radiusPx * Math.cos(angle);
@@ -128,23 +169,21 @@ export default function AdvancedMetronomeWithCircle({
   });
 
   // Render beat markers on the circle
-  const beatMarkers = beatData.map((bd) => {
-    return (
-      <img
-        key={bd.i}
-        src={bd.icon}
-        alt={`Beat ${bd.i}`}
-        className="beat-icon"
-        style={{
-          left: `calc(50% + ${bd.xPos}px - 12px)`,
-          top: `calc(50% + ${bd.yPos}px - 12px)`
-        }}
-        onClick={() => toggleAccent(bd.i)}
-      />
-    );
-  });
+  const beatMarkers = beatData.map((bd) => (
+    <img
+      key={bd.i}
+      src={bd.icon}
+      alt={`Beat ${bd.i}`}
+      className="beat-icon"
+      style={{
+        left: `calc(50% + ${bd.xPos}px - 12px)`,
+        top: `calc(50% + ${bd.yPos}px - 12px)`
+      }}
+      onClick={() => toggleAccent(bd.i)}
+    />
+  ));
 
-  // Draw lines connecting beats if subdivisions >= 3
+  // Draw lines connecting beats if there are 3 or more subdivisions
   let lineConnections = null;
   if (subdivisions >= 3) {
     lineConnections = beatData.map((bd, index) => {
@@ -174,7 +213,7 @@ export default function AdvancedMetronomeWithCircle({
     });
   }
 
-  // Define arrays for normal and active subdivision icons
+  // Arrays for normal and active subdivision icons
   const subIcons = [
     subdivision1,
     subdivision2,
@@ -186,7 +225,6 @@ export default function AdvancedMetronomeWithCircle({
     subdivision8,
     subdivision9
   ];
-
   const subIconsActive = [
     subdivision1Active,
     subdivision2Active,
@@ -217,14 +255,12 @@ export default function AdvancedMetronomeWithCircle({
 
   return (
     <div style={{ position: 'relative', textAlign: 'center' }}>
-      {/* Responsive container for metronome circle */}
+      {/* Metronome Canvas with dynamic size */}
       <div
+        className="metronome-container"
         style={{
-          position: 'relative',
-          width: 'calc(100vw - 40px)',  // account for padding
-          maxWidth: '300px',
-          height: 'calc(100vw - 40px)',  // maintain square aspect ratio
-          maxHeight: '300px',
+          width: `${containerSize}px`,
+          height: `${containerSize}px`,
           margin: '0 auto'
         }}
       >
@@ -253,13 +289,13 @@ export default function AdvancedMetronomeWithCircle({
         </button>
       </div>
 
-      {/* Subdivision header and buttons */}
+      {/* Subdivision Buttons */}
       <div style={{ marginTop: '15px', textAlign: 'center' }}>
         <h3>Subdivision</h3>
         <div
           style={{
             display: 'flex',
-            flexWrap: 'wrap',          // Allow buttons to wrap into multiple rows
+            flexWrap: 'wrap',
             gap: '8px',
             justifyContent: 'center'
           }}
@@ -268,9 +304,9 @@ export default function AdvancedMetronomeWithCircle({
         </div>
       </div>
 
-      {/* Sliders */}
+      {/* Slider and Tempo Controls */}
       <div className="sliders-container" style={{ marginTop: '20px' }}>
-        {/* Display swing slider only if subdivisions is even */}
+        {/* Swing slider (only if subdivisions are even and at least 2) */}
         {subdivisions % 2 === 0 && subdivisions >= 2 && (
           <div className="slider-item" style={{ marginBottom: '10px' }}>
             <label>Swing: {Math.round(swing * 200)}% </label>
@@ -285,6 +321,7 @@ export default function AdvancedMetronomeWithCircle({
           </div>
         )}
 
+        {/* Volume slider */}
         <div className="slider-item" style={{ marginBottom: '10px' }}>
           <label>Volume: {Math.round(volume * 100)}% </label>
           <input
@@ -297,16 +334,42 @@ export default function AdvancedMetronomeWithCircle({
           />
         </div>
 
-        <div className="slider-item">
+        {/* Tempo control (tempo slider) - min value is dynamic */}
+        <div className="slider-item tempo-slider">
           <label>Tempo: {tempo} BPM </label>
           <input
             type="range"
-            min={30}
+            min={tempoMin}
             max={240}
             step={1}
             value={tempo}
             onChange={(e) => setTempo(parseFloat(e.target.value))}
           />
+        </div>
+
+        {/* Tempo control for Smartphones: ±5 BPM buttons using SVGs */}
+        <div className="slider-item tempo-buttons">
+          <button
+            onClick={() => setTempo(tempo - 5)}
+            style={{ background: 'transparent', border: 'none', padding: 0 }}
+          >
+            <img
+              src={minus5Button}
+              alt="-5 BPM"
+              style={{ width: '70px', height: '70px' }}
+            />
+          </button>
+          <span>{tempo} BPM</span>
+          <button
+            onClick={() => setTempo(tempo + 5)}
+            style={{ background: 'transparent', border: 'none', padding: 0 }}
+          >
+            <img
+              src={plus5Button}
+              alt="+5 BPM"
+              style={{ width: '70px', height: '70px' }}  // increased size
+            />
+          </button>
         </div>
       </div>
     </div>
