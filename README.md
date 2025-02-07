@@ -2,7 +2,7 @@
 
 ## Overview
 
-Libre Metronome is a modern, minimalist, and intuitive digital metronome application that merges classic musical functionality with a contemporary user interface. The application integrates analog elements (such as a circular display and an oscillating pointer) with modern technologies to provide musicians and educators with a powerful and flexible tool. The frontend is built in React, while the backend is based on Django and is prepared for future enhancements (e.g., user management and preset functionality).
+Libre Metronome is a modern, minimalist, and intuitive digital metronome application that merges classic musical functionality with a contemporary user interface. The application integrates analog elements (such as a circular display and an oscillating pointer) with modern technologies to provide musicians and educators with a powerful and flexible tool. The frontend is built in React, while the backend is based on Django, with a REST API for future enhancements like user management and preset functionality.
 
 ## Features
 
@@ -18,6 +18,12 @@ Libre Metronome is a modern, minimalist, and intuitive digital metronome applica
 - **Keyboard Interaction:**  
   In addition to mouse or touch controls, the application supports keyboard shortcuts (e.g., Space to start/pause, numeric keys to adjust subdivisions, and "T" for tap tempo).
 
+- **Web Audio Integration:**  
+  Uses the Web Audio API to ensure precise beat timing, with customizable accents and volume levels per beat.
+
+- **REST API Backend:**  
+  The Django-based backend includes a REST API for managing metronome settings, presets, and future user authentication.
+
 ## Technologies
 
 - **Frontend:**  
@@ -25,7 +31,8 @@ Libre Metronome is a modern, minimalist, and intuitive digital metronome applica
     (Modern frontend technologies for a responsive and user-friendly interface.)
 
 - **Backend:**  
-  - Django, Python  
+  - Django, Django REST Framework, Python  
+    (A robust and scalable backend architecture, with RESTful endpoints for future enhancements.)
 
 ## Installation & Local Development
 
@@ -33,7 +40,6 @@ Libre Metronome is a modern, minimalist, and intuitive digital metronome applica
 
 - Node.js (and npm)
 - Python 3 (with pip and venv)
-- Git
 
 ### Local Development
 
@@ -62,10 +68,9 @@ Libre Metronome is a modern, minimalist, and intuitive digital metronome applica
    ```
    The backend will run at http://127.0.0.1:8000.
 
-
 ## Contributing
 
-Contributions to the development of LibreMetronome are welcome. Please open a pull request or create an issue with your suggestions, improvements, or bug reports. Ensure that new features are accompanied by appropriate tests.
+Contributions to the development of Libre Metronome are welcome. Please open a pull request or create an issue with your suggestions, improvements, or bug reports. Ensure that new features are accompanied by appropriate tests.
 
 ## License
 
@@ -74,3 +79,4 @@ This project is licensed under the MIT License.
 ## Acknowledgements
 
 Libre Metronome bridges traditional musical pedagogy with modern technology, providing a solid foundation for further artistic and educational initiatives.
+
