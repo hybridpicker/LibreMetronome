@@ -27,7 +27,7 @@ export default function App() {
   const toggleInfo = () => setShowInfo((prev) => !prev);
 
   return (
-    <div style={{ textAlign: 'center', padding: '20px' }}>
+    <div className="app-container">
       {/* Info button in top left for desktop */}
       <button className="info-button" onClick={toggleInfo}>
         <img src={infoIcon} alt="Info" />

@@ -109,7 +109,7 @@ export default function AdvancedMetronomeWithCircle({
     }
   }
 
-  // Define circle radius
+  // Define circle radius (used for calculation)
   const radiusPx = 150;
 
   // Create beat data for each subdivision
@@ -217,11 +217,14 @@ export default function AdvancedMetronomeWithCircle({
 
   return (
     <div style={{ position: 'relative', textAlign: 'center' }}>
+      {/* Responsive container for metronome circle */}
       <div
         style={{
           position: 'relative',
-          width: '300px',
-          height: '300px',
+          width: 'calc(100vw - 40px)',  // account for padding
+          maxWidth: '300px',
+          height: 'calc(100vw - 40px)',  // maintain square aspect ratio
+          maxHeight: '300px',
           margin: '0 auto'
         }}
       >
@@ -253,7 +256,14 @@ export default function AdvancedMetronomeWithCircle({
       {/* Subdivision header and buttons */}
       <div style={{ marginTop: '15px', textAlign: 'center' }}>
         <h3>Subdivision</h3>
-        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',          // Allow buttons to wrap into multiple rows
+            gap: '8px',
+            justifyContent: 'center'
+          }}
+        >
           {subdivisionButtons}
         </div>
       </div>
