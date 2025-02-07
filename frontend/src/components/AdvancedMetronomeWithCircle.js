@@ -70,6 +70,13 @@ export default function AdvancedMetronomeWithCircle({
     });
   }, [subdivisions]);
 
+  // Force the swing parameter to 0 when the number of subdivisions is odd
+  useEffect(() => {
+    if (subdivisions % 2 !== 0) {
+      setSwing(0);
+    }
+  }, [subdivisions, setSwing]);
+
   // Toggle the accent for a beat (except for the first beat)
   const toggleAccent = (index) => {
     if (index === 0) return; // Do not toggle the first beat
@@ -114,9 +121,8 @@ export default function AdvancedMetronomeWithCircle({
     }
   }
 
-  // State to detect if the device is mobile
+  // Detect if the device is mobile based on viewport width
   const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
-
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 600);
     window.addEventListener('resize', handleResize);
@@ -141,7 +147,6 @@ export default function AdvancedMetronomeWithCircle({
   };
 
   const [containerSize, setContainerSize] = useState(getContainerSize());
-
   useEffect(() => {
     const handleResize = () => {
       setContainerSize(getContainerSize());
@@ -151,13 +156,13 @@ export default function AdvancedMetronomeWithCircle({
   }, []);
 
   // Calculate the radius based on the container size
-  const radiusPx = containerSize / 2;
+  const radius = containerSize / 2;
 
   // Create beat data for each subdivision using the dynamic radius
   const beatData = Array.from({ length: subdivisions }, (_, i) => {
     const angle = (2 * Math.PI * i) / subdivisions - Math.PI / 2;
-    const xPos = radiusPx * Math.cos(angle);
-    const yPos = radiusPx * Math.sin(angle);
+    const xPos = radius * Math.cos(angle);
+    const yPos = radius * Math.sin(angle);
     const isActive =
       logic.currentSubdivision === i &&
       !isPaused &&
@@ -356,7 +361,7 @@ export default function AdvancedMetronomeWithCircle({
             <img
               src={minus5Button}
               alt="-5 BPM"
-              style={{ width: '70px', height: '70px' }}
+              style={{ width: '60px', height: '60px' }}
             />
           </button>
           <span>{tempo} BPM</span>
@@ -367,7 +372,7 @@ export default function AdvancedMetronomeWithCircle({
             <img
               src={plus5Button}
               alt="+5 BPM"
-              style={{ width: '70px', height: '70px' }}  // increased size
+              style={{ width: '60px', height: '60px' }}
             />
           </button>
         </div>
