@@ -40,7 +40,6 @@ Libre Metronome is a modern, minimalist, and intuitive digital metronome applica
 
 - Node.js (and npm)
 - Python 3 (with pip and venv)
-- Git
 
 ### Local Development
 
