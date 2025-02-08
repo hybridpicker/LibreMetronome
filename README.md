@@ -10,7 +10,8 @@ https://github.com/user-attachments/assets/8fdc1b92-e328-4826-86a5-07a5d48fba0d
 ## Website
 https://libremetronome.com/
 
-## Features
+## Version 0.1.0 | Beta Release
+### Features
 
 - **Circular Display:**  
   A circular interface reminiscent of an analog clock or rotary dial. Subdivisions are displayed as markers, with the first beat always accentuated and visually distinguished.
