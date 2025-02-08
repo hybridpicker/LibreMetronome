@@ -1,0 +1,17 @@
+/* File: src/components/Footer.css */
+
+/* Styling for the footer container */
+.footer {
+    background-color: #f8f8f8;
+    padding: 20px;
+    text-align: center;
+  }
+  
+  /* Styling for the separator element */
+  /* The margin-bottom property provides the desired spacing between the separator and footer content */
+  .separator {
+    margin-bottom: 20px; /* Adjust the value as needed */
+    border: 0;
+    border-top: 1px solid #eaeaea;
+  }
+  
