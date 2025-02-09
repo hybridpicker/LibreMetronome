@@ -42,4 +42,9 @@ body {
    align-items: center;
    min-height: 100vh;
  }
+
+ a {
+  color: #0ca3b2;
+  text-decoration: none;
+ }
  
