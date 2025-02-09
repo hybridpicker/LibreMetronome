@@ -1,8 +1,7 @@
 /* File: src/components/Footer.css */
 
 /* Styling for the footer container */
-.footer {
-    background-color: #f8f8f8;
+  .footer {
     padding: 20px;
     text-align: center;
   }

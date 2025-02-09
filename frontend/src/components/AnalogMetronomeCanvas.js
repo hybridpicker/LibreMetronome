@@ -21,35 +21,35 @@ export default function AnalogMetronomeCanvas({
     let animationId;
     let lastTimestamp = 0;
 
-    // Swing range: +/- 30 degrees
-    const maxAngleDeg = 30;
+    // Increase the swing range: now +/- 45 degrees instead of +/- 30 degrees
+    const maxAngleDeg = 45;
     const maxAngleRad = (maxAngleDeg * Math.PI) / 180;
 
     const animate = (time) => {
       const deltaMs = time - lastTimestamp;
       lastTimestamp = time;
 
+      // Clear the entire canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const interval = currentSubInterval();
       if (isPaused || !interval) {
-        // Stand still in center
+        // When paused or interval not available, keep the pendulum centered
         drawPendulumArm(ctx, canvas.width, canvas.height, 0);
       } else {
+        // Calculate the current fraction within the interval
         const now = audioCtxCurrentTime();
         const startT = currentSubStartTime();
         const fraction = (now - startT) / interval;
 
-        // subIndex=0 => left->right
-        // subIndex=1 => right->left
-        // We'll do a simple linear interpolation from -maxAngle to +maxAngle or vice versa
+        // Determine the angle based on the current subdivision index
         let angle = 0;
         if (currentSubIndex % 2 === 0) {
-          // left -> right
+          // left -> right motion
           angle = -maxAngleRad + fraction * (2 * maxAngleRad);
         } else {
-          // right -> left
-          angle = +maxAngleRad - fraction * (2 * maxAngleRad);
+          // right -> left motion
+          angle = maxAngleRad - fraction * (2 * maxAngleRad);
         }
 
         drawPendulumArm(ctx, canvas.width, canvas.height, angle);
@@ -71,33 +71,31 @@ export default function AnalogMetronomeCanvas({
     currentSubIndex
   ]);
 
-  // Draw the pendulum arm at the given angle
+  /**
+   * Draws the pendulum arm (i.e. the metronome needle) at the specified angle.
+   *
+   * @param {CanvasRenderingContext2D} ctx - The canvas 2D rendering context.
+   * @param {number} w - Canvas width.
+   * @param {number} h - Canvas height.
+   * @param {number} angleRad - The angle (in radians) to rotate the needle.
+   */
   const drawPendulumArm = (ctx, w, h, angleRad) => {
     ctx.save();
+    // Translate to the center of the canvas
     ctx.translate(w / 2, h / 2);
 
-    // Make the arm 10% longer (factor 1.1) and narrower (lineWidth=2)
-    const armLength = (Math.min(w, h) / 2) * 1.1;
+    const armLength = (Math.min(w, h) / 2) * 1.4;
 
+    // Rotate the canvas to the current angle
     ctx.rotate(angleRad);
 
-    // Nadel (thin line)
+    // Draw the needle as a thin line
     ctx.beginPath();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = '#0ba3b2';
+    ctx.lineWidth = 1;                  // Reduced line width for a thinner needle
+    ctx.strokeStyle = '#0ba3b2';          // Desired needle color
     ctx.moveTo(0, 0);
     ctx.lineTo(0, -armLength);
     ctx.stroke();
-
-    // Remove the pivot circle:
-    // (No longer drawing the small black pivot circle at the origin)
-
-    // Keep the bob at the tip
-    ctx.beginPath();
-    ctx.arc(0, -armLength, 10, 0, 2 * Math.PI);
-    ctx.fillStyle = '#333';
-    ctx.fill();
-
     ctx.restore();
   };
 
