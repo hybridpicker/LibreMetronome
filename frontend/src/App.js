@@ -1,5 +1,6 @@
 // src/App.js
 import React from 'react';
+import Header from './components/Header';
 import AdvancedMetronomeWithCircle from './components/AdvancedMetronomeWithCircle';
 import Footer from './components/Footer';
 import './App.css';
@@ -17,6 +18,9 @@ function App() {
 
   return (
     <div className="app-container">
+      {/* Header with the main title */}
+      <Header />
+
       {/* Main metronome component */}
       <AdvancedMetronomeWithCircle
         tempo={tempo}
