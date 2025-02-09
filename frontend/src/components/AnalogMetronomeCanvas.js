@@ -8,14 +8,11 @@ export default function AnalogMetronomeCanvas({
   audioCtxCurrentTime,
   currentSubStartTime,
   currentSubInterval,
-  isPaused
+  isPaused,
+  currentSubIndex
 }) {
-  // English comment:
-  // Canvas reference for drawing the pendulum.
   const canvasRef = useRef(null);
 
-  // English comment:
-  // We set up requestAnimationFrame to render the pendulum.
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -24,7 +21,7 @@ export default function AnalogMetronomeCanvas({
     let animationId;
     let lastTimestamp = 0;
 
-    // maxAngle: for a mechanical pendulum, let's say +/- 30 degrees from center
+    // Swing range: +/- 30 degrees
     const maxAngleDeg = 30;
     const maxAngleRad = (maxAngleDeg * Math.PI) / 180;
 
@@ -32,29 +29,29 @@ export default function AnalogMetronomeCanvas({
       const deltaMs = time - lastTimestamp;
       lastTimestamp = time;
 
-      // Clear the canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // If paused, we simply draw the arm at the center
-      if (isPaused || !currentSubInterval()) {
+      const interval = currentSubInterval();
+      if (isPaused || !interval) {
+        // Stand still in center
         drawPendulumArm(ctx, canvas.width, canvas.height, 0);
       } else {
-        // Current audio time
         const now = audioCtxCurrentTime();
-        // fraction from 0 to 1 within the current sub-interval
-        const fraction = (now - currentSubStartTime()) / currentSubInterval();
+        const startT = currentSubStartTime();
+        const fraction = (now - startT) / interval;
 
-        // We want a single "left-right-left" cycle over 2 subdivisions.
-        // We'll do a sine-based motion:
-        // fraction in [0..1] => angle from -maxAngle to +maxAngle
-        // cycle is fraction * pi, so fraction=0 => angle= -maxAngle, fraction=0.5 => angle=0, fraction=1 => angle=+maxAngle
-        // But we want a symmetrical bounce, so let's do:
-        // angle(t) = -maxAngleRad * cos(pi * fraction)
-        // This yields angle = -maxAngleRad at fraction=0, +maxAngleRad at fraction=1
-        // and midpoint 0 at fraction=0.5
-        const angle = -maxAngleRad * Math.cos(Math.PI * fraction);
+        // subIndex=0 => left->right
+        // subIndex=1 => right->left
+        // We'll do a simple linear interpolation from -maxAngle to +maxAngle or vice versa
+        let angle = 0;
+        if (currentSubIndex % 2 === 0) {
+          // left -> right
+          angle = -maxAngleRad + fraction * (2 * maxAngleRad);
+        } else {
+          // right -> left
+          angle = +maxAngleRad - fraction * (2 * maxAngleRad);
+        }
 
-        // Draw the arm
         drawPendulumArm(ctx, canvas.width, canvas.height, angle);
       }
 
@@ -66,36 +63,36 @@ export default function AnalogMetronomeCanvas({
     return () => {
       cancelAnimationFrame(animationId);
     };
-  }, [isPaused, audioCtxCurrentTime, currentSubStartTime, currentSubInterval]);
+  }, [
+    isPaused,
+    audioCtxCurrentTime,
+    currentSubStartTime,
+    currentSubInterval,
+    currentSubIndex
+  ]);
 
-  // English comment:
-  // Function to draw the pendulum arm in the canvas with the given angle.
+  // Draw the pendulum arm at the given angle
   const drawPendulumArm = (ctx, w, h, angleRad) => {
     ctx.save();
-    // Move origin to center
     ctx.translate(w / 2, h / 2);
 
-    // Arm length: about 80% of half the canvas
-    const armLength = (Math.min(w, h) / 2) * 0.8;
+    // Make the arm 10% longer (factor 1.1) and narrower (lineWidth=2)
+    const armLength = (Math.min(w, h) / 2) * 1.1;
 
-    // rotate the canvas
     ctx.rotate(angleRad);
 
-    // draw the arm line
+    // Nadel (thin line)
     ctx.beginPath();
-    ctx.lineWidth = 6;
-    ctx.strokeStyle = '#0ba3b2'; // teal color
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#0ba3b2';
     ctx.moveTo(0, 0);
     ctx.lineTo(0, -armLength);
     ctx.stroke();
 
-    // small circle at pivot
-    ctx.beginPath();
-    ctx.arc(0, 0, 8, 0, 2 * Math.PI);
-    ctx.fillStyle = '#333';
-    ctx.fill();
+    // Remove the pivot circle:
+    // (No longer drawing the small black pivot circle at the origin)
 
-    // small weight at the tip
+    // Keep the bob at the tip
     ctx.beginPath();
     ctx.arc(0, -armLength, 10, 0, 2 * Math.PI);
     ctx.fillStyle = '#333';

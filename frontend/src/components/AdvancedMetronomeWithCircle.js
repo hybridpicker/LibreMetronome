@@ -38,11 +38,10 @@ import subdivision9Active from '../assets/svg/subdivision-9Active.svg';
 import playIcon from '../assets/svg/play.svg';
 import pauseIcon from '../assets/svg/pause.svg';
 
-// SVG BPM adjustment
+// BPM adjustment
 import plus5Button from '../assets/svg/plus5button.svg';
 import minus5Button from '../assets/svg/minus5button.svg';
 
-// NEW import: The analog pendulum canvas
 import AnalogMetronomeCanvas from './AnalogMetronomeCanvas';
 
 export default function AdvancedMetronomeWithCircle({
@@ -58,11 +57,9 @@ export default function AdvancedMetronomeWithCircle({
   setVolume,
   setTapTempo,
   togglePlay,
-  // We add this prop to detect analog mode
   analogMode = false
 }) {
-  // First beat is always accented in Circle Mode,
-  // but effectively ignored in Analog Mode
+  // First beat is always accented in circle mode; not used in analog mode
   const [accents, setAccents] = useState(
     Array.from({ length: subdivisions }, (_, i) => i === 0)
   );
@@ -71,27 +68,23 @@ export default function AdvancedMetronomeWithCircle({
     setAccents((prev) => {
       const newArr = [];
       for (let i = 0; i < subdivisions; i++) {
-        // first beat always accented in circle mode
         newArr[i] = i === 0 ? true : (prev[i] || false);
       }
       return newArr;
     });
   }, [subdivisions]);
 
-  // Force the swing parameter to 0 when the number of subdivisions is odd (Circle Mode)
-  // But we do not necessarily need this in Analog Mode.
+  // Only in circle mode, force swing=0 if subdivisions is odd
   useEffect(() => {
-    if (subdivisions % 2 !== 0 && !analogMode) {
+    if (!analogMode && subdivisions % 2 !== 0) {
       setSwing(0);
     }
   }, [subdivisions, setSwing, analogMode]);
 
   // Toggle accent for circle mode only
   const toggleAccent = (index) => {
-    if (analogMode) {
-      return; // no accent toggling in analog mode
-    }
-    if (index === 0) return; 
+    if (analogMode) return; // do nothing in analog mode
+    if (index === 0) return;
     setAccents((prev) => {
       const updated = [...prev];
       updated[index] = !updated[index];
@@ -110,7 +103,7 @@ export default function AdvancedMetronomeWithCircle({
     volume,
     accents,
     setSubdivisions,
-    analogMode // pass analogMode to the logic
+    analogMode
   });
 
   // Provide tapTempo to parent if requested
@@ -120,14 +113,14 @@ export default function AdvancedMetronomeWithCircle({
     }
   }, [logic.tapTempo, setTapTempo]);
 
-  // Function that picks which beat icon to display in circle mode
+  // Circle mode beat icon
   function getBeatIcon(beatIndex, isActive) {
     const isFirst = beatIndex === 0;
     const isAccented = accents[beatIndex];
 
-    // no special icons for analog
     if (analogMode) {
-      return normalBeat; 
+      // in analog mode, no special icons
+      return normalBeat;
     }
 
     if (isFirst) {
@@ -147,7 +140,6 @@ export default function AdvancedMetronomeWithCircle({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // dynamic tempo min
   const tempoMin = isMobile ? 15 : 30;
 
   // dynamic container size
@@ -169,11 +161,10 @@ export default function AdvancedMetronomeWithCircle({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // radius for circle mode
+  // For circle mode
   const radius = containerSize / 2;
 
-  // Create beat data for each subdivision in circle mode
-  // In analog mode we do not show them
+  // Create beat data for circle mode
   const beatData = Array.from({ length: subdivisions }, (_, i) => {
     const angle = (2 * Math.PI * i) / subdivisions - Math.PI / 2;
     const xPos = radius * Math.cos(angle);
@@ -185,8 +176,12 @@ export default function AdvancedMetronomeWithCircle({
       logic.audioCtx &&
       logic.audioCtx.state === 'running';
 
-    const icon = getBeatIcon(i, isActive);
-    return { i, xPos, yPos, icon };
+    return {
+      i,
+      xPos,
+      yPos,
+      icon: getBeatIcon(i, isActive)
+    };
   });
 
   // Lines connecting beats if 3 or more subdivisions (circle mode)
@@ -218,7 +213,7 @@ export default function AdvancedMetronomeWithCircle({
     });
   }
 
-  // Subdivision icons
+  // Subdivision buttons (circle mode)
   const subIcons = [
     subdivision1,
     subdivision2,
@@ -242,7 +237,6 @@ export default function AdvancedMetronomeWithCircle({
     subdivision9Active
   ];
 
-  // Render subdivision buttons (circle mode only)
   const subdivisionButtons = subIcons.map((icon, idx) => {
     const subVal = idx + 1;
     const isActive = subVal === subdivisions;
@@ -258,7 +252,6 @@ export default function AdvancedMetronomeWithCircle({
     );
   });
 
-  // Helper to handle play/pause
   const handlePlayPause = () => {
     if (typeof togglePlay === 'function') {
       togglePlay();
@@ -280,7 +273,7 @@ export default function AdvancedMetronomeWithCircle({
       >
         {analogMode ? (
           <>
-            {/* ANALOG MODE: Just show the Pendulum Canvas */}
+            {/* ANALOG MODE: No background circle */}
             <AnalogMetronomeCanvas
               width={containerSize}
               height={containerSize}
@@ -290,26 +283,18 @@ export default function AdvancedMetronomeWithCircle({
               }
               currentSubStartTime={() => logic.currentSubStartRef.current}
               currentSubInterval={() => logic.currentSubIntervalRef.current}
+              currentSubIndex={logic.currentSubdivision}
             />
 
-            {/* optional faint circle background */}
-            <img
-              src={circleSVG}
-              alt="Circle for analog"
-              className="metronome-circle"
-              style={{
-                opacity: 0.15
-              }}
-            />
-
-            {/* Button overlay in the center for play/pause */}
+            {/* Play/Pause button UNDER the needle */}
             <button
               className="play-pause-button-overlay"
               onClick={handlePlayPause}
               style={{
                 position: 'absolute',
                 left: '50%',
-                top: '50%',
+                // For "under" the needle, let's move it near the bottom center:
+                top: '85%',           // adjust as needed
                 transform: 'translate(-50%, -50%)',
                 background: 'transparent',
                 border: 'none',
@@ -346,7 +331,7 @@ export default function AdvancedMetronomeWithCircle({
               />
             ))}
 
-            {/* Play/Pause overlay button */}
+            {/* Play/Pause overlay button at center */}
             <button
               className="play-pause-button-overlay"
               onClick={handlePlayPause}
@@ -387,13 +372,8 @@ export default function AdvancedMetronomeWithCircle({
         </div>
       )}
 
-      {/* Sliders and Tempo Controls remain visible in both modes 
-          (Swing is only relevant in circle mode with even subdivisions, 
-           but we won't hide it forcibly. 
-           You can hide it if you prefer not to show it in analog mode.)
-      */}
       <div className="sliders-container" style={{ marginTop: '20px' }}>
-        {/* Example: only show swing if in circle mode */}
+        {/* Show swing only in circle mode, if even subdivisions */}
         {!analogMode && subdivisions % 2 === 0 && subdivisions >= 2 && (
           <div className="slider-item" style={{ marginBottom: '10px' }}>
             <label>Swing: {Math.round(swing * 200)}% </label>

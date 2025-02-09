@@ -7,18 +7,17 @@ import AdvancedMetronomeWithCircle from './components/AdvancedMetronomeWithCircl
 
 function App() {
   // English comment:
-  // This state controls whether the user sees the analog (canvas) mode or the circle (digital) mode.
+  // This state toggles between the analog (canvas) mode and the circle (digital) mode.
   const [analogMode, setAnalogMode] = useState(false);
 
   // Example states for controlling basic metronome parameters.
-  // If you already manage them in a parent or via Redux, adapt as needed.
   const [tempo, setTempo] = useState(120);
   const [isPaused, setIsPaused] = useState(true);
   const [subdivisions, setSubdivisions] = useState(4);
   const [swing, setSwing] = useState(0);
   const [volume, setVolume] = useState(1);
 
-  // Handler for toggling analog mode on/off.
+  // Toggle analog vs circle mode
   const handleToggleAnalogMode = () => {
     setAnalogMode((prev) => !prev);
   };
@@ -26,8 +25,6 @@ function App() {
   return (
     <div className="app-container">
       <Header />
-
-      <h2>Libre Metronome</h2>
 
       {/* Button to toggle analog vs. circle mode */}
       <div style={{ marginBottom: '20px' }}>
@@ -61,7 +58,7 @@ function App() {
         setVolume={setVolume}
         // For tap tempo usage
         setTapTempo={null}
-        // We pass the new analogMode state here
+        // Pass the new analogMode state
         analogMode={analogMode}
       />
 

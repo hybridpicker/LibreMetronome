@@ -41,8 +41,8 @@ export default function useMetronomeLogic({
   const nextNoteTimeRef = useRef(0);
   const currentSubRef = useRef(0);
 
-  // We store the start time of the current subdivision in currentSubStartRef
-  // and the length of the interval (seconds) in currentSubIntervalRef.
+  // We store the start time of the current subdivision
+  // and the length of the interval (seconds) for the canvas to interpolate.
   const currentSubStartRef = useRef(0);
   const currentSubIntervalRef = useRef(0);
 
@@ -117,13 +117,10 @@ export default function useMetronomeLogic({
   const scheduleSubdivision = useCallback(
     (subIndex, when) => {
       if (analogMode) {
-        // English comment:
-        // In analog mode, we always play the normal click,
-        // ignoring first beat or accent. Also we effectively have 2 subdivisions only.
+        // In analog mode, always normal click
         schedulePlay(normalBufferRef.current, when);
       } else {
-        // English comment:
-        // Circle mode: check first beat or accent
+        // Circle mode
         if (subIndex === 0) {
           schedulePlay(firstBufferRef.current, when);
         } else if (accents[subIndex]) {
@@ -144,22 +141,21 @@ export default function useMetronomeLogic({
     return Math.max(subdivisions, 1);
   }, [analogMode, subdivisions]);
 
-  // getCurrentSubIntervalSec: calculates the time for the current subdivision
+  // getCurrentSubIntervalSec: calculates time for the current sub
   const getCurrentSubIntervalSec = useCallback(() => {
     if (!tempo) return 1;
     const beatSec = 60 / tempo;
     const effSubs = getEffectiveSubdivisions();
     const baseSubSec = beatSec / effSubs;
 
+    // Only circle mode with >=2 subs uses swing
     if (!analogMode && effSubs >= 2) {
-      // Circle mode: apply swing logic if user wants it
       if (currentSubRef.current % 2 === 0) {
         return baseSubSec * (1 + swing);
       } else {
         return baseSubSec * (1 - swing);
       }
     } else {
-      // In analog mode, or if only 1 subdivision, we do not apply swing
       return baseSubSec;
     }
   }, [tempo, swing, analogMode, getEffectiveSubdivisions]);
@@ -173,11 +169,10 @@ export default function useMetronomeLogic({
       const subIndex = currentSubRef.current;
       scheduleSubdivision(subIndex, nextNoteTimeRef.current);
 
-      // Update React state for current subdivision (circle mode only)
-      // In analog mode, we can still show this if we want, though it might not be used in the UI
+      // Update React state for current subdivision
       setCurrentSubdivision(subIndex);
 
-      // Update references for the Canvas or Circle
+      // Update references for the Canvas
       currentSubStartRef.current = nextNoteTimeRef.current;
       currentSubIntervalRef.current = getCurrentSubIntervalSec();
 
@@ -236,7 +231,7 @@ export default function useMetronomeLogic({
           setIsPaused((prev) => !prev);
         }
       } else if (!analogMode && e.key >= '1' && e.key <= '9') {
-        // Only in circle mode, allow numeric subdivision changes
+        // In circle mode, let user select subdivisions
         const newSub = parseInt(e.key, 10);
         if (setSubdivisions) {
           setSubdivisions(newSub);
