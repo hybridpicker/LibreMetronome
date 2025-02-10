@@ -1,27 +1,50 @@
-// src/App.js
-import React from 'react';
-import Header from './components/Header';
-import AdvancedMetronomeWithCircle from './components/AdvancedMetronomeWithCircle';
-import Footer from './components/Footer';
+// File: src/App.js
+import React, { useState } from 'react';
 import './App.css';
+import Header from './components/Header';
+import Footer from './components/Footer';
+import AdvancedMetronomeWithCircle from './components/AdvancedMetronomeWithCircle';
 
 function App() {
-  // States for tempo, subdivisions, pause status, swing, and volume
-  const [tempo, setTempo] = React.useState(120);
-  const [subdivisions, setSubdivisions] = React.useState(4);
-  const [isPaused, setIsPaused] = React.useState(true);
-  const [swing, setSwing] = React.useState(0);
-  const [volume, setVolume] = React.useState(0.5);
+  // English comment:
+  // This state toggles between the analog (canvas) mode and the circle (digital) mode.
+  const [analogMode, setAnalogMode] = useState(false);
 
-  // Toggle play/pause state
-  const togglePlay = () => setIsPaused((prev) => !prev);
+  // Example states for controlling basic metronome parameters.
+  const [tempo, setTempo] = useState(120);
+  const [isPaused, setIsPaused] = useState(true);
+  const [subdivisions, setSubdivisions] = useState(4);
+  const [swing, setSwing] = useState(0);
+  const [volume, setVolume] = useState(1);
+
+  // Toggle analog vs circle mode
+  const handleToggleAnalogMode = () => {
+    setAnalogMode((prev) => !prev);
+  };
 
   return (
     <div className="app-container">
-      {/* Header with the main title */}
       <Header />
 
-      {/* Main metronome component */}
+      {/* Button to toggle analog vs. circle mode */}
+      <div style={{ marginBottom: '20px' }}>
+        <button 
+          onClick={handleToggleAnalogMode} 
+          style={{
+            padding: '10px 20px',
+            fontSize: '16px',
+            cursor: 'pointer',
+            background: '#0ba3b2',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '5px'
+          }}
+        >
+          {analogMode ? 'Switch to Circle Mode' : 'Switch to Analog Mode'}
+        </button>
+      </div>
+
+      {/* The main metronome component */}
       <AdvancedMetronomeWithCircle
         tempo={tempo}
         setTempo={setTempo}
@@ -33,10 +56,12 @@ function App() {
         setSwing={setSwing}
         volume={volume}
         setVolume={setVolume}
-        togglePlay={togglePlay}
+        // For tap tempo usage
+        setTapTempo={null}
+        // Pass the new analogMode state
+        analogMode={analogMode}
       />
-      
-      {/* Footer integration */}
+
       <Footer />
     </div>
   );
