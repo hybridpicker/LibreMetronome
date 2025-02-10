@@ -1,5 +1,3 @@
-// File: src/components/AnalogMetronomeCanvas.js
-
 import React, { useEffect, useRef } from 'react';
 
 export default function AnalogMetronomeCanvas({
@@ -19,60 +17,48 @@ export default function AnalogMetronomeCanvas({
     const ctx = canvas.getContext('2d');
 
     let animationId;
-    let lastTimestamp = 0;
-
-    // Increase the swing range: now +/- 45 degrees instead of +/- 30 degrees
     const maxAngleDeg = 45;
     const maxAngleRad = (maxAngleDeg * Math.PI) / 180;
 
     const animate = (time) => {
-      const deltaMs = time - lastTimestamp;
-      lastTimestamp = time;
-
       // Clear the entire canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const interval = currentSubInterval();
       if (isPaused || !interval) {
-        // When paused or interval not available, keep the pendulum centered
+        // Draw centered pendulum if paused or interval not available
         drawPendulumArm(ctx, canvas.width, canvas.height, 0);
       } else {
-        // Calculate the current fraction within the interval
         const now = audioCtxCurrentTime();
         const startT = currentSubStartTime();
-        const fraction = (now - startT) / interval;
+        let fraction = (now - startT) / interval;
+        fraction = Math.min(Math.max(fraction, 0), 1);
 
-        // Determine the angle based on the current subdivision index
         let angle = 0;
         if (currentSubIndex % 2 === 0) {
-          // left -> right motion
+          // left-to-right motion
           angle = -maxAngleRad + fraction * (2 * maxAngleRad);
         } else {
-          // right -> left motion
+          // right-to-left motion
           angle = maxAngleRad - fraction * (2 * maxAngleRad);
         }
-
         drawPendulumArm(ctx, canvas.width, canvas.height, angle);
       }
-
       animationId = requestAnimationFrame(animate);
     };
 
     animationId = requestAnimationFrame(animate);
-
-    return () => {
-      cancelAnimationFrame(animationId);
-    };
+    return () => cancelAnimationFrame(animationId);
   }, [
-    isPaused,
     audioCtxCurrentTime,
     currentSubStartTime,
     currentSubInterval,
+    isPaused,
     currentSubIndex
   ]);
 
   /**
-   * Draws the pendulum arm
+   * Draws the pendulum arm.
    *
    * @param {CanvasRenderingContext2D} ctx - The canvas 2D rendering context.
    * @param {number} w - Canvas width.
@@ -92,7 +78,7 @@ export default function AnalogMetronomeCanvas({
     // Draw the needle as a thin line
     ctx.beginPath();
     ctx.lineWidth = 0.8;                  // Needle width
-    ctx.strokeStyle = '#0ba3b2';         // Needle color
+    ctx.strokeStyle = '#0ba3b2';            // Needle color
     ctx.moveTo(0, 0);
     ctx.lineTo(0, -armLength);
     ctx.stroke();
