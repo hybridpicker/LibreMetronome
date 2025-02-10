@@ -9,7 +9,7 @@
   /* Styling for the separator element */
   /* The margin-bottom property provides the desired spacing between the separator and footer content */
   .separator {
-    margin-bottom: 20px; /* Adjust the value as needed */
+    margin-bottom: 20px;
     border: 0;
     border-top: 1px solid #eaeaea;
   }
