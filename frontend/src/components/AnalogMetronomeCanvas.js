@@ -72,7 +72,7 @@ export default function AnalogMetronomeCanvas({
   ]);
 
   /**
-   * Draws the pendulum arm (i.e. the metronome needle) at the specified angle.
+   * Draws the pendulum arm
    *
    * @param {CanvasRenderingContext2D} ctx - The canvas 2D rendering context.
    * @param {number} w - Canvas width.
@@ -91,8 +91,8 @@ export default function AnalogMetronomeCanvas({
 
     // Draw the needle as a thin line
     ctx.beginPath();
-    ctx.lineWidth = 1;                  // Reduced line width for a thinner needle
-    ctx.strokeStyle = '#0ba3b2';          // Desired needle color
+    ctx.lineWidth = 0.8;                  // Needle width
+    ctx.strokeStyle = '#0ba3b2';         // Needle color
     ctx.moveTo(0, 0);
     ctx.lineTo(0, -armLength);
     ctx.stroke();
