@@ -1,4 +1,3 @@
-// src/App.js
 import React, { useState } from 'react';
 import './App.css';
 import Header from './components/Header';
@@ -7,21 +6,24 @@ import AdvancedMetronomeWithCircle from './components/AdvancedMetronomeWithCircl
 import GridModeMetronome from './components/GridModeMetronome';
 
 function App() {
-  // Der Modus kann "analog", "circle" oder "grid" sein.
+  // Mode can be "analog", "circle" or "grid"
   const [mode, setMode] = useState("analog");
 
-  // Zustände zur Steuerung der Metronom-Parameter
+  // States to control metronome parameters
   const [tempo, setTempo] = useState(120);
   const [isPaused, setIsPaused] = useState(true);
   const [subdivisions, setSubdivisions] = useState(4);
   const [swing, setSwing] = useState(0);
   const [volume, setVolume] = useState(1);
 
+  // Toggle function to switch play/pause state
+  const togglePlay = () => setIsPaused(prev => !prev);
+
   return (
     <div className="app-container">
       <Header />
 
-      {/* Button-Gruppe zur Modus-Auswahl */}
+      {/* Button group for mode selection */}
       <div style={{ marginBottom: "20px", display: "flex", gap: "10px", justifyContent: "center" }}>
         <button 
           onClick={() => setMode("analog")}
@@ -67,7 +69,7 @@ function App() {
         </button>
       </div>
 
-      {/* Bedingte Darstellung der Metronom-Komponente */}
+      {/* Conditional rendering of metronome components */}
       {mode === "analog" && (
         <AdvancedMetronomeWithCircle
           tempo={tempo}
@@ -81,6 +83,7 @@ function App() {
           volume={volume}
           setVolume={setVolume}
           setTapTempo={null}
+          togglePlay={togglePlay} // Pass the togglePlay function
           analogMode={true}
         />
       )}
@@ -98,6 +101,7 @@ function App() {
           volume={volume}
           setVolume={setVolume}
           setTapTempo={null}
+          togglePlay={togglePlay} // Pass the togglePlay function
           analogMode={false}
         />
       )}
@@ -115,6 +119,7 @@ function App() {
           volume={volume}
           setVolume={setVolume}
           setTapTempo={null}
+          togglePlay={togglePlay} // Pass the togglePlay function
           analogMode={false}
         />
       )}
