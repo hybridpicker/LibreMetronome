@@ -1,3 +1,4 @@
+// src/components/GridModeMetronome.js
 import React, { useState, useEffect, useCallback } from 'react';
 import useMetronomeLogic from './useMetronomeLogic';
 
@@ -8,6 +9,28 @@ import squareActive from '../assets/svg/grid/square_active.svg';
 // Play/Pause Icons
 import playIcon from '../assets/svg/play.svg';
 import pauseIcon from '../assets/svg/pause.svg';
+
+// Subdivision icons (inactive)
+import subdivision1 from '../assets/svg/subdivision-1.svg';
+import subdivision2 from '../assets/svg/subdivision-2.svg';
+import subdivision3 from '../assets/svg/subdivision-3.svg';
+import subdivision4 from '../assets/svg/subdivision-4.svg';
+import subdivision5 from '../assets/svg/subdivision-5.svg';
+import subdivision6 from '../assets/svg/subdivision-6.svg';
+import subdivision7 from '../assets/svg/subdivision-7.svg';
+import subdivision8 from '../assets/svg/subdivision-8.svg';
+import subdivision9 from '../assets/svg/subdivision-9.svg';
+
+// Subdivision icons (active)
+import subdivision1Active from '../assets/svg/subdivision-1Active.svg';
+import subdivision2Active from '../assets/svg/subdivision-2Active.svg';
+import subdivision3Active from '../assets/svg/subdivision-3-Active.svg'; // Note the dash
+import subdivision4Active from '../assets/svg/subdivision-4Active.svg';
+import subdivision5Active from '../assets/svg/subdivision-5Active.svg';
+import subdivision6Active from '../assets/svg/subdivision-6Active.svg';
+import subdivision7Active from '../assets/svg/subdivision-7Active.svg';
+import subdivision8Active from '../assets/svg/subdivision-8Active.svg';
+import subdivision9Active from '../assets/svg/subdivision-9Active.svg';
 
 export default function GridModeMetronome({
   tempo,
@@ -22,14 +45,15 @@ export default function GridModeMetronome({
   setVolume,
   setTapTempo,
   togglePlay,
-  analogMode = false
+  analogMode = false,
+  gridMode = true // Indicates Grid Mode is active
 }) {
-  // Grid configuration: Each column's value (1, 2, or 3) determines the sound type.
+  // Grid configuration: each column is initially set to 1.
   const [gridConfig, setGridConfig] = useState(
     Array.from({ length: subdivisions }, () => 1)
   );
 
-  // Update grid configuration when the number of subdivisions changes.
+  // Update grid configuration when subdivisions change.
   useEffect(() => {
     setGridConfig((prev) => {
       const newConfig = Array.from({ length: subdivisions }, (_, i) =>
@@ -39,7 +63,7 @@ export default function GridModeMetronome({
     });
   }, [subdivisions]);
 
-  // Toggle the state of a grid column on click.
+  // Toggle a grid column's state on click.
   const handleColumnClickIndex = useCallback((index) => {
     setGridConfig((prev) => {
       const newConfig = [...prev];
@@ -48,8 +72,49 @@ export default function GridModeMetronome({
     });
   }, []);
 
-  // Initialize metronome logic; pass the grid configuration as beatConfig.
-  const logic = useMetronomeLogic({
+  // Subdivision buttons using icons (like in AdvancedMetronomeWithCircle).
+  const subdivisionButtons = (() => {
+    const subIcons = [
+      subdivision1,
+      subdivision2,
+      subdivision3,
+      subdivision4,
+      subdivision5,
+      subdivision6,
+      subdivision7,
+      subdivision8,
+      subdivision9
+    ];
+    const subIconsActive = [
+      subdivision1Active,
+      subdivision2Active,
+      subdivision3Active,
+      subdivision4Active,
+      subdivision5Active,
+      subdivision6Active,
+      subdivision7Active,
+      subdivision8Active,
+      subdivision9Active
+    ];
+    return subIcons.map((icon, idx) => {
+      const subVal = idx + 1;
+      const isActive = subVal === subdivisions;
+      const iconToUse = isActive ? subIconsActive[idx] : icon;
+      return (
+        <img
+          key={subVal}
+          src={iconToUse}
+          alt={`Subdivision ${subVal}`}
+          className={`subdivision-button ${isActive ? 'active' : ''}`}
+          onClick={() => setSubdivisions(subVal)}
+          style={{ cursor: 'pointer', width: '36px', height: '36px', margin: '0 3px' }}
+        />
+      );
+    });
+  })();
+
+  // Initialize metronome logic; pass gridConfig as beatConfig.
+  const { currentSubdivision, tapTempo } = useMetronomeLogic({
     tempo,
     setTempo,
     subdivisions,
@@ -59,14 +124,15 @@ export default function GridModeMetronome({
     volume,
     beatConfig: gridConfig,
     setSubdivisions,
-    analogMode
+    analogMode,
+    gridMode
   });
 
   useEffect(() => {
     if (setTapTempo) {
-      setTapTempo(() => logic.tapTempo);
+      setTapTempo(() => tapTempo);
     }
-  }, [logic.tapTempo, setTapTempo]);
+  }, [tapTempo, setTapTempo]);
 
   const squareSize = 50;
   const gridWidth = subdivisions * squareSize;
@@ -88,9 +154,8 @@ export default function GridModeMetronome({
           >
             {Array.from({ length: 3 }, (_, rowIndex) => {
               const isActive = rowIndex >= (3 - state);
-              // Highlight the column if it matches the current subdivision from the scheduler.
-              const isCurrent =
-                colIndex === logic.currentSubdivision && !isPaused;
+              // Highlight the column if it matches the current subdivision.
+              const isCurrent = colIndex === currentSubdivision && !isPaused;
               return (
                 <image
                   key={rowIndex}
@@ -111,6 +176,14 @@ export default function GridModeMetronome({
         ))}
       </svg>
 
+      {/* Subdivision Buttons */}
+      <div style={{ marginTop: '15px', textAlign: 'center' }}>
+        <h3>Subdivision</h3>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+          {subdivisionButtons}
+        </div>
+      </div>
+
       {/* Play/Pause Button */}
       <div style={{ marginTop: '10px' }}>
         <button
@@ -119,7 +192,7 @@ export default function GridModeMetronome({
             padding: '10px 20px',
             background: 'transparent',
             border: 'none',
-            cursor: 'pointer',
+            cursor: 'pointer'
           }}
         >
           <img
@@ -130,22 +203,25 @@ export default function GridModeMetronome({
         </button>
       </div>
 
-      {/* Sliders for Volume, Swing, and Tempo */}
-      <div className="sliders-container" style={{ marginTop: '20px' }}>
-        {subdivisions % 2 === 0 && subdivisions >= 2 && (
-          <div className="slider-item" style={{ marginBottom: '10px' }}>
-            <label>Swing: {Math.round(swing * 200)}% </label>
-            <input
-              type="range"
-              min={0}
-              max={0.5}
-              step={0.01}
-              value={swing}
-              onChange={(e) => setSwing(parseFloat(e.target.value))}
-            />
-          </div>
-        )}
-        <div className="slider-item" style={{ marginBottom: '10px' }}>
+      {/* Sliders for Volume, Swing, and Tempo (mobile-like width) */}
+      <div className="sliders-container" style={{ marginTop: '20px', width: '100%' }}>
+        <div className="slider-item" style={{ marginBottom: '10px', maxWidth: '300px', margin: '0 auto' }}>
+          {(!analogMode && subdivisions % 2 === 0 && subdivisions >= 2) && (
+            <>
+              <label>Swing: {Math.round(swing * 200)}% </label>
+              <input
+                type="range"
+                min={0}
+                max={0.5}
+                step={0.01}
+                value={swing}
+                onChange={(e) => setSwing(parseFloat(e.target.value))}
+                style={{ width: '100%' }}
+              />
+            </>
+          )}
+        </div>
+        <div className="slider-item" style={{ marginBottom: '10px', maxWidth: '300px', margin: '0 auto' }}>
           <label>Volume: {Math.round(volume * 100)}% </label>
           <input
             type="range"
@@ -154,9 +230,10 @@ export default function GridModeMetronome({
             step={0.01}
             value={volume}
             onChange={(e) => setVolume(parseFloat(e.target.value))}
+            style={{ width: '100%' }}
           />
         </div>
-        <div className="slider-item tempo-slider">
+        <div className="slider-item tempo-slider" style={{ maxWidth: '300px', margin: '0 auto' }}>
           <label>Tempo: {tempo} BPM </label>
           <input
             type="range"
@@ -165,6 +242,7 @@ export default function GridModeMetronome({
             step={1}
             value={tempo}
             onChange={(e) => setTempo(parseFloat(e.target.value))}
+            style={{ width: '100%' }}
           />
         </div>
       </div>

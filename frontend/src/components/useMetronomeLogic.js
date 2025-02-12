@@ -1,8 +1,9 @@
+// src/components/useMetronomeLogic.js
 import { useEffect, useRef, useState, useCallback } from 'react';
 
 const TEMPO_MIN = 30;
 const TEMPO_MAX = 240;
-const SCHEDULE_AHEAD_TIME = 0.05; // Lookahead window in seconds (50ms)
+const SCHEDULE_AHEAD_TIME = 0.05; // 50ms lookahead window
 
 export default function useMetronomeLogic({
   tempo,
@@ -13,20 +14,22 @@ export default function useMetronomeLogic({
   swing,
   volume,
   accents = [],
-  beatConfig, // In Grid mode: array where 1 = new_click, 2 = click_new_accent, 3 = click_new_first
+  // For circle/grid mode: if beatConfig is not provided, default to an array of 1's.
+  beatConfig = Array.from({ length: subdivisions }, () => 1),
   setSubdivisions,
-  analogMode = false
+  analogMode = false,
+  gridMode = false // New prop: true when Grid Mode is active
 }) {
-  // State for current subdivision (used for visual synchronization)
+  // State for current subdivision (for visual synchronization)
   const [currentSubdivision, setCurrentSubdivision] = useState(0);
 
-  // AudioContext and buffer references
+  // Persist the AudioContext and sound buffers.
   const audioCtxRef = useRef(null);
   const normalBufferRef = useRef(null);
   const accentBufferRef = useRef(null);
   const firstBufferRef = useRef(null);
 
-  // Scheduling references
+  // Scheduling references.
   const nextNoteTimeRef = useRef(0);
   const currentSubRef = useRef(0);
   const currentSubStartRef = useRef(0);
@@ -34,34 +37,40 @@ export default function useMetronomeLogic({
   const lookaheadRef = useRef(null);
   const tapTimesRef = useRef([]);
 
-  // Ref to indicate whether the scheduler is running
   const schedulerRunningRef = useRef(false);
 
-  // Use a ref to always hold the latest beatConfig (Grid state)
+  // Ensure beatConfig is up-to-date; if empty, use default array of 1's.
   const beatConfigRef = useRef(beatConfig);
   useEffect(() => {
-    beatConfigRef.current = beatConfig;
-  }, [beatConfig]);
+    if (!beatConfig || beatConfig.length === 0) {
+      beatConfigRef.current = Array.from({ length: subdivisions }, () => 1);
+    } else {
+      beatConfigRef.current = beatConfig;
+    }
+    console.log("useMetronomeLogic - beatConfig updated:", beatConfigRef.current);
+  }, [beatConfig, subdivisions]);
 
-  // stopScheduler: Clears the scheduler interval and marks scheduler as stopped.
+  // Function to stop the scheduler.
   const stopScheduler = useCallback(() => {
     if (lookaheadRef.current) {
       clearInterval(lookaheadRef.current);
       lookaheadRef.current = null;
       schedulerRunningRef.current = false;
+      console.log("useMetronomeLogic - Scheduler stopped.");
     }
   }, []);
 
-  // Setup AudioContext and load audio files from public/assets/audio
+  // Create the AudioContext (or re-create if closed) and load sounds (once).
   useEffect(() => {
-    try {
-      audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
-    } catch (err) {
-      console.error('Web Audio API not supported:', err);
-      return;
+    if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
+      try {
+        audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+        console.log("useMetronomeLogic - AudioContext created.");
+      } catch (err) {
+        console.error('Web Audio API not supported:', err);
+        return;
+      }
     }
-
-    // Helper: Load and decode an audio file
     function loadSound(url, callback) {
       fetch(url)
         .then((res) => {
@@ -69,30 +78,22 @@ export default function useMetronomeLogic({
           return res.arrayBuffer();
         })
         .then((arr) => audioCtxRef.current.decodeAudioData(arr))
-        .then((decoded) => callback(decoded))
+        .then((decoded) => {
+          callback(decoded);
+          console.log(`useMetronomeLogic - Sound loaded from ${url}`);
+        })
         .catch((err) => console.error(`Error loading ${url}:`, err));
     }
-
-    // Load sound files:
-    loadSound('/assets/audio/click_new.mp3', (buf) => {
-      normalBufferRef.current = buf;
-    });
-    loadSound('/assets/audio/click_new_accent.mp3', (buf) => {
-      accentBufferRef.current = buf;
-    });
-    loadSound('/assets/audio/click_new_first.mp3', (buf) => {
-      firstBufferRef.current = buf;
-    });
-
+    loadSound('/assets/audio/click_new.mp3', (buf) => { normalBufferRef.current = buf; });
+    loadSound('/assets/audio/click_new_accent.mp3', (buf) => { accentBufferRef.current = buf; });
+    loadSound('/assets/audio/click_new_first.mp3', (buf) => { firstBufferRef.current = buf; });
     return () => {
+      // On cleanup, only stop the scheduler (do not close AudioContext)
       stopScheduler();
-      if (audioCtxRef.current) {
-        audioCtxRef.current.close();
-      }
     };
   }, [stopScheduler]);
 
-  // schedulePlay: Schedules playback of a given audio buffer at time "when".
+  // schedulePlay: schedules playback of the given buffer at time "when".
   const schedulePlay = useCallback(
     (buffer, when) => {
       if (!buffer || !audioCtxRef.current) return;
@@ -102,20 +103,26 @@ export default function useMetronomeLogic({
       gainNode.gain.value = volume;
       source.connect(gainNode).connect(audioCtxRef.current.destination);
       source.start(when);
+      console.log(`useMetronomeLogic - Scheduled sound at ${when.toFixed(3)}s`);
     },
     [volume]
   );
 
-  // scheduleSubdivision: Chooses which sound to play based on the current beat configuration.
-  // For Grid mode:
-  // • 1 active square → play new_click (normalBuffer)
-  // • 2 active squares → play click_new_accent (accentBuffer)
-  // • 3 active squares → play click_new_first (firstBuffer)
+  // scheduleSubdivision: selects which sound to play.
+  // In Circle Mode:
+  // - If in Grid Mode, use the beatConfig state:
+  //   * If state === 3, play first beat sound.
+  //   * If state === 2, play accented sound.
+  //   * Otherwise, play normal sound.
+  // - In non-Grid (Circle) Mode:
+  //   * If subIndex === 0, play first beat sound.
+  //   * Else if the beat is accented, play accented sound.
+  //   * Otherwise, play normal sound.
   const scheduleSubdivision = useCallback(
     (subIndex, when) => {
       if (analogMode) {
         schedulePlay(normalBufferRef.current, when);
-      } else if (beatConfigRef.current && Array.isArray(beatConfigRef.current)) {
+      } else if (gridMode) {
         const state = beatConfigRef.current[subIndex];
         if (state === 3) {
           schedulePlay(firstBufferRef.current, when);
@@ -125,7 +132,6 @@ export default function useMetronomeLogic({
           schedulePlay(normalBufferRef.current, when);
         }
       } else {
-        // Fallback: if no beatConfig is provided, use accents array.
         if (subIndex === 0) {
           schedulePlay(firstBufferRef.current, when);
         } else if (accents[subIndex]) {
@@ -135,43 +141,50 @@ export default function useMetronomeLogic({
         }
       }
     },
-    [analogMode, schedulePlay, accents]
+    [analogMode, gridMode, schedulePlay, accents]
   );
 
-  // getEffectiveSubdivisions: Returns the number of subdivisions (overridden to 2 in analog mode)
+  // getEffectiveSubdivisions: returns subdivisions (or 2 in analog mode)
   const getEffectiveSubdivisions = useCallback(() => {
-    if (analogMode) {
-      return 2;
-    }
+    if (analogMode) return 2;
     return Math.max(subdivisions, 1);
   }, [analogMode, subdivisions]);
 
-  // getCurrentSubIntervalSec: Calculates the interval (in seconds) for the current subdivision.
+  // getCurrentSubIntervalSec:
+  // - In Grid Mode: interval = (60 / tempo) / subdivisions, with swing applied.
+  // - In non-Grid (Circle/Analog) Mode: interval is calculated with swing modulation.
   const getCurrentSubIntervalSec = useCallback(() => {
     if (!tempo) return 1;
     const beatSec = 60 / tempo;
+    if (gridMode) {
+      const effSubs = getEffectiveSubdivisions();
+      const baseInterval = beatSec / effSubs;
+      // Apply swing modulation: alternate intervals.
+      const swungInterval = (currentSubRef.current % 2 === 0)
+        ? baseInterval * (1 + swing)
+        : baseInterval * (1 - swing);
+      console.log("useMetronomeLogic - Grid Mode active with swing, interval:", swungInterval);
+      return swungInterval;
+    }
     const effSubs = getEffectiveSubdivisions();
     const baseSubSec = beatSec / effSubs;
     if (!analogMode && effSubs >= 2) {
-      // Apply swing: alternate the interval durations.
-      if (currentSubRef.current % 2 === 0) {
-        return baseSubSec * (1 + swing);
-      } else {
-        return baseSubSec * (1 - swing);
-      }
-    } else {
-      return baseSubSec;
+      const interval = (currentSubRef.current % 2 === 0)
+        ? baseSubSec * (1 + swing)
+        : baseSubSec * (1 - swing);
+      console.log("useMetronomeLogic - Calculated interval with swing:", interval);
+      return interval;
     }
-  }, [tempo, swing, analogMode, getEffectiveSubdivisions]);
+    return baseSubSec;
+  }, [tempo, swing, analogMode, gridMode, getEffectiveSubdivisions]);
 
-  // scheduler: Schedules all notes that must occur within the lookahead window.
+  // Scheduler: schedules all subdivisions within the lookahead window.
   const scheduler = useCallback(() => {
     if (!audioCtxRef.current) return;
     const now = audioCtxRef.current.currentTime;
     while (nextNoteTimeRef.current < now + SCHEDULE_AHEAD_TIME) {
       const subIndex = currentSubRef.current;
       scheduleSubdivision(subIndex, nextNoteTimeRef.current);
-      // Update visual state.
       setCurrentSubdivision(subIndex);
       currentSubStartRef.current = nextNoteTimeRef.current;
       currentSubIntervalRef.current = getCurrentSubIntervalSec();
@@ -181,7 +194,7 @@ export default function useMetronomeLogic({
     }
   }, [scheduleSubdivision, getCurrentSubIntervalSec, getEffectiveSubdivisions]);
 
-  // startScheduler: Initializes scheduling parameters and starts the interval.
+  // startScheduler: initializes parameters and starts the scheduler.
   const startScheduler = useCallback(() => {
     if (schedulerRunningRef.current) return;
     stopScheduler();
@@ -193,15 +206,14 @@ export default function useMetronomeLogic({
     currentSubIntervalRef.current = getCurrentSubIntervalSec();
     lookaheadRef.current = setInterval(scheduler, 25);
     schedulerRunningRef.current = true;
+    console.log("useMetronomeLogic - Scheduler started.");
   }, [stopScheduler, getCurrentSubIntervalSec, scheduler]);
 
-  // handleTapTempo: Adjusts the tempo based on user tap timings.
+  // handleTapTempo: computes a new tempo based on tap timings.
   const handleTapTempo = useCallback(() => {
     const now = performance.now();
     tapTimesRef.current.push(now);
-    if (tapTimesRef.current.length > 5) {
-      tapTimesRef.current.shift();
-    }
+    if (tapTimesRef.current.length > 5) tapTimesRef.current.shift();
     if (tapTimesRef.current.length > 1) {
       let sum = 0;
       for (let i = 1; i < tapTimesRef.current.length; i++) {
@@ -211,19 +223,21 @@ export default function useMetronomeLogic({
       const newTempo = Math.round(60000 / avg);
       const clamped = Math.max(TEMPO_MIN, Math.min(TEMPO_MAX, newTempo));
       if (setTempo) setTempo(clamped);
+      console.log(`useMetronomeLogic - New tempo calculated: ${clamped} BPM`);
     }
   }, [setTempo]);
 
-  // Add keyboard event listeners for Space (toggle play/pause), number keys (change subdivisions), and 't' (tap tempo)
+  // Keyboard listener for Space, number keys, and "t" (tap tempo).
   useEffect(() => {
     function handleKeydown(e) {
       if (e.code === 'Space') {
         e.preventDefault();
-        setIsPaused((prev) => !prev);
+        setIsPaused(prev => !prev);
       } else if (!analogMode && e.key >= '1' && e.key <= '9') {
         const newSub = parseInt(e.key, 10);
         if (setSubdivisions) {
           setSubdivisions(newSub);
+          console.log(`useMetronomeLogic - Key pressed: setting subdivisions to ${newSub}`);
         }
       } else if (e.key.toLowerCase() === 't') {
         handleTapTempo();
@@ -233,26 +247,41 @@ export default function useMetronomeLogic({
     return () => window.removeEventListener('keydown', handleKeydown);
   }, [setIsPaused, setSubdivisions, handleTapTempo, analogMode]);
 
-  // Effect: Start or stop the scheduler based on the isPaused state.
+  // Start or stop the scheduler based on isPaused.
   useEffect(() => {
     if (!audioCtxRef.current) return;
+    if (audioCtxRef.current.state === 'closed') {
+      console.warn("useMetronomeLogic - AudioContext is closed; cannot resume or schedule.");
+      return;
+    }
     if (!isPaused) {
       if (!schedulerRunningRef.current) {
         if (audioCtxRef.current.state === 'suspended') {
           audioCtxRef.current.resume().then(() => {
+            console.log("useMetronomeLogic - AudioContext resumed.");
             startScheduler();
+          }).catch((err) => {
+            console.warn("useMetronomeLogic - Error resuming AudioContext:", err);
           });
         } else {
           startScheduler();
         }
       }
     } else {
-      if (schedulerRunningRef.current) {
-        stopScheduler();
-      }
+      if (schedulerRunningRef.current) stopScheduler();
       setCurrentSubdivision(0);
     }
   }, [isPaused, startScheduler, stopScheduler]);
+
+  // In analog (or circle) mode, restart scheduler when swing changes.
+  useEffect(() => {
+    if (analogMode && !isPaused && schedulerRunningRef.current && audioCtxRef.current) {
+      console.log("useMetronomeLogic - Swing value changed, restarting scheduler.");
+      stopScheduler();
+      nextNoteTimeRef.current = audioCtxRef.current.currentTime;
+      startScheduler();
+    }
+  }, [swing, isPaused, startScheduler, stopScheduler, analogMode]);
 
   return {
     currentSubdivision,

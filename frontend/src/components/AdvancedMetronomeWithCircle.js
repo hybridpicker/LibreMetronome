@@ -1,5 +1,4 @@
-// File: src/components/AdvancedMetronomeWithCircle.js
-
+// src/components/AdvancedMetronomeWithCircle.js
 import React, { useState, useEffect } from 'react';
 import useMetronomeLogic from './useMetronomeLogic';
 
@@ -38,7 +37,7 @@ import subdivision9Active from '../assets/svg/subdivision-9Active.svg';
 import playIcon from '../assets/svg/play.svg';
 import pauseIcon from '../assets/svg/pause.svg';
 
-// BPM adjustment
+// BPM adjustment buttons
 import plus5Button from '../assets/svg/plus5button.svg';
 import minus5Button from '../assets/svg/minus5button.svg';
 
@@ -59,32 +58,34 @@ export default function AdvancedMetronomeWithCircle({
   togglePlay,
   analogMode = false
 }) {
-  // First beat is always accented in circle mode; not used in analog mode
+  // Initialize accent state: the first beat is always accented.
   const [accents, setAccents] = useState(
     Array.from({ length: subdivisions }, (_, i) => i === 0)
   );
 
+  // Update accent state when subdivisions change, preserving existing accent values if possible.
   useEffect(() => {
     setAccents((prev) => {
+      if (prev.length === subdivisions) return prev;
       const newArr = [];
       for (let i = 0; i < subdivisions; i++) {
-        newArr[i] = i === 0 ? true : (prev[i] || false);
+        newArr[i] = i === 0 ? true : (prev[i] !== undefined ? prev[i] : false);
       }
       return newArr;
     });
   }, [subdivisions]);
 
-  // Only in circle mode, force swing=0 if subdivisions is odd
+  // In circle mode, force swing to 0 if subdivisions is odd.
   useEffect(() => {
     if (!analogMode && subdivisions % 2 !== 0) {
       setSwing(0);
     }
   }, [subdivisions, setSwing, analogMode]);
 
-  // Toggle accent for circle mode only
+  // Toggle accent for circle mode (except for the first beat).
   const toggleAccent = (index) => {
-    if (analogMode) return; // do nothing in analog mode
-    if (index === 0) return;
+    if (analogMode) return;
+    if (index === 0) return; // Keep first beat accented
     setAccents((prev) => {
       const updated = [...prev];
       updated[index] = !updated[index];
@@ -92,7 +93,57 @@ export default function AdvancedMetronomeWithCircle({
     });
   };
 
-  // Initialize metronome logic
+  // Define handlePlayPause to toggle play/pause state.
+  const handlePlayPause = () => {
+    if (typeof togglePlay === 'function') {
+      togglePlay();
+    } else {
+      setIsPaused(prev => !prev);
+    }
+  };
+
+  // Subdivision buttons (using icons, similar to GridMode)
+  const subdivisionButtons = (() => {
+    const subIcons = [
+      subdivision1,
+      subdivision2,
+      subdivision3,
+      subdivision4,
+      subdivision5,
+      subdivision6,
+      subdivision7,
+      subdivision8,
+      subdivision9
+    ];
+    const subIconsActive = [
+      subdivision1Active,
+      subdivision2Active,
+      subdivision3Active,
+      subdivision4Active,
+      subdivision5Active,
+      subdivision6Active,
+      subdivision7Active,
+      subdivision8Active,
+      subdivision9Active
+    ];
+    return subIcons.map((icon, idx) => {
+      const subVal = idx + 1;
+      const isActive = subVal === subdivisions;
+      const iconToUse = isActive ? subIconsActive[idx] : icon;
+      return (
+        <img
+          key={subVal}
+          src={iconToUse}
+          alt={`Subdivision ${subVal}`}
+          className={`subdivision-button ${isActive ? 'active' : ''}`}
+          onClick={() => setSubdivisions(subVal)}
+          style={{ cursor: 'pointer', width: '36px', height: '36px', margin: '0 3px' }}
+        />
+      );
+    });
+  })();
+
+  // Initialize metronome logic.
   const logic = useMetronomeLogic({
     tempo,
     setTempo,
@@ -106,43 +157,13 @@ export default function AdvancedMetronomeWithCircle({
     analogMode
   });
 
-  // Provide tapTempo to parent if requested
   useEffect(() => {
     if (setTapTempo) {
       setTapTempo(() => logic.tapTempo);
     }
   }, [logic.tapTempo, setTapTempo]);
 
-  // Circle mode beat icon
-  function getBeatIcon(beatIndex, isActive) {
-    const isFirst = beatIndex === 0;
-    const isAccented = accents[beatIndex];
-
-    if (analogMode) {
-      // in analog mode, no special icons
-      return normalBeat;
-    }
-
-    if (isFirst) {
-      return isActive ? firstBeatActive : firstBeat;
-    } else if (isAccented) {
-      return isActive ? accentedBeatActive : accentedBeat;
-    } else {
-      return isActive ? normalBeatActive : normalBeat;
-    }
-  }
-
-  // Mobile detection
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 600);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  const tempoMin = isMobile ? 15 : 30;
-
-  // dynamic container size
+  // Calculate container size (responsive).
   const getContainerSize = () => {
     if (window.innerWidth < 600) {
       return Math.min(window.innerWidth - 40, 300);
@@ -154,28 +175,23 @@ export default function AdvancedMetronomeWithCircle({
   };
   const [containerSize, setContainerSize] = useState(getContainerSize());
   useEffect(() => {
-    const handleResize = () => {
-      setContainerSize(getContainerSize());
-    };
+    const handleResize = () => setContainerSize(getContainerSize());
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // For circle mode
   const radius = containerSize / 2;
 
-  // Create beat data for circle mode
+  // Build beat data for circle mode.
   const beatData = Array.from({ length: subdivisions }, (_, i) => {
     const angle = (2 * Math.PI * i) / subdivisions - Math.PI / 2;
     const xPos = radius * Math.cos(angle);
     const yPos = radius * Math.sin(angle);
-
     const isActive =
       logic.currentSubdivision === i &&
       !isPaused &&
       logic.audioCtx &&
       logic.audioCtx.state === 'running';
-
     return {
       i,
       xPos,
@@ -184,20 +200,32 @@ export default function AdvancedMetronomeWithCircle({
     };
   });
 
-  // Lines connecting beats if 3 or more subdivisions (circle mode)
+  // Determine which beat icon to display.
+  function getBeatIcon(beatIndex, isActive) {
+    const isFirst = beatIndex === 0;
+    const isAccented = accents[beatIndex];
+    if (analogMode) return normalBeat;
+    if (isFirst) {
+      return isActive ? firstBeatActive : firstBeat;
+    } else if (isAccented) {
+      return isActive ? accentedBeatActive : accentedBeat;
+    } else {
+      return isActive ? normalBeatActive : normalBeat;
+    }
+  }
+
+  // Build connecting lines if subdivisions >= 3.
   let lineConnections = null;
   if (!analogMode && subdivisions >= 3) {
     lineConnections = beatData.map((bd, index) => {
       const nextIndex = (index + 1) % subdivisions;
       const bd2 = beatData[nextIndex];
-
       const dx = bd2.xPos - bd.xPos;
       const dy = bd2.yPos - bd.yPos;
       const dist = Math.sqrt(dx * dx + dy * dy);
       const mx = (bd.xPos + bd2.xPos) / 2;
       const my = (bd.yPos + bd2.yPos) / 2;
       const theta = (Math.atan2(dy, dx) * 180) / Math.PI;
-
       return (
         <div
           key={index}
@@ -213,55 +241,9 @@ export default function AdvancedMetronomeWithCircle({
     });
   }
 
-  // Subdivision buttons (circle mode)
-  const subIcons = [
-    subdivision1,
-    subdivision2,
-    subdivision3,
-    subdivision4,
-    subdivision5,
-    subdivision6,
-    subdivision7,
-    subdivision8,
-    subdivision9
-  ];
-  const subIconsActive = [
-    subdivision1Active,
-    subdivision2Active,
-    subdivision3Active,
-    subdivision4Active,
-    subdivision5Active,
-    subdivision6Active,
-    subdivision7Active,
-    subdivision8Active,
-    subdivision9Active
-  ];
-
-  const subdivisionButtons = subIcons.map((icon, idx) => {
-    const subVal = idx + 1;
-    const isActive = subVal === subdivisions;
-    const iconToUse = isActive ? subIconsActive[idx] : icon;
-    return (
-      <img
-        key={subVal}
-        src={iconToUse}
-        alt={`Subdivision ${subVal}`}
-        className={`subdivision-button ${isActive ? 'active' : ''}`}
-        onClick={() => setSubdivisions(subVal)}
-      />
-    );
-  });
-
-  const handlePlayPause = () => {
-    if (typeof togglePlay === 'function') {
-      togglePlay();
-    } else {
-      setIsPaused((prev) => !prev);
-    }
-  };
-
   return (
     <div style={{ position: 'relative', textAlign: 'center' }}>
+      {/* Metronome display container */}
       <div
         className="metronome-container"
         style={{
@@ -273,28 +255,22 @@ export default function AdvancedMetronomeWithCircle({
       >
         {analogMode ? (
           <>
-            {/* ANALOG MODE: No background circle */}
             <AnalogMetronomeCanvas
               width={containerSize}
               height={containerSize}
               isPaused={isPaused}
-              audioCtxCurrentTime={() =>
-                logic.audioCtx ? logic.audioCtx.currentTime : 0
-              }
+              audioCtxCurrentTime={() => logic.audioCtx ? logic.audioCtx.currentTime : 0}
               currentSubStartTime={() => logic.currentSubStartRef.current}
               currentSubInterval={() => logic.currentSubIntervalRef.current}
               currentSubIndex={logic.currentSubdivision}
             />
-
-            {/* Play/Pause button UNDER the needle */}
             <button
               className="play-pause-button-overlay"
               onClick={handlePlayPause}
               style={{
                 position: 'absolute',
                 left: '50%',
-                // For "under" the needle, let's move it near the bottom center:
-                top: '85%',           // adjust as needed
+                top: '85%',
                 transform: 'translate(-50%, -50%)',
                 background: 'transparent',
                 border: 'none',
@@ -310,7 +286,6 @@ export default function AdvancedMetronomeWithCircle({
           </>
         ) : (
           <>
-            {/* CIRCLE MODE: Original approach */}
             <img
               src={circleSVG}
               alt="Main Circle"
@@ -330,8 +305,6 @@ export default function AdvancedMetronomeWithCircle({
                 onClick={() => toggleAccent(bd.i)}
               />
             ))}
-
-            {/* Play/Pause overlay button at center */}
             <button
               className="play-pause-button-overlay"
               onClick={handlePlayPause}
@@ -355,40 +328,35 @@ export default function AdvancedMetronomeWithCircle({
         )}
       </div>
 
-      {/* Hide subdivision buttons in analog mode */}
+      {/* Subdivision buttons */}
       {!analogMode && (
         <div style={{ marginTop: '15px', textAlign: 'center' }}>
           <h3>Subdivision</h3>
-          <div
-            style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '8px',
-              justifyContent: 'center'
-            }}
-          >
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
             {subdivisionButtons}
           </div>
         </div>
       )}
 
-      <div className="sliders-container" style={{ marginTop: '20px' }}>
-        {/* Show swing only in circle mode, if even subdivisions */}
-        {!analogMode && subdivisions % 2 === 0 && subdivisions >= 2 && (
-          <div className="slider-item" style={{ marginBottom: '10px' }}>
-            <label>Swing: {Math.round(swing * 200)}% </label>
-            <input
-              type="range"
-              min={0}
-              max={0.5}
-              step={0.01}
-              value={swing}
-              onChange={(e) => setSwing(parseFloat(e.target.value))}
-            />
-          </div>
-        )}
-
-        <div className="slider-item" style={{ marginBottom: '10px' }}>
+      {/* Slider container with mobile-like width */}
+      <div className="sliders-container" style={{ marginTop: '20px', width: '100%' }}>
+        <div className="slider-item" style={{ marginBottom: '10px', maxWidth: '300px', margin: '0 auto' }}>
+          {(!analogMode && subdivisions % 2 === 0 && subdivisions >= 2) && (
+            <>
+              <label>Swing: {Math.round(swing * 200)}% </label>
+              <input
+                type="range"
+                min={0}
+                max={0.5}
+                step={0.01}
+                value={swing}
+                onChange={(e) => setSwing(parseFloat(e.target.value))}
+                style={{ width: '100%' }}
+              />
+            </>
+          )}
+        </div>
+        <div className="slider-item" style={{ marginBottom: '10px', maxWidth: '300px', margin: '0 auto' }}>
           <label>Volume: {Math.round(volume * 100)}% </label>
           <input
             type="range"
@@ -397,43 +365,20 @@ export default function AdvancedMetronomeWithCircle({
             step={0.01}
             value={volume}
             onChange={(e) => setVolume(parseFloat(e.target.value))}
+            style={{ width: '100%' }}
           />
         </div>
-
-        <div className="slider-item tempo-slider">
+        <div className="slider-item tempo-slider" style={{ maxWidth: '300px', margin: '0 auto' }}>
           <label>Tempo: {tempo} BPM </label>
           <input
             type="range"
-            min={tempoMin}
+            min={15}
             max={240}
             step={1}
             value={tempo}
             onChange={(e) => setTempo(parseFloat(e.target.value))}
+            style={{ width: '100%' }}
           />
-        </div>
-
-        <div className="slider-item tempo-buttons">
-          <button
-            onClick={() => setTempo(tempo - 5)}
-            style={{ background: 'transparent', border: 'none', padding: 0 }}
-          >
-            <img
-              src={minus5Button}
-              alt="-5 BPM"
-              style={{ width: '60px', height: '60px' }}
-            />
-          </button>
-          <span>{tempo} BPM</span>
-          <button
-            onClick={() => setTempo(tempo + 5)}
-            style={{ background: 'transparent', border: 'none', padding: 0 }}
-          >
-            <img
-              src={plus5Button}
-              alt="+5 BPM"
-              style={{ width: '60px', height: '60px' }}
-            />
-          </button>
         </div>
       </div>
     </div>

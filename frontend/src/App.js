@@ -1,3 +1,4 @@
+// src/App.js
 import React, { useState } from 'react';
 import './App.css';
 import Header from './components/Header';
@@ -6,26 +7,26 @@ import AdvancedMetronomeWithCircle from './components/AdvancedMetronomeWithCircl
 import GridModeMetronome from './components/GridModeMetronome';
 
 function App() {
-  // Mode can be "analog", "circle" or "grid"
-  const [mode, setMode] = useState("analog");
+  // Mode can be "analog", "circle", or "grid"
+  const [mode, setMode] = useState("grid");
 
-  // States to control metronome parameters
+  // Metronome parameters
   const [tempo, setTempo] = useState(120);
   const [isPaused, setIsPaused] = useState(true);
   const [subdivisions, setSubdivisions] = useState(4);
-  const [swing, setSwing] = useState(0);
+  const [swing, setSwing] = useState(0.1);
   const [volume, setVolume] = useState(1);
 
-  // Toggle function to switch play/pause state
+  // Toggle play/pause state
   const togglePlay = () => setIsPaused(prev => !prev);
 
   return (
     <div className="app-container">
       <Header />
 
-      {/* Button group for mode selection */}
+      {/* Mode selection buttons */}
       <div style={{ marginBottom: "20px", display: "flex", gap: "10px", justifyContent: "center" }}>
-        <button 
+        <button
           onClick={() => setMode("analog")}
           style={{
             padding: "10px 20px",
@@ -39,7 +40,7 @@ function App() {
         >
           Analog Mode
         </button>
-        <button 
+        <button
           onClick={() => setMode("circle")}
           style={{
             padding: "10px 20px",
@@ -53,7 +54,7 @@ function App() {
         >
           Circle Mode
         </button>
-        <button 
+        <button
           onClick={() => setMode("grid")}
           style={{
             padding: "10px 20px",
@@ -69,7 +70,7 @@ function App() {
         </button>
       </div>
 
-      {/* Conditional rendering of metronome components */}
+      {/* Render metronome based on selected mode */}
       {mode === "analog" && (
         <AdvancedMetronomeWithCircle
           tempo={tempo}
@@ -82,12 +83,10 @@ function App() {
           setSwing={setSwing}
           volume={volume}
           setVolume={setVolume}
-          setTapTempo={null}
-          togglePlay={togglePlay} // Pass the togglePlay function
+          togglePlay={togglePlay}
           analogMode={true}
         />
       )}
-
       {mode === "circle" && (
         <AdvancedMetronomeWithCircle
           tempo={tempo}
@@ -100,12 +99,10 @@ function App() {
           setSwing={setSwing}
           volume={volume}
           setVolume={setVolume}
-          setTapTempo={null}
-          togglePlay={togglePlay} // Pass the togglePlay function
+          togglePlay={togglePlay}
           analogMode={false}
         />
       )}
-
       {mode === "grid" && (
         <GridModeMetronome
           tempo={tempo}
@@ -118,9 +115,9 @@ function App() {
           setSwing={setSwing}
           volume={volume}
           setVolume={setVolume}
-          setTapTempo={null}
-          togglePlay={togglePlay} // Pass the togglePlay function
+          togglePlay={togglePlay}
           analogMode={false}
+          gridMode={true} 
         />
       )}
 
