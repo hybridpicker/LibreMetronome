@@ -179,7 +179,7 @@ export default function GridModeMetronome({
       {/* Subdivision Buttons */}
       <div style={{ marginTop: '15px', textAlign: 'center' }}>
         <h3>Subdivision</h3>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px' }}>
           {subdivisionButtons}
         </div>
       </div>
