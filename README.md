@@ -72,7 +72,7 @@ https://github.com/user-attachments/assets/d255a73b-2f0c-4033-a95f-5425acbc932e
    python manage.py migrate
    python manage.py runserver
    ```
-   The backend will run at http://127.0.0.1:8000.
+   The backend will run at http://localhost:8000.
 
 ## Contributing
 
