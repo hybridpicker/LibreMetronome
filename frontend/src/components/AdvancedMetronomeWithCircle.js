@@ -58,12 +58,12 @@ export default function AdvancedMetronomeWithCircle({
   togglePlay,
   analogMode = false
 }) {
-  // Initialize accent state: the first beat is always accented.
+  // Initialize accent state: first beat is always accented.
   const [accents, setAccents] = useState(
     Array.from({ length: subdivisions }, (_, i) => i === 0)
   );
 
-  // Update accent state when subdivisions change, preserving existing accent values if possible.
+  // Update accent state when subdivisions change, preserving existing values if possible.
   useEffect(() => {
     setAccents((prev) => {
       if (prev.length === subdivisions) return prev;
@@ -75,17 +75,10 @@ export default function AdvancedMetronomeWithCircle({
     });
   }, [subdivisions]);
 
-  // In circle mode, force swing to 0 if subdivisions is odd.
-  useEffect(() => {
-    if (!analogMode && subdivisions % 2 !== 0) {
-      setSwing(0);
-    }
-  }, [subdivisions, setSwing, analogMode]);
-
   // Toggle accent for circle mode (except for the first beat).
   const toggleAccent = (index) => {
     if (analogMode) return;
-    if (index === 0) return; // Keep first beat accented
+    if (index === 0) return; // First beat remains accented
     setAccents((prev) => {
       const updated = [...prev];
       updated[index] = !updated[index];
@@ -98,7 +91,7 @@ export default function AdvancedMetronomeWithCircle({
     if (typeof togglePlay === 'function') {
       togglePlay();
     } else {
-      setIsPaused(prev => !prev);
+      setIsPaused((prev) => !prev);
     }
   };
 
@@ -143,7 +136,7 @@ export default function AdvancedMetronomeWithCircle({
     });
   })();
 
-  // Initialize metronome logic.
+  // Initialize metronome logic using the current accent configuration
   const logic = useMetronomeLogic({
     tempo,
     setTempo,
@@ -152,7 +145,7 @@ export default function AdvancedMetronomeWithCircle({
     setIsPaused,
     swing,
     volume,
-    accents,
+    accents, // Use current accents for sound scheduling
     setSubdivisions,
     analogMode
   });
@@ -163,7 +156,7 @@ export default function AdvancedMetronomeWithCircle({
     }
   }, [logic.tapTempo, setTapTempo]);
 
-  // Calculate container size (responsive).
+  // Calculate container size (responsive)
   const getContainerSize = () => {
     if (window.innerWidth < 600) {
       return Math.min(window.innerWidth - 40, 300);
