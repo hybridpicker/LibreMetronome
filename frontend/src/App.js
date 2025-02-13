@@ -7,15 +7,17 @@ import AdvancedMetronomeWithCircle from './components/AdvancedMetronomeWithCircl
 import GridModeMetronome from './components/GridModeMetronome';
 
 function App() {
-  // Mode can be "analog", "circle", or "grid"
-  const [mode, setMode] = useState("grid");
+  // Default mode is now "circle" to always display Circle Mode first.
+  const [mode, setMode] = useState("circle");
 
   // Metronome parameters
   const [tempo, setTempo] = useState(120);
   const [isPaused, setIsPaused] = useState(true);
   const [subdivisions, setSubdivisions] = useState(4);
-  const [swing, setSwing] = useState(0.1);
-  const [volume, setVolume] = useState(1);
+  // Default swing is now set to 0
+  const [swing, setSwing] = useState(0);
+  // Default volume is now set to 50% (0.5)
+  const [volume, setVolume] = useState(0.5);
 
   // Toggle play/pause state
   const togglePlay = () => setIsPaused(prev => !prev);
@@ -117,7 +119,7 @@ function App() {
           setVolume={setVolume}
           togglePlay={togglePlay}
           analogMode={false}
-          gridMode={true} 
+          gridMode={true}
         />
       )}
 
