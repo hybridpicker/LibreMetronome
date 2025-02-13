@@ -283,6 +283,18 @@ export default function useMetronomeLogic({
     }
   }, [swing, isPaused, startScheduler, stopScheduler, analogMode]);
 
+  // Immediately restart scheduler when accents change,
+  // but only in Circle Mode (i.e., when gridMode is false)
+  useEffect(() => {
+    if (gridMode) return; // Do not restart scheduler for Grid Mode
+    if (!isPaused && audioCtxRef.current && schedulerRunningRef.current) {
+      console.log("useMetronomeLogic - Accents changed, restarting scheduler.");
+      stopScheduler();
+      nextNoteTimeRef.current = audioCtxRef.current.currentTime;
+      startScheduler();
+    }
+  }, [accents, gridMode, isPaused, stopScheduler, startScheduler]);
+
   return {
     currentSubdivision,
     audioCtx: audioCtxRef.current,
