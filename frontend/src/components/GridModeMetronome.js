@@ -50,8 +50,8 @@ export default function GridModeMetronome({
   setTapTempo,
   togglePlay,
   analogMode = false,
-  gridMode = true, // Indicates that Grid Mode is active
-  accents = null    // <-- New prop: accent configuration from advanced circle mode
+  gridMode = true,
+  accents = null
 }) {
   // Grid configuration: each column is initially set to 1.
   const [gridConfig, setGridConfig] = useState(
