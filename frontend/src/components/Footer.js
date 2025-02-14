@@ -12,7 +12,7 @@ const Footer = () => {
       {/* Separator with added spacing */}
       <hr className="separator" />
       <div className="footer-content">
-        <p>&copy; {new Date().getFullYear()} LibreMetronome | MIT-License.</p>
+        <p>&copy; {new Date().getFullYear()} LibreMetronome | GPL v3 License.</p>
         <p>
           <a
             href="https://github.com/hybridpicker/LibreMetronome"
