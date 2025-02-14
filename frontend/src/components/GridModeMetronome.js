@@ -1,10 +1,14 @@
 // src/components/GridModeMetronome.js
+
 import React, { useState, useEffect, useCallback } from 'react';
 import useMetronomeLogic from './useMetronomeLogic';
 
 // Grid Icons
 import squareInactive from '../assets/svg/grid/square_inactive.svg';
 import squareActive from '../assets/svg/grid/square_active.svg';
+
+// Tap Tempo Icons
+import tapButtonIcon from '../assets/svg/tap-button.svg';
 
 // Play/Pause Icons
 import playIcon from '../assets/svg/play.svg';
@@ -24,7 +28,7 @@ import subdivision9 from '../assets/svg/subdivision-9.svg';
 // Subdivision icons (active)
 import subdivision1Active from '../assets/svg/subdivision-1Active.svg';
 import subdivision2Active from '../assets/svg/subdivision-2Active.svg';
-import subdivision3Active from '../assets/svg/subdivision-3-Active.svg'; // Note the dash
+import subdivision3Active from '../assets/svg/subdivision-3-Active.svg';
 import subdivision4Active from '../assets/svg/subdivision-4Active.svg';
 import subdivision5Active from '../assets/svg/subdivision-5Active.svg';
 import subdivision6Active from '../assets/svg/subdivision-6Active.svg';
@@ -46,7 +50,7 @@ export default function GridModeMetronome({
   setTapTempo,
   togglePlay,
   analogMode = false,
-  gridMode = true // Indicates Grid Mode is active
+  gridMode = true // Indicates that Grid Mode is active
 }) {
   // Grid configuration: each column is initially set to 1.
   const [gridConfig, setGridConfig] = useState(
@@ -72,7 +76,7 @@ export default function GridModeMetronome({
     });
   }, []);
 
-  // Subdivision buttons using icons (like in AdvancedMetronomeWithCircle).
+  // Create subdivision buttons with icons.
   const subdivisionButtons = (() => {
     const subIcons = [
       subdivision1,
@@ -128,19 +132,29 @@ export default function GridModeMetronome({
     gridMode
   });
 
+  // Pass the tapTempo function to a parent component if needed.
   useEffect(() => {
     if (setTapTempo) {
       setTapTempo(() => tapTempo);
     }
   }, [tapTempo, setTapTempo]);
 
+  // Define square dimensions and grid dimensions.
   const squareSize = 50;
   const gridWidth = subdivisions * squareSize;
   const gridHeight = squareSize * 3;
 
+  // Mobile detection: check if the device width is less than 768px.
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
     <div style={{ textAlign: 'center' }}>
-      {/* Grid Display */}
+      {/* SVG Grid Display */}
       <svg
         width={gridWidth}
         height={gridHeight}
@@ -154,7 +168,7 @@ export default function GridModeMetronome({
           >
             {Array.from({ length: 3 }, (_, rowIndex) => {
               const isActive = rowIndex >= (3 - state);
-              // Highlight the column if it matches the current subdivision.
+              // Highlight the column if it matches the current subdivision and the metronome is running.
               const isCurrent = colIndex === currentSubdivision && !isPaused;
               return (
                 <image
@@ -203,7 +217,7 @@ export default function GridModeMetronome({
         </button>
       </div>
 
-      {/* Sliders for Volume, Swing, and Tempo (mobile-like width) */}
+      {/* Sliders for Volume, Swing, and Tempo */}
       <div className="sliders-container" style={{ marginTop: '20px', width: '100%' }}>
         <div className="slider-item" style={{ marginBottom: '10px', maxWidth: '300px', margin: '0 auto' }}>
           {(!analogMode && subdivisions % 2 === 0 && subdivisions >= 2) && (
@@ -246,6 +260,26 @@ export default function GridModeMetronome({
           />
         </div>
       </div>
+
+      {/* Conditionally render the Tap Tempo button on mobile devices */}
+      {isMobile && (
+        <button
+          onClick={tapTempo}
+          style={{
+            // Using transparent background to highlight the SVG
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            marginTop: '20px'
+          }}
+        >
+          <img
+            src={tapButtonIcon}
+            alt="Tap Tempo"
+            style={{ height: '35px', objectFit: 'contain' }}
+          />
+        </button>
+      )}
     </div>
   );
 }
