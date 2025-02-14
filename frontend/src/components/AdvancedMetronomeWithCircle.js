@@ -57,35 +57,41 @@ export default function AdvancedMetronomeWithCircle({
   setVolume,
   setTapTempo,
   togglePlay,
-  analogMode = false
+  analogMode = false,
+  accents,         // Accept parent's accent state if provided
+  toggleAccent     // Accept parent's toggleAccent function if provided
 }) {
-  // Initialize accent state: first beat is always accented.
-  const [accents, setAccents] = useState(
+  // Use parent's accents if provided; otherwise, initialize local accent state.
+  const [localAccents, setLocalAccents] = useState(
     Array.from({ length: subdivisions }, (_, i) => i === 0)
   );
+  const effectiveAccents = accents || localAccents;
 
-  // Update accent state when subdivisions change, preserving existing values if possible.
+  // Update local accent state when subdivisions change if parent's accents are not provided.
   useEffect(() => {
-    setAccents((prev) => {
-      if (prev.length === subdivisions) return prev;
-      const newArr = [];
-      for (let i = 0; i < subdivisions; i++) {
-        newArr[i] = i === 0 ? true : (prev[i] !== undefined ? prev[i] : false);
-      }
-      return newArr;
-    });
-  }, [subdivisions]);
+    if (!accents) {
+      setLocalAccents((prev) => {
+        if (prev.length === subdivisions) return prev;
+        const newArr = [];
+        for (let i = 0; i < subdivisions; i++) {
+          newArr[i] = i === 0 ? true : (prev[i] !== undefined ? prev[i] : false);
+        }
+        return newArr;
+      });
+    }
+  }, [subdivisions, accents]);
 
-  // Toggle accent for circle mode (except for the first beat).
-  const toggleAccent = (index) => {
+  // Use parent's toggleAccent if provided; otherwise, define a local version.
+  const localToggleAccent = (index) => {
     if (analogMode) return;
     if (index === 0) return; // First beat remains accented
-    setAccents((prev) => {
+    setLocalAccents((prev) => {
       const updated = [...prev];
       updated[index] = !updated[index];
       return updated;
     });
   };
+  const effectiveToggleAccent = toggleAccent || localToggleAccent;
 
   // Define handlePlayPause to toggle play/pause state.
   const handlePlayPause = () => {
@@ -146,7 +152,7 @@ export default function AdvancedMetronomeWithCircle({
     setIsPaused,
     swing,
     volume,
-    accents, // Use current accents for sound scheduling
+    accents: effectiveAccents, // Use effective accents
     setSubdivisions,
     analogMode
   });
@@ -197,7 +203,7 @@ export default function AdvancedMetronomeWithCircle({
   // Determine which beat icon to display.
   function getBeatIcon(beatIndex, isActive) {
     const isFirst = beatIndex === 0;
-    const isAccented = accents[beatIndex];
+    const isAccented = effectiveAccents[beatIndex];
     if (analogMode) return normalBeat;
     if (isFirst) {
       return isActive ? firstBeatActive : firstBeat;
@@ -302,7 +308,7 @@ export default function AdvancedMetronomeWithCircle({
                   left: `calc(50% + ${bd.xPos}px - 12px)`,
                   top: `calc(50% + ${bd.yPos}px - 12px)`
                 }}
-                onClick={() => toggleAccent(bd.i)}
+                onClick={() => effectiveToggleAccent(bd.i)}
               />
             ))}
             <button
@@ -387,7 +393,6 @@ export default function AdvancedMetronomeWithCircle({
         <button
           onClick={logic.tapTempo}
           style={{
-            // Removed default text button styling to highlight the SVG
             background: 'transparent',
             border: 'none',
             cursor: 'pointer',
