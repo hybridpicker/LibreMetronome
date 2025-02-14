@@ -1,10 +1,6 @@
 ![Logo](https://github.com/user-attachments/assets/ee0a4ccc-fc09-4024-a4e3-1b95b333ae59)
-
+---
 ![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)
-
-
-
-## Overview
 
 Libre Metronome is a modern, minimalist, and intuitive digital metronome application that merges classic musical functionality with a contemporary user interface. The application integrates analog elements (such as a circular display and an oscillating pointer) with modern technologies to provide musicians and educators with a powerful and flexible tool. The frontend is built in React, while the backend is based on Django, with a REST API for future enhancements like user management and preset functionality.
 
