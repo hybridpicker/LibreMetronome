@@ -58,7 +58,7 @@ export default function GridModeMetronome({
     Array.from({ length: subdivisions }, () => 1)
   );
 
-  // Update grid configuration when subdivisions change.
+  // Update grid configuration when subdivisions or accents change.
   useEffect(() => {
     setGridConfig((prev) => {
       const newConfig = Array.from({ length: subdivisions }, (_, i) =>
@@ -267,7 +267,6 @@ export default function GridModeMetronome({
         <button
           onClick={tapTempo}
           style={{
-            // Using transparent background to highlight the SVG
             background: 'transparent',
             border: 'none',
             cursor: 'pointer',
