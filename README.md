@@ -1,4 +1,8 @@
-# Libre Metronome
+![Logo](https://github.com/user-attachments/assets/ee0a4ccc-fc09-4024-a4e3-1b95b333ae59)
+
+![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)
+
+
 
 ## Overview
 
@@ -79,8 +83,9 @@ https://github.com/user-attachments/assets/d255a73b-2f0c-4033-a95f-5425acbc932e
 Contributions to the development of Libre Metronome are welcome. Please open a pull request or create an issue with your suggestions, improvements, or bug reports. Ensure that new features are accompanied by appropriate tests.
 
 ## License
-
-This project is licensed under the MIT License.
+This project is licensed under the **GNU General Public License v3.0**.  
+You can find the full license text in the `LICENSE` file or at  
+[https://www.gnu.org/licenses/gpl-3.0.html](https://www.gnu.org/licenses/gpl-3.0.html).
 
 ## Acknowledgements
 
