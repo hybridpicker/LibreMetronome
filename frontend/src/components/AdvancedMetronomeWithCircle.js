@@ -8,6 +8,7 @@ import normalBeat from '../assets/svg/normalBeat.svg';
 import normalBeatActive from '../assets/svg/normalBeatActive.svg';
 import accentedBeat from '../assets/svg/accentedBeat.svg';
 import accentedBeatActive from '../assets/svg/accentedBeatActive.svg';
+import tapButtonIcon from '../assets/svg/tap-button.svg';
 
 import circleSVG from '../assets/svg/circle.svg';
 
@@ -386,13 +387,18 @@ export default function AdvancedMetronomeWithCircle({
         <button
           onClick={logic.tapTempo}
           style={{
-            marginTop: '20px',
-            padding: '10px 20px',
-            fontSize: '16px',
-            cursor: 'pointer'
+            // Removed default text button styling to highlight the SVG
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            marginTop: '20px'
           }}
         >
-          Tap Tempo
+          <img
+            src={tapButtonIcon}
+            alt="Tap Tempo"
+            style={{ height: '30px', objectFit: 'contain' }}
+          />
         </button>
       )}
     </div>

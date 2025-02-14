@@ -7,6 +7,9 @@ import useMetronomeLogic from './useMetronomeLogic';
 import squareInactive from '../assets/svg/grid/square_inactive.svg';
 import squareActive from '../assets/svg/grid/square_active.svg';
 
+// Tap Tempo Icons
+import tapButtonIcon from '../assets/svg/tap-button.svg';
+
 // Play/Pause Icons
 import playIcon from '../assets/svg/play.svg';
 import pauseIcon from '../assets/svg/pause.svg';
@@ -25,7 +28,7 @@ import subdivision9 from '../assets/svg/subdivision-9.svg';
 // Subdivision icons (active)
 import subdivision1Active from '../assets/svg/subdivision-1Active.svg';
 import subdivision2Active from '../assets/svg/subdivision-2Active.svg';
-import subdivision3Active from '../assets/svg/subdivision-3-Active.svg'; // Note the dash
+import subdivision3Active from '../assets/svg/subdivision-3-Active.svg';
 import subdivision4Active from '../assets/svg/subdivision-4Active.svg';
 import subdivision5Active from '../assets/svg/subdivision-5Active.svg';
 import subdivision6Active from '../assets/svg/subdivision-6Active.svg';
@@ -263,13 +266,18 @@ export default function GridModeMetronome({
         <button
           onClick={tapTempo}
           style={{
-            marginTop: '20px',
-            padding: '10px 20px',
-            fontSize: '16px',
-            cursor: 'pointer'
+            // Using transparent background to highlight the SVG
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            marginTop: '20px'
           }}
         >
-          Tap Tempo
+          <img
+            src={tapButtonIcon}
+            alt="Tap Tempo"
+            style={{ height: '35px', objectFit: 'contain' }}
+          />
         </button>
       )}
     </div>
