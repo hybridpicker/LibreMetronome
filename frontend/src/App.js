@@ -1,5 +1,3 @@
-// src/App.js
-
 /*
  * LibreMetronome - Open Source Metronome
  *
@@ -19,8 +17,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -42,6 +39,25 @@ function App() {
 
   // Toggle play/pause state
   const togglePlay = () => setIsPaused(prev => !prev);
+
+  // NEW: Lift accent state to the parent.
+  const [accents, setAccents] = useState(
+    Array.from({ length: subdivisions }, (_, i) => i === 0)
+  );
+  // If subdivisions change, reset accent state.
+  useEffect(() => {
+    setAccents(Array.from({ length: subdivisions }, (_, i) => i === 0));
+  }, [subdivisions]);
+
+  // Toggle accent for a given beat index (except the first beat)
+  const toggleAccent = (index) => {
+    if (index === 0) return;
+    setAccents(prev => {
+      const newAccents = [...prev];
+      newAccents[index] = !newAccents[index];
+      return newAccents;
+    });
+  };
 
   return (
     <div className="app-container">
@@ -124,6 +140,8 @@ function App() {
           setVolume={setVolume}
           togglePlay={togglePlay}
           analogMode={false}
+          accents={accents}           // Pass the current accent state
+          toggleAccent={toggleAccent} // Pass the accent toggler
         />
       )}
       {mode === "grid" && (
@@ -141,6 +159,7 @@ function App() {
           togglePlay={togglePlay}
           analogMode={false}
           gridMode={true}
+          accents={accents} // Grid mode uses the same accent configuration!
         />
       )}
 
