@@ -50,7 +50,8 @@ export default function GridModeMetronome({
   setTapTempo,
   togglePlay,
   analogMode = false,
-  gridMode = true // Indicates that Grid Mode is active
+  gridMode = true, // Indicates that Grid Mode is active
+  accents = null    // <-- New prop: accent configuration from advanced circle mode
 }) {
   // Grid configuration: each column is initially set to 1.
   const [gridConfig, setGridConfig] = useState(
@@ -61,11 +62,11 @@ export default function GridModeMetronome({
   useEffect(() => {
     setGridConfig((prev) => {
       const newConfig = Array.from({ length: subdivisions }, (_, i) =>
-        prev[i] !== undefined ? prev[i] : 1
+        i === 0 ? 3 : (accents && accents[i] ? 2 : (prev[i] !== undefined ? prev[i] : 1))
       );
       return newConfig;
     });
-  }, [subdivisions]);
+  }, [subdivisions, accents]); // <-- Added accents as a dependency
 
   // Toggle a grid column's state on click.
   const handleColumnClickIndex = useCallback((index) => {
