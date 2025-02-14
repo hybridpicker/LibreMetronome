@@ -8,6 +8,7 @@ import normalBeat from '../assets/svg/normalBeat.svg';
 import normalBeatActive from '../assets/svg/normalBeatActive.svg';
 import accentedBeat from '../assets/svg/accentedBeat.svg';
 import accentedBeatActive from '../assets/svg/accentedBeatActive.svg';
+import tapButtonIcon from '../assets/svg/tap-button.svg';
 
 import circleSVG from '../assets/svg/circle.svg';
 
@@ -136,7 +137,7 @@ export default function AdvancedMetronomeWithCircle({
     });
   })();
 
-  // Initialize metronome logic using the current accent configuration
+  // Initialize metronome logic using the current accent configuration.
   const logic = useMetronomeLogic({
     tempo,
     setTempo,
@@ -156,7 +157,7 @@ export default function AdvancedMetronomeWithCircle({
     }
   }, [logic.tapTempo, setTapTempo]);
 
-  // Calculate container size (responsive)
+  // Calculate container size (responsive).
   const getContainerSize = () => {
     if (window.innerWidth < 600) {
       return Math.min(window.innerWidth - 40, 300);
@@ -234,6 +235,16 @@ export default function AdvancedMetronomeWithCircle({
     });
   }
 
+  // Mobile detection: check if the device width is less than 768px.
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
     <div style={{ position: 'relative', textAlign: 'center' }}>
       {/* Metronome display container */}
@@ -252,7 +263,7 @@ export default function AdvancedMetronomeWithCircle({
               width={containerSize}
               height={containerSize}
               isPaused={isPaused}
-              audioCtxCurrentTime={() => logic.audioCtx ? logic.audioCtx.currentTime : 0}
+              audioCtxCurrentTime={() => (logic.audioCtx ? logic.audioCtx.currentTime : 0)}
               currentSubStartTime={() => logic.currentSubStartRef.current}
               currentSubInterval={() => logic.currentSubIntervalRef.current}
               currentSubIndex={logic.currentSubdivision}
@@ -279,11 +290,7 @@ export default function AdvancedMetronomeWithCircle({
           </>
         ) : (
           <>
-            <img
-              src={circleSVG}
-              alt="Main Circle"
-              className="metronome-circle"
-            />
+            <img src={circleSVG} alt="Main Circle" className="metronome-circle" />
             {lineConnections}
             {beatData.map((bd) => (
               <img
@@ -321,7 +328,7 @@ export default function AdvancedMetronomeWithCircle({
         )}
       </div>
 
-      {/* Subdivision buttons */}
+      {/* Subdivision buttons container */}
       {!analogMode && (
         <div style={{ marginTop: '15px', textAlign: 'center' }}>
           <h3>Subdivision</h3>
@@ -331,7 +338,7 @@ export default function AdvancedMetronomeWithCircle({
         </div>
       )}
 
-      {/* Slider container with mobile-like width */}
+      {/* Slider container */}
       <div className="sliders-container" style={{ marginTop: '20px', width: '100%' }}>
         <div className="slider-item" style={{ marginBottom: '10px', maxWidth: '300px', margin: '0 auto' }}>
           {(!analogMode && subdivisions % 2 === 0 && subdivisions >= 2) && (
@@ -374,6 +381,26 @@ export default function AdvancedMetronomeWithCircle({
           />
         </div>
       </div>
+
+      {/* Conditionally render the Tap Tempo button on mobile devices */}
+      {isMobile && (
+        <button
+          onClick={logic.tapTempo}
+          style={{
+            // Removed default text button styling to highlight the SVG
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            marginTop: '20px'
+          }}
+        >
+          <img
+            src={tapButtonIcon}
+            alt="Tap Tempo"
+            style={{ height: '30px', objectFit: 'contain' }}
+          />
+        </button>
+      )}
     </div>
   );
 }
