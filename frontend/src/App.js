@@ -30,31 +30,26 @@ const TEMPO_MIN = 15;
 const TEMPO_MAX = 240;
 
 function App() {
-  // Default mode is now "circle" to always display Circle Mode first.
+  // Mode selection: "analog", "circle" or "grid"
   const [mode, setMode] = useState("circle");
 
-  // Metronome parameters
+  // Metronom-Parameter
   const [tempo, setTempo] = useState(120);
   const [isPaused, setIsPaused] = useState(true);
   const [subdivisions, setSubdivisions] = useState(4);
-  // Default swing is now set to 0
   const [swing, setSwing] = useState(0);
-  // Default volume is now set to 50% (0.5)
   const [volume, setVolume] = useState(0.5);
-
-  // Toggle play/pause state
   const togglePlay = () => setIsPaused(prev => !prev);
 
-  // Lift accent state to the parent.
+  // Einheitlicher Akzentstatus im Elternteil.
+  // Der erste Beat ist immer akzentuiert (true); weitere Beats starten mit false.
   const [accents, setAccents] = useState(
     Array.from({ length: subdivisions }, (_, i) => i === 0)
   );
-  // If subdivisions change, reset accent state.
   useEffect(() => {
+    // Reset, wenn sich subdivisions ändern.
     setAccents(Array.from({ length: subdivisions }, (_, i) => i === 0));
   }, [subdivisions]);
-
-  // Toggle accent for a given beat index (except the first beat)
   const toggleAccent = (index) => {
     if (index === 0) return;
     setAccents(prev => {
@@ -64,16 +59,16 @@ function App() {
     });
   };
 
-  // State for the InfoOverlay visibility
+  // InfoOverlay-Zustand
   const [isInfoVisible, setIsInfoVisible] = useState(false);
   const toggleInfoOverlay = () => setIsInfoVisible(prev => !prev);
 
-  // Example Tap Tempo handler (could be linked to metronome logic)
+  // Beispiel Tap Tempo-Handler (kann mit der Metronom-Logik verknüpft werden)
   const handleTapTempo = () => {
     console.log("Tap Tempo triggered via keyboard");
   };
 
-  // Integrate global keyboard shortcuts using our custom hook
+  // Globale Tastaturkürzel
   useKeyboardShortcuts({
     onTogglePlayPause: togglePlay,
     onTapTempo: handleTapTempo,
@@ -91,7 +86,7 @@ function App() {
       <InfoOverlay isVisible={isInfoVisible} onClose={toggleInfoOverlay} />
       <Header />
 
-      {/* Mode selection buttons */}
+      {/* Mode-Auswahl */}
       <div style={{ marginBottom: "20px", display: "flex", gap: "10px", justifyContent: "center" }}>
         <button
           onClick={() => setMode("analog")}
@@ -137,7 +132,7 @@ function App() {
         </button>
       </div>
 
-      {/* Render metronome based on selected mode */}
+      {/* Rendern des Metronoms je nach ausgewähltem Modus */}
       {mode === "analog" && (
         <AdvancedMetronomeWithCircle
           tempo={tempo}
@@ -168,27 +163,32 @@ function App() {
           setVolume={setVolume}
           togglePlay={togglePlay}
           analogMode={false}
-          accents={accents} 
-          toggleAccent={toggleAccent} 
+          accents={accents}
+          toggleAccent={toggleAccent}
         />
       )}
+      {/* Kommentar vor dem Element – nicht inline! */}
       {mode === "grid" && (
-        <GridModeMetronome
-          tempo={tempo}
-          setTempo={setTempo}
-          subdivisions={subdivisions}
-          setSubdivisions={setSubdivisions}
-          isPaused={isPaused}
-          setIsPaused={setIsPaused}
-          swing={swing}
-          setSwing={setSwing}
-          volume={volume}
-          setVolume={setVolume}
-          togglePlay={togglePlay}
-          analogMode={false}
-          gridMode={true}
-          accents={accents}
-        />
+        <>
+          {/* New callback to sync accents */}
+          <GridModeMetronome
+            tempo={tempo}
+            setTempo={setTempo}
+            subdivisions={subdivisions}
+            setSubdivisions={setSubdivisions}
+            isPaused={isPaused}
+            setIsPaused={setIsPaused}
+            swing={swing}
+            setSwing={setSwing}
+            volume={volume}
+            setVolume={setVolume}
+            togglePlay={togglePlay}
+            analogMode={false}
+            gridMode={true}
+            accents={accents}
+            updateAccents={setAccents}
+          />
+        </>
       )}
 
       <Footer />

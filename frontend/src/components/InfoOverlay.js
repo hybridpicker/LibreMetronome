@@ -38,7 +38,7 @@ const InfoModal = ({ onClose }) => {
           <li><strong>A:</strong> Switch to Analog Mode</li>
           <li><strong>C:</strong> Switch to Circle Mode</li>
           <li><strong>G:</strong> Switch to Grid Mode</li>
-          <li><strong>I:</strong> Show/Hide Info Overlay</li>
+          <li><strong>I:</strong> Show Info Overlay</li>
         </ul>
       </div>
     </div>
