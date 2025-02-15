@@ -1,52 +1,85 @@
-// src/components/InfoOverlay.js
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import infoButtonIcon from '../assets/svg/info-button.svg';
-import './InfoOverlay.css'; // Create/update CSS for modal styling
+import './InfoOverlay.css';
 
-// The overlay/modal component
-const InfoModal = ({ onClose }) => (
-  <div className="info-overlay" role="dialog" aria-modal="true">
-    <div className="info-modal">
-      <button
-        className="info-close-button"
-        onClick={onClose}
-        aria-label="Close Information"
-      >
-        &times;
-      </button>
-      <h2>Metronome Information</h2>
-      <ul>
-        <li>
-          <strong>Interactive Controls:</strong> Easily adjustable parameters such as tempo, swing, and volume. The swing and volume values are displayed as percentages (0–100%), while the tempo is displayed in BPM.
-        </li>
-        <li>
-          <strong>Keyboard Interaction:</strong> In addition to mouse or touch controls, the application supports keyboard shortcuts (e.g., Space to start/pause, numeric keys (1–9) to adjust subdivisions, and "T" for tap tempo).
-        </li>
-      </ul>
+// Modal displayed when the info overlay is active
+const InfoModal = ({ onClose }) => {
+  
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onClose]);
+
+  return (
+    <div className="info-overlay" role="dialog" aria-modal="true">
+      <div className="info-modal">
+        <button 
+          className="info-close-button" 
+          onClick={onClose} 
+          aria-label="Close Info Overlay"
+        >
+          &times;
+        </button>
+        <h2>Keyboard Shortcuts</h2>
+        <ul>
+          <li><strong>Space:</strong> Start/Pause</li>
+          <li><strong>T:</strong> Tap tempo</li>
+          <li><strong>1–9:</strong> Adjust subdivisions</li>
+          <li><strong>Left/Right Arrows:</strong> Increase/Decrease tempo</li>
+          <li><strong>A:</strong> Switch to Analog Mode</li>
+          <li><strong>C:</strong> Switch to Circle Mode</li>
+          <li><strong>G:</strong> Switch to Grid Mode</li>
+          <li><strong>I:</strong> Show Info Overlay</li>
+        </ul>
+      </div>
     </div>
-  </div>
+  );
+};
+
+// Info button that is always visible
+const InfoButton = ({ onClick }) => (
+  <button className="info-button" onClick={onClick} aria-label="Toggle Info Overlay">
+    <img src={infoButtonIcon} alt="Info" />
+  </button>
 );
 
-// The Info button component that toggles the overlay
-const InfoButton = () => {
-  const [isInfoVisible, setIsInfoVisible] = React.useState(false);
+// Main component that combines the button and modal
+const InfoOverlay = () => {
+  const [isVisible, setIsVisible] = useState(false);
 
-  const toggleInfo = () => {
-    setIsInfoVisible((prev) => !prev);
+  const toggleOverlay = () => {
+    setIsVisible((prev) => !prev);
   };
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'I' || event.key === 'i') {
+        setIsVisible(true);
+      } else if (event.key === 'Escape') {
+        setIsVisible(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   return (
     <>
-      <button
-        className="info-button"
-        onClick={toggleInfo}
-        aria-label="Information"
-      >
-        <img src={infoButtonIcon} alt="Info" />
-      </button>
-      {isInfoVisible && <InfoModal onClose={toggleInfo} />}
+      <InfoButton onClick={toggleOverlay} />
+      {isVisible && <InfoModal onClose={toggleOverlay} />}
     </>
   );
 };
 
-export default InfoButton;
+export default InfoOverlay;

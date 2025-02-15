@@ -21,9 +21,13 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import Header from './components/Header';
 import Footer from './components/Footer';
-import Info from './components/InfoOverlay';
+import InfoOverlay from './components/InfoOverlay';
 import AdvancedMetronomeWithCircle from './components/AdvancedMetronomeWithCircle';
 import GridModeMetronome from './components/GridModeMetronome';
+import useKeyboardShortcuts from './hooks/KeyboardShortcuts';
+
+const TEMPO_MIN = 15;
+const TEMPO_MAX = 240;
 
 function App() {
   // Default mode is now "circle" to always display Circle Mode first.
@@ -41,7 +45,7 @@ function App() {
   // Toggle play/pause state
   const togglePlay = () => setIsPaused(prev => !prev);
 
-  // NEW: Lift accent state to the parent.
+  // Lift accent state to the parent.
   const [accents, setAccents] = useState(
     Array.from({ length: subdivisions }, (_, i) => i === 0)
   );
@@ -60,9 +64,31 @@ function App() {
     });
   };
 
+  // State for the InfoOverlay visibility
+  const [isInfoVisible, setIsInfoVisible] = useState(false);
+  const toggleInfoOverlay = () => setIsInfoVisible(prev => !prev);
+
+  // Example Tap Tempo handler (could be linked to metronome logic)
+  const handleTapTempo = () => {
+    console.log("Tap Tempo triggered via keyboard");
+  };
+
+  // Integrate global keyboard shortcuts using our custom hook
+  useKeyboardShortcuts({
+    onTogglePlayPause: togglePlay,
+    onTapTempo: handleTapTempo,
+    onSetSubdivisions: setSubdivisions,
+    onIncreaseTempo: () => setTempo(prev => Math.min(prev + 5, TEMPO_MAX)),
+    onDecreaseTempo: () => setTempo(prev => Math.max(prev - 5, TEMPO_MIN)),
+    onSwitchToAnalog: () => setMode("analog"),
+    onSwitchToCircle: () => setMode("circle"),
+    onSwitchToGrid: () => setMode("grid"),
+    onToggleInfoOverlay: toggleInfoOverlay,
+  });
+
   return (
     <div className="app-container">
-      <Info />
+      <InfoOverlay isVisible={isInfoVisible} onClose={toggleInfoOverlay} />
       <Header />
 
       {/* Mode selection buttons */}
@@ -142,8 +168,8 @@ function App() {
           setVolume={setVolume}
           togglePlay={togglePlay}
           analogMode={false}
-          accents={accents}           // Pass the current accent state
-          toggleAccent={toggleAccent} // Pass the accent toggler
+          accents={accents} 
+          toggleAccent={toggleAccent} 
         />
       )}
       {mode === "grid" && (
@@ -161,7 +187,7 @@ function App() {
           togglePlay={togglePlay}
           analogMode={false}
           gridMode={true}
-          accents={accents} // Grid mode uses the same accent configuration!
+          accents={accents}
         />
       )}
 
