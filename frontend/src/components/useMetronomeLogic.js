@@ -14,10 +14,10 @@ export default function useMetronomeLogic({
   swing,
   volume,
   accents = [],
-  beatConfig, // Optional: For Grid Mode; if not provided, defaults will be used
+  beatConfig, // optional, falls nicht vorhanden, wird standardmäßig ein Array voller 1er genutzt
   setSubdivisions,
   analogMode = false,
-  gridMode = false // true when Grid Mode is active
+  gridMode = false // true, wenn Grid Mode aktiv ist
 }) {
   // State for current subdivision (for visual synchronization)
   const [currentSubdivision, setCurrentSubdivision] = useState(0);
@@ -49,9 +49,7 @@ export default function useMetronomeLogic({
   useEffect(() => { volumeRef.current = volume; }, [volume]);
   useEffect(() => { subdivisionsRef.current = subdivisions; }, [subdivisions]);
 
-  // Beat configuration handling:
-  // For Grid Mode, if a beatConfig is provided and has the correct length, use it;
-  // otherwise, default to an array where the first beat is 3 and all others are 1.
+  // beatConfig handling: For Grid Mode, if no beatConfig is provided, default to [3, 1, 1, …]
   const beatConfigRef = useRef(null);
   useEffect(() => {
     if (gridMode) {
@@ -70,7 +68,8 @@ export default function useMetronomeLogic({
     console.log("useMetronomeLogic - beatConfig updated:", beatConfigRef.current);
   }, [beatConfig, subdivisions, gridMode]);
 
-  // Define stopScheduler before any usage
+  // -------------------------------
+  // Definition von stopScheduler (muss vor allen Verwendungen stehen)
   const stopScheduler = useCallback(() => {
     if (lookaheadRef.current) {
       clearInterval(lookaheadRef.current);
@@ -79,8 +78,9 @@ export default function useMetronomeLogic({
       console.log("useMetronomeLogic - Scheduler stopped.");
     }
   }, []);
+  // -------------------------------
 
-  // Create the AudioContext and load sound buffers (only once)
+  // Create AudioContext and load sounds
   useEffect(() => {
     if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
       try {
@@ -112,7 +112,7 @@ export default function useMetronomeLogic({
     };
   }, [stopScheduler]);
 
-  // schedulePlay: Schedules playback of a given buffer at the specified time
+  // schedulePlay: Schedules playback of a given buffer at time "when"
   const schedulePlay = useCallback((buffer, when) => {
     if (!buffer || !audioCtxRef.current) return;
     const source = audioCtxRef.current.createBufferSource();
@@ -124,7 +124,7 @@ export default function useMetronomeLogic({
     console.log(`useMetronomeLogic - Scheduled sound at ${when.toFixed(3)}s`);
   }, []);
 
-  // scheduleSubdivision: Determines which sound to play based on the mode and accent settings.
+  // scheduleSubdivision: Determines which sound to play based on mode and accent settings.
   const scheduleSubdivision = useCallback((subIndex, when) => {
     if (analogMode) {
       schedulePlay(normalBufferRef.current, when);
@@ -138,7 +138,6 @@ export default function useMetronomeLogic({
         schedulePlay(normalBufferRef.current, when);
       }
     } else {
-      // In Circle Mode: first beat uses first beat sound; others use accent if set
       if (subIndex === 0) {
         schedulePlay(firstBufferRef.current, when);
       } else if (accents[subIndex]) {
@@ -180,7 +179,7 @@ export default function useMetronomeLogic({
     return baseSubSec;
   }, [analogMode, gridMode, getEffectiveSubdivisions]);
 
-  // Scheduler: Schedules all subdivision sounds within the lookahead window.
+  // scheduler: Schedules all subdivisions within the lookahead window.
   const scheduler = useCallback(() => {
     if (!audioCtxRef.current) return;
     const now = audioCtxRef.current.currentTime;
@@ -229,7 +228,7 @@ export default function useMetronomeLogic({
     }
   }, [setTempo]);
 
-  // Global keyboard listener for Space, number keys, and "t" (tap tempo)
+  // Global keyboard listener for Space, number keys and "t" (tap tempo)
   useEffect(() => {
     function handleKeydown(e) {
       if (e.code === 'Space') {
@@ -249,7 +248,7 @@ export default function useMetronomeLogic({
     return () => window.removeEventListener('keydown', handleKeydown);
   }, [setIsPaused, setSubdivisions, handleTapTempo, analogMode]);
 
-  // Start or stop the scheduler based on isPaused state
+  // Start/stop scheduler based on isPaused
   useEffect(() => {
     if (!audioCtxRef.current) return;
     if (audioCtxRef.current.state === 'closed') {
@@ -275,9 +274,9 @@ export default function useMetronomeLogic({
     }
   }, [isPaused, startScheduler, stopScheduler]);
 
-  // In Circle Mode: Restart scheduler when accents change
+  // In Circle Mode: Wenn sich die Accent-Einstellungen ändern, Scheduler neu starten.
   useEffect(() => {
-    if (gridMode) return; // Only for Circle Mode
+    if (gridMode) return; // Nur in Circle Mode
     if (!isPaused && audioCtxRef.current && schedulerRunningRef.current) {
       console.log("useMetronomeLogic - Accents changed, restarting scheduler.");
       stopScheduler();
