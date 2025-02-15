@@ -1,5 +1,4 @@
-// src/components/GridModeMetronome.js
-
+// GridModeMetronome.js
 import React, { useState, useEffect, useCallback } from 'react';
 import useMetronomeLogic from './useMetronomeLogic';
 
@@ -64,9 +63,18 @@ export default function GridModeMetronome({
       const newConfig = Array.from({ length: subdivisions }, (_, i) =>
         i === 0 ? 3 : (accents && accents[i] ? 2 : (prev[i] !== undefined ? prev[i] : 1))
       );
+      
+      // Deep comparison: update only if there is an actual change.
+      if (
+        newConfig.length === prev.length &&
+        newConfig.every((val, idx) => val === prev[idx])
+      ) {
+        return prev; // Keine Änderung → kein Update.
+      }
+      
       return newConfig;
     });
-  }, [subdivisions, accents]); // <-- Added accents as a dependency
+  }, [subdivisions, accents]);
 
   // Toggle a grid column's state on click.
   const handleColumnClickIndex = useCallback((index) => {

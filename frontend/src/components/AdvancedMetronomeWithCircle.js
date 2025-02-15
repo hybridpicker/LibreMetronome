@@ -1,4 +1,4 @@
-// src/components/AdvancedMetronomeWithCircle.js
+// AdvancedMetronomeWithCircle.js
 import React, { useState, useEffect } from 'react';
 import useMetronomeLogic from './useMetronomeLogic';
 
@@ -58,8 +58,8 @@ export default function AdvancedMetronomeWithCircle({
   setTapTempo,
   togglePlay,
   analogMode = false,
-  accents,         // Accept parent's accent state if provided
-  toggleAccent     // Accept parent's toggleAccent function if provided
+  accents,
+  toggleAccent
 }) {
   // Use parent's accents if provided; otherwise, initialize local accent state.
   const [localAccents, setLocalAccents] = useState(
