@@ -1,4 +1,3 @@
-// GridModeMetronome.js
 import React, { useState, useEffect, useCallback } from 'react';
 import useMetronomeLogic from './useMetronomeLogic';
 
@@ -11,7 +10,7 @@ import tapButtonIcon from '../assets/svg/tap-button.svg';
 
 // Play/Pause Icons
 import playIcon from '../assets/svg/play.svg';
-import pauseIcon from '../assets/svg/pause.svg';
+import pauseIcon from '../assets/svg/play.svg'; // Falls pause.svg separat vorliegt, ersetzen Sie diesen Import
 
 // Subdivision icons (inactive)
 import subdivision1 from '../assets/svg/subdivision-1.svg';
@@ -50,33 +49,40 @@ export default function GridModeMetronome({
   togglePlay,
   analogMode = false,
   gridMode = true,
-  accents = null
+  accents = null,
+  updateAccents
 }) {
-  // Grid configuration: each column is initially set to 1.
+  // Grid configuration: Jeder Spalte wird initial der Zustand 1 zugewiesen;
+  // für den ersten Beat gilt der Zustand 3 (immer akzentuiert).
   const [gridConfig, setGridConfig] = useState(
     Array.from({ length: subdivisions }, () => 1)
   );
 
-  // Update grid configuration when subdivisions or accents change.
+  // Aktualisierung der gridConfig, wenn subdivisions oder accents sich ändern.
   useEffect(() => {
     setGridConfig((prev) => {
       const newConfig = Array.from({ length: subdivisions }, (_, i) =>
         i === 0 ? 3 : (accents && accents[i] ? 2 : (prev[i] !== undefined ? prev[i] : 1))
       );
-      
-      // Deep comparison: update only if there is an actual change.
       if (
         newConfig.length === prev.length &&
         newConfig.every((val, idx) => val === prev[idx])
       ) {
-        return prev; // Keine Änderung → kein Update.
+        return prev;
       }
-      
       return newConfig;
     });
   }, [subdivisions, accents]);
 
-  // Toggle a grid column's state on click.
+  // Synchronisiere den Akzentstatus mit dem Elternteil, sobald gridConfig sich ändert.
+  useEffect(() => {
+    if (updateAccents) {
+      const newAccents = gridConfig.map((state, i) => (i === 0 ? true : state === 2));
+      updateAccents(newAccents);
+    }
+  }, [gridConfig, updateAccents]);
+
+  // Beim Klick auf eine Spalte: Umschalten des Zustands (1 → 2 → 3 → 1).
   const handleColumnClickIndex = useCallback((index) => {
     setGridConfig((prev) => {
       const newConfig = [...prev];
@@ -85,7 +91,7 @@ export default function GridModeMetronome({
     });
   }, []);
 
-  // Create subdivision buttons with icons.
+  // Erzeuge die Subdivision-Buttons anhand der Icons.
   const subdivisionButtons = (() => {
     const subIcons = [
       subdivision1,
@@ -126,7 +132,7 @@ export default function GridModeMetronome({
     });
   })();
 
-  // Initialize metronome logic; pass gridConfig as beatConfig.
+  // Initialisiere die Metronom-Logik mit gridConfig als beatConfig.
   const { currentSubdivision, tapTempo } = useMetronomeLogic({
     tempo,
     setTempo,
@@ -141,19 +147,18 @@ export default function GridModeMetronome({
     gridMode
   });
 
-  // Pass the tapTempo function to a parent component if needed.
   useEffect(() => {
     if (setTapTempo) {
       setTapTempo(() => tapTempo);
     }
   }, [tapTempo, setTapTempo]);
 
-  // Define square dimensions and grid dimensions.
+  // Definiere Größe der Quadrate und des gesamten Grids.
   const squareSize = 50;
   const gridWidth = subdivisions * squareSize;
   const gridHeight = squareSize * 3;
 
-  // Mobile detection: check if the device width is less than 768px.
+  // Mobile-Erkennung: Falls window.innerWidth < 768px.
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -163,7 +168,7 @@ export default function GridModeMetronome({
 
   return (
     <div style={{ textAlign: 'center' }}>
-      {/* SVG Grid Display */}
+      {/* SVG-Grid-Anzeige */}
       <svg
         width={gridWidth}
         height={gridHeight}
@@ -177,7 +182,6 @@ export default function GridModeMetronome({
           >
             {Array.from({ length: 3 }, (_, rowIndex) => {
               const isActive = rowIndex >= (3 - state);
-              // Highlight the column if it matches the current subdivision and the metronome is running.
               const isCurrent = colIndex === currentSubdivision && !isPaused;
               return (
                 <image
@@ -192,6 +196,7 @@ export default function GridModeMetronome({
                     transition: 'opacity 0.2s ease-in-out',
                     opacity: isCurrent ? 1 : 0.6,
                   }}
+                  alt={`Grid-Zelle ${colIndex}, Zeile ${rowIndex}`}
                 />
               );
             })}
@@ -199,7 +204,7 @@ export default function GridModeMetronome({
         ))}
       </svg>
 
-      {/* Subdivision Buttons */}
+      {/* Unterteilungs-Buttons */}
       <div style={{ marginTop: '15px', textAlign: 'center' }}>
         <h3>Subdivision</h3>
         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px' }}>
@@ -207,7 +212,7 @@ export default function GridModeMetronome({
         </div>
       </div>
 
-      {/* Play/Pause Button */}
+      {/* Play/Pause-Button */}
       <div style={{ marginTop: '10px' }}>
         <button
           onClick={togglePlay}
@@ -217,6 +222,7 @@ export default function GridModeMetronome({
             border: 'none',
             cursor: 'pointer'
           }}
+          aria-label="Toggle play/pause"
         >
           <img
             src={isPaused ? playIcon : pauseIcon}
@@ -226,7 +232,7 @@ export default function GridModeMetronome({
         </button>
       </div>
 
-      {/* Sliders for Volume, Swing, and Tempo */}
+      {/* Slider für Volume, Swing und Tempo */}
       <div className="sliders-container" style={{ marginTop: '20px', width: '100%' }}>
         <div className="slider-item" style={{ marginBottom: '10px', maxWidth: '300px', margin: '0 auto' }}>
           {(!analogMode && subdivisions % 2 === 0 && subdivisions >= 2) && (
@@ -270,7 +276,7 @@ export default function GridModeMetronome({
         </div>
       </div>
 
-      {/* Conditionally render the Tap Tempo button on mobile devices */}
+      {/* Auf mobilen Geräten: Tap Tempo-Button */}
       {isMobile && (
         <button
           onClick={tapTempo}
