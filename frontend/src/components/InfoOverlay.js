@@ -33,11 +33,12 @@ const InfoModal = ({ onClose }) => {
           <li><strong>Space:</strong> Start/Pause</li>
           <li><strong>T:</strong> Tap tempo</li>
           <li><strong>1–9:</strong> Adjust subdivisions</li>
-          <li><strong>Left/Right Arrows:</strong> Increase/Decrease tempo</li>
+          <li><strong>Left/Right Arrows:</strong> Increase/Decrease tempo (default step)</li>
+          <li><strong>Ctrl/Cmd + Left/Right Arrows:</strong> Increase/Decrease tempo by 1 BPM</li>
           <li><strong>A:</strong> Switch to Analog Mode</li>
           <li><strong>C:</strong> Switch to Circle Mode</li>
           <li><strong>G:</strong> Switch to Grid Mode</li>
-          <li><strong>I:</strong> Show Info Overlay</li>
+          <li><strong>I:</strong> Show/Hide Info Overlay</li>
         </ul>
       </div>
     </div>
@@ -54,6 +55,7 @@ const InfoButton = ({ onClick }) => (
 // Main component that combines the button and modal
 const InfoOverlay = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const [tempo, setTempo] = useState(120); // Beispielwert für Tempo
 
   const toggleOverlay = () => {
     setIsVisible((prev) => !prev);
@@ -65,6 +67,18 @@ const InfoOverlay = () => {
         setIsVisible(true);
       } else if (event.key === 'Escape') {
         setIsVisible(false);
+      } else if (event.key === 'ArrowRight') {
+        if (event.ctrlKey || event.metaKey) {
+          setTempo((prevTempo) => prevTempo + 1); // Erhöht um 1 BPM mit Strg/Cmd
+        } else {
+          setTempo((prevTempo) => prevTempo + 5); // Erhöht um 5 BPM standardmäßig
+        }
+      } else if (event.key === 'ArrowLeft') {
+        if (event.ctrlKey || event.metaKey) {
+          setTempo((prevTempo) => prevTempo - 1); // Verringert um 1 BPM mit Strg/Cmd
+        } else {
+          setTempo((prevTempo) => prevTempo - 5); // Verringert um 5 BPM standardmäßig
+        }
       }
     };
 
