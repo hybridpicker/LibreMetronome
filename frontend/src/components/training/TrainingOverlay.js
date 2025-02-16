@@ -1,22 +1,27 @@
 // File: src/components/training/TrainingOverlay.js
 import React, { useState, useEffect } from 'react';
 import './TrainingOverlay.css';
-import trainingButtonIcon from '../../assets/svg/training-button.svg'; // Standard (aus)
-import trainingButtonOnIcon from '../../assets/svg/training-button-on.svg'; // Trainingsmodus aktiv
+import trainingButtonIcon from '../../assets/svg/training-button.svg';       // Icon when training mode is off
+import trainingButtonOnIcon from '../../assets/svg/training-button-on.svg';    // Icon when training mode is on
 
-// TrainingModal: Zeigt die Optionen für die Trainingsmodi an.
+/**
+ * TrainingModal displays the training mode settings.
+ */
 const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings }) => {
   const [localSettings, setLocalSettings] = useState(trainingSettings);
 
   useEffect(() => {
+    console.log("[TrainingModal] Received trainingSettings:", trainingSettings);
     setLocalSettings(trainingSettings);
   }, [trainingSettings]);
 
   const handleChange = (field, value) => {
+    console.log(`[TrainingModal] ${field} changed to:`, value);
     setLocalSettings(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSave = () => {
+    console.log("[TrainingModal] Saving settings:", localSettings);
     setTrainingSettings(localSettings);
     onClose();
   };
@@ -26,7 +31,7 @@ const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings }) => {
       <div className="training-modal">
         <button 
           className="training-close-button" 
-          onClick={onClose} 
+          onClick={() => { console.log("[TrainingModal] Close clicked"); onClose(); }} 
           aria-label="Close Training Overlay"
         >
           &times;
@@ -125,26 +130,35 @@ const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings }) => {
   );
 };
 
-// TrainingButton: Wechselt das Icon, je nachdem ob ein Trainingsmodus aktiv ist.
-const TrainingButton = ({ onClick, active }) => (
-  <button className="training-button" onClick={onClick} aria-label="Toggle Training Overlay">
-    <img src={active ? trainingButtonOnIcon : trainingButtonIcon} alt="Training" />
-  </button>
-);
+/**
+ * TrainingButton displays a button with an icon that changes when training mode is active.
+ */
+const TrainingButton = ({ onClick, active }) => {
+  console.log("[TrainingButton] Render, active =", active);
+  return (
+    <button className="training-button" onClick={onClick} aria-label="Toggle Training Overlay">
+      <img src={active ? trainingButtonOnIcon : trainingButtonIcon} alt="Training" />
+    </button>
+  );
+};
 
-// TrainingOverlay: Kombiniert den Trainingsbutton und das Modal.
+/**
+ * TrainingOverlay combines the TrainingButton and the TrainingModal.
+ */
 const TrainingOverlay = ({ trainingSettings, setTrainingSettings }) => {
   const [isVisible, setIsVisible] = useState(false);
-  // Trainingsmodus aktiv, falls einer der Modi (Macro oder Speed) ungleich 0 ist.
+  // Training is active if either macroMode or speedMode is not 0.
   const trainingActive = trainingSettings.macroMode !== 0 || trainingSettings.speedMode !== 0;
 
   const toggleOverlay = () => {
+    console.log("[TrainingOverlay] Toggling overlay. New state:", !isVisible);
     setIsVisible(prev => !prev);
   };
 
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
+        console.log("[TrainingOverlay] Escape pressed, closing overlay.");
         setIsVisible(false);
       }
     };

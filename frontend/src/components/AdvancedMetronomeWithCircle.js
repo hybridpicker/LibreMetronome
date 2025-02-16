@@ -1,4 +1,4 @@
-// File: src/components/AdvancedMetronomeWithCircle.jsx
+// File: src/components/AdvancedMetronomeWithCircle.js
 import React, { useState, useEffect } from 'react';
 import useMetronomeLogic from './useMetronomeLogic';
 import firstBeat from '../assets/svg/firstBeat.svg';
@@ -49,13 +49,12 @@ export default function AdvancedMetronomeWithCircle({
   setSwing,
   volume,
   setVolume,
-  setTapTempo,
   togglePlay,
-  // analogMode: if true, render analog mode; if false, render circle mode.
+  registerTogglePlay, // New prop to register the play/pause handler
   analogMode = false,
   accents,
   toggleAccent,
-  // Training mode parameters (passed through)
+  // Training mode parameters
   macroMode,
   speedMode,
   measuresUntilMute,
@@ -94,6 +93,29 @@ export default function AdvancedMetronomeWithCircle({
   };
   const effectiveToggleAccent = toggleAccent || localToggleAccent;
 
+  // Instantiate metronome logic
+  const logic = useMetronomeLogic({
+    tempo,
+    setTempo,
+    subdivisions,
+    setIsPaused,
+    setSubdivisions,
+    swing,
+    volume,
+    accents: effectiveAccents,
+    analogMode,
+    gridMode: false,
+    macroMode,
+    speedMode,
+    measuresUntilMute,
+    muteDurationMeasures,
+    muteProbability,
+    tempoIncreasePercent,
+    measuresUntilSpeedUp
+  });
+
+  // Removed setTapTempo useEffect as setTapTempo is not defined
+
   const handlePlayPause = () => {
     console.log("[AdvancedMetronome] Play/Pause button pressed.");
     if (isPaused) {
@@ -115,6 +137,14 @@ export default function AdvancedMetronomeWithCircle({
       console.log("[AdvancedMetronome] Scheduler stopped via handlePlayPause.");
     }
   };
+
+  // Register the play/pause handler for keyboard shortcuts
+  useEffect(() => {
+    if (registerTogglePlay) {
+      // Register the play/pause toggle function so that the keyboard shortcut can invoke it.
+      registerTogglePlay(handlePlayPause);
+    }
+  }, [registerTogglePlay, handlePlayPause]);
 
   const subdivisionButtons = (() => {
     const subIcons = [
@@ -158,35 +188,6 @@ export default function AdvancedMetronomeWithCircle({
       );
     });
   })();
-
-  const logic = useMetronomeLogic({
-    tempo,
-    setTempo,
-    subdivisions,
-    setIsPaused,
-    setSubdivisions,
-    swing,
-    volume,
-    accents: effectiveAccents,
-    analogMode,
-    gridMode: false,
-    macroMode,
-    speedMode,
-    measuresUntilMute,
-    muteDurationMeasures,
-    muteProbability,
-    tempoIncreasePercent,
-    measuresUntilSpeedUp
-  });
-
-  useEffect(() => {
-    if (setTapTempo) {
-      setTapTempo(() => {
-        console.log("[AdvancedMetronome] Tap tempo function set.");
-        return logic.tapTempo;
-      });
-    }
-  }, [logic.tapTempo, setTapTempo]);
 
   const getContainerSize = () => {
     if (window.innerWidth < 600) {
