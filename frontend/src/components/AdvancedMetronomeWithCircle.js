@@ -1,6 +1,9 @@
 // File: src/components/AdvancedMetronomeWithCircle.js
 import React, { useState, useEffect } from 'react';
-import useMetronomeLogic from './useMetronomeLogic';
+import useMetronomeLogic from '../hooks/useMetronomeLogic';
+import useKeyboardShortcuts from '../hooks/KeyboardShortcuts';
+
+// Import icons and assets
 import firstBeat from '../assets/svg/firstBeat.svg';
 import firstBeatActive from '../assets/svg/firstBeatActive.svg';
 import normalBeat from '../assets/svg/normalBeat.svg';
@@ -50,11 +53,13 @@ export default function AdvancedMetronomeWithCircle({
   volume,
   setVolume,
   togglePlay,
-  registerTogglePlay, // New prop to register the play/pause handler
+  registerTogglePlay, // To register the play/pause handler for keyboard shortcuts
   analogMode = false,
+  gridMode = false,
   accents,
   toggleAccent,
-  // Training mode parameters
+  // Training mode parameters:
+  trainingMode = false, // Activate training mode by setting this prop to true
   macroMode,
   speedMode,
   measuresUntilMute,
@@ -93,18 +98,20 @@ export default function AdvancedMetronomeWithCircle({
   };
   const effectiveToggleAccent = toggleAccent || localToggleAccent;
 
-  // Instantiate metronome logic
+  // Instantiate metronome logic and pass gridMode and trainingMode flags
   const logic = useMetronomeLogic({
     tempo,
     setTempo,
     subdivisions,
-    setIsPaused,
     setSubdivisions,
+    isPaused,
+    setIsPaused,
     swing,
     volume,
     accents: effectiveAccents,
+    beatConfig: null, // Optional: you can pass a custom beatConfig if needed
     analogMode,
-    gridMode: false,
+    gridMode,
     macroMode,
     speedMode,
     measuresUntilMute,
@@ -114,8 +121,7 @@ export default function AdvancedMetronomeWithCircle({
     measuresUntilSpeedUp
   });
 
-  // Removed setTapTempo useEffect as setTapTempo is not defined
-
+  // Register play/pause handler for keyboard shortcuts
   const handlePlayPause = () => {
     console.log("[AdvancedMetronome] Play/Pause button pressed.");
     if (isPaused) {
@@ -138,13 +144,19 @@ export default function AdvancedMetronomeWithCircle({
     }
   };
 
-  // Register the play/pause handler for keyboard shortcuts
   useEffect(() => {
     if (registerTogglePlay) {
       // Register the play/pause toggle function so that the keyboard shortcut can invoke it.
       registerTogglePlay(handlePlayPause);
     }
   }, [registerTogglePlay, handlePlayPause]);
+
+  // Register keyboard shortcuts, ensuring onTapTempo is set to logic.tapTempo.
+  useKeyboardShortcuts({
+    onTogglePlayPause: handlePlayPause,
+    onTapTempo: logic.tapTempo,
+    // ... additional callbacks if needed
+  });
 
   const subdivisionButtons = (() => {
     const subIcons = [
@@ -230,14 +242,27 @@ export default function AdvancedMetronomeWithCircle({
 
   function getBeatIcon(beatIndex, isActive) {
     const isFirst = beatIndex === 0;
-    const isAccented = effectiveAccents[beatIndex];
     if (analogMode) return normalBeat;
-    if (isFirst) {
-      return isActive ? firstBeatActive : firstBeat;
-    } else if (isAccented) {
-      return isActive ? accentedBeatActive : accentedBeat;
+    if (gridMode) {
+      // In Grid Mode wird die Beat-Konfiguration anhand des effectiveAccents-Arrays erstellt:
+      const state = beatIndex === 0 ? 3 : (effectiveAccents[beatIndex] ? 2 : 1);
+      if (state === 3) {
+        return isActive ? firstBeatActive : firstBeat;
+      } else if (state === 2) {
+        return isActive ? accentedBeatActive : accentedBeat;
+      } else {
+        return isActive ? normalBeatActive : normalBeat;
+      }
     } else {
-      return isActive ? normalBeatActive : normalBeat;
+      // Im Circle Mode wird direkt auf effectiveAccents zugegriffen.
+      const isAccented = effectiveAccents[beatIndex];
+      if (isFirst) {
+        return isActive ? firstBeatActive : firstBeat;
+      } else if (isAccented) {
+        return isActive ? accentedBeatActive : accentedBeat;
+      } else {
+        return isActive ? normalBeatActive : normalBeat;
+      }
     }
   }
 
