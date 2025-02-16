@@ -1,29 +1,12 @@
-/*
- * LibreMetronome - Open Source Metronome
- *
- * This file is part of LibreMetronome.
- *
- * LibreMetronome is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * LibreMetronome is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
- */
-
-import React, { useState, useEffect } from 'react';
+// File: src/App.js
+import React, { useState } from 'react';
 import './App.css';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import InfoOverlay from './components/InfoOverlay';
 import AdvancedMetronomeWithCircle from './components/AdvancedMetronomeWithCircle';
 import GridModeMetronome from './components/GridModeMetronome';
+import TrainingOverlay from './components/training/TrainingOverlay';
 import useKeyboardShortcuts from './hooks/KeyboardShortcuts';
 
 const TEMPO_MIN = 15;
@@ -33,21 +16,21 @@ function App() {
   // Mode selection: "analog", "circle" or "grid"
   const [mode, setMode] = useState("circle");
 
-  // Metronom-Parameter
+  // Metronom parameters
   const [tempo, setTempo] = useState(120);
   const [isPaused, setIsPaused] = useState(true);
   const [subdivisions, setSubdivisions] = useState(4);
   const [swing, setSwing] = useState(0);
   const [volume, setVolume] = useState(0.5);
+
   const togglePlay = () => setIsPaused(prev => !prev);
 
-  // Einheitlicher Akzentstatus im Elternteil.
-  // Der erste Beat ist immer akzentuiert (true); weitere Beats starten mit false.
+  // Accent state (first beat always true)
   const [accents, setAccents] = useState(
     Array.from({ length: subdivisions }, (_, i) => i === 0)
   );
-  useEffect(() => {
-    // Reset, wenn sich subdivisions ändern.
+  // Reset accents when subdivisions change
+  React.useEffect(() => {
     setAccents(Array.from({ length: subdivisions }, (_, i) => i === 0));
   }, [subdivisions]);
   const toggleAccent = (index) => {
@@ -59,34 +42,37 @@ function App() {
     });
   };
 
-  // InfoOverlay-Zustand
-  const [isInfoVisible, setIsInfoVisible] = useState(false);
-  const toggleInfoOverlay = () => setIsInfoVisible(prev => !prev);
-
-  // Beispiel Tap Tempo-Handler (kann mit der Metronom-Logik verknüpft werden)
-  const handleTapTempo = () => {
-    console.log("Tap Tempo triggered via keyboard");
-  };
+  // Trainingsmodus-Parameter (Standardwerte)
+  const [trainingSettings, setTrainingSettings] = useState({
+    macroMode: 0,              // 0=Off, 1=Fixed Silence, 2=Random Silence
+    speedMode: 0,              // 0=Off, 1=Auto Increase, 2=Manual Increase
+    measuresUntilMute: 2,
+    muteDurationMeasures: 1,
+    muteProbability: 0.3,
+    measuresUntilSpeedUp: 2,
+    tempoIncreasePercent: 5
+  });
 
   // Globale Tastaturkürzel
   useKeyboardShortcuts({
     onTogglePlayPause: togglePlay,
-    onTapTempo: handleTapTempo,
+    onTapTempo: () => console.log("Tap Tempo triggered"),
     onSetSubdivisions: setSubdivisions,
     onIncreaseTempo: () => setTempo(prev => Math.min(prev + 5, TEMPO_MAX)),
     onDecreaseTempo: () => setTempo(prev => Math.max(prev - 5, TEMPO_MIN)),
     onSwitchToAnalog: () => setMode("analog"),
     onSwitchToCircle: () => setMode("circle"),
     onSwitchToGrid: () => setMode("grid"),
-    onToggleInfoOverlay: toggleInfoOverlay,
+    onToggleInfoOverlay: () => {} // Implementiere ggf. Deine Info-Overlay Logik
   });
 
   return (
     <div className="app-container">
-      <InfoOverlay isVisible={isInfoVisible} onClose={toggleInfoOverlay} />
+      <InfoOverlay />
       <Header />
-
-      {/* Mode-Auswahl */}
+      {/* Trainingsbutton (neben dem Info-Button) */}
+      <TrainingOverlay trainingSettings={trainingSettings} setTrainingSettings={setTrainingSettings} />
+      {/* Mode selection buttons */}
       <div style={{ marginBottom: "20px", display: "flex", gap: "10px", justifyContent: "center" }}>
         <button
           onClick={() => setMode("analog")}
@@ -132,7 +118,7 @@ function App() {
         </button>
       </div>
 
-      {/* Rendern des Metronoms je nach ausgewähltem Modus */}
+      {/* Render metronome based on selected mode, passing training parameters */}
       {mode === "analog" && (
         <AdvancedMetronomeWithCircle
           tempo={tempo}
@@ -147,6 +133,9 @@ function App() {
           setVolume={setVolume}
           togglePlay={togglePlay}
           analogMode={true}
+          accents={accents}
+          toggleAccent={toggleAccent}
+          {...trainingSettings}
         />
       )}
       {mode === "circle" && (
@@ -165,32 +154,29 @@ function App() {
           analogMode={false}
           accents={accents}
           toggleAccent={toggleAccent}
+          {...trainingSettings}
         />
       )}
-      {/* Kommentar vor dem Element – nicht inline! */}
       {mode === "grid" && (
-        <>
-          {/* New callback to sync accents */}
-          <GridModeMetronome
-            tempo={tempo}
-            setTempo={setTempo}
-            subdivisions={subdivisions}
-            setSubdivisions={setSubdivisions}
-            isPaused={isPaused}
-            setIsPaused={setIsPaused}
-            swing={swing}
-            setSwing={setSwing}
-            volume={volume}
-            setVolume={setVolume}
-            togglePlay={togglePlay}
-            analogMode={false}
-            gridMode={true}
-            accents={accents}
-            updateAccents={setAccents}
-          />
-        </>
+        <GridModeMetronome
+          tempo={tempo}
+          setTempo={setTempo}
+          subdivisions={subdivisions}
+          setSubdivisions={setSubdivisions}
+          isPaused={isPaused}
+          setIsPaused={setIsPaused}
+          swing={swing}
+          setSwing={setSwing}
+          volume={volume}
+          setVolume={setVolume}
+          togglePlay={togglePlay}
+          analogMode={false}
+          gridMode={true}
+          accents={accents}
+          updateAccents={setAccents}
+          {...trainingSettings}
+        />
       )}
-
       <Footer />
     </div>
   );

@@ -1,19 +1,20 @@
-// src/hooks/KeyboardShortcuts.js
+// File: src/hooks/KeyboardShortcuts.js
 import { useEffect } from 'react';
 
 /**
  * Custom hook to handle global keyboard shortcuts.
  *
- * @param {Object} callbacks - Callback functions for the keyboard actions.
- * @param {Function} callbacks.onTogglePlayPause - Called when Space gedrückt wird.
- * @param {Function} callbacks.onTapTempo - Called when T gedrückt wird.
- * @param {Function} callbacks.onSetSubdivisions - Called bei Zifferntasten (1–9).
- * @param {Function} callbacks.onIncreaseTempo - Erhöht das Tempo (Right Arrow).
- * @param {Function} callbacks.onDecreaseTempo - Verringert das Tempo (Left Arrow).
- * @param {Function} callbacks.onSwitchToAnalog - Wechselt in den Analog Mode (A).
- * @param {Function} callbacks.onSwitchToCircle - Wechselt in den Circle Mode (C).
- * @param {Function} callbacks.onSwitchToGrid - Wechselt in den Grid Mode (G).
- * @param {Function} callbacks.onToggleInfoOverlay - Zeigt oder versteckt das Info Overlay (I).
+ * Available callbacks:
+ * - onTogglePlayPause: Called when the Space key is pressed.
+ * - onTapTempo: Called when the "T" key is pressed.
+ * - onSetSubdivisions: Called when keys 1–9 are pressed to set subdivisions.
+ * - onIncreaseTempo: Called when the Right Arrow key is pressed.
+ * - onDecreaseTempo: Called when the Left Arrow key is pressed.
+ * - onSwitchToAnalog: Called when the "A" key is pressed.
+ * - onSwitchToCircle: Called when the "C" key is pressed.
+ * - onSwitchToGrid: Called when the "G" key is pressed.
+ * - onToggleInfoOverlay: Called when the "I" key is pressed.
+ * - onManualTempoIncrease: Called when the "U" key is pressed (for manual speed training).
  */
 const useKeyboardShortcuts = ({
   onTogglePlayPause,
@@ -25,28 +26,43 @@ const useKeyboardShortcuts = ({
   onSwitchToCircle,
   onSwitchToGrid,
   onToggleInfoOverlay,
+  onManualTempoIncrease,
 }) => {
   useEffect(() => {
     const handleKeydown = (e) => {
-      if (e.code === 'Space') {
-        e.preventDefault();
-        onTogglePlayPause && onTogglePlayPause();
-      } else if (e.key.toLowerCase() === 't') {
-        onTapTempo && onTapTempo();
-      } else if (e.key >= '1' && e.key <= '9') {
-        onSetSubdivisions && onSetSubdivisions(parseInt(e.key, 10));
-      } else if (e.key === 'ArrowRight') {
-        onIncreaseTempo && onIncreaseTempo();
-      } else if (e.key === 'ArrowLeft') {
-        onDecreaseTempo && onDecreaseTempo();
-      } else if (e.key.toLowerCase() === 'a') {
-        onSwitchToAnalog && onSwitchToAnalog();
-      } else if (e.key.toLowerCase() === 'c') {
-        onSwitchToCircle && onSwitchToCircle();
-      } else if (e.key.toLowerCase() === 'g') {
-        onSwitchToGrid && onSwitchToGrid();
-      } else if (e.key.toLowerCase() === 'i') {
-        onToggleInfoOverlay && onToggleInfoOverlay();
+      // Prevent repeated triggers if the key is held down.
+      if (e.repeat) return;
+      
+      switch (e.code) {
+        case 'Space':
+          e.preventDefault();
+          onTogglePlayPause && onTogglePlayPause();
+          break;
+        case 'ArrowRight':
+          onIncreaseTempo && onIncreaseTempo();
+          break;
+        case 'ArrowLeft':
+          onDecreaseTempo && onDecreaseTempo();
+          break;
+        default: {
+          const key = e.key.toLowerCase();
+          if (key === 't') {
+            onTapTempo && onTapTempo();
+          } else if (key >= '1' && key <= '9') {
+            onSetSubdivisions && onSetSubdivisions(parseInt(e.key, 10));
+          } else if (key === 'a') {
+            onSwitchToAnalog && onSwitchToAnalog();
+          } else if (key === 'c') {
+            onSwitchToCircle && onSwitchToCircle();
+          } else if (key === 'g') {
+            onSwitchToGrid && onSwitchToGrid();
+          } else if (key === 'i') {
+            onToggleInfoOverlay && onToggleInfoOverlay();
+          } else if (key === 'u') {
+            onManualTempoIncrease && onManualTempoIncrease();
+          }
+          break;
+        }
       }
     };
 
@@ -62,6 +78,7 @@ const useKeyboardShortcuts = ({
     onSwitchToCircle,
     onSwitchToGrid,
     onToggleInfoOverlay,
+    onManualTempoIncrease,
   ]);
 };
 

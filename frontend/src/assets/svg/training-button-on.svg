@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Ebene_2" data-name="Ebene 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 209.45 51.2">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #0ba3b2;
+        stroke: #fff;
+        stroke-miterlimit: 10;
+      }
+
+      .cls-2 {
+        letter-spacing: 0em;
+      }
+
+      .cls-3 {
+        letter-spacing: -.08em;
+      }
+
+      .cls-4 {
+        letter-spacing: -.01em;
+      }
+
+      .cls-5 {
+        fill: #fff;
+        font-family: Lato-Bold, Lato;
+        font-size: 36px;
+        font-weight: 700;
+      }
+    </style>
+  </defs>
+  <g id="Export">
+    <rect class="cls-1" x=".5" y=".5" width="208.45" height="50.2" rx="6.65" ry="6.65"/>
+    <text class="cls-5" transform="translate(7.93 39.61)"><tspan class="cls-3" x="0" y="0">T</tspan><tspan class="cls-4" x="18.54" y="0">r</tspan><tspan class="cls-2" x="32.72" y="0">aining ON</tspan></text>
+  </g>
+</svg>
