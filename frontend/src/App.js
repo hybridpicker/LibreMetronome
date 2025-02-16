@@ -1,5 +1,5 @@
 // File: src/App.js
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import './App.css';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -13,23 +13,21 @@ const TEMPO_MIN = 15;
 const TEMPO_MAX = 240;
 
 function App() {
-  // Mode selection: "analog", "circle" or "grid"
+  console.log("[App] Rendering App component");
+  // Mode selection: "analog", "circle", or "grid"
   const [mode, setMode] = useState("circle");
 
-  // Metronom parameters
+  // Metronome parameters
   const [tempo, setTempo] = useState(120);
   const [isPaused, setIsPaused] = useState(true);
   const [subdivisions, setSubdivisions] = useState(4);
   const [swing, setSwing] = useState(0);
   const [volume, setVolume] = useState(0.5);
 
-  const togglePlay = () => setIsPaused(prev => !prev);
-
-  // Accent state (first beat always true)
+  // Accent state: first beat always true.
   const [accents, setAccents] = useState(
     Array.from({ length: subdivisions }, (_, i) => i === 0)
   );
-  // Reset accents when subdivisions change
   React.useEffect(() => {
     setAccents(Array.from({ length: subdivisions }, (_, i) => i === 0));
   }, [subdivisions]);
@@ -38,11 +36,12 @@ function App() {
     setAccents(prev => {
       const newAccents = [...prev];
       newAccents[index] = !newAccents[index];
+      console.log(`[App] Toggle accent at index ${index}:`, newAccents[index]);
       return newAccents;
     });
   };
 
-  // Trainingsmodus-Parameter (Standardwerte)
+  // Training mode parameters (default values)
   const [trainingSettings, setTrainingSettings] = useState({
     macroMode: 0,              // 0=Off, 1=Fixed Silence, 2=Random Silence
     speedMode: 0,              // 0=Off, 1=Auto Increase, 2=Manual Increase
@@ -52,30 +51,71 @@ function App() {
     measuresUntilSpeedUp: 2,
     tempoIncreasePercent: 5
   });
+  console.log("[App] Initial trainingSettings:", trainingSettings);
 
-  // Globale Tastaturkürzel
+  // Ref to hold the current play/pause handler from the active metronome component.
+  const togglePlayRef = useRef(null);
+  const registerTogglePlay = (fn) => {
+    console.log("[App] Registered play/pause handler");
+    togglePlayRef.current = fn;
+  };
+
+  // Global keyboard shortcuts – the onTogglePlayPause callback calls the registered handler.
   useKeyboardShortcuts({
-    onTogglePlayPause: togglePlay,
-    onTapTempo: () => console.log("Tap Tempo triggered"),
-    onSetSubdivisions: setSubdivisions,
-    onIncreaseTempo: () => setTempo(prev => Math.min(prev + 5, TEMPO_MAX)),
-    onDecreaseTempo: () => setTempo(prev => Math.max(prev - 5, TEMPO_MIN)),
-    onSwitchToAnalog: () => setMode("analog"),
-    onSwitchToCircle: () => setMode("circle"),
-    onSwitchToGrid: () => setMode("grid"),
-    onToggleInfoOverlay: () => {} // Implementiere ggf. Deine Info-Overlay Logik
+    onTogglePlayPause: () => {
+      console.log("[App] onTogglePlayPause triggered via keyboard");
+      if (togglePlayRef.current) {
+        togglePlayRef.current();
+      }
+    },
+    onTapTempo: () => console.log("[App] onTapTempo triggered"),
+    onSetSubdivisions: (num) => {
+      console.log("[App] onSetSubdivisions triggered with:", num);
+      setSubdivisions(num);
+    },
+    onIncreaseTempo: () => {
+      console.log("[App] onIncreaseTempo triggered");
+      setTempo(prev => Math.min(prev + 5, TEMPO_MAX));
+    },
+    onDecreaseTempo: () => {
+      console.log("[App] onDecreaseTempo triggered");
+      setTempo(prev => Math.max(prev - 5, TEMPO_MIN));
+    },
+    onSwitchToAnalog: () => {
+      console.log("[App] Switching mode to Analog");
+      setMode("analog");
+    },
+    onSwitchToCircle: () => {
+      console.log("[App] Switching mode to Circle");
+      setMode("circle");
+    },
+    onSwitchToGrid: () => {
+      console.log("[App] Switching mode to Grid");
+      setMode("grid");
+    },
+    onToggleInfoOverlay: () => {
+      console.log("[App] onToggleInfoOverlay triggered");
+      // Implement InfoOverlay toggle logic if needed.
+    },
+    onManualTempoIncrease: () => {
+      console.log("[App] onManualTempoIncrease triggered");
+      // Handled within the metronome hook.
+    },
   });
 
   return (
     <div className="app-container">
       <InfoOverlay />
       <Header />
-      {/* Trainingsbutton (neben dem Info-Button) */}
+      {/* Training button (displayed next to the info button) */}
       <TrainingOverlay trainingSettings={trainingSettings} setTrainingSettings={setTrainingSettings} />
       {/* Mode selection buttons */}
       <div style={{ marginBottom: "20px", display: "flex", gap: "10px", justifyContent: "center" }}>
         <button
-          onClick={() => setMode("analog")}
+          onClick={() => {
+            console.log("[App] Mode switched to Analog");
+            setMode("analog");
+          }}
           style={{
             padding: "10px 20px",
             fontSize: "16px",
@@ -89,7 +129,10 @@ function App() {
           Analog Mode
         </button>
         <button
-          onClick={() => setMode("circle")}
+          onClick={() => {
+            console.log("[App] Mode switched to Circle");
+            setMode("circle");
+          }}
           style={{
             padding: "10px 20px",
             fontSize: "16px",
@@ -103,7 +146,10 @@ function App() {
           Circle Mode
         </button>
         <button
-          onClick={() => setMode("grid")}
+          onClick={() => {
+            console.log("[App] Mode switched to Grid");
+            setMode("grid");
+          }}
           style={{
             padding: "10px 20px",
             fontSize: "16px",
@@ -118,7 +164,7 @@ function App() {
         </button>
       </div>
 
-      {/* Render metronome based on selected mode, passing training parameters */}
+      {/* Render metronome based on selected mode; training settings are spread as props */}
       {mode === "analog" && (
         <AdvancedMetronomeWithCircle
           tempo={tempo}
@@ -131,11 +177,14 @@ function App() {
           setSwing={setSwing}
           volume={volume}
           setVolume={setVolume}
-          togglePlay={togglePlay}
+          togglePlay={() => {
+            if (togglePlayRef.current) togglePlayRef.current();
+          }}
           analogMode={true}
           accents={accents}
           toggleAccent={toggleAccent}
           {...trainingSettings}
+          registerTogglePlay={registerTogglePlay}
         />
       )}
       {mode === "circle" && (
@@ -150,11 +199,14 @@ function App() {
           setSwing={setSwing}
           volume={volume}
           setVolume={setVolume}
-          togglePlay={togglePlay}
+          togglePlay={() => {
+            if (togglePlayRef.current) togglePlayRef.current();
+          }}
           analogMode={false}
           accents={accents}
           toggleAccent={toggleAccent}
           {...trainingSettings}
+          registerTogglePlay={registerTogglePlay}
         />
       )}
       {mode === "grid" && (
@@ -169,12 +221,15 @@ function App() {
           setSwing={setSwing}
           volume={volume}
           setVolume={setVolume}
-          togglePlay={togglePlay}
+          togglePlay={() => {
+            if (togglePlayRef.current) togglePlayRef.current();
+          }}
           analogMode={false}
           gridMode={true}
           accents={accents}
           updateAccents={setAccents}
           {...trainingSettings}
+          registerTogglePlay={registerTogglePlay}
         />
       )}
       <Footer />
