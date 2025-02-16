@@ -1,19 +1,37 @@
-# Byte-compiled Python files
-*.pyc
-__pycache__/
-
 # macOS system files
 .DS_Store
 .AppleDouble
 .LSOverride
 
-# Pygame build directories
-build/
-dist/
+# Byte-compiled Python files
+*.pyc
+__pycache__/
 
 # Virtual environment directories
 venv/
 .virtualenv/
+
+# Pygame build directories
+build/
+dist/
+
+# Django-specific files
+*.log
+*.pot
+local_settings.py
+db.sqlite3
+
+# Ansible
+.env
+
+# React
+.DS_*
+*.log
+logs
+**/*.backup.*
+**/*.back.*
+node_modules
+bower_components
 
 # IDE-specific directories (e.g., Visual Studio Code)
 .vscode/
@@ -21,13 +39,5 @@ venv/
 # Log and debug files
 *.log
 
-### Django ###
-*.log
-*.pot
-*.pyc
-__pycache__/
-local_settings.py
-db.sqlite3
-
-#Ansible
-.env
+# Miscellaneous
+*.sublime*
