@@ -1,8 +1,8 @@
 // File: src/components/training/TrainingOverlay.js
 import React, { useState, useEffect } from 'react';
 import './TrainingOverlay.css';
-import trainingButtonIcon from '../../assets/svg/training-button.svg';       // Icon when training mode is off
-import trainingButtonOnIcon from '../../assets/svg/training-button-on.svg';    // Icon when training mode is on
+import trainingButtonIcon from '../../assets/svg/training-button.svg';       
+import trainingButtonOnIcon from '../../assets/svg/training-button-on.svg'; 
 
 /**
  * TrainingModal displays the training mode settings.
@@ -17,7 +17,26 @@ const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings }) => {
 
   const handleChange = (field, value) => {
     console.log(`[TrainingModal] ${field} changed to:`, value);
-    setLocalSettings(prev => ({ ...prev, [field]: value }));
+
+    // If the user chooses a non-zero macroMode, set speedMode to 0.
+    // If the user chooses a non-zero speedMode, set macroMode to 0.
+    if (field === 'macroMode') {
+      const macroVal = Number(value);
+      setLocalSettings(prev => ({
+        ...prev,
+        macroMode: macroVal,
+        speedMode: (macroVal !== 0) ? 0 : prev.speedMode
+      }));
+    } else if (field === 'speedMode') {
+      const speedVal = Number(value);
+      setLocalSettings(prev => ({
+        ...prev,
+        speedMode: speedVal,
+        macroMode: (speedVal !== 0) ? 0 : prev.macroMode
+      }));
+    } else {
+      setLocalSettings(prev => ({ ...prev, [field]: value }));
+    }
   };
 
   const handleSave = () => {
@@ -31,19 +50,24 @@ const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings }) => {
       <div className="training-modal">
         <button 
           className="training-close-button" 
-          onClick={() => { console.log("[TrainingModal] Close clicked"); onClose(); }} 
+          onClick={() => {
+            console.log("[TrainingModal] Close clicked");
+            onClose();
+          }} 
           aria-label="Close Training Overlay"
         >
           &times;
         </button>
         <h2>Training Mode Settings</h2>
+
+        {/* Macro-Timing Section */}
         <div className="training-section">
           <h3>Macro-Timing</h3>
           <label>
             Macro Mode:
             <select
               value={localSettings.macroMode}
-              onChange={(e) => handleChange('macroMode', Number(e.target.value))}
+              onChange={(e) => handleChange('macroMode', e.target.value)}
             >
               <option value={0}>Off</option>
               <option value={1}>Fixed Silence (Mode I)</option>
@@ -86,17 +110,19 @@ const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings }) => {
             </div>
           )}
         </div>
+
+        {/* Speed Training Section */}
         <div className="training-section">
           <h3>Speed Training</h3>
           <label>
             Speed Mode:
             <select
               value={localSettings.speedMode}
-              onChange={(e) => handleChange('speedMode', Number(e.target.value))}
+              onChange={(e) => handleChange('speedMode', e.target.value)}
             >
               <option value={0}>Off</option>
               <option value={1}>Auto Increase (Mode I)</option>
-              <option value={2}>Manual Increase (Mode II - press "U")</option>
+              <option value={2}>Manual Increase (Mode II)</option>
             </select>
           </label>
           {(localSettings.speedMode === 1 || localSettings.speedMode === 2) && (
@@ -122,6 +148,7 @@ const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings }) => {
             </div>
           )}
         </div>
+
         <button className="training-save-button" onClick={handleSave}>
           Save Settings
         </button>
@@ -147,7 +174,7 @@ const TrainingButton = ({ onClick, active }) => {
  */
 const TrainingOverlay = ({ trainingSettings, setTrainingSettings }) => {
   const [isVisible, setIsVisible] = useState(false);
-  // Training is active if either macroMode or speedMode is not 0.
+  // Training is "active" if macroMode != 0 OR speedMode != 0
   const trainingActive = trainingSettings.macroMode !== 0 || trainingSettings.speedMode !== 0;
 
   const toggleOverlay = () => {
