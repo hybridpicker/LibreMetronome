@@ -15,8 +15,6 @@ import { useEffect, useRef } from 'react';
  * - onSwitchToGrid: Called when the "G" key is pressed.
  * - onToggleInfoOverlay: Called when the "I" key is pressed.
  * - onManualTempoIncrease: Called when the "U" key is pressed.
- *
- * A minimal debounce is implemented for the Space key.
  */
 const useKeyboardShortcuts = ({
   onTogglePlayPause,

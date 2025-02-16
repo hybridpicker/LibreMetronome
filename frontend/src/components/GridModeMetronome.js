@@ -1,6 +1,6 @@
 // File: src/components/GridModeMetronome.js
 import React, { useState, useEffect, useCallback } from 'react';
-import useMetronomeLogic from './useMetronomeLogic';
+import useMetronomeLogic from '../hooks/useMetronomeLogic'; // Angepasster Importpfad
 
 // Grid Icons
 import squareInactive from '../assets/svg/grid/square_inactive.svg';
@@ -47,15 +47,15 @@ export default function GridModeMetronome({
   volume,
   setVolume,
   togglePlay,
-  registerTogglePlay, // New prop to register the play/pause handler
-  // For Grid Mode always: analogMode=false, gridMode=true
+  registerTogglePlay, // Neue Prop zum Registrieren des Play/Pause-Handers
+  // Für Grid Mode immer: analogMode=false, gridMode=true
   analogMode = false,
   gridMode = true,
-  // Ignore external accents – use internal default
+  // Externe Akzente werden ignoriert – intern wird ein Standard verwendet
   accents = null,
   updateAccents
 }) {
-  // Initialize the internal grid state: first column always 3, else 1.
+  // Initialisiere den internen Grid-Zustand: Erste Spalte immer 3 (first-beat), ansonsten 1.
   const [gridConfig, setGridConfig] = useState(
     Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1))
   );
@@ -65,7 +65,7 @@ export default function GridModeMetronome({
     );
   }, [subdivisions]);
 
-  // Synchronize accent status with parent if updateAccents is provided.
+  // Synchronisiere den Akzentstatus mit dem Parent, falls updateAccents übergeben wird.
   useEffect(() => {
     if (updateAccents) {
       const newAccents = gridConfig.map((state, i) => (i === 0 ? true : state === 2));
@@ -73,7 +73,7 @@ export default function GridModeMetronome({
     }
   }, [gridConfig, updateAccents]);
 
-  // On column click: cycle state 1 → 2 → 3 → 1.
+  // Bei Klick auf eine Spalte: Zyklisch den Zustand wechseln: 1 → 2 → 3 → 1.
   const handleColumnClickIndex = useCallback((index) => {
     setGridConfig(prev => {
       const newConfig = [...prev];
@@ -126,6 +126,7 @@ export default function GridModeMetronome({
     });
   })();
 
+  // Instanziiere die Metronom-Logik und übergebe dabei gridConfig als beatConfig.
   const logic = useMetronomeLogic({
     tempo,
     setTempo,
@@ -139,7 +140,7 @@ export default function GridModeMetronome({
     analogMode,
     gridMode,
     accents,
-    // Unused training parameters
+    // Unbenutzte Training-Parameter (Standardwerte)
     macroMode: 0,
     speedMode: 0,
     measuresUntilMute: 2,
@@ -149,9 +150,7 @@ export default function GridModeMetronome({
     measuresUntilSpeedUp: 2
   });
 
-  // Removed setTapTempo useEffect as setTapTempo is not defined
-
-  // Define grid dimensions.
+  // Bestimme Grid-Dimensionen
   const squareSize = 50;
   const gridWidth = subdivisions * squareSize;
   const gridHeight = squareSize * 3;
@@ -163,7 +162,7 @@ export default function GridModeMetronome({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Play/Pause handler: calls logic.startScheduler() or logic.stopScheduler().
+  // Play/Pause-Handler: Ruft logic.startScheduler() oder logic.stopScheduler() auf.
   const handlePlayPause = () => {
     console.log("[GridModeMetronome] Play/Pause button pressed.");
     if (isPaused) {
@@ -187,14 +186,14 @@ export default function GridModeMetronome({
     }
   };
 
-  // Register the play/pause handler for keyboard shortcuts
+  // Registriere den Play/Pause-Handler für Tastatur-Shortcuts.
   useEffect(() => {
     if (registerTogglePlay) {
-      // Register the play/pause toggle function so that the keyboard shortcut can invoke it.
       registerTogglePlay(handlePlayPause);
     }
   }, [registerTogglePlay, handlePlayPause]);
 
+  // Erzeuge SVG-Elemente für das Grid: Jede Spalte ist klickbar, um den Akzent-Zustand zu ändern.
   const gridSquares = Array.from({ length: subdivisions }, (_, colIndex) => (
     <g key={colIndex} onClick={() => handleColumnClickIndex(colIndex)} style={{ cursor: 'pointer' }}>
       {Array.from({ length: 3 }, (_, rowIndex) => {
@@ -244,7 +243,7 @@ export default function GridModeMetronome({
           />
         </button>
       </div>
-      {/* Slider container for Swing, Volume, and Tempo */}
+      {/* Slider-Container für Swing, Volume und Tempo */}
       <div className="sliders-container" style={{ marginTop: '20px', width: '100%' }}>
         <div className="slider-item" style={{ marginBottom: '10px', maxWidth: '300px', margin: '0 auto' }}>
           <label>Swing: {Math.round(swing * 200)}% </label>

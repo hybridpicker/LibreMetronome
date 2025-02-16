@@ -1,4 +1,4 @@
-// File: src/components/useMetronomeLogic.js
+// File: src/hooks/useMetronomeLogic.js
 import { useEffect, useRef, useState, useCallback } from 'react';
 
 // Global AudioContext persists across mounts
@@ -63,12 +63,17 @@ export default function useMetronomeLogic({
   const beatConfigRef = useRef(null);
   useEffect(() => {
     if (gridMode) {
-      if (beatConfig && beatConfig.length === subdivisions) {
-        beatConfigRef.current = beatConfig;
+      // Wenn ein accents-Array vorhanden ist und zur Anzahl der Subdivisions passt,
+      // wird die Beat-Konfiguration abgeleitet: Index 0 immer als "first" (3),
+      // weitere Indizes werden als Akzent (2) oder normal (1) gesetzt.
+      if (accents && accents.length === subdivisions) {
+         beatConfigRef.current = accents.map((accent, i) => i === 0 ? 3 : (accent ? 2 : 1));
+      } else if (beatConfig && beatConfig.length === subdivisions) {
+         beatConfigRef.current = beatConfig;
       } else {
-        beatConfigRef.current = Array.from({ length: subdivisions }, (_, i) =>
-          i === 0 ? 3 : 1
-        );
+         beatConfigRef.current = Array.from({ length: subdivisions }, (_, i) =>
+           i === 0 ? 3 : 1
+         );
       }
     } else {
       if (beatConfig && beatConfig.length > 0) {
@@ -78,7 +83,7 @@ export default function useMetronomeLogic({
       }
     }
     console.log("[useMetronomeLogic] beatConfig updated:", beatConfigRef.current);
-  }, [beatConfig, subdivisions, gridMode]);
+  }, [beatConfig, accents, subdivisions, gridMode]);
 
   // Training mode counters
   const measureCountRef = useRef(0);
@@ -249,6 +254,10 @@ export default function useMetronomeLogic({
       const newTempo = Math.round(60000 / avg);
       const clamped = Math.max(TEMPO_MIN, Math.min(TEMPO_MAX, newTempo));
       if (setTempo) setTempo(clamped);
+      // Reset training mode counters to prevent automatic adjustments from overriding manual tap
+      measureCountRef.current = 0;
+      muteMeasureCountRef.current = 0;
+      isSilencePhaseRef.current = false;
       console.log(`[useMetronomeLogic] New tempo from tap: ${clamped} BPM`);
     }
   }, [setTempo]);
@@ -305,7 +314,7 @@ export default function useMetronomeLogic({
     tapTempo: handleTapTempo,
     currentSubStartRef,
     currentSubIntervalRef,
-    startScheduler, // To be called by the play/pause handler
-    stopScheduler   // To be called by the play/pause handler
+    startScheduler,
+    stopScheduler
   };
 }
