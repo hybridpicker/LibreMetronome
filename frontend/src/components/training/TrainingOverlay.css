@@ -1,0 +1,60 @@
+/* File: src/components/training/TrainingOverlay.css */
+.training-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.training-modal {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 400px;
+  width: 90%;
+  text-align: left;
+  position: relative;
+}
+
+.training-close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #0ba3b2;
+  cursor: pointer;
+}
+
+.training-save-button {
+  background: #0ba3b2;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 15px;
+  cursor: pointer;
+}
+
+.training-button {
+  position: fixed;
+  top: 10px;
+  left: 50px; /* Positioned next to the info button */
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 1001;
+}
+
+.training-button img {
+  height: 30px;
+  object-fit: contain;
+}
