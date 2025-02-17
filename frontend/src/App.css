@@ -55,7 +55,7 @@
 /* Lines connecting beats, 0.5px thick, teal color */
 .line-connection {
   height: 0.5px;
-  background: #0ba3b2;
+  background: #00A0A0;
   position: absolute;
   pointer-events: none;
   transform-origin: center center;
@@ -91,7 +91,7 @@
 
 /* Default styling for range inputs */
 input[type="range"] {
-  accent-color: #0ba3b2;
+  accent-color: #00A0A0;
   display: block;
   margin: 0 auto;
 }
@@ -108,7 +108,7 @@ input[type="range"] {
 
 /* Tap tempo button styling */
 .tap-tempo-button {
-  background: #0ba3b2;
+  background: #00A0A0;
   color: #fff;
   border: none;
   border-radius: 5px;
@@ -213,6 +213,6 @@ input[type="range"] {
   border: none;
   font-size: 1.2rem;
   font-weight: bold;
-  color: #0ba3b2;
+  color: #00A0A0;
   cursor: pointer;
 }
