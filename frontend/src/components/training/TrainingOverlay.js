@@ -172,7 +172,7 @@ const TrainingButton = ({ onClick, active }) => {
 /**
  * TrainingOverlay combines the TrainingButton and the TrainingModal.
  */
-const TrainingOverlay = ({ trainingSettings, setTrainingSettings }) => {
+const TrainingOverlay = ({ trainingSettings, setTrainingSettings, onToggleInfo }) => {
   const [isVisible, setIsVisible] = useState(false);
   // Training is "active" if macroMode != 0 OR speedMode != 0
   const trainingActive = trainingSettings.macroMode !== 0 || trainingSettings.speedMode !== 0;

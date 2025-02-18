@@ -199,6 +199,9 @@ export default function AdvancedMetronomeWithCircle({
           onClick={() => {
             console.log(`[AdvancedMetronome] Setting subdivisions to ${subVal}`);
             setSubdivisions(subVal);
+            if (!analogMode && subdivisions % 2 === 0 && subdivisions >= 2 || gridMode) {
+                setSwing(0);
+            }
           }}
           style={{ cursor: 'pointer', width: '36px', height: '36px', margin: '0 3px' }}
         />
