@@ -127,6 +127,8 @@ input[type="range"] {
   border: none;
   cursor: pointer;
   padding: 0;
+  z-index: 1003;
+  text-decoration: none;
 }
 .info-button img {
   width: 30px;

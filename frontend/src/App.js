@@ -95,7 +95,7 @@ function App() {
     },
     onToggleInfoOverlay: () => {
       console.log("[App] onToggleInfoOverlay triggered");
-      // Implement InfoOverlay toggle logic if needed.
+      setIsInfoActive((prev) => !prev);
     },
     onManualTempoIncrease: () => {
       console.log("[App] onManualTempoIncrease triggered");
@@ -103,9 +103,11 @@ function App() {
     },
   });
 
+  const [isInfoActive, setIsInfoActive] = useState(false);
+
   return (
     <div className="app-container">
-      <InfoOverlay />
+      <InfoOverlay setActive={setIsInfoActive} />
       <Header />
       {/* Training button (displayed next to the info button) */}
       <TrainingOverlay trainingSettings={trainingSettings} setTrainingSettings={setTrainingSettings} />

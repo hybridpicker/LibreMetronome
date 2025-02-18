@@ -224,6 +224,14 @@ export default function GridModeMetronome({
     }
   }, [isPaused, logic]);
 
+  // Zusätzlicher useEffect, um Swing auf 0 zu setzen bei ungeraden Subdivisions
+  useEffect(() => {
+    if (subdivisions % 2 !== 0 && swing !== 0) {
+      console.log("[GridModeMetronome] Ungerade Subdivisions erkannt, setze Swing auf 0.");
+      setSwing(0);
+    }
+  }, [subdivisions]);
+
   // Build the SVG grid: each column contains 3 squares.
   const gridSquares = Array.from({ length: subdivisions }, (_, colIndex) => (
     <g
@@ -292,19 +300,23 @@ export default function GridModeMetronome({
       {/* Sliders for Swing, Volume, and Tempo */}
       <div className="sliders-container" style={{ marginTop: '20px', width: '100%' }}>
         <div className="slider-item" style={{ marginBottom: '10px', maxWidth: '300px', margin: '0 auto' }}>
-          <label>Swing: {Math.round(swing * 200)}% </label>
-          <input
-            type="range"
-            min={0}
-            max={0.5}
-            step={0.01}
-            value={swing}
-            onChange={(e) => {
-              console.log("[GridModeMetronome] Swing changed to:", e.target.value);
-              setSwing(parseFloat(e.target.value));
-            }}
-            style={{ width: '100%' }}
-          />
+          {subdivisions % 2 === 0 && (
+            <>
+              <label>Swing: {Math.round(swing * 200)}% </label>
+              <input
+                type="range"
+                min={0}
+                max={0.5}
+                step={0.01}
+                value={swing}
+                onChange={(e) => {
+                  console.log("[GridModeMetronome] Swing changed to:", e.target.value);
+                  setSwing(parseFloat(e.target.value));
+                }}
+                style={{ width: '100%' }}
+              />
+            </>
+          )}
         </div>
         <div className="slider-item" style={{ marginBottom: '10px', maxWidth: '300px', margin: '0 auto' }}>
           <label>Volume: {Math.round(volume * 100)}% </label>
