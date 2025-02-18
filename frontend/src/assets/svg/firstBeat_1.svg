@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Ebene_2" data-name="Ebene 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32.83 32.83">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #00a0a0;
+        stroke: #fff;
+        stroke-miterlimit: 10;
+      }
+    </style>
+  </defs>
+  <g id="Metronome_Circle">
+    <circle class="cls-1" cx="16.42" cy="16.42" r="15.92"/>
+  </g>
+</svg>

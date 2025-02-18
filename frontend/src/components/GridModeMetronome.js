@@ -1,18 +1,19 @@
+// File: src/components/GridModeMetronome.js
 import React, { useState, useEffect, useCallback } from 'react';
-import useMetronomeLogic from './useMetronomeLogic';
+import useMetronomeLogic from '../hooks/useMetronomeLogic'; // Custom hook for audio scheduling
 
 // Grid Icons
 import squareInactive from '../assets/svg/grid/square_inactive.svg';
 import squareActive from '../assets/svg/grid/square_active.svg';
 
-// Tap Tempo Icons
+// Tap Tempo Icon
 import tapButtonIcon from '../assets/svg/tap-button.svg';
 
 // Play/Pause Icons
 import playIcon from '../assets/svg/play.svg';
-import pauseIcon from '../assets/svg/play.svg'; // Falls pause.svg separat vorliegt, ersetzen Sie diesen Import
+import pauseIcon from '../assets/svg/pause.svg';
 
-// Subdivision icons (inactive)
+// Subdivision Icons (inactive)
 import subdivision1 from '../assets/svg/subdivision-1.svg';
 import subdivision2 from '../assets/svg/subdivision-2.svg';
 import subdivision3 from '../assets/svg/subdivision-3.svg';
@@ -23,7 +24,7 @@ import subdivision7 from '../assets/svg/subdivision-7.svg';
 import subdivision8 from '../assets/svg/subdivision-8.svg';
 import subdivision9 from '../assets/svg/subdivision-9.svg';
 
-// Subdivision icons (active)
+// Subdivision Icons (active)
 import subdivision1Active from '../assets/svg/subdivision-1Active.svg';
 import subdivision2Active from '../assets/svg/subdivision-2Active.svg';
 import subdivision3Active from '../assets/svg/subdivision-3-Active.svg';
@@ -33,6 +34,15 @@ import subdivision6Active from '../assets/svg/subdivision-6Active.svg';
 import subdivision7Active from '../assets/svg/subdivision-7Active.svg';
 import subdivision8Active from '../assets/svg/subdivision-8Active.svg';
 import subdivision9Active from '../assets/svg/subdivision-9Active.svg';
+
+// Create an icons object for easier reference
+const subdivisionIcons = {
+  subdivision1, subdivision2, subdivision3, subdivision4, subdivision5,
+  subdivision6, subdivision7, subdivision8, subdivision9,
+  subdivision1Active, subdivision2Active, subdivision3Active, subdivision4Active,
+  subdivision5Active, subdivision6Active, subdivision7Active, subdivision8Active,
+  subdivision9Active
+};
 
 export default function GridModeMetronome({
   tempo,
@@ -45,95 +55,95 @@ export default function GridModeMetronome({
   setSwing,
   volume,
   setVolume,
-  setTapTempo,
-  togglePlay,
+  registerTogglePlay,
+  // For Grid Mode:
   analogMode = false,
   gridMode = true,
-  accents = null,
-  updateAccents
+  accents = null,      // External accent state (array of booleans)
+  updateAccents,       // Function to update parent accent state
+
+  // Training Mode Props
+  macroMode,
+  speedMode,
+  measuresUntilMute,
+  muteDurationMeasures,
+  muteProbability,
+  tempoIncreasePercent,
+  measuresUntilSpeedUp
 }) {
-  // Grid configuration: Jeder Spalte wird initial der Zustand 1 zugewiesen;
-  // für den ersten Beat gilt der Zustand 3 (immer akzentuiert).
+  // Helper function to compare two arrays (shallow comparison)
+  const arraysEqual = (a, b) => {
+    if (!a || !b || a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) return false;
+    }
+    return true;
+  };
+
+  // Local grid configuration state:
+  // 1 = normal, 2 = accent, 3 = first-beat.
+  // The first column (index 0) is always set to 3.
   const [gridConfig, setGridConfig] = useState(
-    Array.from({ length: subdivisions }, () => 1)
+    Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1))
   );
 
-  // Aktualisierung der gridConfig, wenn subdivisions oder accents sich ändern.
+  // Kombinierter Effect für die Initialisierung und Synchronisation
   useEffect(() => {
-    setGridConfig((prev) => {
-      const newConfig = Array.from({ length: subdivisions }, (_, i) =>
-        i === 0 ? 3 : (accents && accents[i] ? 2 : (prev[i] !== undefined ? prev[i] : 1))
+    // Wenn externe Akzente vorhanden sind, verwende diese
+    if (accents && accents.length === subdivisions) {
+      const newGridConfig = accents.map((accent, i) =>
+        i === 0 ? 3 : (accent ? 2 : 1)
       );
-      if (
-        newConfig.length === prev.length &&
-        newConfig.every((val, idx) => val === prev[idx])
-      ) {
-        return prev;
-      }
-      return newConfig;
-    });
-  }, [subdivisions, accents]);
-
-  // Synchronisiere den Akzentstatus mit dem Elternteil, sobald gridConfig sich ändert.
-  useEffect(() => {
-    if (updateAccents) {
-      const newAccents = gridConfig.map((state, i) => (i === 0 ? true : state === 2));
-      updateAccents(newAccents);
+      setGridConfig(newGridConfig);
+    } else {
+      // Ansonsten initialisiere mit Standardwerten
+      setGridConfig(
+        Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1))
+      );
     }
-  }, [gridConfig, updateAccents]);
+  }, [subdivisions, accents]); // Nur von subdivisions und accents abhängig
 
-  // Beim Klick auf eine Spalte: Umschalten des Zustands (1 → 2 → 3 → 1).
+  // Handle clicks on a grid column: cycle through states 1 -> 2 -> 3 -> 1.
   const handleColumnClickIndex = useCallback((index) => {
+    if (index === 0) return; // Ersten Beat nicht zyklisch ändern
+    
     setGridConfig((prev) => {
       const newConfig = [...prev];
-      newConfig[index] = (newConfig[index] % 3) + 1;
+      // Für nicht-erste Beats nur zwischen 1 und 2 wechseln
+      newConfig[index] = newConfig[index] === 1 ? 2 : 1;
+      
+      // Aktualisiere externe Akzente
+      if (updateAccents) {
+        const newAccents = newConfig.map((state, i) =>
+          i === 0 ? true : state === 2
+        );
+        updateAccents(newAccents);
+      }
+      
+      console.log(`[GridModeMetronome] Column ${index} set to state ${newConfig[index]}`);
       return newConfig;
     });
-  }, []);
+  }, [updateAccents]);
 
-  // Erzeuge die Subdivision-Buttons anhand der Icons.
-  const subdivisionButtons = (() => {
-    const subIcons = [
-      subdivision1,
-      subdivision2,
-      subdivision3,
-      subdivision4,
-      subdivision5,
-      subdivision6,
-      subdivision7,
-      subdivision8,
-      subdivision9
-    ];
-    const subIconsActive = [
-      subdivision1Active,
-      subdivision2Active,
-      subdivision3Active,
-      subdivision4Active,
-      subdivision5Active,
-      subdivision6Active,
-      subdivision7Active,
-      subdivision8Active,
-      subdivision9Active
-    ];
-    return subIcons.map((icon, idx) => {
-      const subVal = idx + 1;
-      const isActive = subVal === subdivisions;
-      const iconToUse = isActive ? subIconsActive[idx] : icon;
-      return (
-        <img
-          key={subVal}
-          src={iconToUse}
-          alt={`Subdivision ${subVal}`}
-          className={`subdivision-button ${isActive ? 'active' : ''}`}
-          onClick={() => setSubdivisions(subVal)}
-          style={{ cursor: 'pointer', width: '36px', height: '36px', margin: '0 3px' }}
-        />
-      );
-    });
-  })();
+  // Create subdivision buttons for changing the number of subdivisions.
+  const subdivisionButtons = Array.from({ length: 9 }, (_, idx) => {
+    const subVal = idx + 1;
+    const isActive = subVal === subdivisions;
+    const iconKey = isActive ? `subdivision${subVal}Active` : `subdivision${subVal}`;
+    return (
+      <img
+        key={subVal}
+        src={subdivisionIcons[iconKey]}
+        alt={`Subdivision ${subVal}`}
+        className={`subdivision-button ${isActive ? 'active' : ''}`}
+        onClick={() => setSubdivisions(subVal)}
+        style={{ cursor: 'pointer', width: '36px', height: '36px', margin: '0 3px' }}
+      />
+    );
+  });
 
-  // Initialisiere die Metronom-Logik mit gridConfig als beatConfig.
-  const { currentSubdivision, tapTempo } = useMetronomeLogic({
+  // Instantiate the metronome logic hook, passing in gridConfig as the beat configuration.
+  const logic = useMetronomeLogic({
     tempo,
     setTempo,
     subdivisions,
@@ -141,24 +151,26 @@ export default function GridModeMetronome({
     setIsPaused,
     swing,
     volume,
-    beatConfig: gridConfig,
+    beatConfig: gridConfig,  // Use local gridConfig to determine sound (normal/accent/first)
     setSubdivisions,
     analogMode,
-    gridMode
+    gridMode,
+    accents,
+    macroMode,
+    speedMode,
+    measuresUntilMute,
+    muteDurationMeasures,
+    muteProbability,
+    tempoIncreasePercent,
+    measuresUntilSpeedUp
   });
 
-  useEffect(() => {
-    if (setTapTempo) {
-      setTapTempo(() => tapTempo);
-    }
-  }, [tapTempo, setTapTempo]);
-
-  // Definiere Größe der Quadrate und des gesamten Grids.
+  // Define grid dimensions (each square is 50px by 50px, grid height is 3 rows).
   const squareSize = 50;
   const gridWidth = subdivisions * squareSize;
   const gridHeight = squareSize * 3;
 
-  // Mobile-Erkennung: Falls window.innerWidth < 768px.
+  // Handle mobile detection to adjust UI elements if needed.
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -166,45 +178,103 @@ export default function GridModeMetronome({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Manual play/pause handler.
+  const handlePlayPause = () => {
+    console.log("[GridModeMetronome] Play/Pause button pressed.");
+    if (isPaused) {
+      if (logic.audioCtx && logic.audioCtx.state === 'suspended') {
+        logic.audioCtx.resume().then(() => {
+          console.log("[GridModeMetronome] AudioContext resumed.");
+          setIsPaused(false);
+          logic.startScheduler();
+        }).catch((err) => {
+          console.error("[GridModeMetronome] Error resuming AudioContext:", err);
+        });
+      } else {
+        setIsPaused(false);
+        logic.startScheduler();
+        console.log("[GridModeMetronome] Scheduler started.");
+      }
+    } else {
+      setIsPaused(true);
+      logic.stopScheduler();
+      console.log("[GridModeMetronome] Scheduler stopped.");
+    }
+  };
+
+  // Register the play/pause handler for global keyboard shortcuts.
+  useEffect(() => {
+    if (registerTogglePlay) {
+      registerTogglePlay(handlePlayPause);
+    }
+  }, [registerTogglePlay, handlePlayPause]);
+
+  // Automatically start or stop the scheduler when the pause state changes.
+  useEffect(() => {
+    if (!isPaused) {
+      if (logic.audioCtx && logic.audioCtx.state === 'suspended') {
+        logic.audioCtx.resume().then(() => {
+          logic.startScheduler();
+        });
+      } else {
+        logic.startScheduler();
+      }
+    } else {
+      logic.stopScheduler();
+    }
+  }, [isPaused, logic]);
+
+  // Zusätzlicher useEffect, um Swing auf 0 zu setzen bei ungeraden Subdivisions
+  useEffect(() => {
+    if (subdivisions % 2 !== 0 && swing !== 0) {
+      console.log("[GridModeMetronome] Ungerade Subdivisions erkannt, setze Swing auf 0.");
+      setSwing(0);
+    }
+  }, [subdivisions]);
+
+  // Build the SVG grid: each column contains 3 squares.
+  const gridSquares = Array.from({ length: subdivisions }, (_, colIndex) => (
+    <g
+      key={colIndex}
+      onClick={() => handleColumnClickIndex(colIndex)}
+      style={{ cursor: 'pointer' }}
+    >
+      {Array.from({ length: 3 }, (_, rowIndex) => {
+        // A cell is "active" if its row is within the number of filled cells defined by gridConfig.
+        const isActive = rowIndex >= (3 - gridConfig[colIndex]);
+        // Highlight the cell if it belongs to the currently playing subdivision.
+        const isCurrent = (colIndex === logic.currentSubdivision && !isPaused);
+        return (
+          <image
+            key={rowIndex}
+            href={isActive ? squareActive : squareInactive}
+            x={colIndex * squareSize}
+            y={rowIndex * squareSize}
+            width={squareSize}
+            height={squareSize}
+            style={{
+              transition: 'opacity 0.2s ease-in-out',
+              opacity: isCurrent ? 1 : 0.6
+            }}
+            alt={`Grid cell col=${colIndex}, row=${rowIndex}`}
+          />
+        );
+      })}
+    </g>
+  ));
+
   return (
     <div style={{ textAlign: 'center' }}>
-      {/* SVG-Grid-Anzeige */}
+      {/* SVG grid container */}
       <svg
         width={gridWidth}
         height={gridHeight}
         style={{ margin: '0 auto', display: 'block' }}
       >
-        {gridConfig.map((state, colIndex) => (
-          <g
-            key={colIndex}
-            onClick={() => handleColumnClickIndex(colIndex)}
-            style={{ cursor: 'pointer' }}
-          >
-            {Array.from({ length: 3 }, (_, rowIndex) => {
-              const isActive = rowIndex >= (3 - state);
-              const isCurrent = colIndex === currentSubdivision && !isPaused;
-              return (
-                <image
-                  key={rowIndex}
-                  href={isActive ? squareActive : squareInactive}
-                  x={colIndex * squareSize}
-                  y={rowIndex * squareSize}
-                  width={squareSize}
-                  height={squareSize}
-                  className={`grid-square ${isCurrent ? 'active-beat' : ''}`}
-                  style={{
-                    transition: 'opacity 0.2s ease-in-out',
-                    opacity: isCurrent ? 1 : 0.6,
-                  }}
-                  alt={`Grid-Zelle ${colIndex}, Zeile ${rowIndex}`}
-                />
-              );
-            })}
-          </g>
-        ))}
+        {gridSquares}
       </svg>
 
-      {/* Unterteilungs-Buttons */}
+      {/* Subdivision chooser */}
       <div style={{ marginTop: '15px', textAlign: 'center' }}>
         <h3>Subdivision</h3>
         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px' }}>
@@ -212,16 +282,11 @@ export default function GridModeMetronome({
         </div>
       </div>
 
-      {/* Play/Pause-Button */}
+      {/* Play/Pause button */}
       <div style={{ marginTop: '10px' }}>
         <button
-          onClick={togglePlay}
-          style={{
-            padding: '10px 20px',
-            background: 'transparent',
-            border: 'none',
-            cursor: 'pointer'
-          }}
+          onClick={handlePlayPause}
+          style={{ padding: '10px 20px', background: 'transparent', border: 'none', cursor: 'pointer' }}
           aria-label="Toggle play/pause"
         >
           <img
@@ -232,10 +297,10 @@ export default function GridModeMetronome({
         </button>
       </div>
 
-      {/* Slider für Volume, Swing und Tempo */}
+      {/* Sliders for Swing, Volume, and Tempo */}
       <div className="sliders-container" style={{ marginTop: '20px', width: '100%' }}>
         <div className="slider-item" style={{ marginBottom: '10px', maxWidth: '300px', margin: '0 auto' }}>
-          {(!analogMode && subdivisions % 2 === 0 && subdivisions >= 2) && (
+          {subdivisions % 2 === 0 && (
             <>
               <label>Swing: {Math.round(swing * 200)}% </label>
               <input
@@ -244,7 +309,10 @@ export default function GridModeMetronome({
                 max={0.5}
                 step={0.01}
                 value={swing}
-                onChange={(e) => setSwing(parseFloat(e.target.value))}
+                onChange={(e) => {
+                  console.log("[GridModeMetronome] Swing changed to:", e.target.value);
+                  setSwing(parseFloat(e.target.value));
+                }}
                 style={{ width: '100%' }}
               />
             </>
@@ -258,7 +326,10 @@ export default function GridModeMetronome({
             max={1}
             step={0.01}
             value={volume}
-            onChange={(e) => setVolume(parseFloat(e.target.value))}
+            onChange={(e) => {
+              console.log("[GridModeMetronome] Volume changed to:", e.target.value);
+              setVolume(parseFloat(e.target.value));
+            }}
             style={{ width: '100%' }}
           />
         </div>
@@ -270,22 +341,21 @@ export default function GridModeMetronome({
             max={240}
             step={1}
             value={tempo}
-            onChange={(e) => setTempo(parseFloat(e.target.value))}
+            onChange={(e) => {
+              console.log("[GridModeMetronome] Tempo changed to:", e.target.value);
+              setTempo(parseFloat(e.target.value));
+            }}
             style={{ width: '100%' }}
           />
         </div>
       </div>
 
-      {/* Auf mobilen Geräten: Tap Tempo-Button */}
+      {/* Tap Tempo button for mobile devices */}
       {isMobile && (
         <button
-          onClick={tapTempo}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-            marginTop: '20px'
-          }}
+          onClick={logic.tapTempo}
+          style={{ background: 'transparent', border: 'none', cursor: 'pointer', marginTop: '20px' }}
+          aria-label="Tap Tempo"
         >
           <img
             src={tapButtonIcon}

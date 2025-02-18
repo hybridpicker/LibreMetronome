@@ -1,0 +1,153 @@
+.training-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7); /* Darker background for better contrast */
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.training-modal {
+  background: #f9f9f9; /* Lighter background for the modal */
+  padding: 30px; /* Increased padding for a more spacious layout */
+  border-radius: 12px; /* Rounded corners */
+  max-width: 450px; /* Wider modal */
+  width: 90%;
+  text-align: left;
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Shadow for depth */
+}
+
+.training-close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  font-size: 1.5rem; /* Larger font for better visibility */
+  font-weight: bold;
+  color: #00A0A0; /* Eye-catching color for the close button */
+  cursor: pointer;
+}
+
+.training-close-button:hover {
+  color: #009688; /* Hover effect for the close button */
+}
+
+.training-save-button {
+  background: #0ba3b2;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 12px 20px; /* Increased padding for the button */
+  cursor: pointer;
+  font-size: 1rem; /* Uniform font size */
+  transition: background 0.3s; /* Transition effect */
+}
+
+.training-save-button:hover {
+  background: #009688; /* Darker color on hover */
+}
+
+.training-button {
+  position: fixed;
+  top: 10px;
+  left: 50px; /* Positioned next to the info button */
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 100;
+}
+
+.training-button img {
+  height: 35px; /* Larger icon for better visibility */
+  object-fit: contain;
+}
+
+/* Smartphone adjustments (max-width: 600px) */
+@media (max-width: 600px) {
+  .info-button {
+    display: none;
+  }
+  /* Keep the tempo slider visible on smartphones */
+  .tempo-slider {
+    display: block;
+  }
+  /* Display BPM adjustment buttons on smartphones */
+  .tempo-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+  }
+  /* Enlarge sliders for touch handling */
+  .slider-item input[type="range"] {
+    height: 40px;
+    width: 100%;
+  }
+}
+
+/* Tablet-specific adjustments (600px to 1024px) */
+@media (min-width: 600px) and (max-width: 1024px) {
+  button {
+    font-family: "Arial", sans-serif;
+  }
+  .slider-item input[type="range"] {
+    width: 100%;
+  }
+}
+
+/* Info overlay styling */
+.info-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.info-modal {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 400px;
+  width: 90%;
+  position: relative;
+  text-align: left;
+}
+
+.info-modal h2 {
+  margin-top: 0;
+}
+
+.info-modal ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.info-modal li {
+  margin-bottom: 8px;
+}
+
+/* Info close button styling */
+.info-close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #00A0A0;
+  cursor: pointer;
+}

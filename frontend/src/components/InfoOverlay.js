@@ -46,27 +46,34 @@ const InfoModal = ({ onClose }) => {
 };
 
 // Info button that is always visible
-const InfoButton = ({ onClick }) => (
-  <button className="info-button" onClick={onClick} aria-label="Toggle Info Overlay">
+const InfoButton = ({ onClick, active }) => (
+  <button className={`info-button ${active ? 'info-button-active' : ''}`} onClick={onClick} aria-label="Toggle Info Overlay">
     <img src={infoButtonIcon} alt="Info" />
   </button>
 );
 
 // Main component that combines the button and modal
-const InfoOverlay = () => {
+const InfoOverlay = ({ setActive }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const [tempo, setTempo] = useState(120); // Beispielwert für Tempo
+  const [isInfoButtonActive, setIsInfoButtonActive] = useState(false);
+  const [tempo, setTempo] = useState(120);
 
   const toggleOverlay = () => {
     setIsVisible((prev) => !prev);
+    setIsInfoButtonActive((prev) => !prev);
+    if (setActive) {
+      setActive(!isInfoButtonActive);
+    }
   };
 
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === 'I' || event.key === 'i') {
-        setIsVisible(true);
+        setIsVisible((prev) => !prev);
+        setIsInfoButtonActive((prev) => !prev);
       } else if (event.key === 'Escape') {
         setIsVisible(false);
+        setIsInfoButtonActive(false);
       } else if (event.key === 'ArrowRight') {
         if (event.ctrlKey || event.metaKey) {
           setTempo((prevTempo) => prevTempo + 1); // Erhöht um 1 BPM mit Strg/Cmd
@@ -90,7 +97,7 @@ const InfoOverlay = () => {
 
   return (
     <>
-      <InfoButton onClick={toggleOverlay} />
+      <InfoButton onClick={toggleOverlay} active={isInfoButtonActive} />
       {isVisible && <InfoModal onClose={toggleOverlay} />}
     </>
   );
