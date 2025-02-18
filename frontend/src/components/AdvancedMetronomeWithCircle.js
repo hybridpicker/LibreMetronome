@@ -1,6 +1,9 @@
+// File: src/components/AdvancedMetronomeWithCircle.js
 import React, { useState, useEffect } from 'react';
-import useMetronomeLogic from './useMetronomeLogic';
+import useMetronomeLogic from '../hooks/useMetronomeLogic';
+import useKeyboardShortcuts from '../hooks/KeyboardShortcuts';
 
+// Import icons and assets
 import firstBeat from '../assets/svg/firstBeat.svg';
 import firstBeatActive from '../assets/svg/firstBeatActive.svg';
 import normalBeat from '../assets/svg/normalBeat.svg';
@@ -8,10 +11,9 @@ import normalBeatActive from '../assets/svg/normalBeatActive.svg';
 import accentedBeat from '../assets/svg/accentedBeat.svg';
 import accentedBeatActive from '../assets/svg/accentedBeatActive.svg';
 import tapButtonIcon from '../assets/svg/tap-button.svg';
-
 import circleSVG from '../assets/svg/circle.svg';
 
-// Normale Unterteilungs-Icons
+// Subdivision Icons (inactive)
 import subdivision1 from '../assets/svg/subdivision-1.svg';
 import subdivision2 from '../assets/svg/subdivision-2.svg';
 import subdivision3 from '../assets/svg/subdivision-3.svg';
@@ -22,7 +24,7 @@ import subdivision7 from '../assets/svg/subdivision-7.svg';
 import subdivision8 from '../assets/svg/subdivision-8.svg';
 import subdivision9 from '../assets/svg/subdivision-9.svg';
 
-// Aktive Unterteilungs-Icons
+// Subdivision Icons (active)
 import subdivision1Active from '../assets/svg/subdivision-1Active.svg';
 import subdivision2Active from '../assets/svg/subdivision-2Active.svg';
 import subdivision3Active from '../assets/svg/subdivision-3-Active.svg';
@@ -37,10 +39,6 @@ import subdivision9Active from '../assets/svg/subdivision-9Active.svg';
 import playIcon from '../assets/svg/play.svg';
 import pauseIcon from '../assets/svg/pause.svg';
 
-// BPM-Buttons
-import plus5Button from '../assets/svg/plus5button.svg';
-import minus5Button from '../assets/svg/minus5button.svg';
-
 import AnalogMetronomeCanvas from './AnalogMetronomeCanvas';
 
 export default function AdvancedMetronomeWithCircle({
@@ -54,19 +52,29 @@ export default function AdvancedMetronomeWithCircle({
   setSwing,
   volume,
   setVolume,
-  setTapTempo,
   togglePlay,
+  registerTogglePlay, // Used to register the play/pause handler for keyboard shortcuts
   analogMode = false,
+  gridMode = false,
   accents,
-  toggleAccent
+  toggleAccent,
+  // Training mode parameters:
+  trainingMode = false,
+  macroMode,
+  speedMode,
+  measuresUntilMute,
+  muteDurationMeasures,
+  muteProbability,
+  tempoIncreasePercent,
+  measuresUntilSpeedUp
 }) {
-  // Verwende den Akzentstatus des Elternteils, falls vorhanden, sonst lokalen Zustand.
+  // Local state for accents if the parent does not provide an accents array.
   const [localAccents, setLocalAccents] = useState(
     Array.from({ length: subdivisions }, (_, i) => i === 0)
   );
   const effectiveAccents = accents || localAccents;
 
-  // Aktualisiere lokalen Akzentstatus, wenn subdivisions sich ändern (nur wenn kein Elternstatus vorliegt)
+  // Sync localAccents whenever subdivisions change (and no external accents are provided).
   useEffect(() => {
     if (!accents) {
       setLocalAccents((prev) => {
@@ -75,33 +83,86 @@ export default function AdvancedMetronomeWithCircle({
         for (let i = 0; i < subdivisions; i++) {
           newArr[i] = i === 0 ? true : (prev[i] !== undefined ? prev[i] : false);
         }
+        console.log("[AdvancedMetronome] Updated local accents:", newArr);
         return newArr;
       });
     }
   }, [subdivisions, accents]);
 
-  // Lokale toggleAccent-Funktion, falls kein Eltern-Callback vorliegt.
+  // Local function to toggle accent if no external toggleAccent is provided
   const localToggleAccent = (index) => {
-    if (analogMode) return;
-    if (index === 0) return; // Der erste Beat bleibt akzentuiert.
+    if (analogMode) return; // For analog mode, do nothing
+    if (index === 0) return; // First beat remains an accent by definition
     setLocalAccents((prev) => {
       const updated = [...prev];
       updated[index] = !updated[index];
+      console.log(`[AdvancedMetronome] Toggled accent for beat ${index}:`, updated[index]);
       return updated;
     });
   };
   const effectiveToggleAccent = toggleAccent || localToggleAccent;
 
-  // Umschalten von Play/Pause.
+  // Instantiate the metronome logic hook
+  const logic = useMetronomeLogic({
+    tempo,
+    setTempo,
+    subdivisions,
+    setSubdivisions,
+    isPaused,
+    setIsPaused,
+    swing,
+    volume,
+    accents: effectiveAccents,
+    beatConfig: null, // Not needed for circle mode by default
+    analogMode,
+    gridMode,
+    macroMode,
+    speedMode,
+    measuresUntilMute,
+    muteDurationMeasures,
+    muteProbability,
+    tempoIncreasePercent,
+    measuresUntilSpeedUp
+  });
+
+  // Handler for manually toggling play/pause (e.g. button click).
   const handlePlayPause = () => {
-    if (typeof togglePlay === 'function') {
-      togglePlay();
+    console.log("[AdvancedMetronome] Play/Pause button pressed.");
+    if (isPaused) {
+      if (logic.audioCtx && logic.audioCtx.state === 'suspended') {
+        logic.audioCtx.resume().then(() => {
+          console.log("[AdvancedMetronome] AudioContext resumed.");
+          setIsPaused(false);
+          logic.startScheduler();
+        }).catch((err) => {
+          console.error("[AdvancedMetronome] Error resuming AudioContext:", err);
+        });
+      } else {
+        setIsPaused(false);
+        logic.startScheduler();
+      }
     } else {
-      setIsPaused((prev) => !prev);
+      setIsPaused(true);
+      logic.stopScheduler();
+      console.log("[AdvancedMetronome] Scheduler stopped via handlePlayPause.");
     }
   };
 
-  // Erzeuge die Unterteilungs-Buttons (ähnlich wie im Grid-Modus).
+  // Register the local handlePlayPause function for keyboard shortcuts
+  useEffect(() => {
+    if (registerTogglePlay) {
+      registerTogglePlay(handlePlayPause);
+    }
+  }, [registerTogglePlay, handlePlayPause]);
+
+  // Register keyboard shortcuts, ensuring onTapTempo is set to logic.tapTempo
+  useKeyboardShortcuts({
+    onTogglePlayPause: handlePlayPause,
+    onTapTempo: logic.tapTempo,
+    // Additional callbacks if needed
+  });
+
+  // This block generates the UI elements for selecting subdivisions
   const subdivisionButtons = (() => {
     const subIcons = [
       subdivision1,
@@ -135,34 +196,20 @@ export default function AdvancedMetronomeWithCircle({
           src={iconToUse}
           alt={`Subdivision ${subVal}`}
           className={`subdivision-button ${isActive ? 'active' : ''}`}
-          onClick={() => setSubdivisions(subVal)}
+          onClick={() => {
+            console.log(`[AdvancedMetronome] Setting subdivisions to ${subVal}`);
+            setSubdivisions(subVal);
+            if (!analogMode && subdivisions % 2 === 0 && subdivisions >= 2 || gridMode) {
+                setSwing(0);
+            }
+          }}
           style={{ cursor: 'pointer', width: '36px', height: '36px', margin: '0 3px' }}
         />
       );
     });
   })();
 
-  // Initialisiere die Metronom-Logik mit dem aktuellen Akzentstatus.
-  const logic = useMetronomeLogic({
-    tempo,
-    setTempo,
-    subdivisions,
-    isPaused,
-    setIsPaused,
-    swing,
-    volume,
-    accents: effectiveAccents,
-    setSubdivisions,
-    analogMode
-  });
-
-  useEffect(() => {
-    if (setTapTempo) {
-      setTapTempo(() => logic.tapTempo);
-    }
-  }, [logic.tapTempo, setTapTempo]);
-
-  // Berechne die Container-Größe (responsiv).
+  // Calculate container size to make the circle responsive
   const getContainerSize = () => {
     if (window.innerWidth < 600) {
       return Math.min(window.innerWidth - 40, 300);
@@ -174,14 +221,18 @@ export default function AdvancedMetronomeWithCircle({
   };
   const [containerSize, setContainerSize] = useState(getContainerSize());
   useEffect(() => {
-    const handleResize = () => setContainerSize(getContainerSize());
+    const handleResize = () => {
+      const newSize = getContainerSize();
+      console.log("[AdvancedMetronome] Resizing container to:", newSize);
+      setContainerSize(newSize);
+    };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const radius = containerSize / 2;
 
-  // Erzeuge Beat-Daten für den Circle-Modus.
+  // Precompute beat positions for the circle mode
   const beatData = Array.from({ length: subdivisions }, (_, i) => {
     const angle = (2 * Math.PI * i) / subdivisions - Math.PI / 2;
     const xPos = radius * Math.cos(angle);
@@ -199,21 +250,34 @@ export default function AdvancedMetronomeWithCircle({
     };
   });
 
-  // Bestimme, welches Beat-Icon angezeigt wird.
+  // Decides which icon is shown for each beat
   function getBeatIcon(beatIndex, isActive) {
     const isFirst = beatIndex === 0;
-    const isAccented = effectiveAccents[beatIndex];
     if (analogMode) return normalBeat;
-    if (isFirst) {
-      return isActive ? firstBeatActive : firstBeat;
-    } else if (isAccented) {
-      return isActive ? accentedBeatActive : accentedBeat;
+    if (gridMode) {
+      // If in grid mode, we rely on accent arrays or states differently
+      const state = beatIndex === 0 ? 3 : (effectiveAccents[beatIndex] ? 2 : 1);
+      if (state === 3) {
+        return isActive ? firstBeatActive : firstBeat;
+      } else if (state === 2) {
+        return isActive ? accentedBeatActive : accentedBeat;
+      } else {
+        return isActive ? normalBeatActive : normalBeat;
+      }
     } else {
-      return isActive ? normalBeatActive : normalBeat;
+      // In circle mode we directly use effectiveAccents
+      const isAccented = effectiveAccents[beatIndex];
+      if (isFirst) {
+        return isActive ? firstBeatActive : firstBeat;
+      } else if (isAccented) {
+        return isActive ? accentedBeatActive : accentedBeat;
+      } else {
+        return isActive ? normalBeatActive : normalBeat;
+      }
     }
   }
 
-  // Erzeuge Verbindungs-Linien zwischen den Beats, falls subdivisions ≥ 3.
+  // Draw lines between each pair of adjacent beats in circle mode
   let lineConnections = null;
   if (!analogMode && subdivisions >= 3) {
     lineConnections = beatData.map((bd, index) => {
@@ -240,17 +304,38 @@ export default function AdvancedMetronomeWithCircle({
     });
   }
 
-  // Mobile-Erkennung: Gerät mit Breite < 768px.
+  // Check if we're on a mobile device
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      console.log("[AdvancedMetronome] Mobile view:", mobile);
+      setIsMobile(mobile);
+    };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // --- NEW EFFECT: Start or stop the scheduler depending on isPaused ---
+  useEffect(() => {
+    if (!isPaused) {
+      // If not paused, start or resume the scheduler
+      if (logic.audioCtx && logic.audioCtx.state === 'suspended') {
+        logic.audioCtx.resume().then(() => {
+          logic.startScheduler();
+        });
+      } else {
+        logic.startScheduler();
+      }
+    } else {
+      // If paused, stop the scheduler
+      logic.stopScheduler();
+    }
+  }, [isPaused, logic]);
+
   return (
     <div style={{ position: 'relative', textAlign: 'center' }}>
-      {/* Metronom-Anzeige */}
+      {/* Metronome display container */}
       <div
         className="metronome-container"
         style={{
@@ -281,8 +366,10 @@ export default function AdvancedMetronomeWithCircle({
                 transform: 'translate(-50%, -50%)',
                 background: 'transparent',
                 border: 'none',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                zIndex: 10
               }}
+              aria-label="Toggle play/pause"
             >
               <img
                 src={isPaused ? playIcon : pauseIcon}
@@ -305,7 +392,10 @@ export default function AdvancedMetronomeWithCircle({
                   left: `calc(50% + ${bd.xPos}px - 12px)`,
                   top: `calc(50% + ${bd.yPos}px - 12px)`
                 }}
-                onClick={() => effectiveToggleAccent(bd.i)}
+                onClick={() => {
+                  console.log(`[AdvancedMetronome] Toggle accent on beat ${bd.i}`);
+                  effectiveToggleAccent(bd.i);
+                }}
               />
             ))}
             <button
@@ -318,8 +408,10 @@ export default function AdvancedMetronomeWithCircle({
                 transform: 'translate(-50%, -50%)',
                 background: 'transparent',
                 border: 'none',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                zIndex: 10
               }}
+              aria-label="Toggle play/pause"
             >
               <img
                 src={isPaused ? playIcon : pauseIcon}
@@ -331,7 +423,7 @@ export default function AdvancedMetronomeWithCircle({
         )}
       </div>
 
-      {/* Unterteilungs-Buttons */}
+      {/* Subdivision buttons (hidden in analogMode) */}
       {!analogMode && (
         <div style={{ marginTop: '15px', textAlign: 'center' }}>
           <h3>Subdivision</h3>
@@ -341,9 +433,12 @@ export default function AdvancedMetronomeWithCircle({
         </div>
       )}
 
-      {/* Slider-Container */}
+      {/* Sliders for Volume, Swing, and Tempo */}
       <div className="sliders-container" style={{ marginTop: '20px', width: '100%' }}>
-        <div className="slider-item" style={{ marginBottom: '10px', maxWidth: '300px', margin: '0 auto' }}>
+        <div
+          className="slider-item"
+          style={{ marginBottom: '10px', maxWidth: '300px', margin: '0 auto' }}
+        >
           {(!analogMode && subdivisions % 2 === 0 && subdivisions >= 2) && (
             <>
               <label>Swing: {Math.round(swing * 200)}% </label>
@@ -353,13 +448,19 @@ export default function AdvancedMetronomeWithCircle({
                 max={0.5}
                 step={0.01}
                 value={swing}
-                onChange={(e) => setSwing(parseFloat(e.target.value))}
+                onChange={(e) => {
+                  console.log("[AdvancedMetronome] Swing changed to:", e.target.value);
+                  setSwing(parseFloat(e.target.value));
+                }}
                 style={{ width: '100%' }}
               />
             </>
           )}
         </div>
-        <div className="slider-item" style={{ marginBottom: '10px', maxWidth: '300px', margin: '0 auto' }}>
+        <div
+          className="slider-item"
+          style={{ marginBottom: '10px', maxWidth: '300px', margin: '0 auto' }}
+        >
           <label>Volume: {Math.round(volume * 100)}% </label>
           <input
             type="range"
@@ -367,11 +468,17 @@ export default function AdvancedMetronomeWithCircle({
             max={1}
             step={0.01}
             value={volume}
-            onChange={(e) => setVolume(parseFloat(e.target.value))}
+            onChange={(e) => {
+              console.log("[AdvancedMetronome] Volume changed to:", e.target.value);
+              setVolume(parseFloat(e.target.value));
+            }}
             style={{ width: '100%' }}
           />
         </div>
-        <div className="slider-item tempo-slider" style={{ maxWidth: '300px', margin: '0 auto' }}>
+        <div
+          className="slider-item tempo-slider"
+          style={{ maxWidth: '300px', margin: '0 auto' }}
+        >
           <label>Tempo: {tempo} BPM </label>
           <input
             type="range"
@@ -379,13 +486,16 @@ export default function AdvancedMetronomeWithCircle({
             max={240}
             step={1}
             value={tempo}
-            onChange={(e) => setTempo(parseFloat(e.target.value))}
+            onChange={(e) => {
+              console.log("[AdvancedMetronome] Tempo changed to:", e.target.value);
+              setTempo(parseFloat(e.target.value));
+            }}
             style={{ width: '100%' }}
           />
         </div>
       </div>
 
-      {/* Auf mobilen Geräten: Tap Tempo-Button */}
+      {/* Tap Tempo button for mobile devices */}
       {isMobile && (
         <button
           onClick={logic.tapTempo}
@@ -395,11 +505,12 @@ export default function AdvancedMetronomeWithCircle({
             cursor: 'pointer',
             marginTop: '20px'
           }}
+          aria-label="Tap Tempo"
         >
           <img
             src={tapButtonIcon}
             alt="Tap Tempo"
-            style={{ height: '30px', objectFit: 'contain' }}
+            style={{ height: '35px', objectFit: 'contain' }}
           />
         </button>
       )}
