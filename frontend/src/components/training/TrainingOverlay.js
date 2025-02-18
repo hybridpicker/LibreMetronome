@@ -19,7 +19,6 @@ const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings }) => {
     console.log(`[TrainingModal] ${field} changed to:`, value);
 
     // If the user chooses a non-zero macroMode, set speedMode to 0.
-    // If the user chooses a non-zero speedMode, set macroMode to 0.
     if (field === 'macroMode') {
       const macroVal = Number(value);
       setLocalSettings(prev => ({
@@ -70,8 +69,8 @@ const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings }) => {
               onChange={(e) => handleChange('macroMode', e.target.value)}
             >
               <option value={0}>Off</option>
-              <option value={1}>Fixed Silence (Mode I)</option>
-              <option value={2}>Random Silence (Mode II)</option>
+              <option value={1}>Fixed Silence</option>
+              <option value={2}>Random Silence</option>
             </select>
           </label>
           {localSettings.macroMode === 1 && (
@@ -121,8 +120,8 @@ const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings }) => {
               onChange={(e) => handleChange('speedMode', e.target.value)}
             >
               <option value={0}>Off</option>
-              <option value={1}>Auto Increase (Mode I)</option>
-              <option value={2}>Manual Increase (Mode II)</option>
+              <option value={1}>Auto Increase Tempo</option>
+              <option value={2}>Manual Increase Tempo</option>
             </select>
           </label>
           {(localSettings.speedMode === 1 || localSettings.speedMode === 2) && (
