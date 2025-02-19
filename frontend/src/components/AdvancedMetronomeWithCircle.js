@@ -83,7 +83,6 @@ export default function AdvancedMetronomeWithCircle({
         for (let i = 0; i < subdivisions; i++) {
           newArr[i] = i === 0 ? true : (prev[i] !== undefined ? prev[i] : false);
         }
-        console.log("[AdvancedMetronome] Updated local accents:", newArr);
         return newArr;
       });
     }
@@ -96,7 +95,6 @@ export default function AdvancedMetronomeWithCircle({
     setLocalAccents((prev) => {
       const updated = [...prev];
       updated[index] = !updated[index];
-      console.log(`[AdvancedMetronome] Toggled accent for beat ${index}:`, updated[index]);
       return updated;
     });
   };
@@ -127,11 +125,9 @@ export default function AdvancedMetronomeWithCircle({
 
   // Handler for manually toggling play/pause (e.g. button click).
   const handlePlayPause = () => {
-    console.log("[AdvancedMetronome] Play/Pause button pressed.");
     if (isPaused) {
       if (logic.audioCtx && logic.audioCtx.state === 'suspended') {
         logic.audioCtx.resume().then(() => {
-          console.log("[AdvancedMetronome] AudioContext resumed.");
           setIsPaused(false);
           logic.startScheduler();
         }).catch((err) => {
@@ -144,7 +140,6 @@ export default function AdvancedMetronomeWithCircle({
     } else {
       setIsPaused(true);
       logic.stopScheduler();
-      console.log("[AdvancedMetronome] Scheduler stopped via handlePlayPause.");
     }
   };
 
@@ -197,10 +192,9 @@ export default function AdvancedMetronomeWithCircle({
           alt={`Subdivision ${subVal}`}
           className={`subdivision-button ${isActive ? 'active' : ''}`}
           onClick={() => {
-            console.log(`[AdvancedMetronome] Setting subdivisions to ${subVal}`);
             setSubdivisions(subVal);
             if (!analogMode && subdivisions % 2 === 0 && subdivisions >= 2 || gridMode) {
-                setSwing(0);
+              setSwing(0);
             }
           }}
           style={{ cursor: 'pointer', width: '36px', height: '36px', margin: '0 3px' }}
@@ -223,7 +217,6 @@ export default function AdvancedMetronomeWithCircle({
   useEffect(() => {
     const handleResize = () => {
       const newSize = getContainerSize();
-      console.log("[AdvancedMetronome] Resizing container to:", newSize);
       setContainerSize(newSize);
     };
     window.addEventListener('resize', handleResize);
@@ -255,7 +248,6 @@ export default function AdvancedMetronomeWithCircle({
     const isFirst = beatIndex === 0;
     if (analogMode) return normalBeat;
     if (gridMode) {
-      // If in grid mode, we rely on accent arrays or states differently
       const state = beatIndex === 0 ? 3 : (effectiveAccents[beatIndex] ? 2 : 1);
       if (state === 3) {
         return isActive ? firstBeatActive : firstBeat;
@@ -265,7 +257,6 @@ export default function AdvancedMetronomeWithCircle({
         return isActive ? normalBeatActive : normalBeat;
       }
     } else {
-      // In circle mode we directly use effectiveAccents
       const isAccented = effectiveAccents[beatIndex];
       if (isFirst) {
         return isActive ? firstBeatActive : firstBeat;
@@ -309,7 +300,6 @@ export default function AdvancedMetronomeWithCircle({
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 768;
-      console.log("[AdvancedMetronome] Mobile view:", mobile);
       setIsMobile(mobile);
     };
     window.addEventListener('resize', handleResize);
@@ -319,7 +309,6 @@ export default function AdvancedMetronomeWithCircle({
   // --- NEW EFFECT: Start or stop the scheduler depending on isPaused ---
   useEffect(() => {
     if (!isPaused) {
-      // If not paused, start or resume the scheduler
       if (logic.audioCtx && logic.audioCtx.state === 'suspended') {
         logic.audioCtx.resume().then(() => {
           logic.startScheduler();
@@ -328,7 +317,6 @@ export default function AdvancedMetronomeWithCircle({
         logic.startScheduler();
       }
     } else {
-      // If paused, stop the scheduler
       logic.stopScheduler();
     }
   }, [isPaused, logic]);
@@ -393,7 +381,6 @@ export default function AdvancedMetronomeWithCircle({
                   top: `calc(50% + ${bd.yPos}px - 12px)`
                 }}
                 onClick={() => {
-                  console.log(`[AdvancedMetronome] Toggle accent on beat ${bd.i}`);
                   effectiveToggleAccent(bd.i);
                 }}
               />
@@ -449,7 +436,6 @@ export default function AdvancedMetronomeWithCircle({
                 step={0.01}
                 value={swing}
                 onChange={(e) => {
-                  console.log("[AdvancedMetronome] Swing changed to:", e.target.value);
                   setSwing(parseFloat(e.target.value));
                 }}
                 style={{ width: '100%' }}
@@ -469,7 +455,6 @@ export default function AdvancedMetronomeWithCircle({
             step={0.01}
             value={volume}
             onChange={(e) => {
-              console.log("[AdvancedMetronome] Volume changed to:", e.target.value);
               setVolume(parseFloat(e.target.value));
             }}
             style={{ width: '100%' }}
@@ -487,7 +472,6 @@ export default function AdvancedMetronomeWithCircle({
             step={1}
             value={tempo}
             onChange={(e) => {
-              console.log("[AdvancedMetronome] Tempo changed to:", e.target.value);
               setTempo(parseFloat(e.target.value));
             }}
             style={{ width: '100%' }}

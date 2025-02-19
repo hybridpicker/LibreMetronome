@@ -34,55 +34,42 @@ const useKeyboardShortcuts = ({
   useEffect(() => {
     const handleKeydown = (e) => {
       if (e.repeat) {
-        console.log("[KeyboardShortcuts] Ignoring repeated key:", e.key);
         return;
       }
-      console.log("[KeyboardShortcuts] Key pressed:", e.key, "Code:", e.code);
       
       if (e.code === 'Space') {
         const now = Date.now();
         if (now - lastToggleTimeRef.current < DEBOUNCE_MS) {
-          console.log("[KeyboardShortcuts] Space key debounce active");
           return;
         }
         lastToggleTimeRef.current = now;
         e.preventDefault();
-        console.log("[KeyboardShortcuts] Triggering onTogglePlayPause");
         onTogglePlayPause && onTogglePlayPause();
         return;
       }
       
       switch (e.code) {
         case 'ArrowRight':
-          console.log("[KeyboardShortcuts] Triggering onIncreaseTempo");
           onIncreaseTempo && onIncreaseTempo();
           break;
         case 'ArrowLeft':
-          console.log("[KeyboardShortcuts] Triggering onDecreaseTempo");
           onDecreaseTempo && onDecreaseTempo();
           break;
         default: {
           const key = e.key.toLowerCase();
           if (key === 't') {
-            console.log("[KeyboardShortcuts] Triggering onTapTempo");
             onTapTempo && onTapTempo();
           } else if (key >= '1' && key <= '9') {
-            console.log("[KeyboardShortcuts] Triggering onSetSubdivisions with", e.key);
             onSetSubdivisions && onSetSubdivisions(parseInt(e.key, 10));
           } else if (key === 'a') {
-            console.log("[KeyboardShortcuts] Triggering onSwitchToAnalog");
             onSwitchToAnalog && onSwitchToAnalog();
           } else if (key === 'c') {
-            console.log("[KeyboardShortcuts] Triggering onSwitchToCircle");
             onSwitchToCircle && onSwitchToCircle();
           } else if (key === 'g') {
-            console.log("[KeyboardShortcuts] Triggering onSwitchToGrid");
             onSwitchToGrid && onSwitchToGrid();
           } else if (key === 'i') {
-            console.log("[KeyboardShortcuts] Triggering onToggleInfoOverlay");
             onToggleInfoOverlay && onToggleInfoOverlay();
           } else if (key === 'u') {
-            console.log("[KeyboardShortcuts] Triggering onManualTempoIncrease");
             onManualTempoIncrease && onManualTempoIncrease();
           }
           break;

@@ -10,13 +10,10 @@ const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings, setMode
   const [localSettings, setLocalSettings] = useState(trainingSettings);
 
   useEffect(() => {
-    console.log("[TrainingModal] Received trainingSettings:", trainingSettings);
     setLocalSettings(trainingSettings);
   }, [trainingSettings]);
 
   const handleChange = (field, value) => {
-    console.log(`[TrainingModal] ${field} changed to:`, value);
-
     // If the user chooses a non-zero macroMode, set speedMode to 0.
     if (field === 'macroMode') {
       const macroVal = Number(value);
@@ -38,7 +35,6 @@ const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings, setMode
   };
 
   const handleSave = () => {
-    console.log("[TrainingModal] Saving settings:", localSettings);
     setTrainingSettings(localSettings);
     onClose();
     // Retain the current mode if a training setting is active
@@ -53,7 +49,6 @@ const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings, setMode
         <button 
           className="training-close-button" 
           onClick={() => {
-            console.log("[TrainingModal] Close clicked");
             onClose(); // Close the modal
             // Restart the play mode
             if (setIsPaused) {
@@ -170,7 +165,6 @@ const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings, setMode
  * TrainingButton displays a button with an icon that changes when training mode is active.
  */
 const TrainingButton = ({ onClick, active }) => {
-  console.log("[TrainingButton] Render, active =", active);
   return (
     <button className="training-button" onClick={onClick} aria-label="Toggle Training Overlay">
       <img src={active ? trainingButtonOnIcon : trainingButtonIcon} alt="Training" />
@@ -187,14 +181,12 @@ const TrainingOverlay = ({ trainingSettings, setTrainingSettings, onToggleInfo, 
   const trainingActive = trainingSettings.macroMode !== 0 || trainingSettings.speedMode !== 0;
 
   const toggleOverlay = () => {
-    console.log("[TrainingOverlay] Toggling overlay. New state:", !isVisible);
     setIsVisible(prev => !prev);
   };
 
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
-        console.log("[TrainingOverlay] Escape pressed, closing overlay.");
         setIsVisible(false);
       }
     };

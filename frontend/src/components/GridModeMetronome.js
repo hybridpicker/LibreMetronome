@@ -106,7 +106,6 @@ export default function GridModeMetronome({
   useEffect(() => {
     if (registerTapTempo && logic.tapTempo) {
       registerTapTempo(logic.tapTempo);
-      console.log("[GridModeMetronome] tapTempo-Funktion registriert.");
     }
   }, [registerTapTempo, logic.tapTempo]);
 
@@ -151,7 +150,6 @@ export default function GridModeMetronome({
         updateAccents(newAccents);
       }
       
-      console.log(`[GridModeMetronome] Column ${index} set to state ${newConfig[index]}`);
       return newConfig;
     });
   }, [updateAccents]);
@@ -183,11 +181,9 @@ export default function GridModeMetronome({
 
   // Manual play/pause handler.
   const handlePlayPause = () => {
-    console.log("[GridModeMetronome] Play/Pause button pressed.");
     if (isPaused) {
       if (logic.audioCtx && logic.audioCtx.state === 'suspended') {
         logic.audioCtx.resume().then(() => {
-          console.log("[GridModeMetronome] AudioContext resumed.");
           setIsPaused(false);
           logic.startScheduler();
         }).catch((err) => {
@@ -196,12 +192,10 @@ export default function GridModeMetronome({
       } else {
         setIsPaused(false);
         logic.startScheduler();
-        console.log("[GridModeMetronome] Scheduler started.");
       }
     } else {
       setIsPaused(true);
       logic.stopScheduler();
-      console.log("[GridModeMetronome] Scheduler stopped.");
     }
   };
 
@@ -230,7 +224,6 @@ export default function GridModeMetronome({
   // Zusätzlicher useEffect, um Swing auf 0 zu setzen bei ungeraden Subdivisions
   useEffect(() => {
     if (subdivisions % 2 !== 0 && swing !== 0) {
-      console.log("[GridModeMetronome] Ungerade Subdivisions erkannt, setze Swing auf 0.");
       setSwing(0);
     }
   }, [subdivisions]);
@@ -243,9 +236,7 @@ export default function GridModeMetronome({
       style={{ cursor: 'pointer' }}
     >
       {Array.from({ length: 3 }, (_, rowIndex) => {
-        // A cell is "active" if its row is within the number of filled cells defined by gridConfig.
         const isActive = rowIndex >= (3 - gridConfig[colIndex]);
-        // Highlight the cell if it belongs to the currently playing subdivision.
         const isCurrent = (colIndex === logic.currentSubdivision && !isPaused);
         return (
           <image
@@ -313,7 +304,6 @@ export default function GridModeMetronome({
                 step={0.01}
                 value={swing}
                 onChange={(e) => {
-                  console.log("[GridModeMetronome] Swing changed to:", e.target.value);
                   setSwing(parseFloat(e.target.value));
                 }}
                 style={{ width: '100%' }}
@@ -330,7 +320,6 @@ export default function GridModeMetronome({
             step={0.01}
             value={volume}
             onChange={(e) => {
-              console.log("[GridModeMetronome] Volume changed to:", e.target.value);
               setVolume(parseFloat(e.target.value));
             }}
             style={{ width: '100%' }}
@@ -345,7 +334,6 @@ export default function GridModeMetronome({
             step={1}
             value={tempo}
             onChange={(e) => {
-              console.log("[GridModeMetronome] Tempo changed to:", e.target.value);
               setTempo(parseFloat(e.target.value));
             }}
             style={{ width: '100%' }}
