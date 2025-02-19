@@ -1,4 +1,3 @@
-// File: src/components/GridModeMetronome.js
 import React, { useState, useEffect, useCallback } from 'react';
 import useMetronomeLogic from '../hooks/useMetronomeLogic'; // Custom hook for audio scheduling
 
@@ -75,8 +74,9 @@ export default function GridModeMetronome({
   registerTapTempo
 }) {
   // Local grid configuration state:
+  // For grid mode: 0 = mute, 1 = normal, 2 = accent; first beat is fixed as 3.
   const [gridConfig, setGridConfig] = useState(
-    Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1))
+    Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 0))
   );
 
   // Initialize the metronome logic hook, passing in gridConfig as the beat configuration.
@@ -119,29 +119,28 @@ export default function GridModeMetronome({
   };
 
   useEffect(() => {
-    // If external accents are provided, sync gridConfig accordingly
+    // If external accents are provided, sync gridConfig accordingly.
+    // Mapping: first beat always 3; for others, if accent true then state 2, else mute (0).
     if (accents && accents.length === subdivisions) {
       const newGridConfig = accents.map((accent, i) =>
-        i === 0 ? 3 : (accent ? 2 : 1)
+        i === 0 ? 3 : (accent ? 2 : 0)
       );
-      // Update local gridConfig to reflect external accent changes
       setGridConfig(newGridConfig);
     } else {
-      // Otherwise, initialize with default values
+      // Otherwise, initialize with default values (first beat fixed, others mute)
       setGridConfig(
-        Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1))
+        Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 0))
       );
     }
   }, [subdivisions, accents]);
 
-  // Handle clicks on a grid column: cycle through states 1 -> 2 -> 3 -> 1.
+  // Handle clicks on a grid column: cycle through states for non-first beats:
+  // mute (0) → normal (1) → accent (2) → mute (0)
   const handleColumnClickIndex = useCallback((index) => {
     if (index === 0) return; // Do not change the first beat cyclically
-    
     setGridConfig((prev) => {
       const newConfig = [...prev];
-      // For non-first beats, cycle through states 1 -> 2 -> 3 -> 1
-      newConfig[index] = (newConfig[index] % 3) + 1;
+      newConfig[index] = (newConfig[index] + 1) % 3;
       
       // Update external accent state if updateAccents is provided
       if (updateAccents) {
