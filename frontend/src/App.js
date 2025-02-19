@@ -24,15 +24,31 @@ function App() {
   const [volume, setVolume] = useState(0.5);
 
   // Accent state: first beat always true.
-  const [accents, setAccents] = useState(
-    Array.from({ length: subdivisions }, (_, i) => i === 0 ? 3 : 1)
+  // Accent states for Grid and Circle modes
+  const [gridAccents, setGridAccents] = useState(
+    Array.from({ length: subdivisions }, (_, i) => i === 0 ? 3 : 1) // 3 for first beat, 1 for others
   );
+  const [circleAccents, setCircleAccents] = useState(
+    Array.from({ length: subdivisions }, (_, i) => i === 0 ? 3 : 1) // 3 for first beat, 1 for others
+  );
+
   React.useEffect(() => {
-    setAccents(Array.from({ length: subdivisions }, (_, i) => i === 0 ? 3 : 1));
+    setGridAccents(Array.from({ length: subdivisions }, (_, i) => i === 0 ? 3 : 1));
+    setCircleAccents(Array.from({ length: subdivisions }, (_, i) => i === 0 ? 3 : 1));
   }, [subdivisions]);
-  const toggleAccent = (index) => {
+
+  const toggleGridAccent = (index) => {
     if (index === 0) return;
-    setAccents(prev => {
+    setGridAccents(prev => {
+      const newAccents = [...prev];
+      newAccents[index] = (newAccents[index] + 1) % 3;
+      return newAccents;
+    });
+  };
+
+  const toggleCircleAccent = (index) => {
+    if (index === 0) return;
+    setCircleAccents(prev => {
       const newAccents = [...prev];
       newAccents[index] = (newAccents[index] + 1) % 3;
       return newAccents;
@@ -177,8 +193,8 @@ function App() {
             if (togglePlayRef.current) togglePlayRef.current();
           }}
           analogMode={true}
-          accents={accents}
-          toggleAccent={toggleAccent}
+          accents={mode === "grid" ? gridAccents : circleAccents}
+          toggleAccent={mode === "grid" ? toggleGridAccent : toggleCircleAccent}
           {...trainingSettings}
           registerTogglePlay={registerTogglePlay}
         />
@@ -199,8 +215,8 @@ function App() {
             if (togglePlayRef.current) togglePlayRef.current();
           }}
           analogMode={false}
-          accents={accents}
-          toggleAccent={toggleAccent}
+          accents={mode === "grid" ? gridAccents : circleAccents}
+          toggleAccent={mode === "grid" ? toggleGridAccent : toggleCircleAccent}
           {...trainingSettings}
           registerTogglePlay={registerTogglePlay}
         />
@@ -222,8 +238,8 @@ function App() {
           }}
           analogMode={false}
           gridMode={true}
-          accents={accents}
-          updateAccents={setAccents}
+          accents={gridAccents}
+          updateAccents={setGridAccents}
           {...trainingSettings}
           registerTogglePlay={registerTogglePlay}
           registerTapTempo={registerTapTempo}

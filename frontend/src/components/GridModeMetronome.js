@@ -76,7 +76,7 @@ export default function GridModeMetronome({
   // Local grid configuration state:
   // For grid mode: 0 = mute, 1 = normal, 2 = accent; first beat is fixed as 3.
   const [gridConfig, setGridConfig] = useState(
-    Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 0))
+      Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1))
   );
 
   // Initialize the metronome logic hook, passing in gridConfig as the beat configuration.
@@ -126,18 +126,18 @@ export default function GridModeMetronome({
     } else {
       // Otherwise, initialize with default values (first beat fixed, others mute)
       setGridConfig(
-        Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 0))
+        Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1))
       );
     }
   }, [subdivisions, accents]);
 
   // Handle clicks on a grid column: cycle through states for non-first beats:
-  // mute (0) → normal (1) → accent (2) → mute (0)
+  // mute (0) → normal (1) → accent (2) → first beat (3) → mute (0)
   const handleColumnClickIndex = useCallback((index) => {
     if (index === 0) return; // Do not change the first beat cyclically
     setGridConfig((prev) => {
       const newConfig = [...prev];
-      newConfig[index] = (newConfig[index] + 1) % 3;
+      newConfig[index] = (newConfig[index] + 1) % 4;
       
       // Update external accent state if updateAccents is provided
       if (updateAccents) {
