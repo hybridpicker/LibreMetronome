@@ -50,6 +50,7 @@
   object-fit: contain;
   position: absolute;
   cursor: pointer;
+  z-index: 1;
 }
 
 /* Lines connecting beats, 0.5px thick, teal color */

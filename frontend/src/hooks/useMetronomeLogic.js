@@ -180,10 +180,16 @@ export default function useMetronomeLogic({
     } else {
       if (subIndex === 0) {
         schedulePlay(firstBufferRef.current, when);
-      } else if (accentsRef.current[subIndex]) {
-        schedulePlay(accentBufferRef.current, when);
       } else {
-        schedulePlay(normalBufferRef.current, when);
+        const state = accentsRef.current[subIndex];
+        if (state === 2) {
+          schedulePlay(accentBufferRef.current, when);
+        } else if (state === 1) {
+          schedulePlay(normalBufferRef.current, when);
+        } else if (state === 0) {
+          // Mute state: do not play any sound
+          return;
+        }
       }
     }
   }, [analogMode, gridMode, schedulePlay, shouldMuteThisBeat]);

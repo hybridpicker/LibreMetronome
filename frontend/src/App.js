@@ -25,16 +25,16 @@ function App() {
 
   // Accent state: first beat always true.
   const [accents, setAccents] = useState(
-    Array.from({ length: subdivisions }, (_, i) => i === 0)
+    Array.from({ length: subdivisions }, (_, i) => i === 0 ? 3 : 1)
   );
   React.useEffect(() => {
-    setAccents(Array.from({ length: subdivisions }, (_, i) => i === 0));
+    setAccents(Array.from({ length: subdivisions }, (_, i) => i === 0 ? 3 : 1));
   }, [subdivisions]);
   const toggleAccent = (index) => {
     if (index === 0) return;
     setAccents(prev => {
       const newAccents = [...prev];
-      newAccents[index] = !newAccents[index];
+      newAccents[index] = (newAccents[index] + 1) % 3;
       return newAccents;
     });
   };

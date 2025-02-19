@@ -55,7 +55,7 @@ export default function GridModeMetronome({
   volume,
   setVolume,
   registerTogglePlay,
-  // For Grid Mode:
+  /* For Grid Mode: */
   analogMode = false,
   gridMode = true,
   accents = null,      // External accent state (array of booleans)
@@ -120,12 +120,9 @@ export default function GridModeMetronome({
 
   useEffect(() => {
     // If external accents are provided, sync gridConfig accordingly.
-    // Mapping: first beat always 3; for others, if accent true then state 2, else mute (0).
+    // Assuming accents already use numerical states
     if (accents && accents.length === subdivisions) {
-      const newGridConfig = accents.map((accent, i) =>
-        i === 0 ? 3 : (accent ? 2 : 0)
-      );
-      setGridConfig(newGridConfig);
+      setGridConfig(accents);
     } else {
       // Otherwise, initialize with default values (first beat fixed, others mute)
       setGridConfig(
@@ -144,10 +141,7 @@ export default function GridModeMetronome({
       
       // Update external accent state if updateAccents is provided
       if (updateAccents) {
-        const newAccents = newConfig.map((state, i) =>
-          i === 0 ? true : state === 2
-        );
-        updateAccents(newAccents);
+        updateAccents(newConfig);
       }
       
       return newConfig;
@@ -230,11 +224,7 @@ export default function GridModeMetronome({
 
   // Build the SVG grid: each column contains 3 squares.
   const gridSquares = Array.from({ length: subdivisions }, (_, colIndex) => (
-    <g
-      key={colIndex}
-      onClick={() => handleColumnClickIndex(colIndex)}
-      style={{ cursor: 'pointer' }}
-    >
+    <g key={colIndex}>
       {Array.from({ length: 3 }, (_, rowIndex) => {
         const isActive = rowIndex >= (3 - gridConfig[colIndex]);
         const isCurrent = (colIndex === logic.currentSubdivision && !isPaused);
@@ -247,9 +237,12 @@ export default function GridModeMetronome({
             width={50}
             height={50}
             style={{
+              cursor: 'pointer',
+              pointerEvents: 'auto',
               transition: 'opacity 0.2s ease-in-out',
               opacity: isCurrent ? 1 : 0.6
             }}
+            onClick={() => handleColumnClickIndex(colIndex)}
             alt={`Grid cell col=${colIndex}, row=${rowIndex}`}
           />
         );
