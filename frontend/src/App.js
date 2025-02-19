@@ -53,14 +53,21 @@ function App() {
   });
   console.log("[App] Initial trainingSettings:", trainingSettings);
 
-  // Ref to hold the current play/pause handler from the active metronome component.
+  // Refs für Play/Pause und Tap Tempo
   const togglePlayRef = useRef(null);
+  const tapTempoRef = useRef(null);
+
   const registerTogglePlay = (fn) => {
     console.log("[App] Registered play/pause handler");
     togglePlayRef.current = fn;
   };
 
-  // Global keyboard shortcuts – the onTogglePlayPause callback calls the registered handler.
+  const registerTapTempo = (fn) => {
+    console.log("[App] Registered tapTempo handler");
+    tapTempoRef.current = fn;
+  };
+
+  // Global keyboard shortcuts – der onTogglePlayPause Callback ruft den registrierten Handler auf.
   useKeyboardShortcuts({
     onTogglePlayPause: () => {
       console.log("[App] onTogglePlayPause triggered via keyboard");
@@ -68,7 +75,12 @@ function App() {
         togglePlayRef.current();
       }
     },
-    onTapTempo: () => console.log("[App] onTapTempo triggered"),
+    onTapTempo: () => {
+      console.log("[App] onTapTempo triggered via keyboard");
+      if (tapTempoRef.current) {
+        tapTempoRef.current();
+      }
+    },
     onSetSubdivisions: (num) => {
       console.log("[App] onSetSubdivisions triggered with:", num);
       setSubdivisions(num);
@@ -110,7 +122,7 @@ function App() {
       <InfoOverlay setActive={setIsInfoActive} />
       <Header />
       {/* Training button (displayed next to the info button) */}
-      <TrainingOverlay trainingSettings={trainingSettings} setTrainingSettings={setTrainingSettings} />
+      <TrainingOverlay trainingSettings={trainingSettings} setTrainingSettings={setTrainingSettings} setMode={setMode} setIsPaused={setIsPaused} />
       {/* Mode selection buttons */}
       <div style={{ marginBottom: "20px", display: "flex", gap: "10px", justifyContent: "center" }}>
         <button
@@ -167,7 +179,7 @@ function App() {
       </div>
 
       {/* Render metronome based on selected mode; training settings are spread as props */}
-      {mode === "analog" && (
+      {(mode === "analog" || mode === "training") && (
         <AdvancedMetronomeWithCircle
           tempo={tempo}
           setTempo={setTempo}
@@ -232,6 +244,7 @@ function App() {
           updateAccents={setAccents}
           {...trainingSettings}
           registerTogglePlay={registerTogglePlay}
+          registerTapTempo={registerTapTempo}
         />
       )}
       <Footer />

@@ -15,7 +15,9 @@ export default function useMetronomeLogic({
   isPaused,
   setIsPaused,
   swing,
+  setSwing,
   volume,
+  setVolume,
   accents = [],
   beatConfig,
   analogMode = false,
@@ -73,9 +75,7 @@ export default function useMetronomeLogic({
   useEffect(() => {
     if (gridMode) {
       if (accents && accents.length === subdivisions) {
-        beatConfigRef.current = accents.map((accent, i) =>
-          i === 0 ? 3 : (accent ? 2 : 1)
-        );
+        beatConfigRef.current = beatConfig; // Use the passed beatConfig directly
       } else if (beatConfig && beatConfig.length === subdivisions) {
         beatConfigRef.current = beatConfig;
       } else {
@@ -189,13 +189,17 @@ export default function useMetronomeLogic({
       console.log(`[useMetronomeLogic] Grid Mode -> subIndex: ${subIndex}, state: ${state}`);
       if (state === 3) {
         schedulePlay(firstBufferRef.current, when);
+        console.log("[useMetronomeLogic] State 3 detected: Playing first sound only.");
       } else if (state === 2) {
         schedulePlay(accentBufferRef.current, when);
-      } else {
+        console.log("[useMetronomeLogic] Accent sound played.");
+      } else if (state === 1) {
         schedulePlay(normalBufferRef.current, when);
+        console.log("[useMetronomeLogic] Normal click sound played.");
       }
-    } else {
-      // Circle mode: first beat always uses the first sound; others check the accent configuration
+    }
+    else {
+      // Kreis-Modus: Spiele Sound basierend auf den Akzenten
       if (subIndex === 0) {
         schedulePlay(firstBufferRef.current, when);
       } else if (accentsRef.current[subIndex]) {
