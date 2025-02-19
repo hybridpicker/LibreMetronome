@@ -102,7 +102,7 @@ export default function GridModeMetronome({
     measuresUntilSpeedUp
   });
 
-  // Tap Tempo Registrierung
+  // Tap Tempo Registration
   useEffect(() => {
     if (registerTapTempo && logic.tapTempo) {
       registerTapTempo(logic.tapTempo);
@@ -119,14 +119,15 @@ export default function GridModeMetronome({
   };
 
   useEffect(() => {
-    // Wenn externe Akzente vorhanden sind, verwende diese
+    // If external accents are provided, sync gridConfig accordingly
     if (accents && accents.length === subdivisions) {
       const newGridConfig = accents.map((accent, i) =>
         i === 0 ? 3 : (accent ? 2 : 1)
       );
-
+      // Update local gridConfig to reflect external accent changes
+      setGridConfig(newGridConfig);
     } else {
-      // Ansonsten initialisiere mit Standardwerten
+      // Otherwise, initialize with default values
       setGridConfig(
         Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1))
       );
@@ -135,14 +136,14 @@ export default function GridModeMetronome({
 
   // Handle clicks on a grid column: cycle through states 1 -> 2 -> 3 -> 1.
   const handleColumnClickIndex = useCallback((index) => {
-    if (index === 0) return; // Ersten Beat nicht zyklisch ändern
+    if (index === 0) return; // Do not change the first beat cyclically
     
     setGridConfig((prev) => {
       const newConfig = [...prev];
-      // Für nicht-erste Beats nur zwischen 1 und 2 wechseln
-      newConfig[index] = (newConfig[index] % 3) + 1; // Cycle through states 1 -> 2 -> 3
+      // For non-first beats, cycle through states 1 -> 2 -> 3 -> 1
+      newConfig[index] = (newConfig[index] % 3) + 1;
       
-      // Aktualisiere externe Akzente
+      // Update external accent state if updateAccents is provided
       if (updateAccents) {
         const newAccents = newConfig.map((state, i) =>
           i === 0 ? true : state === 2
@@ -221,7 +222,7 @@ export default function GridModeMetronome({
     }
   }, [isPaused, logic]);
 
-  // Zusätzlicher useEffect, um Swing auf 0 zu setzen bei ungeraden Subdivisions
+  // Additional effect: set swing to 0 when subdivisions is odd.
   useEffect(() => {
     if (subdivisions % 2 !== 0 && swing !== 0) {
       setSwing(0);
@@ -341,7 +342,7 @@ export default function GridModeMetronome({
         </div>
       </div>
 
-      {/* Tap Tempo button für mobile Geräte */}
+      {/* Tap Tempo button for mobile devices */}
       {isMobile && (
         <button
           onClick={logic.tapTempo}
