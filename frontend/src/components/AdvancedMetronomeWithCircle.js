@@ -70,7 +70,7 @@ export default function AdvancedMetronomeWithCircle({
   // Local state for accent variants if the parent does not provide an accents array.
   // For circle mode we use: 0 = mute, 1 = normal, 2 = accent; first beat is fixed as 3.
   const [localAccents, setLocalAccents] = useState(
-    Array.from({ length: subdivisions }, (_, i) => i === 0 ? 3 : 0)
+      Array.from({ length: subdivisions }, (_, i) => i === 0 ? 3 : 1)
   );
   const effectiveAccents = accents || localAccents;
 
