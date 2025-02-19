@@ -13,7 +13,6 @@ const TEMPO_MIN = 15;
 const TEMPO_MAX = 240;
 
 function App() {
-  console.log("[App] Rendering App component");
   // Mode selection: "analog", "circle", or "grid"
   const [mode, setMode] = useState("circle");
 
@@ -36,7 +35,6 @@ function App() {
     setAccents(prev => {
       const newAccents = [...prev];
       newAccents[index] = !newAccents[index];
-      console.log(`[App] Toggle accent at index ${index}:`, newAccents[index]);
       return newAccents;
     });
   };
@@ -51,66 +49,53 @@ function App() {
     measuresUntilSpeedUp: 2,
     tempoIncreasePercent: 5
   });
-  console.log("[App] Initial trainingSettings:", trainingSettings);
 
   // Refs für Play/Pause und Tap Tempo
   const togglePlayRef = useRef(null);
   const tapTempoRef = useRef(null);
 
   const registerTogglePlay = (fn) => {
-    console.log("[App] Registered play/pause handler");
     togglePlayRef.current = fn;
   };
 
   const registerTapTempo = (fn) => {
-    console.log("[App] Registered tapTempo handler");
     tapTempoRef.current = fn;
   };
 
   // Global keyboard shortcuts – der onTogglePlayPause Callback ruft den registrierten Handler auf.
   useKeyboardShortcuts({
     onTogglePlayPause: () => {
-      console.log("[App] onTogglePlayPause triggered via keyboard");
       if (togglePlayRef.current) {
         togglePlayRef.current();
       }
     },
     onTapTempo: () => {
-      console.log("[App] onTapTempo triggered via keyboard");
       if (tapTempoRef.current) {
         tapTempoRef.current();
       }
     },
     onSetSubdivisions: (num) => {
-      console.log("[App] onSetSubdivisions triggered with:", num);
       setSubdivisions(num);
     },
     onIncreaseTempo: () => {
-      console.log("[App] onIncreaseTempo triggered");
       setTempo(prev => Math.min(prev + 5, TEMPO_MAX));
     },
     onDecreaseTempo: () => {
-      console.log("[App] onDecreaseTempo triggered");
       setTempo(prev => Math.max(prev - 5, TEMPO_MIN));
     },
     onSwitchToAnalog: () => {
-      console.log("[App] Switching mode to Analog");
       setMode("analog");
     },
     onSwitchToCircle: () => {
-      console.log("[App] Switching mode to Circle");
       setMode("circle");
     },
     onSwitchToGrid: () => {
-      console.log("[App] Switching mode to Grid");
       setMode("grid");
     },
     onToggleInfoOverlay: () => {
-      console.log("[App] onToggleInfoOverlay triggered");
       setIsInfoActive((prev) => !prev);
     },
     onManualTempoIncrease: () => {
-      console.log("[App] onManualTempoIncrease triggered");
       // Handled within the metronome hook.
     },
   });
@@ -127,7 +112,6 @@ function App() {
       <div style={{ marginBottom: "20px", display: "flex", gap: "10px", justifyContent: "center" }}>
         <button
           onClick={() => {
-            console.log("[App] Mode switched to Analog");
             setMode("analog");
           }}
           style={{
@@ -144,7 +128,6 @@ function App() {
         </button>
         <button
           onClick={() => {
-            console.log("[App] Mode switched to Circle");
             setMode("circle");
           }}
           style={{
@@ -161,7 +144,6 @@ function App() {
         </button>
         <button
           onClick={() => {
-            console.log("[App] Mode switched to Grid");
             setMode("grid");
           }}
           style={{

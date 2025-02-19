@@ -67,10 +67,6 @@ export default function useMetronomeLogic({
   }, [accents]);
 
   // Setup beat configuration for grid mode or circle mode.
-  // In grid mode, the beat configuration is derived from the current accents:
-  // - First beat always gets state 3 ("first beat")
-  // - Beats with an accent get state 2
-  // - Others get state 1
   const beatConfigRef = useRef(null);
   useEffect(() => {
     if (gridMode) {
@@ -82,14 +78,12 @@ export default function useMetronomeLogic({
         beatConfigRef.current = Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1));
       }
     } else {
-      // In circle mode we don't use the grid configuration – default to ones.
       if (beatConfig && beatConfig.length > 0) {
         beatConfigRef.current = beatConfig;
       } else {
         beatConfigRef.current = Array.from({ length: subdivisions }, () => 1);
       }
     }
-    console.log("[useMetronomeLogic] beatConfig updated:", beatConfigRef.current);
   }, [beatConfig, subdivisions, gridMode, accents]);
 
   // Training mode counters
@@ -103,13 +97,11 @@ export default function useMetronomeLogic({
 
     // Macro Mode: handle fixed or random silence
     if (macroMode === 1) {
-      // Fixed silence: enter silence phase after a set number of measures
       if (!isSilencePhaseRef.current) {
         if (measureCountRef.current >= measuresUntilMute) {
           isSilencePhaseRef.current = true;
           muteMeasureCountRef.current = 0;
           measureCountRef.current = 0;
-          console.log("[useMetronomeLogic] Macro Timing: Entering silence phase.");
         }
       } else {
         muteMeasureCountRef.current += 1;
@@ -117,7 +109,6 @@ export default function useMetronomeLogic({
           isSilencePhaseRef.current = false;
           muteMeasureCountRef.current = 0;
           measureCountRef.current = 0;
-          console.log("[useMetronomeLogic] Macro Timing: Exiting silence phase.");
         }
       }
     } else if (macroMode === 2) {
@@ -130,7 +121,6 @@ export default function useMetronomeLogic({
         const factor = 1 + tempoIncreasePercent / 100;
         setTempo(prev => Math.min(Math.round(prev * factor), TEMPO_MAX));
         measureCountRef.current = 0;
-        console.log("[useMetronomeLogic] Speed Training: Tempo increased automatically.");
       }
     }
   }, [
@@ -156,7 +146,6 @@ export default function useMetronomeLogic({
       clearInterval(lookaheadRef.current);
       lookaheadRef.current = null;
       schedulerRunningRef.current = false;
-      console.log("[useMetronomeLogic] Scheduler stopped.");
     }
   }, []);
 
@@ -169,37 +158,26 @@ export default function useMetronomeLogic({
     gainNode.gain.value = volumeRef.current;
     source.connect(gainNode).connect(audioCtxRef.current.destination);
     source.start(when);
-    console.log(`[useMetronomeLogic] Scheduled sound at ${when.toFixed(3)}s`);
   }, []);
 
   // Decide which sound to schedule based on the current mode and accent configuration
   const scheduleSubdivision = useCallback((subIndex, when) => {
-    // Check if this beat should be muted due to training mode
     if (shouldMuteThisBeat(subIndex)) {
-      console.log("[useMetronomeLogic] Beat muted due to training mode.");
       return;
     }
 
     if (analogMode) {
-      // Analog mode always plays the normal sound
       schedulePlay(normalBufferRef.current, when);
     } else if (gridMode) {
-      // In grid mode, use the beatConfig derived from the current accents
       const state = beatConfigRef.current[subIndex];
-      console.log(`[useMetronomeLogic] Grid Mode -> subIndex: ${subIndex}, state: ${state}`);
       if (state === 3) {
         schedulePlay(firstBufferRef.current, when);
-        console.log("[useMetronomeLogic] State 3 detected: Playing first sound only.");
       } else if (state === 2) {
         schedulePlay(accentBufferRef.current, when);
-        console.log("[useMetronomeLogic] Accent sound played.");
       } else if (state === 1) {
         schedulePlay(normalBufferRef.current, when);
-        console.log("[useMetronomeLogic] Normal click sound played.");
       }
-    }
-    else {
-      // Kreis-Modus: Spiele Sound basierend auf den Akzenten
+    } else {
       if (subIndex === 0) {
         schedulePlay(firstBufferRef.current, when);
       } else if (accentsRef.current[subIndex]) {
@@ -267,7 +245,6 @@ export default function useMetronomeLogic({
   // Start the scheduler interval
   const startScheduler = useCallback(() => {
     if (schedulerRunningRef.current) {
-      console.log("[useMetronomeLogic] Scheduler already running.");
       return;
     }
     stopScheduler();
@@ -284,7 +261,6 @@ export default function useMetronomeLogic({
     // Start the scheduler interval (25ms resolution)
     lookaheadRef.current = setInterval(scheduler, 25);
     schedulerRunningRef.current = true;
-    console.log("[useMetronomeLogic] Scheduler started.");
   }, [stopScheduler, scheduler, getCurrentSubIntervalSec]);
 
   // Handle tap-tempo functionality to calculate new tempo
@@ -311,7 +287,6 @@ export default function useMetronomeLogic({
       measureCountRef.current = 0;
       muteMeasureCountRef.current = 0;
       isSilencePhaseRef.current = false;
-      console.log(`[useMetronomeLogic] New tempo from tap: ${clamped} BPM`);
     }
   }, [setTempo]);
 
@@ -320,7 +295,6 @@ export default function useMetronomeLogic({
     if (!globalAudioCtx || globalAudioCtx.state === 'closed') {
       try {
         globalAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        console.log("[useMetronomeLogic] AudioContext created.");
       } catch (err) {
         console.error("Web Audio API not supported:", err);
         return;
@@ -337,7 +311,6 @@ export default function useMetronomeLogic({
         .then((arrBuffer) => audioCtxRef.current.decodeAudioData(arrBuffer))
         .then((decoded) => {
           callback(decoded);
-          console.log(`[useMetronomeLogic] Sound loaded from ${url}`);
         })
         .catch((err) => console.error(`Error loading ${url}:`, err));
     };
@@ -357,8 +330,6 @@ export default function useMetronomeLogic({
   useEffect(() => {
     if (!didMountRef.current) {
       didMountRef.current = true;
-      console.log("[useMetronomeLogic] Initial mount - not auto-starting scheduler.");
-      return;
     }
   }, []);
 
