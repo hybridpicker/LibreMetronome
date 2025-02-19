@@ -1,13 +1,12 @@
-// File: src/components/training/TrainingOverlay.js
 import React, { useState, useEffect } from 'react';
 import './TrainingOverlay.css';
-import trainingButtonIcon from '../../assets/svg/training-button.svg';       
-import trainingButtonOnIcon from '../../assets/svg/training-button-on.svg'; 
+import trainingButtonIcon from '../../assets/svg/training-button.svg';
+import trainingButtonOnIcon from '../../assets/svg/training-button-on.svg';
 
 /**
  * TrainingModal displays the training mode settings.
  */
-const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings }) => {
+const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings, setMode, setIsPaused }) => {
   const [localSettings, setLocalSettings] = useState(trainingSettings);
 
   useEffect(() => {
@@ -42,6 +41,10 @@ const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings }) => {
     console.log("[TrainingModal] Saving settings:", localSettings);
     setTrainingSettings(localSettings);
     onClose();
+    // Retain the current mode if a training setting is active
+    if (localSettings.macroMode !== 0 || localSettings.speedMode !== 0) {
+      setMode(prevMode => prevMode);
+    }
   };
 
   return (
@@ -51,7 +54,14 @@ const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings }) => {
           className="training-close-button" 
           onClick={() => {
             console.log("[TrainingModal] Close clicked");
-            onClose();
+            onClose(); // Close the modal
+            // Restart the play mode
+            if (setIsPaused) {
+              setIsPaused(true); // Pause the metronome
+              setTimeout(() => {
+                setIsPaused(false); // Resume the metronome after a short delay
+              }, 100); // 100ms delay
+            }
           }} 
           aria-label="Close Training Overlay"
         >
@@ -171,7 +181,7 @@ const TrainingButton = ({ onClick, active }) => {
 /**
  * TrainingOverlay combines the TrainingButton and the TrainingModal.
  */
-const TrainingOverlay = ({ trainingSettings, setTrainingSettings, onToggleInfo }) => {
+const TrainingOverlay = ({ trainingSettings, setTrainingSettings, onToggleInfo, setMode }) => {
   const [isVisible, setIsVisible] = useState(false);
   // Training is "active" if macroMode != 0 OR speedMode != 0
   const trainingActive = trainingSettings.macroMode !== 0 || trainingSettings.speedMode !== 0;
@@ -200,6 +210,7 @@ const TrainingOverlay = ({ trainingSettings, setTrainingSettings, onToggleInfo }
           onClose={toggleOverlay}
           trainingSettings={trainingSettings}
           setTrainingSettings={setTrainingSettings}
+          setMode={setMode}
         />
       )}
     </>

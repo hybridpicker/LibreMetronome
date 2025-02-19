@@ -69,8 +69,47 @@ export default function GridModeMetronome({
   muteDurationMeasures,
   muteProbability,
   tempoIncreasePercent,
-  measuresUntilSpeedUp
+  measuresUntilSpeedUp,
+
+  // Tap Tempo Registration
+  registerTapTempo
 }) {
+  // Local grid configuration state:
+  const [gridConfig, setGridConfig] = useState(
+    Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1))
+  );
+
+  // Initialize the metronome logic hook, passing in gridConfig as the beat configuration.
+  const logic = useMetronomeLogic({
+    tempo,
+    setTempo,
+    subdivisions,
+    isPaused,
+    setIsPaused,
+    swing,
+    volume,
+    beatConfig: gridConfig,  // Use local gridConfig to determine sound (normal/accent/first)
+    setSubdivisions,
+    analogMode,
+    gridMode,
+    accents,
+    macroMode,
+    speedMode,
+    measuresUntilMute,
+    muteDurationMeasures,
+    muteProbability,
+    tempoIncreasePercent,
+    measuresUntilSpeedUp
+  });
+
+  // Tap Tempo Registrierung
+  useEffect(() => {
+    if (registerTapTempo && logic.tapTempo) {
+      registerTapTempo(logic.tapTempo);
+      console.log("[GridModeMetronome] tapTempo-Funktion registriert.");
+    }
+  }, [registerTapTempo, logic.tapTempo]);
+
   // Helper function to compare two arrays (shallow comparison)
   const arraysEqual = (a, b) => {
     if (!a || !b || a.length !== b.length) return false;
@@ -80,28 +119,20 @@ export default function GridModeMetronome({
     return true;
   };
 
-  // Local grid configuration state:
-  // 1 = normal, 2 = accent, 3 = first-beat.
-  // The first column (index 0) is always set to 3.
-  const [gridConfig, setGridConfig] = useState(
-    Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1))
-  );
-
-  // Kombinierter Effect für die Initialisierung und Synchronisation
   useEffect(() => {
     // Wenn externe Akzente vorhanden sind, verwende diese
     if (accents && accents.length === subdivisions) {
       const newGridConfig = accents.map((accent, i) =>
         i === 0 ? 3 : (accent ? 2 : 1)
       );
-      setGridConfig(newGridConfig);
+
     } else {
       // Ansonsten initialisiere mit Standardwerten
       setGridConfig(
         Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1))
       );
     }
-  }, [subdivisions, accents]); // Nur von subdivisions und accents abhängig
+  }, [subdivisions, accents]);
 
   // Handle clicks on a grid column: cycle through states 1 -> 2 -> 3 -> 1.
   const handleColumnClickIndex = useCallback((index) => {
@@ -110,7 +141,7 @@ export default function GridModeMetronome({
     setGridConfig((prev) => {
       const newConfig = [...prev];
       // Für nicht-erste Beats nur zwischen 1 und 2 wechseln
-      newConfig[index] = newConfig[index] === 1 ? 2 : 1;
+      newConfig[index] = (newConfig[index] % 3) + 1; // Cycle through states 1 -> 2 -> 3
       
       // Aktualisiere externe Akzente
       if (updateAccents) {
@@ -141,34 +172,6 @@ export default function GridModeMetronome({
       />
     );
   });
-
-  // Instantiate the metronome logic hook, passing in gridConfig as the beat configuration.
-  const logic = useMetronomeLogic({
-    tempo,
-    setTempo,
-    subdivisions,
-    isPaused,
-    setIsPaused,
-    swing,
-    volume,
-    beatConfig: gridConfig,  // Use local gridConfig to determine sound (normal/accent/first)
-    setSubdivisions,
-    analogMode,
-    gridMode,
-    accents,
-    macroMode,
-    speedMode,
-    measuresUntilMute,
-    muteDurationMeasures,
-    muteProbability,
-    tempoIncreasePercent,
-    measuresUntilSpeedUp
-  });
-
-  // Define grid dimensions (each square is 50px by 50px, grid height is 3 rows).
-  const squareSize = 50;
-  const gridWidth = subdivisions * squareSize;
-  const gridHeight = squareSize * 3;
 
   // Handle mobile detection to adjust UI elements if needed.
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -248,10 +251,10 @@ export default function GridModeMetronome({
           <image
             key={rowIndex}
             href={isActive ? squareActive : squareInactive}
-            x={colIndex * squareSize}
-            y={rowIndex * squareSize}
-            width={squareSize}
-            height={squareSize}
+            x={colIndex * 50}
+            y={rowIndex * 50}
+            width={50}
+            height={50}
             style={{
               transition: 'opacity 0.2s ease-in-out',
               opacity: isCurrent ? 1 : 0.6
@@ -267,8 +270,8 @@ export default function GridModeMetronome({
     <div style={{ textAlign: 'center' }}>
       {/* SVG grid container */}
       <svg
-        width={gridWidth}
-        height={gridHeight}
+        width={subdivisions * 50}
+        height={150}
         style={{ margin: '0 auto', display: 'block' }}
       >
         {gridSquares}
@@ -350,7 +353,7 @@ export default function GridModeMetronome({
         </div>
       </div>
 
-      {/* Tap Tempo button for mobile devices */}
+      {/* Tap Tempo button für mobile Geräte */}
       {isMobile && (
         <button
           onClick={logic.tapTempo}
