@@ -1,4 +1,3 @@
-// File: src/components/AdvancedMetronomeWithCircle.js
 import React, { useState, useEffect } from 'react';
 import useMetronomeLogic from '../hooks/useMetronomeLogic';
 import useKeyboardShortcuts from '../hooks/KeyboardShortcuts';
@@ -68,9 +67,10 @@ export default function AdvancedMetronomeWithCircle({
   tempoIncreasePercent,
   measuresUntilSpeedUp
 }) {
-  // Local state for accents if the parent does not provide an accents array.
+  // Local state for accent variants if the parent does not provide an accents array.
+  // For circle mode we use: 0 = mute, 1 = normal, 2 = accent; first beat is fixed as 3.
   const [localAccents, setLocalAccents] = useState(
-    Array.from({ length: subdivisions }, (_, i) => i === 0)
+    Array.from({ length: subdivisions }, (_, i) => i === 0 ? 3 : 0)
   );
   const effectiveAccents = accents || localAccents;
 
@@ -81,20 +81,21 @@ export default function AdvancedMetronomeWithCircle({
         if (prev.length === subdivisions) return prev;
         const newArr = [];
         for (let i = 0; i < subdivisions; i++) {
-          newArr[i] = i === 0 ? true : (prev[i] !== undefined ? prev[i] : false);
+          newArr[i] = i === 0 ? 3 : (prev[i] !== undefined ? prev[i] : 0);
         }
         return newArr;
       });
     }
   }, [subdivisions, accents]);
 
-  // Local function to toggle accent if no external toggleAccent is provided
+  // Local function to cycle accent variant if no external toggleAccent is provided.
+  // Cycles for non-first beats: mute (0) → normal (1) → accent (2) → mute (0)
   const localToggleAccent = (index) => {
-    if (analogMode) return; // For analog mode, do nothing
-    if (index === 0) return; // First beat remains an accent by definition
+    if (analogMode) return; // Do nothing for analog mode
+    if (index === 0) return; // First beat remains fixed
     setLocalAccents((prev) => {
       const updated = [...prev];
-      updated[index] = !updated[index];
+      updated[index] = (updated[index] + 1) % 3;
       return updated;
     });
   };
@@ -245,25 +246,32 @@ export default function AdvancedMetronomeWithCircle({
 
   // Decides which icon is shown for each beat
   function getBeatIcon(beatIndex, isActive) {
-    const isFirst = beatIndex === 0;
     if (analogMode) return normalBeat;
     if (gridMode) {
-      const state = beatIndex === 0 ? 3 : (effectiveAccents[beatIndex] ? 2 : 1);
+      const state = beatIndex === 0 ? 3 : (effectiveAccents[beatIndex]);
       if (state === 3) {
         return isActive ? firstBeatActive : firstBeat;
       } else if (state === 2) {
         return isActive ? accentedBeatActive : accentedBeat;
+      } else if (state === 1) {
+        return isActive ? normalBeatActive : normalBeat;
       } else {
+        // Mute state: use normal icon (opacity will be reduced via style)
         return isActive ? normalBeatActive : normalBeat;
       }
     } else {
-      const isAccented = effectiveAccents[beatIndex];
-      if (isFirst) {
+      if (beatIndex === 0) {
         return isActive ? firstBeatActive : firstBeat;
-      } else if (isAccented) {
-        return isActive ? accentedBeatActive : accentedBeat;
       } else {
-        return isActive ? normalBeatActive : normalBeat;
+        const state = effectiveAccents[beatIndex];
+        if (state === 2) {
+          return isActive ? accentedBeatActive : accentedBeat;
+        } else if (state === 1) {
+          return isActive ? normalBeatActive : normalBeat;
+        } else {
+          // Mute state
+          return isActive ? normalBeatActive : normalBeat;
+        }
       }
     }
   }
@@ -376,12 +384,14 @@ export default function AdvancedMetronomeWithCircle({
                 src={bd.icon}
                 alt={`Beat ${bd.i}`}
                 className="beat-icon"
-                style={{
-                  left: `calc(50% + ${bd.xPos}px - 12px)`,
-                  top: `calc(50% + ${bd.yPos}px - 12px)`
-                }}
                 onClick={() => {
                   effectiveToggleAccent(bd.i);
+                }}
+                style={{
+                  left: `calc(50% + ${bd.xPos}px - 12px)`,
+                  top: `calc(50% + ${bd.yPos}px - 12px)`,
+                  // Reduce opacity if the beat is set to mute
+                  opacity: effectiveAccents[bd.i] === 0 ? 0.3 : 1
                 }}
               />
             ))}
