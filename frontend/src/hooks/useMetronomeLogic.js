@@ -1,3 +1,4 @@
+// File: src/hooks/useMetronomeLogic.js
 import { useEffect, useRef, useState, useCallback } from 'react';
 
 // Global AudioContext persists across mounts
@@ -338,6 +339,14 @@ export default function useMetronomeLogic({
       didMountRef.current = true;
     }
   }, []);
+
+  // NEW: Restart the scheduler when accents change so that updated beat settings (e.g. muting) take effect immediately.
+  useEffect(() => {
+    if (!isPaused) {
+      stopScheduler();
+      startScheduler();
+    }
+  }, [accents, isPaused, stopScheduler, startScheduler]);
 
   return {
     currentSubdivision,
