@@ -1,5 +1,5 @@
 // File: src/App.js
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import './App.css';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -13,7 +13,6 @@ const TEMPO_MIN = 15;
 const TEMPO_MAX = 240;
 
 function App() {
-  console.log("[App] Rendering App component");
   // Mode selection: "analog", "circle", or "grid"
   const [mode, setMode] = useState("circle");
 
@@ -24,19 +23,20 @@ function App() {
   const [swing, setSwing] = useState(0);
   const [volume, setVolume] = useState(0.5);
 
-  // Accent state: first beat always true.
+  // Unified accent state (first beat fixed as 3, others start as 1)
   const [accents, setAccents] = useState(
-    Array.from({ length: subdivisions }, (_, i) => i === 0)
+    Array.from({ length: subdivisions }, (_, i) => i === 0 ? 3 : 1)
   );
-  React.useEffect(() => {
-    setAccents(Array.from({ length: subdivisions }, (_, i) => i === 0));
+  useEffect(() => {
+    setAccents(Array.from({ length: subdivisions }, (_, i) => i === 0 ? 3 : 1));
   }, [subdivisions]);
+
+  // Unified toggle function: cycles non-first beats from mute (0) → normal (1) → accent (2) → mute (0)
   const toggleAccent = (index) => {
     if (index === 0) return;
     setAccents(prev => {
       const newAccents = [...prev];
-      newAccents[index] = !newAccents[index];
-      console.log(`[App] Toggle accent at index ${index}:`, newAccents[index]);
+      newAccents[index] = (newAccents[index] + 1) % 3;
       return newAccents;
     });
   };
@@ -51,69 +51,69 @@ function App() {
     measuresUntilSpeedUp: 2,
     tempoIncreasePercent: 5
   });
-  console.log("[App] Initial trainingSettings:", trainingSettings);
 
-  // Ref to hold the current play/pause handler from the active metronome component.
+  // Refs for Play/Pause and Tap Tempo
   const togglePlayRef = useRef(null);
+  const tapTempoRef = useRef(null);
+
   const registerTogglePlay = (fn) => {
-    console.log("[App] Registered play/pause handler");
     togglePlayRef.current = fn;
+  };
+
+  const registerTapTempo = (fn) => {
+    tapTempoRef.current = fn;
   };
 
   // Global keyboard shortcuts – the onTogglePlayPause callback calls the registered handler.
   useKeyboardShortcuts({
     onTogglePlayPause: () => {
-      console.log("[App] onTogglePlayPause triggered via keyboard");
       if (togglePlayRef.current) {
         togglePlayRef.current();
       }
     },
-    onTapTempo: () => console.log("[App] onTapTempo triggered"),
+    onTapTempo: () => {
+      if (tapTempoRef.current) {
+        tapTempoRef.current();
+      }
+    },
     onSetSubdivisions: (num) => {
-      console.log("[App] onSetSubdivisions triggered with:", num);
       setSubdivisions(num);
     },
     onIncreaseTempo: () => {
-      console.log("[App] onIncreaseTempo triggered");
       setTempo(prev => Math.min(prev + 5, TEMPO_MAX));
     },
     onDecreaseTempo: () => {
-      console.log("[App] onDecreaseTempo triggered");
       setTempo(prev => Math.max(prev - 5, TEMPO_MIN));
     },
     onSwitchToAnalog: () => {
-      console.log("[App] Switching mode to Analog");
       setMode("analog");
     },
     onSwitchToCircle: () => {
-      console.log("[App] Switching mode to Circle");
       setMode("circle");
     },
     onSwitchToGrid: () => {
-      console.log("[App] Switching mode to Grid");
       setMode("grid");
     },
     onToggleInfoOverlay: () => {
-      console.log("[App] onToggleInfoOverlay triggered");
-      // Implement InfoOverlay toggle logic if needed.
+      setIsInfoActive((prev) => !prev);
     },
     onManualTempoIncrease: () => {
-      console.log("[App] onManualTempoIncrease triggered");
       // Handled within the metronome hook.
     },
   });
 
+  const [isInfoActive, setIsInfoActive] = useState(false);
+
   return (
     <div className="app-container">
-      <InfoOverlay />
+      <InfoOverlay setActive={setIsInfoActive} />
       <Header />
       {/* Training button (displayed next to the info button) */}
-      <TrainingOverlay trainingSettings={trainingSettings} setTrainingSettings={setTrainingSettings} />
+      <TrainingOverlay trainingSettings={trainingSettings} setTrainingSettings={setTrainingSettings} setMode={setMode} setIsPaused={setIsPaused} />
       {/* Mode selection buttons */}
       <div style={{ marginBottom: "20px", display: "flex", gap: "10px", justifyContent: "center" }}>
         <button
           onClick={() => {
-            console.log("[App] Mode switched to Analog");
             setMode("analog");
           }}
           style={{
@@ -130,7 +130,6 @@ function App() {
         </button>
         <button
           onClick={() => {
-            console.log("[App] Mode switched to Circle");
             setMode("circle");
           }}
           style={{
@@ -147,7 +146,6 @@ function App() {
         </button>
         <button
           onClick={() => {
-            console.log("[App] Mode switched to Grid");
             setMode("grid");
           }}
           style={{
@@ -165,7 +163,7 @@ function App() {
       </div>
 
       {/* Render metronome based on selected mode; training settings are spread as props */}
-      {mode === "analog" && (
+      {(mode === "analog" || mode === "training") && (
         <AdvancedMetronomeWithCircle
           tempo={tempo}
           setTempo={setTempo}
@@ -230,6 +228,7 @@ function App() {
           updateAccents={setAccents}
           {...trainingSettings}
           registerTogglePlay={registerTogglePlay}
+          registerTapTempo={registerTapTempo}
         />
       )}
       <Footer />

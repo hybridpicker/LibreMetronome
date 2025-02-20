@@ -1,29 +1,47 @@
-// File: src/components/training/TrainingOverlay.js
 import React, { useState, useEffect } from 'react';
 import './TrainingOverlay.css';
-import trainingButtonIcon from '../../assets/svg/training-button.svg';       // Icon when training mode is off
-import trainingButtonOnIcon from '../../assets/svg/training-button-on.svg';    // Icon when training mode is on
+import trainingButtonIcon from '../../assets/svg/training-button.svg';
+import trainingButtonOnIcon from '../../assets/svg/training-button-on.svg';
 
 /**
  * TrainingModal displays the training mode settings.
  */
-const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings }) => {
+const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings, setMode, setIsPaused }) => {
   const [localSettings, setLocalSettings] = useState(trainingSettings);
 
   useEffect(() => {
-    console.log("[TrainingModal] Received trainingSettings:", trainingSettings);
     setLocalSettings(trainingSettings);
   }, [trainingSettings]);
 
   const handleChange = (field, value) => {
-    console.log(`[TrainingModal] ${field} changed to:`, value);
-    setLocalSettings(prev => ({ ...prev, [field]: value }));
+    // If the user chooses a non-zero macroMode, set speedMode to 0.
+    if (field === 'macroMode') {
+      const macroVal = Number(value);
+      setLocalSettings(prev => ({
+        ...prev,
+        macroMode: macroVal,
+        speedMode: (macroVal !== 0) ? 0 : prev.speedMode
+      }));
+    } else if (field === 'speedMode') {
+      const speedVal = Number(value);
+      setLocalSettings(prev => ({
+        ...prev,
+        speedMode: speedVal,
+        macroMode: (speedVal !== 0) ? 0 : prev.macroMode
+      }));
+    } else {
+      setLocalSettings(prev => ({ ...prev, [field]: value }));
+    }
   };
 
   const handleSave = () => {
-    console.log("[TrainingModal] Saving settings:", localSettings);
     setTrainingSettings(localSettings);
+    setIsPaused(true);
     onClose();
+    // Retain the current mode if a training setting is active
+    if (localSettings.macroMode !== 0 || localSettings.speedMode !== 0) {
+      setMode(prevMode => prevMode);
+    }
   };
 
   return (
@@ -31,23 +49,34 @@ const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings }) => {
       <div className="training-modal">
         <button 
           className="training-close-button" 
-          onClick={() => { console.log("[TrainingModal] Close clicked"); onClose(); }} 
+          onClick={() => {
+            onClose(); // Close the modal
+            // Restart the play mode
+            if (setIsPaused) {
+              setIsPaused(true); // Pause the metronome
+              setTimeout(() => {
+                setIsPaused(false); // Resume the metronome after a short delay
+              }, 100); // 100ms delay
+            }
+          }} 
           aria-label="Close Training Overlay"
         >
           &times;
         </button>
         <h2>Training Mode Settings</h2>
+
+        {/* Macro-Timing Section */}
         <div className="training-section">
           <h3>Macro-Timing</h3>
           <label>
             Macro Mode:
             <select
               value={localSettings.macroMode}
-              onChange={(e) => handleChange('macroMode', Number(e.target.value))}
+              onChange={(e) => handleChange('macroMode', e.target.value)}
             >
               <option value={0}>Off</option>
-              <option value={1}>Fixed Silence (Mode I)</option>
-              <option value={2}>Random Silence (Mode II)</option>
+              <option value={1}>Fixed Silence</option>
+              <option value={2}>Random Silence</option>
             </select>
           </label>
           {localSettings.macroMode === 1 && (
@@ -86,17 +115,19 @@ const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings }) => {
             </div>
           )}
         </div>
+
+        {/* Speed Training Section */}
         <div className="training-section">
           <h3>Speed Training</h3>
           <label>
             Speed Mode:
             <select
               value={localSettings.speedMode}
-              onChange={(e) => handleChange('speedMode', Number(e.target.value))}
+              onChange={(e) => handleChange('speedMode', e.target.value)}
             >
               <option value={0}>Off</option>
-              <option value={1}>Auto Increase (Mode I)</option>
-              <option value={2}>Manual Increase (Mode II - press "U")</option>
+              <option value={1}>Auto Increase Tempo</option>
+              <option value={2}>Manual Increase Tempo</option>
             </select>
           </label>
           {(localSettings.speedMode === 1 || localSettings.speedMode === 2) && (
@@ -122,6 +153,7 @@ const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings }) => {
             </div>
           )}
         </div>
+
         <button className="training-save-button" onClick={handleSave}>
           Save Settings
         </button>
@@ -134,7 +166,6 @@ const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings }) => {
  * TrainingButton displays a button with an icon that changes when training mode is active.
  */
 const TrainingButton = ({ onClick, active }) => {
-  console.log("[TrainingButton] Render, active =", active);
   return (
     <button className="training-button" onClick={onClick} aria-label="Toggle Training Overlay">
       <img src={active ? trainingButtonOnIcon : trainingButtonIcon} alt="Training" />
@@ -145,20 +176,18 @@ const TrainingButton = ({ onClick, active }) => {
 /**
  * TrainingOverlay combines the TrainingButton and the TrainingModal.
  */
-const TrainingOverlay = ({ trainingSettings, setTrainingSettings }) => {
+const TrainingOverlay = ({ trainingSettings, setTrainingSettings, onToggleInfo, setMode, setIsPaused }) => {
   const [isVisible, setIsVisible] = useState(false);
-  // Training is active if either macroMode or speedMode is not 0.
+  // Training is "active" if macroMode != 0 OR speedMode != 0
   const trainingActive = trainingSettings.macroMode !== 0 || trainingSettings.speedMode !== 0;
 
   const toggleOverlay = () => {
-    console.log("[TrainingOverlay] Toggling overlay. New state:", !isVisible);
     setIsVisible(prev => !prev);
   };
 
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
-        console.log("[TrainingOverlay] Escape pressed, closing overlay.");
         setIsVisible(false);
       }
     };
@@ -174,6 +203,8 @@ const TrainingOverlay = ({ trainingSettings, setTrainingSettings }) => {
           onClose={toggleOverlay}
           trainingSettings={trainingSettings}
           setTrainingSettings={setTrainingSettings}
+          setMode={setMode}
+          setIsPaused={setIsPaused}
         />
       )}
     </>

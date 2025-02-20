@@ -33,7 +33,7 @@ const InfoModal = ({ onClose }) => {
           <li><strong>Space:</strong> Start/Pause</li>
           <li><strong>T:</strong> Tap tempo</li>
           <li><strong>1–9:</strong> Adjust subdivisions</li>
-          <li><strong>Left/Right Arrows:</strong> Increase/Decrease tempo (default step)</li>
+          <li><strong>Left/Right Arrows:</strong> Increase/Decrease tempo by 5 BPM</li>
           <li><strong>Ctrl/Cmd + Left/Right Arrows:</strong> Increase/Decrease tempo by 1 BPM</li>
           <li><strong>A:</strong> Switch to Analog Mode</li>
           <li><strong>C:</strong> Switch to Circle Mode</li>
@@ -46,38 +46,45 @@ const InfoModal = ({ onClose }) => {
 };
 
 // Info button that is always visible
-const InfoButton = ({ onClick }) => (
-  <button className="info-button" onClick={onClick} aria-label="Toggle Info Overlay">
+const InfoButton = ({ onClick, active }) => (
+  <button className={`info-button ${active ? 'info-button-active' : ''}`} onClick={onClick} aria-label="Toggle Info Overlay">
     <img src={infoButtonIcon} alt="Info" />
   </button>
 );
 
 // Main component that combines the button and modal
-const InfoOverlay = () => {
+const InfoOverlay = ({ setActive }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const [tempo, setTempo] = useState(120); // Beispielwert für Tempo
+  const [isInfoButtonActive, setIsInfoButtonActive] = useState(false);
+  const [tempo, setTempo] = useState(120);
 
   const toggleOverlay = () => {
     setIsVisible((prev) => !prev);
+    setIsInfoButtonActive((prev) => !prev);
+    if (setActive) {
+      setActive(!isInfoButtonActive);
+    }
   };
 
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === 'I' || event.key === 'i') {
-        setIsVisible(true);
+        setIsVisible((prev) => !prev);
+        setIsInfoButtonActive((prev) => !prev);
       } else if (event.key === 'Escape') {
         setIsVisible(false);
+        setIsInfoButtonActive(false);
       } else if (event.key === 'ArrowRight') {
         if (event.ctrlKey || event.metaKey) {
-          setTempo((prevTempo) => prevTempo + 1); // Erhöht um 1 BPM mit Strg/Cmd
+          setTempo((prevTempo) => prevTempo + 1);
         } else {
-          setTempo((prevTempo) => prevTempo + 5); // Erhöht um 5 BPM standardmäßig
+          setTempo((prevTempo) => prevTempo + 5);
         }
       } else if (event.key === 'ArrowLeft') {
         if (event.ctrlKey || event.metaKey) {
-          setTempo((prevTempo) => prevTempo - 1); // Verringert um 1 BPM mit Strg/Cmd
+          setTempo((prevTempo) => prevTempo - 1); 
         } else {
-          setTempo((prevTempo) => prevTempo - 5); // Verringert um 5 BPM standardmäßig
+          setTempo((prevTempo) => prevTempo - 5);
         }
       }
     };
@@ -90,7 +97,7 @@ const InfoOverlay = () => {
 
   return (
     <>
-      <InfoButton onClick={toggleOverlay} />
+      <InfoButton onClick={toggleOverlay} active={isInfoButtonActive} />
       {isVisible && <InfoModal onClose={toggleOverlay} />}
     </>
   );
