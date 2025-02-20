@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 
-VERSION = "0.2.1"
+VERSION = "0.3.0"
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
