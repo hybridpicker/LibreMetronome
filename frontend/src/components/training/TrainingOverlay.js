@@ -36,6 +36,7 @@ const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings, setMode
 
   const handleSave = () => {
     setTrainingSettings(localSettings);
+    setIsPaused(true);
     onClose();
     // Retain the current mode if a training setting is active
     if (localSettings.macroMode !== 0 || localSettings.speedMode !== 0) {
@@ -175,7 +176,7 @@ const TrainingButton = ({ onClick, active }) => {
 /**
  * TrainingOverlay combines the TrainingButton and the TrainingModal.
  */
-const TrainingOverlay = ({ trainingSettings, setTrainingSettings, onToggleInfo, setMode }) => {
+const TrainingOverlay = ({ trainingSettings, setTrainingSettings, onToggleInfo, setMode, setIsPaused }) => {
   const [isVisible, setIsVisible] = useState(false);
   // Training is "active" if macroMode != 0 OR speedMode != 0
   const trainingActive = trainingSettings.macroMode !== 0 || trainingSettings.speedMode !== 0;
@@ -203,6 +204,7 @@ const TrainingOverlay = ({ trainingSettings, setTrainingSettings, onToggleInfo, 
           trainingSettings={trainingSettings}
           setTrainingSettings={setTrainingSettings}
           setMode={setMode}
+          setIsPaused={setIsPaused}
         />
       )}
     </>
