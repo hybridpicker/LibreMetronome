@@ -1,5 +1,5 @@
 // File: src/App.js
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import './App.css';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -23,32 +23,18 @@ function App() {
   const [swing, setSwing] = useState(0);
   const [volume, setVolume] = useState(0.5);
 
-  // Accent state: first beat always true.
-  // Accent states for Grid and Circle modes
-  const [gridAccents, setGridAccents] = useState(
-    Array.from({ length: subdivisions }, (_, i) => i === 0 ? 3 : 1) // 3 for first beat, 1 for others
+  // Unified accent state (first beat fixed as 3, others start as 1)
+  const [accents, setAccents] = useState(
+    Array.from({ length: subdivisions }, (_, i) => i === 0 ? 3 : 1)
   );
-  const [circleAccents, setCircleAccents] = useState(
-    Array.from({ length: subdivisions }, (_, i) => i === 0 ? 3 : 1) // 3 for first beat, 1 for others
-  );
-
-  React.useEffect(() => {
-    setGridAccents(Array.from({ length: subdivisions }, (_, i) => i === 0 ? 3 : 1));
-    setCircleAccents(Array.from({ length: subdivisions }, (_, i) => i === 0 ? 3 : 1));
+  useEffect(() => {
+    setAccents(Array.from({ length: subdivisions }, (_, i) => i === 0 ? 3 : 1));
   }, [subdivisions]);
 
-  const toggleGridAccent = (index) => {
+  // Unified toggle function: cycles non-first beats from mute (0) → normal (1) → accent (2) → mute (0)
+  const toggleAccent = (index) => {
     if (index === 0) return;
-    setGridAccents(prev => {
-      const newAccents = [...prev];
-      newAccents[index] = (newAccents[index] + 1) % 3;
-      return newAccents;
-    });
-  };
-
-  const toggleCircleAccent = (index) => {
-    if (index === 0) return;
-    setCircleAccents(prev => {
+    setAccents(prev => {
       const newAccents = [...prev];
       newAccents[index] = (newAccents[index] + 1) % 3;
       return newAccents;
@@ -66,7 +52,7 @@ function App() {
     tempoIncreasePercent: 5
   });
 
-  // Refs für Play/Pause und Tap Tempo
+  // Refs for Play/Pause and Tap Tempo
   const togglePlayRef = useRef(null);
   const tapTempoRef = useRef(null);
 
@@ -78,7 +64,7 @@ function App() {
     tapTempoRef.current = fn;
   };
 
-  // Global keyboard shortcuts – der onTogglePlayPause Callback ruft den registrierten Handler auf.
+  // Global keyboard shortcuts – the onTogglePlayPause callback calls the registered handler.
   useKeyboardShortcuts({
     onTogglePlayPause: () => {
       if (togglePlayRef.current) {
@@ -193,8 +179,8 @@ function App() {
             if (togglePlayRef.current) togglePlayRef.current();
           }}
           analogMode={true}
-          accents={mode === "grid" ? gridAccents : circleAccents}
-          toggleAccent={mode === "grid" ? toggleGridAccent : toggleCircleAccent}
+          accents={accents}
+          toggleAccent={toggleAccent}
           {...trainingSettings}
           registerTogglePlay={registerTogglePlay}
         />
@@ -215,8 +201,8 @@ function App() {
             if (togglePlayRef.current) togglePlayRef.current();
           }}
           analogMode={false}
-          accents={mode === "grid" ? gridAccents : circleAccents}
-          toggleAccent={mode === "grid" ? toggleGridAccent : toggleCircleAccent}
+          accents={accents}
+          toggleAccent={toggleAccent}
           {...trainingSettings}
           registerTogglePlay={registerTogglePlay}
         />
@@ -238,8 +224,8 @@ function App() {
           }}
           analogMode={false}
           gridMode={true}
-          accents={gridAccents}
-          updateAccents={setGridAccents}
+          accents={accents}
+          updateAccents={setAccents}
           {...trainingSettings}
           registerTogglePlay={registerTogglePlay}
           registerTapTempo={registerTapTempo}
