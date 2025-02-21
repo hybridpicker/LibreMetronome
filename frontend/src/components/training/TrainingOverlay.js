@@ -23,11 +23,9 @@ const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings, setMode
         speedMode: (macroVal !== 0) ? 0 : prev.speedMode
       }));
     } else if (field === 'speedMode') {
-      const speedVal = Number(value);
       setLocalSettings(prev => ({
         ...prev,
-        speedMode: speedVal,
-        macroMode: (speedVal !== 0) ? 0 : prev.macroMode
+        speedMode: Number(value)
       }));
     } else {
       setLocalSettings(prev => ({ ...prev, [field]: value }));
@@ -38,7 +36,6 @@ const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings, setMode
     setTrainingSettings(localSettings);
     setIsPaused(true);
     onClose();
-    // Retain the current mode if a training setting is active
     if (localSettings.macroMode !== 0 || localSettings.speedMode !== 0) {
       setMode(prevMode => prevMode);
     }
@@ -50,13 +47,12 @@ const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings, setMode
         <button 
           className="training-close-button" 
           onClick={() => {
-            onClose(); // Close the modal
-            // Restart the play mode
+            onClose();
             if (setIsPaused) {
-              setIsPaused(true); // Pause the metronome
+              setIsPaused(true);
               setTimeout(() => {
-                setIsPaused(false); // Resume the metronome after a short delay
-              }, 100); // 100ms delay
+                setIsPaused(false);
+              }, 100);
             }
           }} 
           aria-label="Close Training Overlay"
@@ -127,21 +123,18 @@ const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings, setMode
             >
               <option value={0}>Off</option>
               <option value={1}>Auto Increase Tempo</option>
-              <option value={2}>Manual Increase Tempo</option>
             </select>
           </label>
-          {(localSettings.speedMode === 1 || localSettings.speedMode === 2) && (
+          {localSettings.speedMode === 1 && (
             <div className="training-options">
-              {localSettings.speedMode === 1 && (
-                <label>
-                  Measures until Speed Up:
-                  <input
-                    type="number"
-                    value={localSettings.measuresUntilSpeedUp}
-                    onChange={(e) => handleChange('measuresUntilSpeedUp', Number(e.target.value))}
-                  />
-                </label>
-              )}
+              <label>
+                Measures until Speed Up:
+                <input
+                  type="number"
+                  value={localSettings.measuresUntilSpeedUp}
+                  onChange={(e) => handleChange('measuresUntilSpeedUp', Number(e.target.value))}
+                />
+              </label>
               <label>
                 Tempo Increase (%):
                 <input
@@ -178,7 +171,6 @@ const TrainingButton = ({ onClick, active }) => {
  */
 const TrainingOverlay = ({ trainingSettings, setTrainingSettings, onToggleInfo, setMode, setIsPaused }) => {
   const [isVisible, setIsVisible] = useState(false);
-  // Training is "active" if macroMode != 0 OR speedMode != 0
   const trainingActive = trainingSettings.macroMode !== 0 || trainingSettings.speedMode !== 0;
 
   const toggleOverlay = () => {
