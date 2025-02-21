@@ -1,3 +1,5 @@
+// File: src/components/AdvancedMetronomeWithCircle.js
+
 import React, { useState, useEffect } from 'react';
 import useMetronomeLogic from '../hooks/useMetronomeLogic';
 import useKeyboardShortcuts from '../hooks/KeyboardShortcuts';
@@ -70,7 +72,7 @@ export default function AdvancedMetronomeWithCircle({
   // Local state for accent variants if the parent does not provide an accents array.
   // For circle mode we use: 0 = mute, 1 = normal, 2 = accent; first beat is fixed as 3.
   const [localAccents, setLocalAccents] = useState(
-      Array.from({ length: subdivisions }, (_, i) => i === 0 ? 3 : 1)
+    Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1))
   );
   const effectiveAccents = accents || localAccents;
 
@@ -112,7 +114,7 @@ export default function AdvancedMetronomeWithCircle({
     swing,
     volume,
     accents: effectiveAccents,
-    beatConfig: null, // Not needed for circle mode by default
+    beatConfig: null,
     analogMode,
     gridMode,
     macroMode,
@@ -154,11 +156,10 @@ export default function AdvancedMetronomeWithCircle({
   // Register keyboard shortcuts, ensuring onTapTempo is set to logic.tapTempo
   useKeyboardShortcuts({
     onTogglePlayPause: handlePlayPause,
-    onTapTempo: logic.tapTempo,
-    // Additional callbacks if needed
+    onTapTempo: logic.tapTempo
   });
 
-  // This block generates the UI elements for selecting subdivisions
+  // Generate subdivision icons
   const subdivisionButtons = (() => {
     const subIcons = [
       subdivision1,
@@ -194,7 +195,7 @@ export default function AdvancedMetronomeWithCircle({
           className={`subdivision-button ${isActive ? 'active' : ''}`}
           onClick={() => {
             setSubdivisions(subVal);
-            if (!analogMode && subdivisions % 2 === 0 && subdivisions >= 2 || gridMode) {
+            if (!analogMode && subdivisions % 2 === 0 && subdivisions >= 2) {
               setSwing(0);
             }
           }}
@@ -204,7 +205,7 @@ export default function AdvancedMetronomeWithCircle({
     });
   })();
 
-  // Calculate container size to make the circle responsive
+  // Responsive container size
   const getContainerSize = () => {
     if (window.innerWidth < 600) {
       return Math.min(window.innerWidth - 40, 300);
@@ -244,7 +245,6 @@ export default function AdvancedMetronomeWithCircle({
     };
   });
 
-  // Decides which icon is shown for each beat
   function getBeatIcon(beatIndex, isActive) {
     if (analogMode) return normalBeat;
     if (gridMode) {
@@ -256,10 +256,11 @@ export default function AdvancedMetronomeWithCircle({
       } else if (state === 1) {
         return isActive ? normalBeatActive : normalBeat;
       } else {
-        // Mute state: use normal icon (opacity will be reduced via style)
+        // Mute state
         return isActive ? normalBeatActive : normalBeat;
       }
     } else {
+      // circle mode
       if (beatIndex === 0) {
         return isActive ? firstBeatActive : firstBeat;
       } else {
@@ -269,7 +270,7 @@ export default function AdvancedMetronomeWithCircle({
         } else if (state === 1) {
           return isActive ? normalBeatActive : normalBeat;
         } else {
-          // Mute state
+          // Mute
           return isActive ? normalBeatActive : normalBeat;
         }
       }
@@ -314,7 +315,7 @@ export default function AdvancedMetronomeWithCircle({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // --- NEW EFFECT: Start or stop the scheduler depending on isPaused ---
+  // Start or stop the scheduler depending on isPaused
   useEffect(() => {
     if (!isPaused) {
       if (logic.audioCtx && logic.audioCtx.state === 'suspended') {
@@ -508,6 +509,11 @@ export default function AdvancedMetronomeWithCircle({
           />
         </button>
       )}
+
+      {/* --- NEW: Show the measured BPM if you like --- */}
+      <div style={{ marginTop: '1.5rem' }}>
+        <strong>Measured BPM:</strong> {logic.actualBpm.toFixed(2)}
+      </div>
     </div>
   );
 }
