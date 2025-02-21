@@ -114,7 +114,8 @@ select {
 }
 
 @media (max-width: 600px) {
-  .info-button {
+  /* TODO: Styling for Mobile */
+  .info-button, .training-button {
     display: none;
   }
   /* Keep the tempo slider visible on smartphones */
