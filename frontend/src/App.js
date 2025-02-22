@@ -5,6 +5,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import InfoOverlay from './components/InfoOverlay';
 import AdvancedMetronomeWithCircle from './components/AdvancedMetronomeWithCircle';
+import MultiCircleMetronome from './components/MultiCircleMetronome';
 import GridModeMetronome from './components/GridModeMetronome';
 import TrainingOverlay from './components/training/TrainingOverlay';
 import useKeyboardShortcuts from './hooks/KeyboardShortcuts';
@@ -19,26 +20,22 @@ const TEMPO_MIN = 15;
 const TEMPO_MAX = 240;
 
 function App() {
-  // Mode selection: "analog", "circle", or "grid"
+  // Mode: "analog", "circle", "grid", or "multi"
   const [mode, setMode] = useState("circle");
 
-  // Metronome parameters
   const [tempo, setTempo] = useState(120);
   const [isPaused, setIsPaused] = useState(true);
-  // Subdivisions remains user selectable via the 1–9 buttons.
   const [subdivisions, setSubdivisions] = useState(4);
   const [swing, setSwing] = useState(0);
   const [volume, setVolume] = useState(0.5);
 
-  // Unified accent state (first beat fixed as 3, others start as 1)
   const [accents, setAccents] = useState(
-    Array.from({ length: subdivisions }, (_, i) => i === 0 ? 3 : 1)
+    Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1))
   );
   useEffect(() => {
-    setAccents(Array.from({ length: subdivisions }, (_, i) => i === 0 ? 3 : 1));
+    setAccents(Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1)));
   }, [subdivisions]);
 
-  // Unified toggle function for accents: cycles non-first beats from mute (0) → normal (1) → accent (2) → mute (0)
   const toggleAccent = (index) => {
     if (index === 0) return;
     setAccents(prev => {
@@ -48,11 +45,9 @@ function App() {
     });
   };
 
-  // New: beatMode state for quarter/eighth note selection.
-  // "quarter" uses beatMultiplier = 1; "eighth" uses beatMultiplier = 2.
+  // Global beat mode for non‑multi modes.
   const [beatMode, setBeatMode] = useState("quarter");
 
-  // Training mode parameters (default values)
   const [trainingSettings, setTrainingSettings] = useState({
     macroMode: 0,
     speedMode: 0,
@@ -63,13 +58,11 @@ function App() {
     tempoIncreasePercent: 5
   });
 
-  // Refs for Play/Pause and Tap Tempo – these allow our keyboard shortcuts to trigger the correct handlers.
   const togglePlayRef = useRef(null);
   const tapTempoRef = useRef(null);
   const registerTogglePlay = (fn) => { togglePlayRef.current = fn; };
   const registerTapTempo = (fn) => { tapTempoRef.current = fn; };
 
-  // Global keyboard shortcuts registration.
   useKeyboardShortcuts({
     onTogglePlayPause: () => { if (togglePlayRef.current) togglePlayRef.current(); },
     onTapTempo: () => { if (tapTempoRef.current) tapTempoRef.current(); },
@@ -79,7 +72,8 @@ function App() {
     onSwitchToAnalog: () => { setMode("analog"); },
     onSwitchToCircle: () => { setMode("circle"); },
     onSwitchToGrid: () => { setMode("grid"); },
-    onToggleInfoOverlay: () => { setIsInfoActive(prev => !prev); },
+    onSwitchToMulti: () => { setMode("multi"); },
+    onToggleInfoOverlay: () => { },
     onManualTempoIncrease: () => { }
   });
 
@@ -97,81 +91,37 @@ function App() {
       />
       {/* Mode selection buttons */}
       <div style={{ marginBottom: "20px", display: "flex", gap: "10px", justifyContent: "center" }}>
-        <button
-          onClick={() => setMode("analog")}
-          style={{
-            padding: "10px 20px",
-            fontSize: "16px",
-            cursor: "pointer",
-            background: mode === "analog" ? "#00A0A0" : "#ccc",
-            color: "#fff",
-            border: "none",
-            borderRadius: "5px"
-          }}
-        >
+        <button onClick={() => setMode("analog")} style={{ padding: "10px 20px", fontSize: "16px", cursor: "pointer", background: mode === "analog" ? "#00A0A0" : "#ccc", color: "#fff", border: "none", borderRadius: "5px" }}>
           Analog Mode
         </button>
-        <button
-          onClick={() => setMode("circle")}
-          style={{
-            padding: "10px 20px",
-            fontSize: "16px",
-            cursor: "pointer",
-            background: mode === "circle" ? "#00A0A0" : "#ccc",
-            color: "#fff",
-            border: "none",
-            borderRadius: "5px"
-          }}
-        >
+        <button onClick={() => setMode("circle")} style={{ padding: "10px 20px", fontSize: "16px", cursor: "pointer", background: mode === "circle" ? "#00A0A0" : "#ccc", color: "#fff", border: "none", borderRadius: "5px" }}>
           Circle Mode
         </button>
-        <button
-          onClick={() => setMode("grid")}
-          style={{
-            padding: "10px 20px",
-            fontSize: "16px",
-            cursor: "pointer",
-            background: mode === "grid" ? "#00A0A0" : "#ccc",
-            color: "#fff",
-            border: "none",
-            borderRadius: "5px"
-          }}
-        >
+        <button onClick={() => setMode("grid")} style={{ padding: "10px 20px", fontSize: "16px", cursor: "pointer", background: mode === "grid" ? "#00A0A0" : "#ccc", color: "#fff", border: "none", borderRadius: "5px" }}>
           Grid Mode
+        </button>
+        <button onClick={() => setMode("multi")} style={{ padding: "10px 20px", fontSize: "16px", cursor: "pointer", background: mode === "multi" ? "#00A0A0" : "#ccc", color: "#fff", border: "none", borderRadius: "5px" }}>
+          Multi Circle
         </button>
       </div>
       
-      {/* Quarter/Eighth note buttons with heading */}
+      {/* Quarter/Eighth note selector (only for non‑multi modes) */}
+      {mode !== "multi" && (
       <div style={{ marginBottom: "20px", textAlign: "center" }}>
         <h3>Notes</h3>
         <div style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
-          <button
-            onClick={() => setBeatMode("quarter")}
-            style={{ background: "transparent", border: "none", cursor: "pointer" }}
-          >
-            <img
-              src={beatMode === "quarter" ? quarterNotesActive : quarterNotesInactive}
-              alt="Quarter Notes"
-              style={{ width: "50px", height: "50px" }}
-            />
+          <button onClick={() => setBeatMode("quarter")} style={{ background: "transparent", border: "none", cursor: "pointer" }}>
+            <img src={beatMode === "quarter" ? quarterNotesActive : quarterNotesInactive} alt="Quarter Notes" style={{ width: "50px", height: "50px" }} />
           </button>
-          <button
-            onClick={() => setBeatMode("eighth")}
-            style={{ background: "transparent", border: "none", cursor: "pointer" }}
-          >
-            <img
-              src={beatMode === "eighth" ? eightNotesActive : eightNotesInactive}
-              alt="Eighth Notes"
-              style={{ width: "50px", height: "50px" }}
-            />
+          <button onClick={() => setBeatMode("eighth")} style={{ background: "transparent", border: "none", cursor: "pointer" }}>
+            <img src={beatMode === "eighth" ? eightNotesActive : eightNotesInactive} alt="Eighth Notes" style={{ width: "50px", height: "50px" }} />
           </button>
         </div>
       </div>
+      )}
       
-      {/* Render metronome based on selected mode.
-          The beatMultiplier prop is determined by beatMode.
-          The subdivision buttons remain available inside each metronome component. */}
-      {(mode === "analog" || mode === "training") && (
+      {/* Render metronome mode based on selection */}
+      {mode === "analog" && (
         <AdvancedMetronomeWithCircle
           tempo={tempo}
           setTempo={setTempo}
@@ -236,6 +186,23 @@ function App() {
           beatMultiplier={beatMode === "quarter" ? 1 : 2}
         />
       )}
+      {mode === "multi" && (
+        <MultiCircleMetronome
+          tempo={tempo}
+          setTempo={setTempo}
+          isPaused={isPaused}
+          setIsPaused={setIsPaused}
+          swing={swing}
+          setSwing={setSwing}
+          volume={volume}
+          setVolume={setVolume}
+          analogMode={false}
+          {...trainingSettings}
+          registerTogglePlay={registerTogglePlay}
+          registerTapTempo={registerTapTempo}
+        />
+      )}
+      
       <Footer />
     </div>
   );
