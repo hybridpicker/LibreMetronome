@@ -61,7 +61,7 @@ export default function AnalogMetronomeCanvas({
     ctx.rotate(angleRad);
     ctx.beginPath();
     ctx.lineWidth = 0.8;
-    ctx.strokeStyle = '#0ba3b2';
+    ctx.strokeStyle = '#00A0A0';
     ctx.moveTo(0, 0);
     ctx.lineTo(0, -armLength);
     ctx.stroke();

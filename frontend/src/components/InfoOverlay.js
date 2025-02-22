@@ -34,7 +34,6 @@ const InfoModal = ({ onClose }) => {
           <li><strong>T:</strong> Tap tempo</li>
           <li><strong>1–9:</strong> Adjust subdivisions</li>
           <li><strong>Left/Right Arrows:</strong> Increase/Decrease tempo by 5 BPM</li>
-          <li><strong>Ctrl/Cmd + Left/Right Arrows:</strong> Increase/Decrease tempo by 1 BPM</li>
           <li><strong>A:</strong> Switch to Analog Mode</li>
           <li><strong>C:</strong> Switch to Circle Mode</li>
           <li><strong>G:</strong> Switch to Grid Mode</li>
