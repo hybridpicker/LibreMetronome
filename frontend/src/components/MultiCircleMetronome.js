@@ -42,7 +42,7 @@ import subdivision9Active from '../assets/svg/subdivision-9Active.svg';
 
 export default function MultiCircleMetronome(props) {
   // Each circle has its own settings.
-  // Initially, we start with one circle using the default settings from props.
+  // We start with one circle using defaults from props.
   const [circleSettings, setCircleSettings] = useState([
     {
       subdivisions: props.subdivisions || 4,
@@ -53,21 +53,24 @@ export default function MultiCircleMetronome(props) {
   const [activeCircle, setActiveCircle] = useState(0);
   const currentSettings = circleSettings[activeCircle] || { subdivisions: 4, accents: [3, 1, 1, 1], beatMode: "quarter" };
 
-  // --- Define addCircle before usage ---
+  // Define addCircle BEFORE using it.
   const addCircle = () => {
-    setCircleSettings(prev => [...prev, {
-      subdivisions: props.subdivisions || 4,
-      accents: Array.from({ length: props.subdivisions || 4 }, (_, i) => (i === 0 ? 3 : 1)),
-      beatMode: "quarter"
-    }]);
+    setCircleSettings(prev => [
+      ...prev,
+      {
+        subdivisions: props.subdivisions || 4,
+        accents: Array.from({ length: props.subdivisions || 4 }, (_, i) => (i === 0 ? 3 : 1)),
+        beatMode: "quarter"
+      }
+    ]);
   };
 
-  // Allow clicking on any circle to activate it.
+  // Allow clicking on any circle to make it active.
   const onCircleClick = (index) => {
     setActiveCircle(index);
   };
 
-  // Create a metronome logic hook using the active circle's settings.
+  // Create metronome logic hook using the active circle’s settings.
   const logic = useMetronomeLogic({
     tempo: props.tempo,
     setTempo: props.setTempo,
@@ -112,7 +115,7 @@ export default function MultiCircleMetronome(props) {
     });
   };
 
-  // Cycle active circle automatically when a measure completes.
+  // Cycle active circle automatically when a measure ends (currentSubdivision resets to 0).
   const prevSubdivisionRef = useRef(null);
   useEffect(() => {
     if (prevSubdivisionRef.current !== null && logic.currentSubdivision === 0) {
@@ -157,7 +160,7 @@ export default function MultiCircleMetronome(props) {
 
   const beatData = computeBeatData();
 
-  // Render the active circle (clickable beat icons that update accents).
+  // Render the active circle (with clickable beat icons).
   const renderActiveCircle = () => {
     return beatData.map((bd, i) => (
       <img
@@ -253,25 +256,26 @@ export default function MultiCircleMetronome(props) {
     );
   };
 
-  // Define play/pause handler (already defined above, but we also use useCallback for stability).
+  // Fix play/pause bugs by using a functional state update.
   const handlePlayPause = useCallback(() => {
-    if (props.isPaused) {
-      if (logic.audioCtx && logic.audioCtx.state === 'suspended') {
-        logic.audioCtx.resume().then(() => {
-          props.setIsPaused(false);
+    props.setIsPaused(prevPaused => {
+      if (prevPaused) {
+        if (logic.audioCtx && logic.audioCtx.state === 'suspended') {
+          logic.audioCtx.resume().then(() => {
+            logic.startScheduler();
+          }).catch((err) => {
+            console.error("[MultiCircleMetronome] Error resuming AudioContext:", err);
+          });
+        } else {
           logic.startScheduler();
-        }).catch((err) => {
-          console.error("[MultiCircleMetronome] Error resuming AudioContext:", err);
-        });
+        }
+        return false;
       } else {
-        props.setIsPaused(false);
-        logic.startScheduler();
+        logic.stopScheduler();
+        return true;
       }
-    } else {
-      props.setIsPaused(true);
-      logic.stopScheduler();
-    }
-  }, [props.isPaused, logic]);
+    });
+  }, [logic]);
 
   // Register keyboard shortcuts.
   useKeyboardShortcuts({
@@ -289,7 +293,7 @@ export default function MultiCircleMetronome(props) {
 
   return (
     <div style={{ textAlign: 'center' }}>
-      {/* Render circles: each circle is clickable to become active */}
+      {/* Render circles – each circle is clickable to activate */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
         {circleSettings.map((settings, index) => (
           <div
@@ -307,12 +311,13 @@ export default function MultiCircleMetronome(props) {
             {index === activeCircle ? (
               renderActiveCircle()
             ) : (
-              // Inactive circle: render static beat layout based on its stored settings.
               Array.from({ length: settings.subdivisions }, (_, i) => {
                 const angle = (2 * Math.PI * i) / settings.subdivisions - Math.PI / 2;
                 const xPos = radius * Math.cos(angle);
                 const yPos = radius * Math.sin(angle);
-                let icon = i === 0 ? firstBeat : (settings.accents[i] === 2 ? accentedBeat : normalBeat);
+                const icon = i === 0
+                  ? firstBeat
+                  : (settings.accents[i] === 2 ? accentedBeat : normalBeat);
                 return (
                   <img
                     key={i}

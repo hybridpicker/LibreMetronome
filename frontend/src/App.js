@@ -107,20 +107,20 @@ function App() {
       
       {/* Quarter/Eighth note selector (only for non‑multi modes) */}
       {mode !== "multi" && (
-      <div style={{ marginBottom: "20px", textAlign: "center" }}>
-        <h3>Notes</h3>
-        <div style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
-          <button onClick={() => setBeatMode("quarter")} style={{ background: "transparent", border: "none", cursor: "pointer" }}>
-            <img src={beatMode === "quarter" ? quarterNotesActive : quarterNotesInactive} alt="Quarter Notes" style={{ width: "50px", height: "50px" }} />
-          </button>
-          <button onClick={() => setBeatMode("eighth")} style={{ background: "transparent", border: "none", cursor: "pointer" }}>
-            <img src={beatMode === "eighth" ? eightNotesActive : eightNotesInactive} alt="Eighth Notes" style={{ width: "50px", height: "50px" }} />
-          </button>
+        <div style={{ marginBottom: "20px", textAlign: "center" }}>
+          <h3>Notes</h3>
+          <div style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
+            <button onClick={() => setBeatMode("quarter")} style={{ background: "transparent", border: "none", cursor: "pointer" }}>
+              <img src={beatMode === "quarter" ? quarterNotesActive : quarterNotesInactive} alt="Quarter Notes" style={{ width: "50px", height: "50px" }} />
+            </button>
+            <button onClick={() => setBeatMode("eighth")} style={{ background: "transparent", border: "none", cursor: "pointer" }}>
+              <img src={beatMode === "eighth" ? eightNotesActive : eightNotesInactive} alt="Eighth Notes" style={{ width: "50px", height: "50px" }} />
+            </button>
+          </div>
         </div>
-      </div>
       )}
       
-      {/* Render metronome mode based on selection */}
+      {/* Render metronome mode */}
       {mode === "analog" && (
         <AdvancedMetronomeWithCircle
           tempo={tempo}
