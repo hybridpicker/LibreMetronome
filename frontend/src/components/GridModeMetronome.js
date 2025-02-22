@@ -1,18 +1,13 @@
+// File: src/components/GridModeMetronome.js
 import React, { useState, useEffect, useCallback } from 'react';
-import useMetronomeLogic from '../hooks/useMetronomeLogic'; // Custom hook for audio scheduling
+import useMetronomeLogic from '../hooks/useMetronomeLogic';
 
-// Grid Icons
 import squareInactive from '../assets/svg/grid/square_inactive.svg';
 import squareActive from '../assets/svg/grid/square_active.svg';
-
-// Tap Tempo Icon
 import tapButtonIcon from '../assets/svg/tap-button.svg';
-
-// Play/Pause Icons
 import playIcon from '../assets/svg/play.svg';
 import pauseIcon from '../assets/svg/pause.svg';
 
-// Subdivision Icons (inactive)
 import subdivision1 from '../assets/svg/subdivision-1.svg';
 import subdivision2 from '../assets/svg/subdivision-2.svg';
 import subdivision3 from '../assets/svg/subdivision-3.svg';
@@ -23,7 +18,6 @@ import subdivision7 from '../assets/svg/subdivision-7.svg';
 import subdivision8 from '../assets/svg/subdivision-8.svg';
 import subdivision9 from '../assets/svg/subdivision-9.svg';
 
-// Subdivision Icons (active)
 import subdivision1Active from '../assets/svg/subdivision-1Active.svg';
 import subdivision2Active from '../assets/svg/subdivision-2Active.svg';
 import subdivision3Active from '../assets/svg/subdivision-3-Active.svg';
@@ -34,7 +28,6 @@ import subdivision7Active from '../assets/svg/subdivision-7Active.svg';
 import subdivision8Active from '../assets/svg/subdivision-8Active.svg';
 import subdivision9Active from '../assets/svg/subdivision-9Active.svg';
 
-// Create an icons object for easier reference
 const subdivisionIcons = {
   subdivision1, subdivision2, subdivision3, subdivision4, subdivision5,
   subdivision6, subdivision7, subdivision8, subdivision9,
@@ -55,13 +48,10 @@ export default function GridModeMetronome({
   volume,
   setVolume,
   registerTogglePlay,
-  /* For Grid Mode: */
   analogMode = false,
   gridMode = true,
-  accents = null,      // External accent state (array of booleans)
-  updateAccents,       // Function to update parent accent state
-
-  // Training Mode Props
+  accents = null,
+  updateAccents,
   macroMode,
   speedMode,
   measuresUntilMute,
@@ -69,17 +59,13 @@ export default function GridModeMetronome({
   muteProbability,
   tempoIncreasePercent,
   measuresUntilSpeedUp,
-
-  // Tap Tempo Registration
-  registerTapTempo
+  registerTapTempo,
+  beatMultiplier = 1
 }) {
-  // Local grid configuration state:
-  // For grid mode: 0 = mute, 1 = normal, 2 = accent; first beat is fixed as 3.
   const [gridConfig, setGridConfig] = useState(
-      Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1))
+    Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1))
   );
 
-  // Initialize the metronome logic hook, passing in gridConfig as the beat configuration.
   const logic = useMetronomeLogic({
     tempo,
     setTempo,
@@ -88,7 +74,7 @@ export default function GridModeMetronome({
     setIsPaused,
     swing,
     volume,
-    beatConfig: gridConfig,  // Use local gridConfig to determine sound (normal/accent/first)
+    beatConfig: gridConfig,
     setSubdivisions,
     analogMode,
     gridMode,
@@ -99,17 +85,16 @@ export default function GridModeMetronome({
     muteDurationMeasures,
     muteProbability,
     tempoIncreasePercent,
-    measuresUntilSpeedUp
+    measuresUntilSpeedUp,
+    beatMultiplier
   });
 
-  // Tap Tempo Registration
   useEffect(() => {
     if (registerTapTempo && logic.tapTempo) {
       registerTapTempo(logic.tapTempo);
     }
   }, [registerTapTempo, logic.tapTempo]);
 
-  // Helper function to compare two arrays (shallow comparison)
   const arraysEqual = (a, b) => {
     if (!a || !b || a.length !== b.length) return false;
     for (let i = 0; i < a.length; i++) {
@@ -119,36 +104,28 @@ export default function GridModeMetronome({
   };
 
   useEffect(() => {
-    // If external accents are provided, sync gridConfig accordingly.
-    // Assuming accents already use numerical states
     if (accents && accents.length === subdivisions) {
       setGridConfig(accents);
     } else {
-      // Otherwise, initialize with default values (first beat fixed, others mute)
       setGridConfig(
         Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1))
       );
     }
   }, [subdivisions, accents]);
 
-  // Handle clicks on a grid column: cycle through states for non-first beats:
-  // mute (0) → normal (1) → accent (2) → first beat (3) → mute (0)
   const handleColumnClickIndex = useCallback((index) => {
-    if (index === 0) return; // Do not change the first beat cyclically
+    if (index === 0) return;
     setGridConfig((prev) => {
       const newConfig = [...prev];
       newConfig[index] = (newConfig[index] + 1) % 4;
-      
-      // Update external accent state if updateAccents is provided
       if (updateAccents) {
         updateAccents(newConfig);
       }
-      
       return newConfig;
     });
   }, [updateAccents]);
 
-  // Create subdivision buttons for changing the number of subdivisions.
+  // Subdivision chooser UI
   const subdivisionButtons = Array.from({ length: 9 }, (_, idx) => {
     const subVal = idx + 1;
     const isActive = subVal === subdivisions;
@@ -165,7 +142,6 @@ export default function GridModeMetronome({
     );
   });
 
-  // Handle mobile detection to adjust UI elements if needed.
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -173,7 +149,6 @@ export default function GridModeMetronome({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Manual play/pause handler.
   const handlePlayPause = () => {
     if (isPaused) {
       if (logic.audioCtx && logic.audioCtx.state === 'suspended') {
@@ -193,14 +168,12 @@ export default function GridModeMetronome({
     }
   };
 
-  // Register the play/pause handler for global keyboard shortcuts.
   useEffect(() => {
     if (registerTogglePlay) {
       registerTogglePlay(handlePlayPause);
     }
   }, [registerTogglePlay, handlePlayPause]);
 
-  // Automatically start or stop the scheduler when the pause state changes.
   useEffect(() => {
     if (!isPaused) {
       if (logic.audioCtx && logic.audioCtx.state === 'suspended') {
@@ -215,14 +188,12 @@ export default function GridModeMetronome({
     }
   }, [isPaused, logic]);
 
-  // Additional effect: set swing to 0 when subdivisions is odd.
   useEffect(() => {
     if (subdivisions % 2 !== 0 && swing !== 0) {
       setSwing(0);
     }
   }, [subdivisions]);
 
-  // Build the SVG grid: each column contains 3 squares.
   const gridSquares = Array.from({ length: subdivisions }, (_, colIndex) => (
     <g key={colIndex}>
       {Array.from({ length: 3 }, (_, rowIndex) => {
@@ -252,7 +223,6 @@ export default function GridModeMetronome({
 
   return (
     <div style={{ textAlign: 'center' }}>
-      {/* SVG grid container */}
       <svg
         width={subdivisions * 50}
         height={150}
@@ -260,16 +230,13 @@ export default function GridModeMetronome({
       >
         {gridSquares}
       </svg>
-
-      {/* Subdivision chooser */}
+      {/* Subdivision chooser UI */}
       <div style={{ marginTop: '15px', textAlign: 'center' }}>
         <h3>Subdivision</h3>
         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px' }}>
           {subdivisionButtons}
         </div>
       </div>
-
-      {/* Play/Pause button */}
       <div style={{ marginTop: '10px' }}>
         <button
           onClick={handlePlayPause}
@@ -283,8 +250,6 @@ export default function GridModeMetronome({
           />
         </button>
       </div>
-
-      {/* Sliders for Swing, Volume, and Tempo */}
       <div className="sliders-container" style={{ marginTop: '20px', width: '100%' }}>
         <div className="slider-item" style={{ marginBottom: '10px', maxWidth: '300px', margin: '0 auto' }}>
           {subdivisions % 2 === 0 && (
@@ -296,9 +261,7 @@ export default function GridModeMetronome({
                 max={0.5}
                 step={0.01}
                 value={swing}
-                onChange={(e) => {
-                  setSwing(parseFloat(e.target.value));
-                }}
+                onChange={(e) => setSwing(parseFloat(e.target.value))}
                 style={{ width: '100%' }}
               />
             </>
@@ -312,9 +275,7 @@ export default function GridModeMetronome({
             max={1}
             step={0.01}
             value={volume}
-            onChange={(e) => {
-              setVolume(parseFloat(e.target.value));
-            }}
+            onChange={(e) => setVolume(parseFloat(e.target.value))}
             style={{ width: '100%' }}
           />
         </div>
@@ -326,15 +287,11 @@ export default function GridModeMetronome({
             max={240}
             step={1}
             value={tempo}
-            onChange={(e) => {
-              setTempo(parseFloat(e.target.value));
-            }}
+            onChange={(e) => setTempo(parseFloat(e.target.value))}
             style={{ width: '100%' }}
           />
         </div>
       </div>
-
-      {/* Tap Tempo button for mobile devices */}
       {isMobile && (
         <button
           onClick={logic.tapTempo}
