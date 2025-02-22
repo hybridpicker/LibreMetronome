@@ -120,7 +120,7 @@ function App() {
             padding: "10px 20px",
             fontSize: "16px",
             cursor: "pointer",
-            background: mode === "analog" ? "#0ba3b2" : "#ccc",
+            background: mode === "analog" ? "#00A0A0" : "#ccc",
             color: "#fff",
             border: "none",
             borderRadius: "5px"
@@ -136,7 +136,7 @@ function App() {
             padding: "10px 20px",
             fontSize: "16px",
             cursor: "pointer",
-            background: mode === "circle" ? "#0ba3b2" : "#ccc",
+            background: mode === "circle" ? "#00A0A0" : "#ccc",
             color: "#fff",
             border: "none",
             borderRadius: "5px"
@@ -152,7 +152,7 @@ function App() {
             padding: "10px 20px",
             fontSize: "16px",
             cursor: "pointer",
-            background: mode === "grid" ? "#0ba3b2" : "#ccc",
+            background: mode === "grid" ? "#00A0A0" : "#ccc",
             color: "#fff",
             border: "none",
             borderRadius: "5px"
