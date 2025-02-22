@@ -12,7 +12,6 @@ import normalBeatActive from '../assets/svg/normalBeatActive.svg';
 import accentedBeat from '../assets/svg/accentedBeat.svg';
 import accentedBeatActive from '../assets/svg/accentedBeatActive.svg';
 import tapButtonIcon from '../assets/svg/tap-button.svg';
-import circleSVG from '../assets/svg/circle.svg';
 
 // Subdivision Icons (inactive)
 import subdivision1 from '../assets/svg/subdivision-1.svg';
@@ -377,7 +376,6 @@ export default function AdvancedMetronomeWithCircle({
           </>
         ) : (
           <>
-            <img src={circleSVG} alt="Main Circle" className="metronome-circle" />
             {lineConnections}
             {beatData.map((bd) => (
               <img

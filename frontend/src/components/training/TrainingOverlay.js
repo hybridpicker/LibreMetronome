@@ -50,9 +50,6 @@ const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings, setMode
             onClose();
             if (setIsPaused) {
               setIsPaused(true);
-              setTimeout(() => {
-                setIsPaused(false);
-              }, 100);
             }
           }} 
           aria-label="Close Training Overlay"

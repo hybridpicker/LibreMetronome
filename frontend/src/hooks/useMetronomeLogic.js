@@ -36,8 +36,7 @@ export default function useMetronomeLogic({
   // Which "subdivision index" are we currently playing? (0..subdivisions-1)
   const [currentSubdivision, setCurrentSubdivision] = useState(0);
 
-  // We'll measure the actual BPM to verify that it stays near the tempo
-  // (in this model, it should indeed stay near the slider BPM).
+  // Measure the actual BPM to verify that it stays near the tempo
   const [actualBpm, setActualBpm] = useState(0);
 
   // AudioContext and Sound Buffers
@@ -170,10 +169,7 @@ export default function useMetronomeLogic({
 
   /**
    * updateActualBpm:
-   * We measure every beat's timestamp (including subdivisions).
-   * Then we calculate how many ms pass on average, convert to BPM.
-   * Because the user wants "120 BPM" to mean 120 hits in a minute
-   * (not 120 quarter notes in a minute), measuring all hits is correct.
+   * Measure every beat's timestamp (including subdivisions).
    */
   const updateActualBpm = useCallback(() => {
     const MAX_BEATS_TO_TRACK = 16;
@@ -247,7 +243,6 @@ export default function useMetronomeLogic({
    * getCurrentSubIntervalSec:
    * The user wants "120 BPM" => 120 hits per minute => 0.5s between hits,
    * irrespective of subdivisions. So the base interval is simply (60 / tempo).
-   * Then we might optionally apply swing if needed.
    */
   const getCurrentSubIntervalSec = useCallback(() => {
     if (!tempoRef.current) return 0.5;
@@ -255,9 +250,7 @@ export default function useMetronomeLogic({
     const secPerHit = 60 / tempoRef.current; // e.g. 60/120=0.5s
 
     // If we want to apply swing, we do it only on pairs of hits, for example:
-    // But typically, with this new approach, you'd need to define carefully
     // how swing acts if each beat is considered a "main beat".
-    // As an example, let's do a 2-step approach: even subIndex => factor up, odd => factor down.
 
     if (subdivisionsRef.current >= 2) {
       // If we actually want swing:
@@ -278,10 +271,7 @@ export default function useMetronomeLogic({
   }, []);
 
   /**
-   * scheduler:
-   * We'll schedule each hit. The difference is that a measure has "subdivisions" hits,
-   * each spaced by getCurrentSubIntervalSec().
-   * But there's no dividing the quarter note among them: it's literally the same base interval each time.
+   * scheduler
    */
   const scheduler = useCallback(() => {
     if (!audioCtxRef.current) return;
