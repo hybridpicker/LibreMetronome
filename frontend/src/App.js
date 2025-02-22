@@ -9,6 +9,12 @@ import GridModeMetronome from './components/GridModeMetronome';
 import TrainingOverlay from './components/training/TrainingOverlay';
 import useKeyboardShortcuts from './hooks/KeyboardShortcuts';
 
+// Import SVGs for quarter/eighth note buttons
+import quarterNotesActive from './assets/svg/quarter_eight_notes/quarterNotesActive.svg';
+import quarterNotesInactive from './assets/svg/quarter_eight_notes/quarterNotesInactive.svg';
+import eightNotesActive from './assets/svg/quarter_eight_notes/eightNotesActive.svg';
+import eightNotesInactive from './assets/svg/quarter_eight_notes/eightNotesInactive.svg';
+
 const TEMPO_MIN = 15;
 const TEMPO_MAX = 240;
 
@@ -19,6 +25,7 @@ function App() {
   // Metronome parameters
   const [tempo, setTempo] = useState(120);
   const [isPaused, setIsPaused] = useState(true);
+  // Subdivisions remains user selectable via the 1–9 buttons.
   const [subdivisions, setSubdivisions] = useState(4);
   const [swing, setSwing] = useState(0);
   const [volume, setVolume] = useState(0.5);
@@ -31,7 +38,7 @@ function App() {
     setAccents(Array.from({ length: subdivisions }, (_, i) => i === 0 ? 3 : 1));
   }, [subdivisions]);
 
-  // Unified toggle function: cycles non-first beats from mute (0) → normal (1) → accent (2) → mute (0)
+  // Unified toggle function for accents: cycles non-first beats from mute (0) → normal (1) → accent (2) → mute (0)
   const toggleAccent = (index) => {
     if (index === 0) return;
     setAccents(prev => {
@@ -41,10 +48,14 @@ function App() {
     });
   };
 
+  // New: beatMode state for quarter/eighth note selection.
+  // "quarter" uses beatMultiplier = 1; "eighth" uses beatMultiplier = 2.
+  const [beatMode, setBeatMode] = useState("quarter");
+
   // Training mode parameters (default values)
   const [trainingSettings, setTrainingSettings] = useState({
-    macroMode: 0,              // 0=Off, 1=Fixed Silence, 2=Random Silence
-    speedMode: 0,              // 0=Off, 1=Auto Increase, 2=Manual Increase
+    macroMode: 0,
+    speedMode: 0,
     measuresUntilMute: 2,
     muteDurationMeasures: 1,
     muteProbability: 0.3,
@@ -52,54 +63,24 @@ function App() {
     tempoIncreasePercent: 5
   });
 
-  // Refs for Play/Pause and Tap Tempo
+  // Refs for Play/Pause and Tap Tempo – these allow our keyboard shortcuts to trigger the correct handlers.
   const togglePlayRef = useRef(null);
   const tapTempoRef = useRef(null);
+  const registerTogglePlay = (fn) => { togglePlayRef.current = fn; };
+  const registerTapTempo = (fn) => { tapTempoRef.current = fn; };
 
-  const registerTogglePlay = (fn) => {
-    togglePlayRef.current = fn;
-  };
-
-  const registerTapTempo = (fn) => {
-    tapTempoRef.current = fn;
-  };
-
-  // Global keyboard shortcuts – the onTogglePlayPause callback calls the registered handler.
+  // Global keyboard shortcuts registration.
   useKeyboardShortcuts({
-    onTogglePlayPause: () => {
-      if (togglePlayRef.current) {
-        togglePlayRef.current();
-      }
-    },
-    onTapTempo: () => {
-      if (tapTempoRef.current) {
-        tapTempoRef.current();
-      }
-    },
-    onSetSubdivisions: (num) => {
-      setSubdivisions(num);
-    },
-    onIncreaseTempo: () => {
-      setTempo(prev => Math.min(prev + 5, TEMPO_MAX));
-    },
-    onDecreaseTempo: () => {
-      setTempo(prev => Math.max(prev - 5, TEMPO_MIN));
-    },
-    onSwitchToAnalog: () => {
-      setMode("analog");
-    },
-    onSwitchToCircle: () => {
-      setMode("circle");
-    },
-    onSwitchToGrid: () => {
-      setMode("grid");
-    },
-    onToggleInfoOverlay: () => {
-      setIsInfoActive((prev) => !prev);
-    },
-    onManualTempoIncrease: () => {
-      // Handled within the metronome hook.
-    },
+    onTogglePlayPause: () => { if (togglePlayRef.current) togglePlayRef.current(); },
+    onTapTempo: () => { if (tapTempoRef.current) tapTempoRef.current(); },
+    onSetSubdivisions: (num) => { setSubdivisions(num); },
+    onIncreaseTempo: () => { setTempo(prev => Math.min(prev + 5, TEMPO_MAX)); },
+    onDecreaseTempo: () => { setTempo(prev => Math.max(prev - 5, TEMPO_MIN)); },
+    onSwitchToAnalog: () => { setMode("analog"); },
+    onSwitchToCircle: () => { setMode("circle"); },
+    onSwitchToGrid: () => { setMode("grid"); },
+    onToggleInfoOverlay: () => { setIsInfoActive(prev => !prev); },
+    onManualTempoIncrease: () => { }
   });
 
   const [isInfoActive, setIsInfoActive] = useState(false);
@@ -108,19 +89,21 @@ function App() {
     <div className="app-container">
       <InfoOverlay setActive={setIsInfoActive} />
       <Header />
-      {/* Training button (displayed next to the info button) */}
-      <TrainingOverlay trainingSettings={trainingSettings} setTrainingSettings={setTrainingSettings} setMode={setMode} setIsPaused={setIsPaused} />
+      <TrainingOverlay 
+        trainingSettings={trainingSettings} 
+        setTrainingSettings={setTrainingSettings} 
+        setMode={setMode} 
+        setIsPaused={setIsPaused} 
+      />
       {/* Mode selection buttons */}
       <div style={{ marginBottom: "20px", display: "flex", gap: "10px", justifyContent: "center" }}>
         <button
-          onClick={() => {
-            setMode("analog");
-          }}
+          onClick={() => setMode("analog")}
           style={{
             padding: "10px 20px",
             fontSize: "16px",
             cursor: "pointer",
-            background: mode === "analog" ? "#0ba3b2" : "#ccc",
+            background: mode === "analog" ? "#00A0A0" : "#ccc",
             color: "#fff",
             border: "none",
             borderRadius: "5px"
@@ -129,14 +112,12 @@ function App() {
           Analog Mode
         </button>
         <button
-          onClick={() => {
-            setMode("circle");
-          }}
+          onClick={() => setMode("circle")}
           style={{
             padding: "10px 20px",
             fontSize: "16px",
             cursor: "pointer",
-            background: mode === "circle" ? "#0ba3b2" : "#ccc",
+            background: mode === "circle" ? "#00A0A0" : "#ccc",
             color: "#fff",
             border: "none",
             borderRadius: "5px"
@@ -145,14 +126,12 @@ function App() {
           Circle Mode
         </button>
         <button
-          onClick={() => {
-            setMode("grid");
-          }}
+          onClick={() => setMode("grid")}
           style={{
             padding: "10px 20px",
             fontSize: "16px",
             cursor: "pointer",
-            background: mode === "grid" ? "#0ba3b2" : "#ccc",
+            background: mode === "grid" ? "#00A0A0" : "#ccc",
             color: "#fff",
             border: "none",
             borderRadius: "5px"
@@ -161,8 +140,37 @@ function App() {
           Grid Mode
         </button>
       </div>
-
-      {/* Render metronome based on selected mode; training settings are spread as props */}
+      
+      {/* Quarter/Eighth note buttons with heading */}
+      <div style={{ marginBottom: "20px", textAlign: "center" }}>
+        <h3>Notes</h3>
+        <div style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
+          <button
+            onClick={() => setBeatMode("quarter")}
+            style={{ background: "transparent", border: "none", cursor: "pointer" }}
+          >
+            <img
+              src={beatMode === "quarter" ? quarterNotesActive : quarterNotesInactive}
+              alt="Quarter Notes"
+              style={{ width: "50px", height: "50px" }}
+            />
+          </button>
+          <button
+            onClick={() => setBeatMode("eighth")}
+            style={{ background: "transparent", border: "none", cursor: "pointer" }}
+          >
+            <img
+              src={beatMode === "eighth" ? eightNotesActive : eightNotesInactive}
+              alt="Eighth Notes"
+              style={{ width: "50px", height: "50px" }}
+            />
+          </button>
+        </div>
+      </div>
+      
+      {/* Render metronome based on selected mode.
+          The beatMultiplier prop is determined by beatMode.
+          The subdivision buttons remain available inside each metronome component. */}
       {(mode === "analog" || mode === "training") && (
         <AdvancedMetronomeWithCircle
           tempo={tempo}
@@ -175,14 +183,13 @@ function App() {
           setSwing={setSwing}
           volume={volume}
           setVolume={setVolume}
-          togglePlay={() => {
-            if (togglePlayRef.current) togglePlayRef.current();
-          }}
+          togglePlay={() => { if (togglePlayRef.current) togglePlayRef.current(); }}
           analogMode={true}
           accents={accents}
           toggleAccent={toggleAccent}
           {...trainingSettings}
           registerTogglePlay={registerTogglePlay}
+          beatMultiplier={beatMode === "quarter" ? 1 : 2}
         />
       )}
       {mode === "circle" && (
@@ -197,14 +204,13 @@ function App() {
           setSwing={setSwing}
           volume={volume}
           setVolume={setVolume}
-          togglePlay={() => {
-            if (togglePlayRef.current) togglePlayRef.current();
-          }}
+          togglePlay={() => { if (togglePlayRef.current) togglePlayRef.current(); }}
           analogMode={false}
           accents={accents}
           toggleAccent={toggleAccent}
           {...trainingSettings}
           registerTogglePlay={registerTogglePlay}
+          beatMultiplier={beatMode === "quarter" ? 1 : 2}
         />
       )}
       {mode === "grid" && (
@@ -219,9 +225,7 @@ function App() {
           setSwing={setSwing}
           volume={volume}
           setVolume={setVolume}
-          togglePlay={() => {
-            if (togglePlayRef.current) togglePlayRef.current();
-          }}
+          togglePlay={() => { if (togglePlayRef.current) togglePlayRef.current(); }}
           analogMode={false}
           gridMode={true}
           accents={accents}
@@ -229,6 +233,7 @@ function App() {
           {...trainingSettings}
           registerTogglePlay={registerTogglePlay}
           registerTapTempo={registerTapTempo}
+          beatMultiplier={beatMode === "quarter" ? 1 : 2}
         />
       )}
       <Footer />
