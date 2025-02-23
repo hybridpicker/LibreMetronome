@@ -1,4 +1,3 @@
-// File: src/App.js
 import React, { useState, useRef, useEffect } from 'react';
 import './App.css';
 import Header from './components/Header';
@@ -83,11 +82,11 @@ function App() {
     <div className="app-container">
       <InfoOverlay setActive={setIsInfoActive} />
       <Header />
-      <TrainingOverlay 
-        trainingSettings={trainingSettings} 
-        setTrainingSettings={setTrainingSettings} 
-        setMode={setMode} 
-        setIsPaused={setIsPaused} 
+      <TrainingOverlay
+        trainingSettings={trainingSettings}
+        setTrainingSettings={setTrainingSettings}
+        setMode={setMode}
+        setIsPaused={setIsPaused}
       />
       {/* Mode selection buttons */}
       <div style={{ marginBottom: "20px", display: "flex", gap: "10px", justifyContent: "center" }}>
@@ -104,7 +103,7 @@ function App() {
           Multi Circle
         </button>
       </div>
-      
+
       {/* Quarter/Eighth note selector (only for non‑multi modes) */}
       {mode !== "multi" && (
         <div style={{ marginBottom: "20px", textAlign: "center" }}>
@@ -119,7 +118,7 @@ function App() {
           </div>
         </div>
       )}
-      
+
       {/* Render metronome mode */}
       {mode === "analog" && (
         <AdvancedMetronomeWithCircle
@@ -202,7 +201,7 @@ function App() {
           registerTapTempo={registerTapTempo}
         />
       )}
-      
+
       <Footer />
     </div>
   );
