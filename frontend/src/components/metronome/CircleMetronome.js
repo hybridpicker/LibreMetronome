@@ -12,7 +12,7 @@ import pauseIcon from '../../assets/svg/pause.svg';
 import AnalogMetronomeCanvas from './AnalogMetronomeCanvas';
 
 const CircleMetronome = (props) => {
-  // Choose the proper beat icon for a given beat index and state
+  // Choose the proper beat icon for a given beat index and state.
   const getBeatIcon = (index, isActive) => {
     if (props.analogMode) return normalBeat;
     if (index === 0) return isActive ? firstBeatActive : firstBeat;
@@ -23,9 +23,9 @@ const CircleMetronome = (props) => {
 
   return (
     <BaseMetronome {...props}>
-      {({ beatData, containerSize, radius, logic }) =>
-        props.analogMode ? (
-          <>
+      {({ beatData, containerSize, radius, logic }) => (
+        <>
+          {props.analogMode ? (
             <AnalogMetronomeCanvas
               width={containerSize}
               height={containerSize}
@@ -35,31 +35,8 @@ const CircleMetronome = (props) => {
               currentSubInterval={() => logic.currentSubIntervalRef.current}
               currentSubIndex={logic.currentSubdivision}
             />
-            <button
-              onClick={props.togglePlay}
-              className="play-pause-button-overlay"
-              style={{
-                position: 'absolute',
-                left: '50%',
-                top: '85%',
-                transform: 'translate(-50%, -50%)',
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                zIndex: 10
-              }}
-              aria-label="Toggle play/pause"
-            >
-              <img
-                src={props.isPaused ? playIcon : pauseIcon}
-                alt={props.isPaused ? 'Play' : 'Pause'}
-                style={{ width: '36px', height: '36px', objectFit: 'contain' }}
-              />
-            </button>
-          </>
-        ) : (
-          <>
-            {beatData.map((bd) => (
+          ) : (
+            beatData.map((bd) => (
               <img
                 key={bd.i}
                 src={getBeatIcon(bd.i, bd.isActive)}
@@ -73,31 +50,32 @@ const CircleMetronome = (props) => {
                   opacity: props.accents[bd.i] === 0 ? 0.3 : 1
                 }}
               />
-            ))}
-            <button
-              onClick={props.togglePlay}
-              className="play-pause-button-overlay"
-              style={{
-                position: 'absolute',
-                left: '50%',
-                top: '50%',
-                transform: 'translate(-50%, -50%)',
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                zIndex: 10
-              }}
-              aria-label="Toggle play/pause"
-            >
-              <img
-                src={props.isPaused ? playIcon : pauseIcon}
-                alt={props.isPaused ? 'Play' : 'Pause'}
-                style={{ width: '36px', height: '36px', objectFit: 'contain' }}
-              />
-            </button>
-          </>
-        )
-      }
+            ))
+          )}
+          {/* Render a single play/pause button overlay */}
+          <button
+            onClick={props.togglePlay}
+            className="play-pause-button-overlay"
+            style={{
+              position: 'absolute',
+              left: '50%',
+              top: props.analogMode ? '85%' : '50%',
+              transform: 'translate(-50%, -50%)',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              zIndex: 10
+            }}
+            aria-label="Toggle play/pause"
+          >
+            <img
+              src={props.isPaused ? playIcon : pauseIcon}
+              alt={props.isPaused ? 'Play' : 'Pause'}
+              style={{ width: '36px', height: '36px', objectFit: 'contain' }}
+            />
+          </button>
+        </>
+      )}
     </BaseMetronome>
   );
 };
