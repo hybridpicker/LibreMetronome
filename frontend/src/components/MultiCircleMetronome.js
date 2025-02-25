@@ -1,7 +1,7 @@
 // src/components/MultiCircleMetronome.js
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import useMetronomeLogic from "../hooks/useMetronomeLogic";
-import useKeyboardShortcuts from "../hooks/KeyboardShortcuts";
+import useKeyboardShortcuts from "../hooks/useKeyboardShortcuts";
 
 // Beat icons
 import firstBeat from "../assets/svg/firstBeat.svg";

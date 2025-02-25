@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 
 let globalAudioCtx = null;
-
 const TEMPO_MIN = 15;
 const TEMPO_MAX = 240;
 const SCHEDULE_AHEAD_TIME = 0.05; // 50 ms lookahead
@@ -29,7 +28,7 @@ export default function useMetronomeLogic({
   muteProbability = 0.3,
   tempoIncreasePercent = 5,
   measuresUntilSpeedUp = 2,
-  beatMultiplier = 1 // NEW: 1 for quarter notes, 2 for eighth notes
+  beatMultiplier = 1
 }) {
   const [currentSubdivision, setCurrentSubdivision] = useState(0);
   const [actualBpm, setActualBpm] = useState(0);
@@ -45,7 +44,6 @@ export default function useMetronomeLogic({
   const currentSubIntervalRef = useRef(0);
   const lookaheadRef = useRef(null);
   const schedulerRunningRef = useRef(false);
-
   const playedBeatTimesRef = useRef([]);
 
   const tempoRef = useRef(tempo);
@@ -109,20 +107,11 @@ export default function useMetronomeLogic({
         measureCountRef.current = 0;
       }
     }
-  }, [
-    macroMode, speedMode,
-    measuresUntilMute, muteDurationMeasures,
-    measuresUntilSpeedUp, tempoIncreasePercent,
-    setTempo
-  ]);
+  }, [macroMode, speedMode, measuresUntilMute, muteDurationMeasures, measuresUntilSpeedUp, tempoIncreasePercent, setTempo]);
 
   const shouldMuteThisBeat = useCallback((subIndex) => {
-    if (macroMode === 1 && isSilencePhaseRef.current) {
-      return true;
-    }
-    if (macroMode === 2) {
-      return Math.random() < muteProbability;
-    }
+    if (macroMode === 1 && isSilencePhaseRef.current) return true;
+    if (macroMode === 2) return Math.random() < muteProbability;
     return false;
   }, [macroMode, muteProbability]);
 
@@ -147,70 +136,45 @@ export default function useMetronomeLogic({
   const updateActualBpm = useCallback(() => {
     const MAX_BEATS_TO_TRACK = 16;
     const arr = playedBeatTimesRef.current;
-    if (arr.length > MAX_BEATS_TO_TRACK) { arr.shift(); }
+    if (arr.length > MAX_BEATS_TO_TRACK) arr.shift();
     if (arr.length < 2) return;
     let totalDiff = 0;
-    for (let i = 1; i < arr.length; i++) {
-      totalDiff += (arr[i] - arr[i - 1]);
-    }
+    for (let i = 1; i < arr.length; i++) totalDiff += (arr[i] - arr[i - 1]);
     const avgDiff = totalDiff / (arr.length - 1);
     const newBpm = 60000 / avgDiff;
     setActualBpm(newBpm);
   }, []);
 
-  // >>> NEW: Define scheduleSubdivision to schedule each beat (subdivision)
   const scheduleSubdivision = useCallback((subIndex, when) => {
-    // Record the beat time if not muted
     if (!shouldMuteThisBeat(subIndex)) {
       playedBeatTimesRef.current.push(performance.now());
       updateActualBpm();
     }
-    if (shouldMuteThisBeat(subIndex)) {
-      return; // Do not schedule sound if muted
-    }
+    if (shouldMuteThisBeat(subIndex)) return;
     if (analogMode) {
       schedulePlay(normalBufferRef.current, when);
     } else if (gridMode) {
       const state = beatConfigRef.current[subIndex];
-      if (state === 3) {
-        schedulePlay(firstBufferRef.current, when);
-      } else if (state === 2) {
-        schedulePlay(accentBufferRef.current, when);
-      } else if (state === 1) {
-        schedulePlay(normalBufferRef.current, when);
-      }
+      if (state === 3) schedulePlay(firstBufferRef.current, when);
+      else if (state === 2) schedulePlay(accentBufferRef.current, when);
+      else if (state === 1) schedulePlay(normalBufferRef.current, when);
     } else {
-      // Circle mode
-      if (subIndex === 0) {
-        schedulePlay(firstBufferRef.current, when);
-      } else {
+      if (subIndex === 0) schedulePlay(firstBufferRef.current, when);
+      else {
         const state = accentsRef.current[subIndex];
-        if (state === 2) {
-          schedulePlay(accentBufferRef.current, when);
-        } else if (state === 1) {
-          schedulePlay(normalBufferRef.current, when);
-        }
+        if (state === 2) schedulePlay(accentBufferRef.current, when);
+        else if (state === 1) schedulePlay(normalBufferRef.current, when);
       }
     }
-  }, [
-    analogMode,
-    gridMode,
-    schedulePlay,
-    shouldMuteThisBeat,
-    updateActualBpm
-  ]);
-  // <<< End scheduleSubdivision definition
+  }, [analogMode, gridMode, schedulePlay, shouldMuteThisBeat, updateActualBpm]);
 
-  // Adjust base interval by the beatMultiplier
   const getCurrentSubIntervalSec = useCallback(() => {
     if (!tempoRef.current) return 0.5;
     const secPerHit = 60 / (tempoRef.current * beatMultiplier);
     if (subdivisionsRef.current >= 2) {
       const isEvenSub = (currentSubRef.current % 2 === 0);
       const swingFactor = swingRef.current || 0;
-      if (swingFactor > 0) {
-        return isEvenSub ? secPerHit * (1 + swingFactor) : secPerHit * (1 - swingFactor);
-      }
+      if (swingFactor > 0) return isEvenSub ? secPerHit * (1 + swingFactor) : secPerHit * (1 - swingFactor);
     }
     return secPerHit;
   }, [beatMultiplier]);
@@ -220,16 +184,13 @@ export default function useMetronomeLogic({
     const now = audioCtxRef.current.currentTime;
     while (nextNoteTimeRef.current < now + SCHEDULE_AHEAD_TIME) {
       const subIndex = currentSubRef.current;
-      // Use the newly defined scheduleSubdivision
       scheduleSubdivision(subIndex, nextNoteTimeRef.current);
       setCurrentSubdivision(subIndex);
       currentSubStartRef.current = nextNoteTimeRef.current;
       currentSubIntervalRef.current = getCurrentSubIntervalSec();
       currentSubRef.current = (subIndex + 1) % subdivisionsRef.current;
       nextNoteTimeRef.current += currentSubIntervalRef.current;
-      if (currentSubRef.current === 0) {
-        handleEndOfMeasure();
-      }
+      if (currentSubRef.current === 0) handleEndOfMeasure();
     }
   }, [scheduleSubdivision, getCurrentSubIntervalSec, handleEndOfMeasure]);
 
