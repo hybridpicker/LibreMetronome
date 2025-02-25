@@ -1,3 +1,4 @@
+// File: src/App.js
 import React, { useState, useRef, useEffect } from 'react';
 import './App.css';
 import Header from './components/Header';
@@ -5,11 +6,11 @@ import Footer from './components/Footer';
 import InfoOverlay from './components/InfoOverlay';
 import AdvancedMetronomeWithCircle from './components/AdvancedMetronomeWithCircle';
 import MultiCircleMetronome from './components/MultiCircleMetronome';
-import GridModeMetronome from './components/GridModeMetronome';
+import GridModeMetronome from './components/metronome/GridModeMetronome';
 import TrainingOverlay from './components/training/TrainingOverlay';
-import useKeyboardShortcuts from './hooks/KeyboardShortcuts';
+import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
+import MetronomeControls from './components/metronome/MetronomeControls';
 
-// Import SVGs for quarter/eighth note buttons
 import quarterNotesActive from './assets/svg/quarter_eight_notes/quarterNotesActive.svg';
 import quarterNotesInactive from './assets/svg/quarter_eight_notes/quarterNotesInactive.svg';
 import eightNotesActive from './assets/svg/quarter_eight_notes/eightNotesActive.svg';
@@ -19,18 +20,18 @@ const TEMPO_MIN = 15;
 const TEMPO_MAX = 240;
 
 function App() {
-  // Mode: "analog", "circle", "grid", or "multi"
+  // Mode can be: "analog", "circle", "grid", or "multi"
   const [mode, setMode] = useState("circle");
-
   const [tempo, setTempo] = useState(120);
   const [isPaused, setIsPaused] = useState(true);
   const [subdivisions, setSubdivisions] = useState(4);
   const [swing, setSwing] = useState(0);
   const [volume, setVolume] = useState(0.5);
-
   const [accents, setAccents] = useState(
     Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1))
   );
+
+  // Reinitialize accents whenever subdivisions change.
   useEffect(() => {
     setAccents(Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1)));
   }, [subdivisions]);
@@ -44,9 +45,7 @@ function App() {
     });
   };
 
-  // Global beat mode for non‑multi modes.
   const [beatMode, setBeatMode] = useState("quarter");
-
   const [trainingSettings, setTrainingSettings] = useState({
     macroMode: 0,
     speedMode: 0,
@@ -78,6 +77,99 @@ function App() {
 
   const [isInfoActive, setIsInfoActive] = useState(false);
 
+  // Render the metronome view based on the current mode.
+  const renderMetronome = () => {
+    switch (mode) {
+      case "analog":
+        return (
+          <AdvancedMetronomeWithCircle
+            tempo={tempo}
+            setTempo={setTempo}
+            subdivisions={subdivisions}
+            setSubdivisions={setSubdivisions}
+            isPaused={isPaused}
+            setIsPaused={setIsPaused}
+            swing={swing}
+            setSwing={setSwing}
+            volume={volume}
+            setVolume={setVolume}
+            togglePlay={() => { if (togglePlayRef.current) togglePlayRef.current(); }}
+            analogMode={true}
+            accents={accents}
+            toggleAccent={toggleAccent}
+            {...trainingSettings}
+            registerTogglePlay={registerTogglePlay}
+            beatMultiplier={beatMode === "quarter" ? 1 : 2}
+          />
+        );
+      case "circle":
+        return (
+          <AdvancedMetronomeWithCircle
+            tempo={tempo}
+            setTempo={setTempo}
+            subdivisions={subdivisions}
+            setSubdivisions={setSubdivisions}
+            isPaused={isPaused}
+            setIsPaused={setIsPaused}
+            swing={swing}
+            setSwing={setSwing}
+            volume={volume}
+            setVolume={setVolume}
+            togglePlay={() => { if (togglePlayRef.current) togglePlayRef.current(); }}
+            analogMode={false}
+            accents={accents}
+            toggleAccent={toggleAccent}
+            {...trainingSettings}
+            registerTogglePlay={registerTogglePlay}
+            beatMultiplier={beatMode === "quarter" ? 1 : 2}
+          />
+        );
+      case "grid":
+        return (
+          <GridModeMetronome
+            tempo={tempo}
+            setTempo={setTempo}
+            subdivisions={subdivisions}
+            setSubdivisions={setSubdivisions}
+            isPaused={isPaused}
+            setIsPaused={setIsPaused}
+            swing={swing}
+            setSwing={setSwing}
+            volume={volume}
+            setVolume={setVolume}
+            togglePlay={() => { if (togglePlayRef.current) togglePlayRef.current(); }}
+            analogMode={false}
+            gridMode={true}
+            accents={accents}
+            updateAccents={setAccents}
+            {...trainingSettings}
+            registerTogglePlay={registerTogglePlay}
+            registerTapTempo={registerTapTempo}
+            beatMultiplier={beatMode === "quarter" ? 1 : 2}
+          />
+        );
+      case "multi":
+        return (
+          <MultiCircleMetronome
+            tempo={tempo}
+            setTempo={setTempo}
+            isPaused={isPaused}
+            setIsPaused={setIsPaused}
+            swing={swing}
+            setSwing={setSwing}
+            volume={volume}
+            setVolume={setVolume}
+            analogMode={false}
+            {...trainingSettings}
+            registerTogglePlay={registerTogglePlay}
+            registerTapTempo={registerTapTempo}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="app-container">
       <InfoOverlay setActive={setIsInfoActive} />
@@ -103,102 +195,25 @@ function App() {
           Multi Circle
         </button>
       </div>
+      
+      {/* Render the metronome view */}
+      {renderMetronome()}
 
-      {/* Quarter/Eighth note selector (only for non‑multi modes) */}
+      {/* Render common controls only if mode is not multi.
+          In analog mode, the SubdivisionSelector is hidden; notes and sliders appear once. */}
       {mode !== "multi" && (
-        <div style={{ marginBottom: "20px", textAlign: "center" }}>
-          <h3>Notes</h3>
-          <div style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
-            <button onClick={() => setBeatMode("quarter")} style={{ background: "transparent", border: "none", cursor: "pointer" }}>
-              <img src={beatMode === "quarter" ? quarterNotesActive : quarterNotesInactive} alt="Quarter Notes" style={{ width: "50px", height: "50px" }} />
-            </button>
-            <button onClick={() => setBeatMode("eighth")} style={{ background: "transparent", border: "none", cursor: "pointer" }}>
-              <img src={beatMode === "eighth" ? eightNotesActive : eightNotesInactive} alt="Eighth Notes" style={{ width: "50px", height: "50px" }} />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Render metronome mode */}
-      {mode === "analog" && (
-        <AdvancedMetronomeWithCircle
-          tempo={tempo}
-          setTempo={setTempo}
+        <MetronomeControls
+          mode={mode}
+          beatMode={beatMode}
+          setBeatMode={setBeatMode}
           subdivisions={subdivisions}
           setSubdivisions={setSubdivisions}
-          isPaused={isPaused}
-          setIsPaused={setIsPaused}
           swing={swing}
           setSwing={setSwing}
           volume={volume}
           setVolume={setVolume}
-          togglePlay={() => { if (togglePlayRef.current) togglePlayRef.current(); }}
-          analogMode={true}
-          accents={accents}
-          toggleAccent={toggleAccent}
-          {...trainingSettings}
-          registerTogglePlay={registerTogglePlay}
-          beatMultiplier={beatMode === "quarter" ? 1 : 2}
-        />
-      )}
-      {mode === "circle" && (
-        <AdvancedMetronomeWithCircle
           tempo={tempo}
           setTempo={setTempo}
-          subdivisions={subdivisions}
-          setSubdivisions={setSubdivisions}
-          isPaused={isPaused}
-          setIsPaused={setIsPaused}
-          swing={swing}
-          setSwing={setSwing}
-          volume={volume}
-          setVolume={setVolume}
-          togglePlay={() => { if (togglePlayRef.current) togglePlayRef.current(); }}
-          analogMode={false}
-          accents={accents}
-          toggleAccent={toggleAccent}
-          {...trainingSettings}
-          registerTogglePlay={registerTogglePlay}
-          beatMultiplier={beatMode === "quarter" ? 1 : 2}
-        />
-      )}
-      {mode === "grid" && (
-        <GridModeMetronome
-          tempo={tempo}
-          setTempo={setTempo}
-          subdivisions={subdivisions}
-          setSubdivisions={setSubdivisions}
-          isPaused={isPaused}
-          setIsPaused={setIsPaused}
-          swing={swing}
-          setSwing={setSwing}
-          volume={volume}
-          setVolume={setVolume}
-          togglePlay={() => { if (togglePlayRef.current) togglePlayRef.current(); }}
-          analogMode={false}
-          gridMode={true}
-          accents={accents}
-          updateAccents={setAccents}
-          {...trainingSettings}
-          registerTogglePlay={registerTogglePlay}
-          registerTapTempo={registerTapTempo}
-          beatMultiplier={beatMode === "quarter" ? 1 : 2}
-        />
-      )}
-      {mode === "multi" && (
-        <MultiCircleMetronome
-          tempo={tempo}
-          setTempo={setTempo}
-          isPaused={isPaused}
-          setIsPaused={setIsPaused}
-          swing={swing}
-          setSwing={setSwing}
-          volume={volume}
-          setVolume={setVolume}
-          analogMode={false}
-          {...trainingSettings}
-          registerTogglePlay={registerTogglePlay}
-          registerTapTempo={registerTapTempo}
         />
       )}
 
