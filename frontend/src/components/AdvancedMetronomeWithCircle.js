@@ -391,57 +391,6 @@ export default function AdvancedMetronomeWithCircle({
           </>
         )}
       </div>
-      {/* Subdivision buttons remain visible */}
-      {!analogMode && (
-        <div style={{ marginTop: '15px', textAlign: 'center' }}>
-          <h3>Subdivision</h3>
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px' }}>
-            {subdivisionButtons}
-          </div>
-        </div>
-      )}
-      <div className="sliders-container" style={{ marginTop: '20px', width: '100%' }}>
-        <div className="slider-item" style={{ marginBottom: '10px', maxWidth: '300px', margin: '0 auto' }}>
-          {(!analogMode && subdivisions % 2 === 0 && subdivisions >= 2) && (
-            <>
-              <label>Swing: {Math.round(swing * 200)}% </label>
-              <input
-                type="range"
-                min={0}
-                max={0.5}
-                step={0.01}
-                value={swing}
-                onChange={(e) => setSwing(parseFloat(e.target.value))}
-                style={{ width: '100%' }}
-              />
-            </>
-          )}
-        </div>
-        <div className="slider-item" style={{ marginBottom: '10px', maxWidth: '300px', margin: '0 auto' }}>
-          <label>Volume: {Math.round(volume * 100)}% </label>
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.01}
-            value={volume}
-            onChange={(e) => setVolume(parseFloat(e.target.value))}
-            style={{ width: '100%' }}
-          />
-        </div>
-        <div className="slider-item tempo-slider" style={{ maxWidth: '300px', margin: '0 auto' }}>
-          <label>Tempo: {tempo} BPM </label>
-          <input
-            type="range"
-            min={15}
-            max={240}
-            step={1}
-            value={tempo}
-            onChange={(e) => setTempo(parseFloat(e.target.value))}
-            style={{ width: '100%' }}
-          />
-        </div>
-      </div>
       {isMobile && (
         <button
           onClick={logic.tapTempo}
