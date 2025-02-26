@@ -163,6 +163,7 @@ function App() {
             {...trainingSettings}
             registerTogglePlay={registerTogglePlay}
             registerTapTempo={registerTapTempo}
+            key="multicircle"
           />
         );
       default:

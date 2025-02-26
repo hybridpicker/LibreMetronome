@@ -41,7 +41,14 @@ import subdivision9Active from "../assets/svg/subdivision-9Active.svg";
 // MultiCircleMetronome Component
 // ---------------------
 export default function MultiCircleMetronome(props) {
-  console.log("[MultiCircleMetronome] Mounted with props:", props);
+  const mountLogRef = useRef(false);
+  // Nur beim ersten Rendering ausgeben, nicht bei Updates
+  useEffect(() => {
+    if (!mountLogRef.current) {
+      console.log("[MultiCircleMetronome] Component mounted");
+      mountLogRef.current = true;
+    }
+  }, []);
   
   // State for circle settings and active circles
   const [circleSettings, setCircleSettings] = useState([
@@ -75,6 +82,9 @@ export default function MultiCircleMetronome(props) {
   
   // Flag to track if we need to restart the scheduler after a circle change
   const needRestartRef = useRef(false);
+  
+  // Flag to prevent duplicate firing of subdivision 0 when switching circles
+  const preventDuplicateFirstBeatRef = useRef(false);
   
   // Create metronome logic using the stable reference to playing settings
   const logic = useMetronomeLogic({
@@ -122,9 +132,11 @@ export default function MultiCircleMetronome(props) {
       prevSubdivisionRef.current !== null &&
       prevSubdivisionRef.current !== logic.currentSubdivision &&
       logic.currentSubdivision === 0 && 
-      circleSettings.length > 1 // Only switch if there are multiple circles
+      circleSettings.length > 1 && // Only switch if there are multiple circles
+      !preventDuplicateFirstBeatRef.current // Prevent unwanted switches
     ) {
-      console.log("[MultiCircleMetronome] Measure complete, switching circles");
+      console.log("[MultiCircleMetronome] Measure complete, switching circles from", playingCircle, "to", (playingCircle + 1) % circleSettings.length);
+      console.log("[MultiCircleMetronome] Setting prevention flag to prevent double first beat");
       
       // Stop the current scheduler
       logic.stopScheduler();
@@ -132,24 +144,40 @@ export default function MultiCircleMetronome(props) {
       // Move to the next circle
       setPlayingCircle(prev => (prev + 1) % circleSettings.length);
       
+      // Set flag to prevent immediate restart at subdivision 0
+      preventDuplicateFirstBeatRef.current = true;
+      
       // Mark that we need to restart
       needRestartRef.current = true;
     }
     
-    prevSubdivisionRef.current = logic.currentSubdivision;
-  }, [logic.currentSubdivision, props.isPaused, circleSettings.length, logic]);
+    // If we've moved past subdivision 0, we can clear the prevention flag
+    if (logic.currentSubdivision > 0 && preventDuplicateFirstBeatRef.current) {
+      console.log("[MultiCircleMetronome] Clearing prevention flag (subdivision > 0)");
+      preventDuplicateFirstBeatRef.current = false;
+    }
+    
+    // Only update the previous subdivision if it's different
+    if (prevSubdivisionRef.current !== logic.currentSubdivision) {
+      prevSubdivisionRef.current = logic.currentSubdivision;
+    }
+  }, [logic.currentSubdivision, props.isPaused, circleSettings.length, logic, playingCircle]);
   
   // Handle restarting the scheduler when playingCircle changes
   useEffect(() => {
     if (needRestartRef.current && !props.isPaused) {
       // Small delay to ensure the new settings are applied
-      setTimeout(() => {
+      const timerId = setTimeout(() => {
         if (!props.isPaused) {
           console.log("[MultiCircleMetronome] Restarting scheduler with new circle settings");
+          console.log("[MultiCircleMetronome] Playing circle:", playingCircle);
+          console.log("[MultiCircleMetronome] Prevention flag is:", preventDuplicateFirstBeatRef.current ? "ON" : "OFF");
           logic.startScheduler();
           needRestartRef.current = false;
         }
       }, 20);
+      
+      return () => clearTimeout(timerId);
     }
   }, [playingCircle, props.isPaused, logic]);
 
@@ -405,6 +433,10 @@ export default function MultiCircleMetronome(props) {
         // Always start with the first circle
         setPlayingCircle(0);
         
+        // Reset prevention flag when starting playback
+        preventDuplicateFirstBeatRef.current = false;
+        console.log("[MultiCircleMetronome] Reset prevention flag to FALSE on play start");
+        
         // Update the playing settings reference to match
         playingSettingsRef.current = circleSettings[0];
         
@@ -420,7 +452,7 @@ export default function MultiCircleMetronome(props) {
               console.error("[MultiCircleMetronome] Error resuming audio:", err)
             );
         } else {
-          console.log("[MultiCircleMetronome] Starting scheduler.");
+          console.log("[MultiCircleMetronome] Starting scheduler directly.");
           logic.startScheduler();
         }
         return false;
@@ -441,6 +473,13 @@ export default function MultiCircleMetronome(props) {
         
         // Reset to first circle for next playback
         setPlayingCircle(0);
+        
+        // Reset prevention flag
+        preventDuplicateFirstBeatRef.current = false;
+        console.log("[MultiCircleMetronome] Reset prevention flag to FALSE on pause");
+        
+        // Reset current subdivision reference
+        prevSubdivisionRef.current = null;
         
         return true;
       }
