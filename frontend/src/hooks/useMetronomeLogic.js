@@ -145,7 +145,25 @@ export default function useMetronomeLogic({
     setActualBpm(newBpm);
   }, []);
 
+  // Neue Referenz, um den zuletzt abgespielten Beat zu verfolgen
+  const lastPlayedBeatRef = useRef({ time: 0, subIndex: -1 });
+
   const scheduleSubdivision = useCallback((subIndex, when) => {
+    // Prüfe, ob dieser Beat zu schnell nach dem letzten gespielt wird (doppelter Beat)
+    const now = audioCtxRef.current ? audioCtxRef.current.currentTime : 0;
+    const minTimeBetweenBeats = 0.05; // 50ms Mindestabstand zwischen Beats
+    
+    // Wenn der erste Beat (subIndex 0) zweimal kurz hintereinander gespielt werden soll, überspringen
+    if (subIndex === 0 && 
+        lastPlayedBeatRef.current.subIndex === 0 && 
+        now - lastPlayedBeatRef.current.time < minTimeBetweenBeats) {
+      console.log("[useMetronomeLogic] Verhindere doppelten First Beat");
+      return; // Überspringe die Wiedergabe dieses Beats
+    }
+    
+    // Aktualisiere den Zeitpunkt und Index des zuletzt abgespielten Beats
+    lastPlayedBeatRef.current = { time: now, subIndex };
+    
     if (!shouldMuteThisBeat(subIndex)) {
       playedBeatTimesRef.current.push(performance.now());
       updateActualBpm();
