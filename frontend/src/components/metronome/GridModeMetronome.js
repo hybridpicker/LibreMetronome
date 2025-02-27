@@ -109,10 +109,7 @@ const GridModeMetronome = (props) => {
         key={colIndex}
         onClick={() => handleColumnClick(colIndex)}
         style={{
-          cursor: 'pointer',
-          transform: isCurrentBeat ? 'scale(1.1)' : 'scale(1)',
-          transformOrigin: 'center center',
-          transition: 'transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)'
+          cursor: 'pointer'
         }}
       >
         {Array.from({ length: 3 }, (_, rowIndex) => {
@@ -128,7 +125,7 @@ const GridModeMetronome = (props) => {
               width={squareSize}
               height={squareSize}
               style={{
-                filter: isHighlighted ? 'brightness(1.3) drop-shadow(0 0 5px rgba(255, 255, 255, 0.7))' : 'none',
+                filter: isHighlighted ? 'brightness(0.8)' : 'none',
                 transition: 'filter 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)'
               }}
             />

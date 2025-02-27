@@ -28,7 +28,8 @@ export default function useMetronomeLogic({
   muteProbability = 0.3,
   tempoIncreasePercent = 5,
   measuresUntilSpeedUp = 2,
-  beatMultiplier = 1
+  beatMultiplier = 1,
+  multiCircleMode = false // New flag to indicate multi circle mode
 }) {
   const [currentSubdivision, setCurrentSubdivision] = useState(0);
   const [actualBpm, setActualBpm] = useState(0);
@@ -125,12 +126,41 @@ export default function useMetronomeLogic({
 
   const schedulePlay = useCallback((buffer, when) => {
     if (!buffer || !audioCtxRef.current) return;
+    
+    // Get current time for validation
+    const now = audioCtxRef.current.currentTime;
+    
+    // Ensure the scheduled time is in the future
+    if (when <= now) {
+      console.log(`[useMetronomeLogic] Warning: Attempted to schedule sound in the past. Adjusting time from ${when} to ${now + 0.01}`);
+      when = now + 0.01; // Ensure at least 10ms in the future
+    }
+    
+    // Create a new buffer source for this sound
     const source = audioCtxRef.current.createBufferSource();
     source.buffer = buffer;
+    
+    // Create a gain node to control volume
     const gainNode = audioCtxRef.current.createGain();
-    gainNode.gain.value = volumeRef.current;
+    
+    // Apply volume with a slight ramp to avoid clicks
+    gainNode.gain.setValueAtTime(0, when - 0.005);
+    gainNode.gain.linearRampToValueAtTime(volumeRef.current, when);
+    
+    // Connect the source to the gain node and then to the output
     source.connect(gainNode).connect(audioCtxRef.current.destination);
+    
+    // Start the sound at the precise scheduled time
     source.start(when);
+    
+    // Add error handling
+    source.onended = () => {
+      source.disconnect();
+      gainNode.disconnect();
+    };
+    
+    // Return the source in case we need to stop it later
+    return source;
   }, []);
 
   const updateActualBpm = useCallback(() => {
@@ -147,44 +177,78 @@ export default function useMetronomeLogic({
 
   // New reference to track the last played beat
   const lastPlayedBeatRef = useRef({ time: 0, subIndex: -1 });
+// Track the last time we played each subdivision index
+const lastPlayedTimesByIndexRef = useRef({});
 
-  const scheduleSubdivision = useCallback((subIndex, when) => {
-    // Check if this beat is played too quickly after the last one (duplicate beat)
-    const now = audioCtxRef.current ? audioCtxRef.current.currentTime : 0;
-    const minTimeBetweenBeats = 0.05; // 50ms minimum time between beats
-    
-    // Skip if the first beat (subIndex 0) is played twice in quick succession
-    if (subIndex === 0 &&
-        lastPlayedBeatRef.current.subIndex === 0 &&
-        now - lastPlayedBeatRef.current.time < minTimeBetweenBeats) {
-      console.log("[useMetronomeLogic] Preventing duplicate first beat");
-      return; // Skip playing this beat
-    }
-    
-    // Update the timestamp and index of the last played beat
-    lastPlayedBeatRef.current = { time: now, subIndex };
-    
-    if (!shouldMuteThisBeat(subIndex)) {
-      playedBeatTimesRef.current.push(performance.now());
-      updateActualBpm();
-    }
-    if (shouldMuteThisBeat(subIndex)) return;
-    if (analogMode) {
-      schedulePlay(normalBufferRef.current, when);
-    } else if (gridMode) {
-      const state = beatConfigRef.current[subIndex];
-      if (state === 3) schedulePlay(firstBufferRef.current, when);
-      else if (state === 2) schedulePlay(accentBufferRef.current, when);
-      else if (state === 1) schedulePlay(normalBufferRef.current, when);
+const scheduleSubdivision = useCallback((subIndex, when) => {
+  // Get current time for timing calculations
+  const now = audioCtxRef.current ? audioCtxRef.current.currentTime : 0;
+  
+  // Ensure the scheduled time is in the future with a larger buffer
+  // This prevents scheduling sounds in the past which can cause timing issues
+  if (when < now) {
+    console.log(`[useMetronomeLogic] Adjusting scheduled time from ${when} to ${now + 0.02} (current: ${now})`);
+    when = now + 0.02; // Ensure at least 20ms in the future (increased from 10ms)
+  }
+  
+  // CRITICAL: More robust duplicate beat prevention, especially for first beats
+  const minTimeBetweenBeats = subIndex === 0 ? 0.2 : 0.05; // 200ms for first beat, 50ms for others
+  const lastPlayedTime = lastPlayedTimesByIndexRef.current[subIndex] || 0;
+  
+  // Check if this specific subdivision was played too recently
+  if (now - lastPlayedTime < minTimeBetweenBeats) {
+    console.log(`[useMetronomeLogic] Preventing duplicate beat for subdivision ${subIndex} (too soon)`);
+    return; // Skip playing this beat
+  }
+  
+  // Update the timestamp for this specific subdivision index
+  lastPlayedTimesByIndexRef.current[subIndex] = now;
+  
+  // Also update the general last played beat reference
+  lastPlayedBeatRef.current = { time: now, subIndex };
+  
+  // Track timing for BPM calculation
+  if (!shouldMuteThisBeat(subIndex)) {
+    playedBeatTimesRef.current.push(performance.now());
+    updateActualBpm();
+  }
+  
+  // Skip playing if this beat should be muted
+  if (shouldMuteThisBeat(subIndex)) return;
+  
+  // Determine which sound to play based on the mode and beat type
+  let buffer = null;
+  
+  if (analogMode) {
+    // Analog mode always uses the normal click
+    buffer = normalBufferRef.current;
+  } else if (gridMode) {
+    // Grid mode uses the beat configuration
+    const state = beatConfigRef.current[subIndex];
+    if (state === 3) buffer = firstBufferRef.current;
+    else if (state === 2) buffer = accentBufferRef.current;
+    else if (state === 1) buffer = normalBufferRef.current;
+  } else {
+    // Standard mode uses first beat or accents
+    if (subIndex === 0) {
+      buffer = firstBufferRef.current;
     } else {
-      if (subIndex === 0) schedulePlay(firstBufferRef.current, when);
-      else {
-        const state = accentsRef.current[subIndex];
-        if (state === 2) schedulePlay(accentBufferRef.current, when);
-        else if (state === 1) schedulePlay(normalBufferRef.current, when);
-      }
+      const state = accentsRef.current[subIndex];
+      if (state === 2) buffer = accentBufferRef.current;
+      else if (state === 1) buffer = normalBufferRef.current;
     }
-  }, [analogMode, gridMode, schedulePlay, shouldMuteThisBeat, updateActualBpm]);
+  }
+  
+  // Schedule the sound to play at the precise time
+  if (buffer) {
+    schedulePlay(buffer, when);
+    
+    // Log scheduling for debugging in multi circle mode
+    if (multiCircleMode && subIndex === 0) {
+      console.log(`[useMetronomeLogic] Scheduled first beat at ${when}, current time: ${now}, delta: ${when - now}`);
+    }
+  }
+}, [analogMode, gridMode, multiCircleMode, schedulePlay, shouldMuteThisBeat, updateActualBpm]);
 
   const getCurrentSubIntervalSec = useCallback(() => {
     if (!tempoRef.current) return 0.5;
@@ -199,32 +263,71 @@ export default function useMetronomeLogic({
 
   const scheduler = useCallback(() => {
     if (!audioCtxRef.current) return;
+    
     const now = audioCtxRef.current.currentTime;
-    while (nextNoteTimeRef.current < now + SCHEDULE_AHEAD_TIME) {
+    
+    // Use a slightly longer lookahead time for multi circle mode to ensure smooth transitions
+    const effectiveScheduleAheadTime = multiCircleMode ? SCHEDULE_AHEAD_TIME * 1.2 : SCHEDULE_AHEAD_TIME;
+    
+    // Schedule notes until we're ahead of the current time by the lookahead amount
+    while (nextNoteTimeRef.current < now + effectiveScheduleAheadTime) {
       const subIndex = currentSubRef.current;
+      
+      // Schedule this subdivision at the precise time
       scheduleSubdivision(subIndex, nextNoteTimeRef.current);
+      
+      // Update UI state
       setCurrentSubdivision(subIndex);
+      
+      // Store the start time of this subdivision
       currentSubStartRef.current = nextNoteTimeRef.current;
+      
+      // Calculate the duration of this subdivision
       currentSubIntervalRef.current = getCurrentSubIntervalSec();
+      
+      // Move to the next subdivision
       currentSubRef.current = (subIndex + 1) % subdivisionsRef.current;
+      
+      // Calculate the precise time for the next subdivision
       nextNoteTimeRef.current += currentSubIntervalRef.current;
-      if (currentSubRef.current === 0) handleEndOfMeasure();
+      
+      // If we've completed a measure, handle any measure-level logic
+      if (currentSubRef.current === 0) {
+        handleEndOfMeasure();
+      }
     }
-  }, [scheduleSubdivision, getCurrentSubIntervalSec, handleEndOfMeasure]);
+  }, [scheduleSubdivision, getCurrentSubIntervalSec, handleEndOfMeasure, multiCircleMode]);
 
-  const startScheduler = useCallback(() => {
+  const startScheduler = useCallback((startTime = null) => {
     if (schedulerRunningRef.current) return;
     stopScheduler();
     if (!audioCtxRef.current) return;
+    
+    // Reset subdivision to 0
     currentSubRef.current = 0;
     setCurrentSubdivision(0);
-    nextNoteTimeRef.current = audioCtxRef.current.currentTime;
+    
+    // In multi circle mode, we need to ensure we start with a clean state
+    if (multiCircleMode) {
+      // Reset the last played beat reference to avoid duplicate beat prevention on start
+      lastPlayedBeatRef.current = { time: 0, subIndex: -1 };
+    }
+    
+    // Use provided start time or current time
+    const now = audioCtxRef.current.currentTime;
+    nextNoteTimeRef.current = startTime !== null ? startTime : now;
+    
+    // Ensure we're starting with a clean timing reference
     currentSubStartRef.current = nextNoteTimeRef.current;
     currentSubIntervalRef.current = getCurrentSubIntervalSec();
     playedBeatTimesRef.current = [];
-    lookaheadRef.current = setInterval(scheduler, 25);
+    
+    // Use a more precise lookahead interval for better timing
+    lookaheadRef.current = setInterval(scheduler, 20); // Reduced from 25ms to 20ms for better precision
     schedulerRunningRef.current = true;
-  }, [stopScheduler, scheduler, getCurrentSubIntervalSec]);
+    
+    console.log(`[useMetronomeLogic] Scheduler started at time: ${nextNoteTimeRef.current}, current time: ${now}`);
+  }, [stopScheduler, scheduler, getCurrentSubIntervalSec, multiCircleMode]);
 
   const tapTimesRef = useRef([]);
   const handleTapTempo = useCallback(() => {
@@ -283,8 +386,10 @@ export default function useMetronomeLogic({
     if (!isPaused) {
       stopScheduler();
       startScheduler();
+    } else {
+      stopScheduler();
     }
-  }, [accents, isPaused, stopScheduler, startScheduler]);
+  }, [isPaused, stopScheduler, startScheduler]);
 
   return {
     currentSubdivision,
@@ -294,6 +399,7 @@ export default function useMetronomeLogic({
     currentSubStartRef,
     currentSubIntervalRef,
     startScheduler,
-    stopScheduler
+    stopScheduler,
+    lookaheadRef // Expose the lookahead reference so we can track and stop it globally
   };
 }
