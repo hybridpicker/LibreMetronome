@@ -4,11 +4,13 @@ import playIcon from '../../assets/svg/play.svg';
 import pauseIcon from '../../assets/svg/pause.svg';
 import tapButtonIcon from '../../assets/svg/tap-button.svg';
 import squareActive from '../../assets/svg/grid/square_active.svg';
+import squareActivePlay from '../../assets/svg/grid/square_active_play.svg.svg';
 import squareInactive from '../../assets/svg/grid/square_inactive.svg';
 
 // Create a local object for the icons
 const subdivisionIcons = {
   squareActive,
+  squareActivePlay,
   squareInactive
 };
 
@@ -119,13 +121,13 @@ const GridModeMetronome = (props) => {
           return (
             <image
               key={rowIndex}
-              href={isActive ? subdivisionIcons.squareActive : subdivisionIcons.squareInactive}
+              href={isHighlighted ? subdivisionIcons.squareActivePlay : (isActive ? subdivisionIcons.squareActive : subdivisionIcons.squareInactive)}
               x={colIndex * squareSize}
               y={rowIndex * squareSize}
               width={squareSize}
               height={squareSize}
               style={{
-                filter: isHighlighted ? 'brightness(0.8)' : 'none',
+                filter: 'none',
                 transition: 'filter 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)'
               }}
             />

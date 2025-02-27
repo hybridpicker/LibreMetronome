@@ -10,6 +10,7 @@ const useKeyboardShortcuts = ({
   onSwitchToAnalog,
   onSwitchToCircle,
   onSwitchToGrid,
+  onSwitchToMulti,
   onToggleInfoOverlay,
   onManualTempoIncrease,
 }) => {
@@ -70,6 +71,7 @@ const useKeyboardShortcuts = ({
           else if (key === 'a') onSwitchToAnalog && onSwitchToAnalog();
           else if (key === 'c') onSwitchToCircle && onSwitchToCircle();
           else if (key === 'g') onSwitchToGrid && onSwitchToGrid();
+          else if (key === 'm') onSwitchToMulti && onSwitchToMulti();
           else if (key === 'i') onToggleInfoOverlay && onToggleInfoOverlay();
           else if (key === 'u') onManualTempoIncrease && onManualTempoIncrease();
           break;
@@ -88,6 +90,7 @@ const useKeyboardShortcuts = ({
     onSwitchToAnalog,
     onSwitchToCircle,
     onSwitchToGrid,
+    onSwitchToMulti,
     onToggleInfoOverlay,
     onManualTempoIncrease,
   ]);
