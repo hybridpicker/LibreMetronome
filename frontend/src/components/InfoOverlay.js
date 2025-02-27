@@ -37,7 +37,10 @@ const InfoModal = ({ onClose }) => {
           <li><strong>A:</strong> Switch to Analog Mode</li>
           <li><strong>C:</strong> Switch to Circle Mode</li>
           <li><strong>G:</strong> Switch to Grid Mode</li>
+          <li><strong>M:</strong> Switch to Multi Circle Mode</li>
+          <li><strong>U:</strong> Manual tempo increase</li>
           <li><strong>I:</strong> Show Info Overlay</li>
+          <li><strong>Esc:</strong> Close any open menu</li>
         </ul>
       </div>
     </div>
