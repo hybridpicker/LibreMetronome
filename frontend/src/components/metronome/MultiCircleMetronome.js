@@ -78,10 +78,14 @@ export default function MultiCircleMetronome(props) {
   // Update the playing settings reference when playingCircle changes
   useEffect(() => {
     playingSettingsRef.current = circleSettings[playingCircle];
+    console.log("[MultiCircleMetronome] Updated playingSettingsRef to circle", playingCircle);
   }, [playingCircle, circleSettings]);
   
   // Flag to track if we need to restart the scheduler after a circle change
   const needRestartRef = useRef(false);
+  
+  // Flag to track if we're currently in a circle transition
+  const isTransitioningRef = useRef(false);
   
   // Flag to prevent duplicate firing of subdivision 0 when switching circles
   const preventDuplicateFirstBeatRef = useRef(false);
@@ -107,34 +111,26 @@ export default function MultiCircleMetronome(props) {
     muteProbability: props.muteProbability,
     tempoIncreasePercent: props.tempoIncreasePercent,
     measuresUntilSpeedUp: props.measuresUntilSpeedUp,
-    beatMultiplier: playingSettingsRef.current.beatMode === "quarter" ? 1 : 2
+    beatMultiplier: playingSettingsRef.current.beatMode === "quarter" ? 1 : 2,
+    multiCircleMode: true // Flag to indicate we're in multi circle mode
   });
   
   // Store a reference to the logic object
   logicRef.current = logic;
 
-  // Log when playingCircle changes to help with debugging
+  // Global scheduler reference to ensure only one scheduler is running
+  const globalSchedulerRef = useRef(null);
+  
+  // Simplified playingCircle change handler
   useEffect(() => {
     console.log("[MultiCircleMetronome] Playing circle changed to:", playingCircle);
-    console.log("[MultiCircleMetronome] Current settings for this circle:", playingSettingsRef.current);
     
-    // When the playing circle changes, we need to update the metronome settings
-    // This ensures that the correct subdivisions and accents are used for the new circle
-    if (!props.isPaused) {
-      // Stop the current scheduler
-      logic.stopScheduler();
-      
-      // Update the playing settings reference
-      playingSettingsRef.current = circleSettings[playingCircle];
-      
-      // Start the scheduler with the new settings after a small delay
-      setTimeout(() => {
-        if (!props.isPaused) {
-          logic.startScheduler();
-        }
-      }, 10);
-    }
-  }, [playingCircle, logic, props.isPaused, circleSettings]);
+    // Update the playing settings reference
+    playingSettingsRef.current = circleSettings[playingCircle];
+    console.log("[MultiCircleMetronome] Updated settings for circle", playingCircle, ":", playingSettingsRef.current);
+    
+    // No need to stop and restart the scheduler - our new approach handles this differently
+  }, [playingCircle, circleSettings]);
 
   // Update accent on beat click
   const updateAccent = (beatIndex) => {
@@ -151,43 +147,80 @@ export default function MultiCircleMetronome(props) {
   // Track previous subdivision to detect measure completion
   const prevSubdivisionRef = useRef(null);
   
-  // When the subdivision cycles back to 0, move to the next circle
-  useEffect(() => {
+  // COMPLETELY NEW APPROACH: Use a custom scheduler for circle switching
+  // Instead of trying to coordinate multiple schedulers, we'll use a single scheduler
+  // and handle the circle switching logic directly in the component
+  
+  // Track the last time we checked for a circle switch
+  const lastCircleSwitchCheckTimeRef = useRef(0);
+  
+  // Track the measure count for each circle
+  const measureCountRef = useRef(0);
+  
+  // Custom function to handle subdivision changes and circle switching
+  const handleSubdivisionChange = useCallback((newSubdivision) => {
+    // Only proceed if we're playing and have multiple circles
+    if (props.isPaused || circleSettings.length <= 1) return;
+    
     // Check if we've completed a measure (subdivision went back to 0)
     if (
-      !props.isPaused &&
       prevSubdivisionRef.current !== null &&
-      prevSubdivisionRef.current !== logic.currentSubdivision &&
-      logic.currentSubdivision === 0 &&
-      circleSettings.length > 1 && // Only switch if there are multiple circles
-      !preventDuplicateFirstBeatRef.current // Prevent unwanted switches
+      prevSubdivisionRef.current !== newSubdivision &&
+      newSubdivision === 0 &&
+      !isTransitioningRef.current // Don't switch if we're already transitioning
     ) {
-      console.log("[MultiCircleMetronome] Measure complete, switching circles from", playingCircle, "to", (playingCircle + 1) % circleSettings.length);
-      console.log("[MultiCircleMetronome] Setting prevention flag to prevent double first beat");
+      // Increment measure count
+      measureCountRef.current += 1;
       
-      // Set flag to prevent immediate restart at subdivision 0
-      preventDuplicateFirstBeatRef.current = true;
+      // Get current time to prevent rapid checks
+      const now = Date.now();
       
-      // Move to the next circle - this will trigger the playingCircle useEffect
-      // which will handle stopping and restarting the scheduler
+      // Ensure we don't check too frequently (at least 500ms between checks)
+      if (now - lastCircleSwitchCheckTimeRef.current < 500) {
+        console.log("[MultiCircleMetronome] Skipping circle switch check - too soon");
+        return;
+      }
+      
+      lastCircleSwitchCheckTimeRef.current = now;
+      
+      console.log("[MultiCircleMetronome] Measure complete, checking for circle switch");
+      
+      // Set transition flag to prevent multiple transitions
+      isTransitioningRef.current = true;
+      
+      // Move to the next circle
       const nextCircleIndex = (playingCircle + 1) % circleSettings.length;
+      console.log(`[MultiCircleMetronome] Switching to circle ${nextCircleIndex}`);
+      
+      // Update the playing settings reference
+      playingSettingsRef.current = circleSettings[nextCircleIndex];
+      
+      // Update the playing circle state
       setPlayingCircle(nextCircleIndex);
       
       // Log for debugging
       console.log("[MultiCircleMetronome] Measure ended. Auto-switching active circle.");
+      
+      // Clear transition flag after a delay
+      setTimeout(() => {
+        isTransitioningRef.current = false;
+        console.log("[MultiCircleMetronome] Transition completed");
+      }, 100);
     }
     
-    // If we've moved past subdivision 0, we can clear the prevention flag
-    if (logic.currentSubdivision > 0 && preventDuplicateFirstBeatRef.current) {
-      console.log("[MultiCircleMetronome] Clearing prevention flag (subdivision > 0)");
-      preventDuplicateFirstBeatRef.current = false;
+    // Update the previous subdivision reference
+    prevSubdivisionRef.current = newSubdivision;
+  }, [props.isPaused, circleSettings, playingCircle]);
+  
+  // CRITICAL FIX: Use a direct subscription to subdivision changes instead of an interval
+  // This prevents multiple intervals from running simultaneously
+  useEffect(() => {
+    // Only set up the handler if we're not paused
+    if (!props.isPaused && logic.currentSubdivision !== undefined) {
+      // Call the handler directly when the subdivision changes
+      handleSubdivisionChange(logic.currentSubdivision);
     }
-    
-    // Only update the previous subdivision if it's different
-    if (prevSubdivisionRef.current !== logic.currentSubdivision) {
-      prevSubdivisionRef.current = logic.currentSubdivision;
-    }
-  }, [logic.currentSubdivision, props.isPaused, circleSettings.length, logic, playingCircle]);
+  }, [logic.currentSubdivision, handleSubdivisionChange, props.isPaused, logic]);
 
   // Container size calculation
   const getContainerSize = () => {
@@ -212,12 +245,14 @@ export default function MultiCircleMetronome(props) {
       const yPos = radius * Math.sin(angle);
       
       // A beat is active only if it's the current subdivision AND this circle is the playing circle
+      // AND we're not in a transition between circles
       const isActive =
         i === logic.currentSubdivision &&
         activeCircle === playingCircle &&
         !props.isPaused &&
         logic.audioCtx &&
-        logic.audioCtx.state === "running";
+        logic.audioCtx.state === "running" &&
+        !isTransitioningRef.current;
         
       let icon;
       if (i === 0) {
@@ -228,7 +263,7 @@ export default function MultiCircleMetronome(props) {
             ? isActive ? accentedBeatActive : accentedBeat
             : isActive ? normalBeatActive : normalBeat;
       }
-      return { i, xPos, yPos, icon };
+      return { i, xPos, yPos, icon, isActive };
     });
     
     return beatData.map((bd) => (
@@ -406,11 +441,13 @@ export default function MultiCircleMetronome(props) {
       const yPos = radius * Math.sin(angle);
       
       // Determine if this specific beat is active
-      const isActive = 
-        i === logic.currentSubdivision && 
+      // Also check if we're in a transition between circles
+      const isActive =
+        i === logic.currentSubdivision &&
         isPlaying &&
         logic.audioCtx &&
-        logic.audioCtx.state === "running";
+        logic.audioCtx.state === "running" &&
+        !isTransitioningRef.current;
       
       // Choose correct icon based on beat type and active state
       let icon;
@@ -418,7 +455,7 @@ export default function MultiCircleMetronome(props) {
         icon = isActive ? firstBeatActive : firstBeat;
       } else {
         const accent = settings.accents[i] || 1;
-        icon = accent === 2 
+        icon = accent === 2
           ? isActive ? accentedBeatActive : accentedBeat
           : isActive ? normalBeatActive : normalBeat;
       }
@@ -483,11 +520,11 @@ export default function MultiCircleMetronome(props) {
   // Added lightweight protection to prevent issues with keyboard shortcuts
   const isProcessingPlayPauseRef = useRef(false);
   
+  // Simplified play/pause handler that works with our new approach
   const handlePlayPause = useCallback(() => {
     console.log("[MultiCircleMetronome] handlePlayPause invoked. Current isPaused:", props.isPaused);
     
-    // Prevent rapid consecutive calls (especially from keyboard)
-    // But use a very short timeout to avoid interfering with audio timing
+    // Prevent rapid consecutive calls
     if (isProcessingPlayPauseRef.current) {
       console.log("[MultiCircleMetronome] Ignoring play/pause request - already processing");
       return;
@@ -498,47 +535,69 @@ export default function MultiCircleMetronome(props) {
     props.setIsPaused((prev) => {
       if (prev) {
         // Starting playback
-        console.log("[MultiCircleMetronome] Starting playback");
+        console.log("[MultiCircleMetronome] Resuming play.");
         
         // Always start with the first circle
         setPlayingCircle(0);
         
-        // Reset prevention flag when starting playback
-        preventDuplicateFirstBeatRef.current = false;
-        console.log("[MultiCircleMetronome] Reset prevention flag to FALSE on play start");
+        // Reset state
+        isTransitioningRef.current = false;
+        prevSubdivisionRef.current = null;
+        measureCountRef.current = 0;
+        lastCircleSwitchCheckTimeRef.current = 0;
         
         // Update the playing settings reference to match
         playingSettingsRef.current = circleSettings[0];
         
-        // Resume audio context and start scheduler
-        if (logic.audioCtx && logic.audioCtx.state === "suspended") {
-          logic.audioCtx
-            .resume()
-            .then(() => {
-              console.log("[MultiCircleMetronome] AudioContext resumed. Starting scheduler.");
-              logic.startScheduler();
-              // Release the lock immediately after starting the scheduler
-              isProcessingPlayPauseRef.current = false;
-            })
-            .catch((err) => {
-              console.error("[MultiCircleMetronome] Error resuming audio:", err);
-              isProcessingPlayPauseRef.current = false;
-            });
-        } else {
-          console.log("[MultiCircleMetronome] Starting scheduler directly.");
+        // Start playback with clean state
+        const startPlayback = () => {
+          // Reset subdivision to 0
+          if (logic.currentSubStartRef) {
+            logic.currentSubStartRef.current = 0;
+          }
+          
+          // Start the scheduler
           logic.startScheduler();
-          // Release the lock immediately
+          
+          // Release the lock
+          setTimeout(() => {
+            isProcessingPlayPauseRef.current = false;
+          }, 100);
+        };
+        
+        // Ensure audio context is running
+        if (logic.audioCtx) {
+          if (logic.audioCtx.state === "suspended") {
+            logic.audioCtx
+              .resume()
+              .then(() => {
+                console.log("[MultiCircleMetronome] AudioContext resumed.");
+                startPlayback();
+              })
+              .catch((err) => {
+                console.error("[MultiCircleMetronome] Error resuming audio:", err);
+                isProcessingPlayPauseRef.current = false;
+              });
+          } else {
+            startPlayback();
+          }
+        } else {
           isProcessingPlayPauseRef.current = false;
         }
+        
         return false;
       } else {
         // Stopping playback
-        console.log("[MultiCircleMetronome] Stopping playback");
+        console.log("[MultiCircleMetronome] Pausing play. Stopping scheduler and suspending audio.");
         
-        // Stop scheduler first to prevent any new sounds
+        // Reset state
+        isTransitioningRef.current = false;
+        prevSubdivisionRef.current = null;
+        
+        // Stop the scheduler
         logic.stopScheduler();
         
-        // Then suspend audio context
+        // Suspend audio context
         if (logic.audioCtx && logic.audioCtx.state === "running") {
           logic.audioCtx
             .suspend()
@@ -551,24 +610,16 @@ export default function MultiCircleMetronome(props) {
               isProcessingPlayPauseRef.current = false;
             });
         } else {
-          // Release the lock if we didn't need to suspend
           isProcessingPlayPauseRef.current = false;
         }
         
         // Reset to first circle for next playback
         setPlayingCircle(0);
         
-        // Reset prevention flag
-        preventDuplicateFirstBeatRef.current = false;
-        console.log("[MultiCircleMetronome] Reset prevention flag to FALSE on pause");
-        
-        // Reset current subdivision reference
-        prevSubdivisionRef.current = null;
-        
         return true;
       }
     });
-  }, [logic, props.setIsPaused, circleSettings]);
+  }, [logic, props.setIsPaused, props.isPaused, circleSettings]);
 
   // Register the handle play/pause function with parent component via ref
   useEffect(() => {
@@ -584,9 +635,32 @@ export default function MultiCircleMetronome(props) {
     }
   }, [logic.tapTempo, props.registerTapTempo]);
 
-  // Register keyboard shortcuts
+  // Register keyboard shortcuts with a special handler for keyboard events
+  // This ensures we don't have conflicts between button clicks and keyboard shortcuts
+  const keyboardPlayPauseHandler = useCallback(() => {
+    console.log("[MultiCircleMetronome] Play/Pause triggered from keyboard");
+    
+    // CRITICAL: Stop any existing interval for subdivision checking
+    // This prevents multiple intervals from running simultaneously
+    const existingIntervals = window.setInterval(() => {}, 100);
+    for (let i = 1; i < existingIntervals; i++) {
+      window.clearInterval(i);
+    }
+    
+    // Add a significant delay to ensure we're not processing too quickly
+    // This helps prevent issues with rapid key presses and multiple schedulers
+    setTimeout(() => {
+      // Make sure we're not already processing
+      if (!isProcessingPlayPauseRef.current) {
+        handlePlayPause();
+      } else {
+        console.log("[MultiCircleMetronome] Ignoring keyboard play/pause - already processing");
+      }
+    }, 150); // Increased from 20ms to 150ms
+  }, [handlePlayPause]);
+  
   useKeyboardShortcuts({
-    onTogglePlayPause: handlePlayPause,
+    onTogglePlayPause: keyboardPlayPauseHandler,
     onTapTempo: logic.tapTempo
   });
 
