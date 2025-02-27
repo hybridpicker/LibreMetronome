@@ -777,8 +777,8 @@ export default function MultiCircleMetronome(props) {
       </div>
       
       {/* Global sliders */}
-      <div className="sliders-container" style={{ marginTop: "20px", width: "100%" }}>
-        <div style={{ marginBottom: "10px", maxWidth: "300px", margin: "0 auto" }}>
+      <div className="sliders-container" style={{ marginTop: "20px", width: "100%", maxWidth: "500px", margin: "0 auto" }}>
+        <div className="slider-item" style={{ marginBottom: "10px", maxWidth: "500px", margin: "0 auto", width: "100%" }}>
           {currentSettings.subdivisions % 2 === 0 && (
             <>
               <label>Swing: {Math.round(props.swing * 200)}% </label>
@@ -794,7 +794,7 @@ export default function MultiCircleMetronome(props) {
             </>
           )}
         </div>
-        <div style={{ marginBottom: "10px", maxWidth: "300px", margin: "0 auto" }}>
+        <div className="slider-item" style={{ marginBottom: "10px", maxWidth: "500px", margin: "0 auto", width: "100%" }}>
           <label>Volume: {Math.round(props.volume * 100)}% </label>
           <input
             type="range"
@@ -806,7 +806,7 @@ export default function MultiCircleMetronome(props) {
             style={{ width: "100%" }}
           />
         </div>
-        <div style={{ maxWidth: "300px", margin: "0 auto" }}>
+        <div className="slider-item tempo-slider" style={{ maxWidth: "500px", margin: "0 auto", width: "100%" }}>
           <label>Tempo: {props.tempo} BPM </label>
           <input
             type="range"
