@@ -42,7 +42,7 @@ import subdivision9Active from "../assets/svg/subdivision-9Active.svg";
 // ---------------------
 export default function MultiCircleMetronome(props) {
   const mountLogRef = useRef(false);
-  // Nur beim ersten Rendering ausgeben, nicht bei Updates
+  // Only log on initial render, not on updates
   useEffect(() => {
     if (!mountLogRef.current) {
       console.log("[MultiCircleMetronome] Component mounted");
@@ -87,6 +87,7 @@ export default function MultiCircleMetronome(props) {
   const preventDuplicateFirstBeatRef = useRef(false);
   
   // Create metronome logic using the stable reference to playing settings
+  const logicRef = useRef(null);
   const logic = useMetronomeLogic({
     tempo: props.tempo,
     setTempo: props.setTempo,
@@ -108,6 +109,32 @@ export default function MultiCircleMetronome(props) {
     measuresUntilSpeedUp: props.measuresUntilSpeedUp,
     beatMultiplier: playingSettingsRef.current.beatMode === "quarter" ? 1 : 2
   });
+  
+  // Store a reference to the logic object
+  logicRef.current = logic;
+
+  // Log when playingCircle changes to help with debugging
+  useEffect(() => {
+    console.log("[MultiCircleMetronome] Playing circle changed to:", playingCircle);
+    console.log("[MultiCircleMetronome] Current settings for this circle:", playingSettingsRef.current);
+    
+    // When the playing circle changes, we need to update the metronome settings
+    // This ensures that the correct subdivisions and accents are used for the new circle
+    if (!props.isPaused) {
+      // Stop the current scheduler
+      logic.stopScheduler();
+      
+      // Update the playing settings reference
+      playingSettingsRef.current = circleSettings[playingCircle];
+      
+      // Start the scheduler with the new settings after a small delay
+      setTimeout(() => {
+        if (!props.isPaused) {
+          logic.startScheduler();
+        }
+      }, 10);
+    }
+  }, [playingCircle, logic, props.isPaused, circleSettings]);
 
   // Update accent on beat click
   const updateAccent = (beatIndex) => {
@@ -128,27 +155,26 @@ export default function MultiCircleMetronome(props) {
   useEffect(() => {
     // Check if we've completed a measure (subdivision went back to 0)
     if (
-      !props.isPaused && 
+      !props.isPaused &&
       prevSubdivisionRef.current !== null &&
       prevSubdivisionRef.current !== logic.currentSubdivision &&
-      logic.currentSubdivision === 0 && 
+      logic.currentSubdivision === 0 &&
       circleSettings.length > 1 && // Only switch if there are multiple circles
       !preventDuplicateFirstBeatRef.current // Prevent unwanted switches
     ) {
       console.log("[MultiCircleMetronome] Measure complete, switching circles from", playingCircle, "to", (playingCircle + 1) % circleSettings.length);
       console.log("[MultiCircleMetronome] Setting prevention flag to prevent double first beat");
       
-      // Stop the current scheduler
-      logic.stopScheduler();
-      
-      // Move to the next circle
-      setPlayingCircle(prev => (prev + 1) % circleSettings.length);
-      
       // Set flag to prevent immediate restart at subdivision 0
       preventDuplicateFirstBeatRef.current = true;
       
-      // Mark that we need to restart
-      needRestartRef.current = true;
+      // Move to the next circle - this will trigger the playingCircle useEffect
+      // which will handle stopping and restarting the scheduler
+      const nextCircleIndex = (playingCircle + 1) % circleSettings.length;
+      setPlayingCircle(nextCircleIndex);
+      
+      // Log for debugging
+      console.log("[MultiCircleMetronome] Measure ended. Auto-switching active circle.");
     }
     
     // If we've moved past subdivision 0, we can clear the prevention flag
@@ -162,24 +188,6 @@ export default function MultiCircleMetronome(props) {
       prevSubdivisionRef.current = logic.currentSubdivision;
     }
   }, [logic.currentSubdivision, props.isPaused, circleSettings.length, logic, playingCircle]);
-  
-  // Handle restarting the scheduler when playingCircle changes
-  useEffect(() => {
-    if (needRestartRef.current && !props.isPaused) {
-      // Small delay to ensure the new settings are applied
-      const timerId = setTimeout(() => {
-        if (!props.isPaused) {
-          console.log("[MultiCircleMetronome] Restarting scheduler with new circle settings");
-          console.log("[MultiCircleMetronome] Playing circle:", playingCircle);
-          console.log("[MultiCircleMetronome] Prevention flag is:", preventDuplicateFirstBeatRef.current ? "ON" : "OFF");
-          logic.startScheduler();
-          needRestartRef.current = false;
-        }
-      }, 20);
-      
-      return () => clearTimeout(timerId);
-    }
-  }, [playingCircle, props.isPaused, logic]);
 
   // Container size calculation
   const getContainerSize = () => {
@@ -237,7 +245,9 @@ export default function MultiCircleMetronome(props) {
           top: `calc(50% + ${bd.yPos}px - ${iconSize / 2}px)`,
           width: `${iconSize}px`,
           height: `${iconSize}px`,
-          cursor: bd.i === 0 ? "default" : "pointer"
+          cursor: bd.i === 0 ? "default" : "pointer",
+          filter: bd.isActive ? "drop-shadow(0 0 5px rgba(255, 255, 255, 0.7))" : "none",
+          transition: "filter 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)"
         }}
       />
     ));
@@ -288,7 +298,15 @@ export default function MultiCircleMetronome(props) {
               return updated;
             });
           }}
-          style={{ cursor: "pointer", width: "36px", height: "36px", margin: "0 3px" }}
+          style={{
+            cursor: "pointer",
+            width: "36px",
+            height: "36px",
+            margin: "0 3px",
+            transition: "transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
+            transform: isActive ? "scale(1.1)" : "scale(1)",
+            filter: isActive ? "drop-shadow(0 0 5px rgba(0, 160, 160, 0.5))" : "none"
+          }}
         />
       );
     });
@@ -307,6 +325,20 @@ export default function MultiCircleMetronome(props) {
             });
           }}
           style={{ background: "transparent", border: "none", cursor: "pointer" }}
+          onMouseOver={(e) => {
+            const img = e.currentTarget.querySelector('img');
+            if (img && currentSettings.beatMode !== "quarter") {
+              img.style.transform = 'scale(1.05)';
+              img.style.filter = 'drop-shadow(0 0 5px rgba(255, 255, 255, 0.3))';
+            }
+          }}
+          onMouseOut={(e) => {
+            const img = e.currentTarget.querySelector('img');
+            if (img && currentSettings.beatMode !== "quarter") {
+              img.style.transform = 'scale(1)';
+              img.style.filter = 'none';
+            }
+          }}
         >
           <img
             src={require("../assets/svg/quarter_eight_notes/quarterNotesActive.svg").default}
@@ -314,7 +346,10 @@ export default function MultiCircleMetronome(props) {
             style={{
               width: "50px",
               height: "50px",
-              opacity: currentSettings.beatMode === "quarter" ? 1 : 0.5
+              opacity: currentSettings.beatMode === "quarter" ? 1 : 0.5,
+              transition: "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
+              filter: currentSettings.beatMode === "quarter" ? "drop-shadow(0 0 5px rgba(0, 160, 160, 0.5))" : "none",
+              transform: currentSettings.beatMode === "quarter" ? "scale(1.05)" : "scale(1)"
             }}
           />
         </button>
@@ -327,6 +362,20 @@ export default function MultiCircleMetronome(props) {
             });
           }}
           style={{ background: "transparent", border: "none", cursor: "pointer" }}
+          onMouseOver={(e) => {
+            const img = e.currentTarget.querySelector('img');
+            if (img && currentSettings.beatMode !== "eighth") {
+              img.style.transform = 'scale(1.05)';
+              img.style.filter = 'drop-shadow(0 0 5px rgba(255, 255, 255, 0.3))';
+            }
+          }}
+          onMouseOut={(e) => {
+            const img = e.currentTarget.querySelector('img');
+            if (img && currentSettings.beatMode !== "eighth") {
+              img.style.transform = 'scale(1)';
+              img.style.filter = 'none';
+            }
+          }}
         >
           <img
             src={require("../assets/svg/quarter_eight_notes/eightNotesActive.svg").default}
@@ -334,7 +383,10 @@ export default function MultiCircleMetronome(props) {
             style={{
               width: "50px",
               height: "50px",
-              opacity: currentSettings.beatMode === "eighth" ? 1 : 0.5
+              opacity: currentSettings.beatMode === "eighth" ? 1 : 0.5,
+              transition: "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
+              filter: currentSettings.beatMode === "eighth" ? "drop-shadow(0 0 5px rgba(0, 160, 160, 0.5))" : "none",
+              transform: currentSettings.beatMode === "eighth" ? "scale(1.05)" : "scale(1)"
             }}
           />
         </button>
@@ -381,7 +433,9 @@ export default function MultiCircleMetronome(props) {
             left: `calc(50% + ${xPos}px - ${iconSize / 2}px)`,
             top: `calc(50% + ${yPos}px - ${iconSize / 2}px)`,
             width: `${iconSize}px`,
-            height: `${iconSize}px`
+            height: `${iconSize}px`,
+            filter: isActive ? "drop-shadow(0 0 5px rgba(255, 255, 255, 0.7))" : "none",
+            transition: "filter 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)"
           }}
         />
       );
@@ -399,17 +453,21 @@ export default function MultiCircleMetronome(props) {
       return (
         <div
           key={idx}
-          onClick={() => setActiveCircle(idx)}
+          onClick={() => {
+            console.log("[MultiCircleMetronome] Switching active circle to index", idx);
+            setActiveCircle(idx);
+          }}
           style={{
             position: "relative",
             width: containerSize,
             height: containerSize,
-            border: isActiveUI 
-              ? "3px solid #00A0A0"  // Active in UI (selected)
-              : isPlaying 
-                ? "3px solid #FFD700" // Currently playing
-                : "3px solid transparent",
+            boxShadow: isActiveUI
+              ? "0 0 0 3px #00A0A0, 0 0 10px rgba(0, 160, 160, 0.6)"  // Active in UI (selected) with glow
+              : isPlaying
+                ? "0 0 0 3px #FFD700, 0 0 10px rgba(255, 215, 0, 0.6)" // Currently playing with glow
+                : "none",
             borderRadius: "50%",
+            transition: "box-shadow 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)",
             cursor: "pointer"
           }}
         >
@@ -422,8 +480,20 @@ export default function MultiCircleMetronome(props) {
   };
 
   // Handle play/pause with proper suspend/resume
+  // Added lightweight protection to prevent issues with keyboard shortcuts
+  const isProcessingPlayPauseRef = useRef(false);
+  
   const handlePlayPause = useCallback(() => {
     console.log("[MultiCircleMetronome] handlePlayPause invoked. Current isPaused:", props.isPaused);
+    
+    // Prevent rapid consecutive calls (especially from keyboard)
+    // But use a very short timeout to avoid interfering with audio timing
+    if (isProcessingPlayPauseRef.current) {
+      console.log("[MultiCircleMetronome] Ignoring play/pause request - already processing");
+      return;
+    }
+    
+    isProcessingPlayPauseRef.current = true;
     
     props.setIsPaused((prev) => {
       if (prev) {
@@ -447,28 +517,42 @@ export default function MultiCircleMetronome(props) {
             .then(() => {
               console.log("[MultiCircleMetronome] AudioContext resumed. Starting scheduler.");
               logic.startScheduler();
+              // Release the lock immediately after starting the scheduler
+              isProcessingPlayPauseRef.current = false;
             })
-            .catch((err) =>
-              console.error("[MultiCircleMetronome] Error resuming audio:", err)
-            );
+            .catch((err) => {
+              console.error("[MultiCircleMetronome] Error resuming audio:", err);
+              isProcessingPlayPauseRef.current = false;
+            });
         } else {
           console.log("[MultiCircleMetronome] Starting scheduler directly.");
           logic.startScheduler();
+          // Release the lock immediately
+          isProcessingPlayPauseRef.current = false;
         }
         return false;
       } else {
         // Stopping playback
         console.log("[MultiCircleMetronome] Stopping playback");
         
-        // Stop scheduler and suspend audio
+        // Stop scheduler first to prevent any new sounds
         logic.stopScheduler();
+        
+        // Then suspend audio context
         if (logic.audioCtx && logic.audioCtx.state === "running") {
           logic.audioCtx
             .suspend()
-            .then(() => console.log("[MultiCircleMetronome] AudioContext suspended."))
-            .catch((err) =>
-              console.error("[MultiCircleMetronome] Error suspending audio:", err)
-            );
+            .then(() => {
+              console.log("[MultiCircleMetronome] AudioContext suspended.");
+              isProcessingPlayPauseRef.current = false;
+            })
+            .catch((err) => {
+              console.error("[MultiCircleMetronome] Error suspending audio:", err);
+              isProcessingPlayPauseRef.current = false;
+            });
+        } else {
+          // Release the lock if we didn't need to suspend
+          isProcessingPlayPauseRef.current = false;
         }
         
         // Reset to first circle for next playback
@@ -549,11 +633,30 @@ export default function MultiCircleMetronome(props) {
           onClick={handlePlayPause}
           style={{ background: "transparent", border: "none", cursor: "pointer" }}
           aria-label="Toggle Play/Pause"
+          onMouseOver={(e) => {
+            const img = e.currentTarget.querySelector('img');
+            if (img) {
+              img.style.transform = 'scale(1.1)';
+              img.style.filter = 'drop-shadow(0 0 5px rgba(255, 255, 255, 0.5))';
+            }
+          }}
+          onMouseOut={(e) => {
+            const img = e.currentTarget.querySelector('img');
+            if (img) {
+              img.style.transform = 'scale(1)';
+              img.style.filter = 'none';
+            }
+          }}
         >
           <img
             src={props.isPaused ? playIcon : pauseIcon}
             alt={props.isPaused ? "Play" : "Pause"}
-            style={{ width: "36px", height: "36px", objectFit: "contain" }}
+            style={{
+              width: "36px",
+              height: "36px",
+              objectFit: "contain",
+              transition: 'all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)'
+            }}
           />
         </button>
         <button
@@ -567,7 +670,17 @@ export default function MultiCircleMetronome(props) {
             cursor: "pointer",
             color: "#fff",
             fontSize: "24px",
-            lineHeight: "50px"
+            lineHeight: "50px",
+            boxShadow: "0 0 8px rgba(0, 160, 160, 0.5)",
+            transition: "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)"
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.transform = "scale(1.05)";
+            e.currentTarget.style.boxShadow = "0 0 12px rgba(0, 160, 160, 0.7)";
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.transform = "scale(1)";
+            e.currentTarget.style.boxShadow = "0 0 8px rgba(0, 160, 160, 0.5)";
           }}
           aria-label="Add Circle"
         >
@@ -639,11 +752,29 @@ export default function MultiCircleMetronome(props) {
           onClick={logic.tapTempo}
           style={{ background: "transparent", border: "none", cursor: "pointer", marginTop: "20px" }}
           aria-label="Tap Tempo"
+          onMouseOver={(e) => {
+            const img = e.currentTarget.querySelector('img');
+            if (img) {
+              img.style.transform = 'scale(1.1)';
+              img.style.filter = 'drop-shadow(0 0 5px rgba(255, 255, 255, 0.5))';
+            }
+          }}
+          onMouseOut={(e) => {
+            const img = e.currentTarget.querySelector('img');
+            if (img) {
+              img.style.transform = 'scale(1)';
+              img.style.filter = 'none';
+            }
+          }}
         >
           <img
             src={tapButtonIcon}
             alt="Tap Tempo"
-            style={{ height: "35px", objectFit: "contain" }}
+            style={{
+              height: "35px",
+              objectFit: "contain",
+              transition: 'all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)'
+            }}
           />
         </button>
       )}

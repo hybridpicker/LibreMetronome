@@ -1,16 +1,26 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import useMetronomeLogic from '../../hooks/useMetronomeLogic';
 import playIcon from '../../assets/svg/play.svg';
 import pauseIcon from '../../assets/svg/pause.svg';
 import tapButtonIcon from '../../assets/svg/tap-button.svg';
-// Ensure you have created src/assets/svg/subdivisionIcons.js as described
-import { subdivisionIcons } from '../../assets/svg/subdivisionIcons';
+import squareActive from '../../assets/svg/grid/square_active.svg';
+import squareInactive from '../../assets/svg/grid/square_inactive.svg';
+
+// Create a local object for the icons
+const subdivisionIcons = {
+  squareActive,
+  squareInactive
+};
 
 const GridModeMetronome = (props) => {
   // Initialize gridConfig based on the current subdivisions (1 to 9)
   const [gridConfig, setGridConfig] = useState(
     Array.from({ length: props.subdivisions }, (_, i) => (i === 0 ? 3 : 1))
   );
+  
+  // Animation state
+  const [animationFrame, setAnimationFrame] = useState(null);
+  const animationRef = useRef(null);
 
   useEffect(() => {
     // If accents are passed in and match subdivisions count, update gridConfig.
@@ -56,25 +66,77 @@ const GridModeMetronome = (props) => {
     });
   }, [props.updateAccents]);
 
+  // Animation function for the current beat
+  const animateCurrentBeat = useCallback(() => {
+    if (props.isPaused) {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+      }
+      setAnimationFrame(null);
+      return;
+    }
+
+    setAnimationFrame(logic.currentSubdivision);
+    
+    animationRef.current = requestAnimationFrame(animateCurrentBeat);
+  }, [logic.currentSubdivision, props.isPaused]);
+
+  // Start/stop animation based on isPaused state
+  useEffect(() => {
+    if (!props.isPaused) {
+      animateCurrentBeat();
+    } else if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+      setAnimationFrame(null);
+    }
+    
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [props.isPaused, animateCurrentBeat]);
+
   // Render grid as an SVG where each column represents a subdivision.
   const squareSize = 50;
-  const gridSquares = Array.from({ length: props.subdivisions }, (_, colIndex) => (
-    <g key={colIndex} onClick={() => handleColumnClick(colIndex)} style={{ cursor: 'pointer' }}>
-      {Array.from({ length: 3 }, (_, rowIndex) => {
-        const isActive = rowIndex >= (3 - gridConfig[colIndex]);
-        return (
-          <image
-            key={rowIndex}
-            href={isActive ? subdivisionIcons.squareActive : subdivisionIcons.squareInactive}
-            x={colIndex * squareSize}
-            y={rowIndex * squareSize}
-            width={squareSize}
-            height={squareSize}
-          />
-        );
-      })}
-    </g>
-  ));
+  const gridSquares = Array.from({ length: props.subdivisions }, (_, colIndex) => {
+    const isCurrentBeat = colIndex === animationFrame && !props.isPaused;
+    
+    return (
+      <g
+        key={colIndex}
+        onClick={() => handleColumnClick(colIndex)}
+        style={{
+          cursor: 'pointer',
+          transform: isCurrentBeat ? 'scale(1.1)' : 'scale(1)',
+          transformOrigin: 'center center',
+          transition: 'transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)'
+        }}
+      >
+        {Array.from({ length: 3 }, (_, rowIndex) => {
+          const isActive = rowIndex >= (3 - gridConfig[colIndex]);
+          const isHighlighted = isCurrentBeat && isActive;
+          
+          return (
+            <image
+              key={rowIndex}
+              href={isActive ? subdivisionIcons.squareActive : subdivisionIcons.squareInactive}
+              x={colIndex * squareSize}
+              y={rowIndex * squareSize}
+              width={squareSize}
+              height={squareSize}
+              style={{
+                filter: isHighlighted ? 'brightness(1.3) drop-shadow(0 0 5px rgba(255, 255, 255, 0.7))' : 'none',
+                transition: 'filter 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)'
+              }}
+            />
+          );
+        })}
+      </g>
+    );
+  });
 
   // Responsive behavior for mobile devices
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -101,6 +163,26 @@ const GridModeMetronome = (props) => {
     }
   };
 
+  // Register the toggle play function for keyboard shortcuts
+  useEffect(() => {
+    if (props.registerTogglePlay) {
+      props.registerTogglePlay(handlePlayPause);
+    }
+    
+    if (props.registerTapTempo) {
+      props.registerTapTempo(logic.tapTempo);
+    }
+    
+    return () => {
+      if (props.registerTogglePlay) {
+        props.registerTogglePlay(null);
+      }
+      if (props.registerTapTempo) {
+        props.registerTapTempo(null);
+      }
+    };
+  }, [props.registerTogglePlay, props.registerTapTempo, handlePlayPause, logic.tapTempo]);
+
   return (
     <div style={{ textAlign: 'center' }}>
       <svg
@@ -111,13 +193,65 @@ const GridModeMetronome = (props) => {
         {gridSquares}
       </svg>
       <div style={{ marginTop: '10px' }}>
-        <button onClick={handlePlayPause} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }} aria-label="Toggle play/pause">
-          <img src={props.isPaused ? playIcon : pauseIcon} alt={props.isPaused ? 'Play' : 'Pause'} style={{ width: '36px', height: '36px' }} />
+        <button
+          onClick={handlePlayPause}
+          style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
+          aria-label="Toggle play/pause"
+          onMouseOver={(e) => {
+            const img = e.currentTarget.querySelector('img');
+            if (img) {
+              img.style.transform = 'scale(1.1)';
+              img.style.filter = 'drop-shadow(0 0 5px rgba(255, 255, 255, 0.5))';
+            }
+          }}
+          onMouseOut={(e) => {
+            const img = e.currentTarget.querySelector('img');
+            if (img) {
+              img.style.transform = 'scale(1)';
+              img.style.filter = 'none';
+            }
+          }}
+        >
+          <img
+            src={props.isPaused ? playIcon : pauseIcon}
+            alt={props.isPaused ? 'Play' : 'Pause'}
+            style={{
+              width: '36px',
+              height: '36px',
+              transition: 'all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)'
+            }}
+          />
         </button>
       </div>
       {isMobile && (
-        <button onClick={logic.tapTempo} style={{ background: 'transparent', border: 'none', cursor: 'pointer', marginTop: '20px' }} aria-label="Tap Tempo">
-          <img src={tapButtonIcon} alt="Tap Tempo" style={{ height: '35px', objectFit: 'contain' }} />
+        <button
+          onClick={logic.tapTempo}
+          style={{ background: 'transparent', border: 'none', cursor: 'pointer', marginTop: '20px' }}
+          aria-label="Tap Tempo"
+          onMouseOver={(e) => {
+            const img = e.currentTarget.querySelector('img');
+            if (img) {
+              img.style.transform = 'scale(1.1)';
+              img.style.filter = 'drop-shadow(0 0 5px rgba(255, 255, 255, 0.5))';
+            }
+          }}
+          onMouseOut={(e) => {
+            const img = e.currentTarget.querySelector('img');
+            if (img) {
+              img.style.transform = 'scale(1)';
+              img.style.filter = 'none';
+            }
+          }}
+        >
+          <img
+            src={tapButtonIcon}
+            alt="Tap Tempo"
+            style={{
+              height: '35px',
+              objectFit: 'contain',
+              transition: 'all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)'
+            }}
+          />
         </button>
       )}
     </div>
