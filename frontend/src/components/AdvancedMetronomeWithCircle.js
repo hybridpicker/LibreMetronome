@@ -126,7 +126,7 @@ export default function AdvancedMetronomeWithCircle({
           setIsPaused(false);
           logic.startScheduler();
         }).catch((err) => {
-          console.error("[AdvancedMetronome] Error resuming AudioContext:", err);
+          // Error handler left empty after console.log removal
         });
       } else {
         setIsPaused(false);

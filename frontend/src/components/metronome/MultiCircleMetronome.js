@@ -45,7 +45,6 @@ export default function MultiCircleMetronome(props) {
   // Only log on initial render, not on updates
   useEffect(() => {
     if (!mountLogRef.current) {
-      console.log("[MultiCircleMetronome] Component mounted");
       mountLogRef.current = true;
     }
   }, []);
@@ -78,7 +77,6 @@ export default function MultiCircleMetronome(props) {
   // Update the playing settings reference when playingCircle changes
   useEffect(() => {
     playingSettingsRef.current = circleSettings[playingCircle];
-    console.log("[MultiCircleMetronome] Updated playingSettingsRef to circle", playingCircle);
   }, [playingCircle, circleSettings]);
   
   // Flag to track if we need to restart the scheduler after a circle change
@@ -123,18 +121,14 @@ export default function MultiCircleMetronome(props) {
   
   // Simplified playingCircle change handler
   useEffect(() => {
-    console.log("[MultiCircleMetronome] Playing circle changed to:", playingCircle);
-    
     // Update the playing settings reference
     playingSettingsRef.current = circleSettings[playingCircle];
-    console.log("[MultiCircleMetronome] Updated settings for circle", playingCircle, ":", playingSettingsRef.current);
     
     // No need to stop and restart the scheduler - our new approach handles this differently
   }, [playingCircle, circleSettings]);
 
   // Update accent on beat click
   const updateAccent = (beatIndex) => {
-    console.log("[MultiCircleMetronome] Updating accent for beat", beatIndex);
     setCircleSettings((prev) => {
       const updated = [...prev];
       const acc = [...updated[activeCircle].accents];
@@ -177,20 +171,16 @@ export default function MultiCircleMetronome(props) {
       
       // Ensure we don't check too frequently (at least 500ms between checks)
       if (now - lastCircleSwitchCheckTimeRef.current < 500) {
-        console.log("[MultiCircleMetronome] Skipping circle switch check - too soon");
         return;
       }
       
       lastCircleSwitchCheckTimeRef.current = now;
-      
-      console.log("[MultiCircleMetronome] Measure complete, checking for circle switch");
       
       // Set transition flag to prevent multiple transitions
       isTransitioningRef.current = true;
       
       // Move to the next circle
       const nextCircleIndex = (playingCircle + 1) % circleSettings.length;
-      console.log(`[MultiCircleMetronome] Switching to circle ${nextCircleIndex}`);
       
       // Update the playing settings reference
       playingSettingsRef.current = circleSettings[nextCircleIndex];
@@ -198,13 +188,9 @@ export default function MultiCircleMetronome(props) {
       // Update the playing circle state
       setPlayingCircle(nextCircleIndex);
       
-      // Log for debugging
-      console.log("[MultiCircleMetronome] Measure ended. Auto-switching active circle.");
-      
       // Clear transition flag after a delay
       setTimeout(() => {
         isTransitioningRef.current = false;
-        console.log("[MultiCircleMetronome] Transition completed");
       }, 100);
     }
     
@@ -491,7 +477,6 @@ export default function MultiCircleMetronome(props) {
         <div
           key={idx}
           onClick={() => {
-            console.log("[MultiCircleMetronome] Switching active circle to index", idx);
             setActiveCircle(idx);
           }}
           style={{
@@ -522,11 +507,8 @@ export default function MultiCircleMetronome(props) {
   
   // Simplified play/pause handler that works with our new approach
   const handlePlayPause = useCallback(() => {
-    console.log("[MultiCircleMetronome] handlePlayPause invoked. Current isPaused:", props.isPaused);
-    
     // Prevent rapid consecutive calls
     if (isProcessingPlayPauseRef.current) {
-      console.log("[MultiCircleMetronome] Ignoring play/pause request - already processing");
       return;
     }
     
@@ -535,7 +517,6 @@ export default function MultiCircleMetronome(props) {
     props.setIsPaused((prev) => {
       if (prev) {
         // Starting playback
-        console.log("[MultiCircleMetronome] Resuming play.");
         
         // Always start with the first circle
         setPlayingCircle(0);
@@ -571,11 +552,9 @@ export default function MultiCircleMetronome(props) {
             logic.audioCtx
               .resume()
               .then(() => {
-                console.log("[MultiCircleMetronome] AudioContext resumed.");
                 startPlayback();
               })
               .catch((err) => {
-                console.error("[MultiCircleMetronome] Error resuming audio:", err);
                 isProcessingPlayPauseRef.current = false;
               });
           } else {
@@ -588,7 +567,6 @@ export default function MultiCircleMetronome(props) {
         return false;
       } else {
         // Stopping playback
-        console.log("[MultiCircleMetronome] Pausing play. Stopping scheduler and suspending audio.");
         
         // Reset state
         isTransitioningRef.current = false;
@@ -602,11 +580,9 @@ export default function MultiCircleMetronome(props) {
           logic.audioCtx
             .suspend()
             .then(() => {
-              console.log("[MultiCircleMetronome] AudioContext suspended.");
               isProcessingPlayPauseRef.current = false;
             })
             .catch((err) => {
-              console.error("[MultiCircleMetronome] Error suspending audio:", err);
               isProcessingPlayPauseRef.current = false;
             });
         } else {
@@ -638,8 +614,6 @@ export default function MultiCircleMetronome(props) {
   // Register keyboard shortcuts with a special handler for keyboard events
   // This ensures we don't have conflicts between button clicks and keyboard shortcuts
   const keyboardPlayPauseHandler = useCallback(() => {
-    console.log("[MultiCircleMetronome] Play/Pause triggered from keyboard");
-    
     // CRITICAL: Stop any existing interval for subdivision checking
     // This prevents multiple intervals from running simultaneously
     const existingIntervals = window.setInterval(() => {}, 100);
@@ -654,7 +628,7 @@ export default function MultiCircleMetronome(props) {
       if (!isProcessingPlayPauseRef.current) {
         handlePlayPause();
       } else {
-        console.log("[MultiCircleMetronome] Ignoring keyboard play/pause - already processing");
+        // Ignoring keyboard play/pause - already processing
       }
     }, 150); // Increased from 20ms to 150ms
   }, [handlePlayPause]);
@@ -674,7 +648,6 @@ export default function MultiCircleMetronome(props) {
 
   // Add a circle
   const addCircle = () => {
-    console.log("[MultiCircleMetronome] Adding new circle");
     setCircleSettings((prev) => [
       ...prev,
       {
