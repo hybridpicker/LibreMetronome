@@ -176,9 +176,11 @@ export default function useMetronomeLogic({
   }, []);
 
   // New reference to track the last played beat
-  const lastPlayedBeatRef = useRef({ time: 0, subIndex: -1 });
-// Track the last time we played each subdivision index
-const lastPlayedTimesByIndexRef = useRef({});
+    const lastPlayedBeatRef = useRef({ time: 0, subIndex: -1 });
+  // Track the last time we played each subdivision index
+  const lastPlayedTimesByIndexRef = useRef({});
+  // Track if this is the first beat after starting the scheduler
+  const isFirstBeatAfterStartRef = useRef(false);
 
 const scheduleSubdivision = useCallback((subIndex, when) => {
   // Get current time for timing calculations
@@ -191,14 +193,20 @@ const scheduleSubdivision = useCallback((subIndex, when) => {
     when = now + 0.02; // Ensure at least 20ms in the future (increased from 10ms)
   }
   
-  // CRITICAL: More robust duplicate beat prevention, especially for first beats
-  const minTimeBetweenBeats = subIndex === 0 ? 0.2 : 0.05; // 200ms for first beat, 50ms for others
-  const lastPlayedTime = lastPlayedTimesByIndexRef.current[subIndex] || 0;
-  
-  // Check if this specific subdivision was played too recently
-  if (now - lastPlayedTime < minTimeBetweenBeats) {
-    console.log(`[useMetronomeLogic] Preventing duplicate beat for subdivision ${subIndex} (too soon)`);
-    return; // Skip playing this beat
+  // Skip duplicate beat check if this is the first beat after starting the scheduler
+  if (isFirstBeatAfterStartRef.current && subIndex === 0) {
+    console.log(`[useMetronomeLogic] Playing first beat after start`);
+    isFirstBeatAfterStartRef.current = false; // Reset the flag after playing the first beat
+  } else {
+    // CRITICAL: More robust duplicate beat prevention, especially for first beats
+    const minTimeBetweenBeats = subIndex === 0 ? 0.2 : 0.05; // 200ms for first beat, 50ms for others
+    const lastPlayedTime = lastPlayedTimesByIndexRef.current[subIndex] || 0;
+    
+    // Check if this specific subdivision was played too recently
+    if (now - lastPlayedTime < minTimeBetweenBeats) {
+      console.log(`[useMetronomeLogic] Preventing duplicate beat for subdivision ${subIndex} (too soon)`);
+      return; // Skip playing this beat
+    }
   }
   
   // Update the timestamp for this specific subdivision index
@@ -312,6 +320,12 @@ const scheduleSubdivision = useCallback((subIndex, when) => {
       // Reset the last played beat reference to avoid duplicate beat prevention on start
       lastPlayedBeatRef.current = { time: 0, subIndex: -1 };
     }
+    
+    // Reset lastPlayedTimesByIndexRef to prevent skipping the first beat
+    lastPlayedTimesByIndexRef.current = {};
+    
+    // Set flag to indicate this is the first beat after starting
+    isFirstBeatAfterStartRef.current = true;
     
     // Use provided start time or current time
     const now = audioCtxRef.current.currentTime;
