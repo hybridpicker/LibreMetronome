@@ -1,4 +1,3 @@
-// File: src/components/metronome/SubdivisionSelector.js
 import React from 'react';
 import subdivision1 from '../../assets/svg/subdivision-1.svg';
 import subdivision1Active from '../../assets/svg/subdivision-1Active.svg';
@@ -19,6 +18,8 @@ import subdivision8Active from '../../assets/svg/subdivision-8Active.svg';
 import subdivision9 from '../../assets/svg/subdivision-9.svg';
 import subdivision9Active from '../../assets/svg/subdivision-9Active.svg';
 
+import '../SubdivisionSelector.css';
+
 const icons = [
   { inactive: subdivision1, active: subdivision1Active },
   { inactive: subdivision2, active: subdivision2Active },
@@ -33,7 +34,7 @@ const icons = [
 
 const SubdivisionSelector = ({ subdivisions, onSelect }) => {
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+    <div className="subdivision-container">
       {icons.map((icon, idx) => {
         const subVal = idx + 1;
         const isActive = subVal === subdivisions;
@@ -43,7 +44,7 @@ const SubdivisionSelector = ({ subdivisions, onSelect }) => {
             src={isActive ? icon.active : icon.inactive}
             alt={`Subdivision ${subVal}`}
             onClick={() => onSelect(subVal)}
-            style={{ cursor: 'pointer', width: '36px', height: '36px', margin: '0 3px' }}
+            className="subdivision-button"
           />
         );
       })}
