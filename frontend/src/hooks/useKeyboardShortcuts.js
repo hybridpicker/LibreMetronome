@@ -1,4 +1,3 @@
-// src/hooks/useKeyboardShortcuts.js
 import { useEffect, useRef } from 'react';
 
 const useKeyboardShortcuts = ({
@@ -14,45 +13,67 @@ const useKeyboardShortcuts = ({
   onToggleInfoOverlay,
   onManualTempoIncrease
 }) => {
-  // Store callbacks in refs to ensure latest versions
+  // Speichern der Callback-Funktionen in Refs
   const togglePlayRef = useRef(onTogglePlayPause);
+  const tapTempoRef = useRef(onTapTempo);
   
-  // Keep refs updated with latest callback functions
   useEffect(() => {
     togglePlayRef.current = onTogglePlayPause;
   }, [onTogglePlayPause]);
   
-  // Debounce flag to prevent multiple rapid triggers
+  useEffect(() => {
+    tapTempoRef.current = onTapTempo;
+  }, [onTapTempo]);
+  
+  // Flag zur Verhinderung mehrfacher Trigger
   const isProcessingSpaceRef = useRef(false);
+  const lastSpaceKeyTimeRef = useRef(0);
   
   useEffect(() => {
     const handleKeyDown = (event) => {
-      // Skip if we're in an input field
-      if (event.target.tagName === 'INPUT' || 
-          event.target.tagName === 'TEXTAREA' || 
-          event.target.isContentEditable) {
+      // Falls der Fokus in einem INPUT, TEXTAREA, editierbaren Element oder BUTTON liegt, überspringen
+      if (
+        event.target.tagName === 'INPUT' ||
+        event.target.tagName === 'TEXTAREA' ||
+        event.target.isContentEditable ||
+        event.target.tagName === 'BUTTON'
+      ) {
         return;
       }
-
-      switch (event.code) {
-        case 'Space':
-          if (!isProcessingSpaceRef.current && togglePlayRef.current) {
-            event.preventDefault(); // Prevent page scrolling
-            isProcessingSpaceRef.current = true;
-            
-            // Direct call to the latest function reference
+      
+      if (event.code === 'Space') {
+        if (event.repeat) return;
+        
+        // Zusätzliche Debounce-Logik mit Zeitstempel
+        const now = Date.now();
+        if (now - lastSpaceKeyTimeRef.current < 500) {
+          // Ignoriere Tastendrücke, die zu schnell hintereinander erfolgen (500ms)
+          return;
+        }
+        lastSpaceKeyTimeRef.current = now;
+        
+        console.log("Space key pressed globally. " + (isProcessingSpaceRef.current ? "(Verarbeitung läuft)" : ""));
+        event.preventDefault();
+        
+        if (!isProcessingSpaceRef.current && togglePlayRef.current) {
+          isProcessingSpaceRef.current = true;
+          // Verwende requestAnimationFrame, um sicherzustellen, dass der Aufruf außerhalb des Rendering-Zyklus erfolgt
+          requestAnimationFrame(() => {
             togglePlayRef.current();
-            
-            // Reset the processing flag after a delay
+            // Setze die Sperre nach einer Verzögerung zurück
             setTimeout(() => {
               isProcessingSpaceRef.current = false;
-            }, 200); // Increased debounce time
-          }
-          break;
+            }, 350); // Erhöht von 250ms auf 350ms für mehr Sicherheit
+          });
+        }
+      }
+      
+      // Weitere Shortcuts
+      switch (event.code) {
         case 'KeyT':
-          if (onTapTempo) onTapTempo();
+          console.log("Key T pressed for Tap Tempo.");
+          if (tapTempoRef.current) tapTempoRef.current();
           break;
-        // Number keys for subdivisions
         case 'Digit1': case 'Numpad1':
           if (onSetSubdivisions) onSetSubdivisions(1);
           break;
@@ -80,14 +101,14 @@ const useKeyboardShortcuts = ({
         case 'Digit9': case 'Numpad9':
           if (onSetSubdivisions) onSetSubdivisions(9);
           break;
-        // Tempo adjustment
         case 'ArrowUp':
+        case 'ArrowRight':
           if (onIncreaseTempo) onIncreaseTempo();
           break;
         case 'ArrowDown':
+        case 'ArrowLeft':
           if (onDecreaseTempo) onDecreaseTempo();
           break;
-        // Mode switching
         case 'KeyA':
           if (onSwitchToAnalog) onSwitchToAnalog();
           break;
@@ -103,7 +124,7 @@ const useKeyboardShortcuts = ({
         case 'KeyI':
           if (onToggleInfoOverlay) onToggleInfoOverlay();
           break;
-        case 'Enter':
+        case 'KeyU':
           if (onManualTempoIncrease) onManualTempoIncrease();
           break;
         default:
@@ -111,28 +132,16 @@ const useKeyboardShortcuts = ({
       }
     };
 
-    // Also handle keyup to reset state
-    const handleKeyUp = (event) => {
-      if (event.code === 'Space') {
-        // Don't reset immediately to prevent bounce issues
-        setTimeout(() => {
-          isProcessingSpaceRef.current = false;
-        }, 50);
-      }
-    };
-
     window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
     
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
     };
   }, [
-    onTapTempo, onSetSubdivisions, onIncreaseTempo, onDecreaseTempo,
+    onSetSubdivisions, onIncreaseTempo, onDecreaseTempo,
     onSwitchToAnalog, onSwitchToCircle, onSwitchToGrid, onSwitchToMulti,
     onToggleInfoOverlay, onManualTempoIncrease
-  ]); // Note: togglePlayRef is not in dependencies - we handle it separately
+  ]);
 };
 
 export default useKeyboardShortcuts;
