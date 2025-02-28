@@ -160,6 +160,44 @@ input[type="range"] {
   }
 }
 
+/* Tablet adjustments (between 601px and 1024px) */
+@media (min-width: 601px) and (max-width: 1024px) {
+  /* Show the info button on tablets */
+  .info-button {
+    display: block;
+  }
+  /* Keep tempo slider visible */
+  .tempo-slider {
+    display: block;
+  }
+  /* Adjust tempo buttons for tablet size */
+  .tempo-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+  }
+  /* Tablet-optimized slider size */
+  .slider-item input[type="range"] {
+    height: 30px;
+    width: 100%;
+  }
+}
+
+/* Browser detection for tablets */
+@media (min-width: 601px) and (max-width: 1024px) and (orientation: landscape) {
+  /* Additional adjustments for tablets in landscape mode (likely browser) */
+  .info-button {
+    display: block;
+    /* Make more prominent in browser mode */
+    font-size: 1.1em;
+  }
+  /* Additional browser-specific elements can be shown here */
+  .browser-only-elements {
+    display: block;
+  }
+}
+
 /* Button styling to ensure Lato font is used */
 button {
   font-family: 'Lato', sans-serif;
