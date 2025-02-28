@@ -132,7 +132,6 @@ export default function useMetronomeLogic({
     
     // Ensure the scheduled time is in the future
     if (when <= now) {
-      console.log(`[useMetronomeLogic] Warning: Attempted to schedule sound in the past. Adjusting time from ${when} to ${now + 0.01}`);
       when = now + 0.01; // Ensure at least 10ms in the future
     }
     
@@ -189,13 +188,11 @@ const scheduleSubdivision = useCallback((subIndex, when) => {
   // Ensure the scheduled time is in the future with a larger buffer
   // This prevents scheduling sounds in the past which can cause timing issues
   if (when < now) {
-    console.log(`[useMetronomeLogic] Adjusting scheduled time from ${when} to ${now + 0.02} (current: ${now})`);
     when = now + 0.02; // Ensure at least 20ms in the future (increased from 10ms)
   }
   
   // Skip duplicate beat check if this is the first beat after starting the scheduler
   if (isFirstBeatAfterStartRef.current && subIndex === 0) {
-    console.log(`[useMetronomeLogic] Playing first beat after start`);
     isFirstBeatAfterStartRef.current = false; // Reset the flag after playing the first beat
   } else {
     // CRITICAL: More robust duplicate beat prevention, especially for first beats
@@ -204,7 +201,6 @@ const scheduleSubdivision = useCallback((subIndex, when) => {
     
     // Check if this specific subdivision was played too recently
     if (now - lastPlayedTime < minTimeBetweenBeats) {
-      console.log(`[useMetronomeLogic] Preventing duplicate beat for subdivision ${subIndex} (too soon)`);
       return; // Skip playing this beat
     }
   }
@@ -253,7 +249,7 @@ const scheduleSubdivision = useCallback((subIndex, when) => {
     
     // Log scheduling for debugging in multi circle mode
     if (multiCircleMode && subIndex === 0) {
-      console.log(`[useMetronomeLogic] Scheduled first beat at ${when}, current time: ${now}, delta: ${when - now}`);
+      // Scheduling first beat in multi circle mode
     }
   }
 }, [analogMode, gridMode, multiCircleMode, schedulePlay, shouldMuteThisBeat, updateActualBpm]);
@@ -339,8 +335,6 @@ const scheduleSubdivision = useCallback((subIndex, when) => {
     // Use a more precise lookahead interval for better timing
     lookaheadRef.current = setInterval(scheduler, 20); // Reduced from 25ms to 20ms for better precision
     schedulerRunningRef.current = true;
-    
-    console.log(`[useMetronomeLogic] Scheduler started at time: ${nextNoteTimeRef.current}, current time: ${now}`);
   }, [stopScheduler, scheduler, getCurrentSubIntervalSec, multiCircleMode]);
 
   const tapTimesRef = useRef([]);
@@ -368,7 +362,6 @@ const scheduleSubdivision = useCallback((subIndex, when) => {
       try {
         globalAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
       } catch (err) {
-        console.error("Web Audio API not supported:", err);
         return;
       }
     }
@@ -381,7 +374,7 @@ const scheduleSubdivision = useCallback((subIndex, when) => {
         })
         .then((arrBuffer) => audioCtxRef.current.decodeAudioData(arrBuffer))
         .then(decoded => callback(decoded))
-        .catch(err => console.error(`Error loading ${url}:`, err));
+        .catch(err => {});
     };
     loadSound('/assets/audio/click_new.mp3', (buf) => { normalBufferRef.current = buf; });
     loadSound('/assets/audio/click_new_accent.mp3', (buf) => { accentBufferRef.current = buf; });

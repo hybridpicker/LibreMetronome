@@ -84,11 +84,8 @@ function ActiveCircleMetronome({
     beatMultiplier: settings.beatMode === "quarter" ? 1 : 2
   });
 
-  console.log("[ActiveCircleMetronome] Mounted. Settings:", settings);
-
   useEffect(() => {
     if (onLogicReady && logic.audioCtx) {
-      console.log("[ActiveCircleMetronome] AudioContext ready");
       onLogicReady(logic.audioCtx);
     }
   }, [logic.audioCtx, onLogicReady]);
@@ -97,22 +94,18 @@ function ActiveCircleMetronome({
   const didStartRef = useRef(false);
   useEffect(() => {
     if (isPaused) {
-      console.log("[ActiveCircleMetronome] Paused. Stopping scheduler.");
       logic.stopScheduler();
       didStartRef.current = false;
     } else if (!didStartRef.current) {
       if (logic.audioCtx && logic.audioCtx.state === "suspended") {
-        console.log("[ActiveCircleMetronome] Resuming audio context...");
         logic.audioCtx
           .resume()
           .then(() => {
-            console.log("[ActiveCircleMetronome] AudioContext resumed. Starting scheduler.");
             logic.startScheduler();
             didStartRef.current = true;
           })
-          .catch((err) => console.error("[ActiveCircleMetronome] Error resuming:", err));
+          .catch((err) => {});
       } else {
-        console.log("[ActiveCircleMetronome] Starting scheduler.");
         logic.startScheduler();
         didStartRef.current = true;
       }
@@ -140,7 +133,6 @@ function ActiveCircleMetronome({
       !isPaused &&
       onMeasureComplete
     ) {
-      console.log("[ActiveCircleMetronome] Measure complete.");
       measureFiredRef.current = true;
       onMeasureComplete();
     }
@@ -187,7 +179,6 @@ function ActiveCircleMetronome({
           alt={`Beat ${bd.i}`}
           onClick={() => {
             if (i !== 0 && onAccentChange) {
-              console.log("[ActiveCircleMetronome] Updating accent for beat", bd.i);
               onAccentChange(bd.i);
             }
           }}
@@ -209,7 +200,6 @@ function ActiveCircleMetronome({
 // MultiCircleMetronome Component
 // ---------------------
 export default function MultiCircleMetronome(props) {
-  console.log("[MultiCircleMetronome] Mounted with props:", props);
   const [circleSettings, setCircleSettings] = useState([
     {
       subdivisions: props.subdivisions || 4,
@@ -229,7 +219,6 @@ export default function MultiCircleMetronome(props) {
 
   // Add a new circle.
   const addCircle = () => {
-    console.log("[MultiCircleMetronome] Adding new circle");
     setCircleSettings((prev) => [
       ...prev,
       {
@@ -244,7 +233,6 @@ export default function MultiCircleMetronome(props) {
 
   // Switch active circle on preview click.
   const onCircleClick = (index) => {
-    console.log("[MultiCircleMetronome] Switching active circle to index", index);
     setActiveCircle(index);
   };
 
@@ -283,7 +271,6 @@ export default function MultiCircleMetronome(props) {
 
   // Update accent on beat click.
   const updateAccent = (beatIndex) => {
-    console.log("[MultiCircleMetronome] Updating accent for beat", beatIndex);
     setCircleSettings((prev) => {
       const updated = [...prev];
       const acc = [...updated[activeCircle].accents];
@@ -301,7 +288,6 @@ export default function MultiCircleMetronome(props) {
       prevSubdivisionRef.current !== logic.currentSubdivision &&
       logic.currentSubdivision === 0
     ) {
-      console.log("[MultiCircleMetronome] Measure ended. Auto-switching active circle.");
       setActiveCircle((prev) => (prev + 1) % circleSettings.length);
       schedulerStartedRef.current = false;
     }
@@ -516,35 +502,26 @@ export default function MultiCircleMetronome(props) {
 
   // Handle play/pause with proper suspend/resume.
   const handlePlayPause = useCallback(() => {
-    console.log("[MultiCircleMetronome] handlePlayPause invoked. Current isPaused:", props.isPaused);
     props.setIsPaused((prev) => {
       if (prev) {
-        console.log("[MultiCircleMetronome] Resuming play.");
         if (logic.audioCtx && logic.audioCtx.state === "suspended") {
           logic.audioCtx
             .resume()
             .then(() => {
-              console.log("[MultiCircleMetronome] AudioContext resumed. Starting scheduler.");
               logic.startScheduler();
             })
-            .catch((err) =>
-              console.error("[MultiCircleMetronome] Error resuming audio:", err)
-            );
+            .catch((err) => {});
         } else {
-          console.log("[MultiCircleMetronome] Starting scheduler.");
           logic.startScheduler();
         }
         return false;
       } else {
-        console.log("[MultiCircleMetronome] Pausing play. Stopping scheduler and suspending audio.");
         logic.stopScheduler();
         if (logic.audioCtx && logic.audioCtx.state === "running") {
           logic.audioCtx
             .suspend()
-            .then(() => console.log("[MultiCircleMetronome] AudioContext suspended."))
-            .catch((err) =>
-              console.error("[MultiCircleMetronome] Error suspending audio:", err)
-            );
+            .then(() => {})
+            .catch((err) => {});
         }
         return true;
       }
