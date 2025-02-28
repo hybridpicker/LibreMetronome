@@ -1,4 +1,4 @@
-// File: src/hooks/useKeyboardShortcuts.js
+// src/hooks/useKeyboardShortcuts.js
 import { useEffect, useRef } from 'react';
 
 const useKeyboardShortcuts = ({
@@ -12,84 +12,127 @@ const useKeyboardShortcuts = ({
   onSwitchToGrid,
   onSwitchToMulti,
   onToggleInfoOverlay,
-  onManualTempoIncrease,
+  onManualTempoIncrease
 }) => {
-  // Extremely robust debounce for play/pause
-  const isProcessingRef = useRef(false);
-  const lastToggleTimeRef = useRef(0);
-  const DEBOUNCE_MS = 500; // Increased from 300ms to 500ms
-
+  // Store callbacks in refs to ensure latest versions
+  const togglePlayRef = useRef(onTogglePlayPause);
+  
+  // Keep refs updated with latest callback functions
   useEffect(() => {
-    const handleKeydown = (e) => {
-      if (e.repeat) return;
-      
-      if (e.code === 'Space') {
-        // Prevent default to avoid page scrolling
-        e.preventDefault();
-        
-        // Extremely robust debounce for play/pause
-        const now = Date.now();
-        if (now - lastToggleTimeRef.current < DEBOUNCE_MS || isProcessingRef.current) {
-          return;
-        }
-        
-        // Set processing flag to prevent multiple calls
-        isProcessingRef.current = true;
-        lastToggleTimeRef.current = now;
-        
-        // CRITICAL: Use a longer delay to ensure we're not interfering with any ongoing processes
-        
-        // Use a much longer delay to ensure we're not interfering with any ongoing processes
-        setTimeout(() => {
-          if (onTogglePlayPause) {
-            onTogglePlayPause();
-          }
-          
-          // Release the processing flag after a much longer delay
-          setTimeout(() => {
-            isProcessingRef.current = false;
-          }, 300); // Increased from 100ms to 300ms
-        }, 100); // Increased from 10ms to 100ms
-        
+    togglePlayRef.current = onTogglePlayPause;
+  }, [onTogglePlayPause]);
+  
+  // Debounce flag to prevent multiple rapid triggers
+  const isProcessingSpaceRef = useRef(false);
+  
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      // Skip if we're in an input field
+      if (event.target.tagName === 'INPUT' || 
+          event.target.tagName === 'TEXTAREA' || 
+          event.target.isContentEditable) {
         return;
       }
-      switch (e.code) {
-        case 'ArrowRight':
-          onIncreaseTempo && onIncreaseTempo();
+
+      switch (event.code) {
+        case 'Space':
+          if (!isProcessingSpaceRef.current && togglePlayRef.current) {
+            event.preventDefault(); // Prevent page scrolling
+            isProcessingSpaceRef.current = true;
+            
+            // Direct call to the latest function reference
+            togglePlayRef.current();
+            
+            // Reset the processing flag after a delay
+            setTimeout(() => {
+              isProcessingSpaceRef.current = false;
+            }, 200); // Increased debounce time
+          }
           break;
-        case 'ArrowLeft':
-          onDecreaseTempo && onDecreaseTempo();
+        case 'KeyT':
+          if (onTapTempo) onTapTempo();
           break;
-        default: {
-          const key = e.key.toLowerCase();
-          if (key === 't') onTapTempo && onTapTempo();
-          else if (key >= '1' && key <= '9') onSetSubdivisions && onSetSubdivisions(parseInt(e.key, 10));
-          else if (key === 'a') onSwitchToAnalog && onSwitchToAnalog();
-          else if (key === 'c') onSwitchToCircle && onSwitchToCircle();
-          else if (key === 'g') onSwitchToGrid && onSwitchToGrid();
-          else if (key === 'm') onSwitchToMulti && onSwitchToMulti();
-          else if (key === 'i') onToggleInfoOverlay && onToggleInfoOverlay();
-          else if (key === 'u') onManualTempoIncrease && onManualTempoIncrease();
+        // Number keys for subdivisions
+        case 'Digit1': case 'Numpad1':
+          if (onSetSubdivisions) onSetSubdivisions(1);
           break;
-        }
+        case 'Digit2': case 'Numpad2':
+          if (onSetSubdivisions) onSetSubdivisions(2);
+          break;
+        case 'Digit3': case 'Numpad3':
+          if (onSetSubdivisions) onSetSubdivisions(3);
+          break;
+        case 'Digit4': case 'Numpad4':
+          if (onSetSubdivisions) onSetSubdivisions(4);
+          break;
+        case 'Digit5': case 'Numpad5':
+          if (onSetSubdivisions) onSetSubdivisions(5);
+          break;
+        case 'Digit6': case 'Numpad6':
+          if (onSetSubdivisions) onSetSubdivisions(6);
+          break;
+        case 'Digit7': case 'Numpad7':
+          if (onSetSubdivisions) onSetSubdivisions(7);
+          break;
+        case 'Digit8': case 'Numpad8':
+          if (onSetSubdivisions) onSetSubdivisions(8);
+          break;
+        case 'Digit9': case 'Numpad9':
+          if (onSetSubdivisions) onSetSubdivisions(9);
+          break;
+        // Tempo adjustment
+        case 'ArrowUp':
+          if (onIncreaseTempo) onIncreaseTempo();
+          break;
+        case 'ArrowDown':
+          if (onDecreaseTempo) onDecreaseTempo();
+          break;
+        // Mode switching
+        case 'KeyA':
+          if (onSwitchToAnalog) onSwitchToAnalog();
+          break;
+        case 'KeyC':
+          if (onSwitchToCircle) onSwitchToCircle();
+          break;
+        case 'KeyG':
+          if (onSwitchToGrid) onSwitchToGrid();
+          break;
+        case 'KeyM':
+          if (onSwitchToMulti) onSwitchToMulti();
+          break;
+        case 'KeyI':
+          if (onToggleInfoOverlay) onToggleInfoOverlay();
+          break;
+        case 'Enter':
+          if (onManualTempoIncrease) onManualTempoIncrease();
+          break;
+        default:
+          break;
       }
     };
 
-    window.addEventListener('keydown', handleKeydown);
-    return () => window.removeEventListener('keydown', handleKeydown);
+    // Also handle keyup to reset state
+    const handleKeyUp = (event) => {
+      if (event.code === 'Space') {
+        // Don't reset immediately to prevent bounce issues
+        setTimeout(() => {
+          isProcessingSpaceRef.current = false;
+        }, 50);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
   }, [
-    onTogglePlayPause,
-    onTapTempo,
-    onSetSubdivisions,
-    onIncreaseTempo,
-    onDecreaseTempo,
-    onSwitchToAnalog,
-    onSwitchToCircle,
-    onSwitchToGrid,
-    onSwitchToMulti,
-    onToggleInfoOverlay,
-    onManualTempoIncrease,
-  ]);
+    onTapTempo, onSetSubdivisions, onIncreaseTempo, onDecreaseTempo,
+    onSwitchToAnalog, onSwitchToCircle, onSwitchToGrid, onSwitchToMulti,
+    onToggleInfoOverlay, onManualTempoIncrease
+  ]); // Note: togglePlayRef is not in dependencies - we handle it separately
 };
 
 export default useKeyboardShortcuts;
