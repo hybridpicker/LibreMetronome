@@ -1,0 +1,66 @@
+/* src/components/MultiCircleMetronome.css */
+
+.multi-circle-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin: 20px auto;
+  }
+  
+  .metronome-circle {
+    position: relative;
+    border-radius: 50%;
+    margin: 15px 0;
+    box-sizing: border-box;
+    aspect-ratio: 1/1;
+    overflow: visible;
+  }
+  
+  .metronome-circle-active {
+    box-shadow: 0 0 0 3px #00A0A0, 0 0 10px rgba(0, 160, 160, 0.6);
+  }
+  
+  .metronome-circle-playing {
+    box-shadow: 0 0 0 3px #FFD700, 0 0 10px rgba(255, 215, 0, 0.6);
+  }
+  
+  .add-circle-button {
+    position: relative;
+    border-radius: 50%;
+    border: 2px dashed #00A0A0;
+    margin: 15px 0;
+    box-sizing: border-box;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    aspect-ratio: 1/1;
+  }
+  
+  .plus-button {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #00A0A0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    font-size: 36px;
+    font-weight: bold;
+    box-shadow: 0 0 8px rgba(0, 160, 160, 0.5);
+  }
+  
+  .beat-icon {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    transition: filter 0.15s cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+  
+  .beat-icon-active {
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.7));
+  }
