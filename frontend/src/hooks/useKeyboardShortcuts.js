@@ -16,11 +16,16 @@ const useKeyboardShortcuts = ({
 }) => {
   // Store callbacks in refs to ensure latest versions
   const togglePlayRef = useRef(onTogglePlayPause);
+  const tapTempoRef = useRef(onTapTempo);
   
   // Keep refs updated with latest callback functions
   useEffect(() => {
     togglePlayRef.current = onTogglePlayPause;
   }, [onTogglePlayPause]);
+  
+  useEffect(() => {
+    tapTempoRef.current = onTapTempo;
+  }, [onTapTempo]);
   
   // Debounce flag to prevent multiple rapid triggers
   const isProcessingSpaceRef = useRef(false);
@@ -40,17 +45,20 @@ const useKeyboardShortcuts = ({
             event.preventDefault(); // Prevent page scrolling
             isProcessingSpaceRef.current = true;
             
-            // Direct call to the latest function reference
-            togglePlayRef.current();
-            
-            // Reset the processing flag after a delay
+            // Use setTimeout to avoid potential setState during render issues
             setTimeout(() => {
-              isProcessingSpaceRef.current = false;
-            }, 200); // Increased debounce time
+              // Direct call to the latest function reference
+              togglePlayRef.current();
+              
+              // Reset the processing flag after a delay
+              setTimeout(() => {
+                isProcessingSpaceRef.current = false;
+              }, 200); // Increased debounce time
+            }, 10);
           }
           break;
         case 'KeyT':
-          if (onTapTempo) onTapTempo();
+          if (tapTempoRef.current) tapTempoRef.current();
           break;
         // Number keys for subdivisions
         case 'Digit1': case 'Numpad1':
@@ -82,9 +90,11 @@ const useKeyboardShortcuts = ({
           break;
         // Tempo adjustment
         case 'ArrowUp':
+        case 'ArrowRight':
           if (onIncreaseTempo) onIncreaseTempo();
           break;
         case 'ArrowDown':
+        case 'ArrowLeft':
           if (onDecreaseTempo) onDecreaseTempo();
           break;
         // Mode switching
@@ -103,7 +113,7 @@ const useKeyboardShortcuts = ({
         case 'KeyI':
           if (onToggleInfoOverlay) onToggleInfoOverlay();
           break;
-        case 'Enter':
+        case 'KeyU':
           if (onManualTempoIncrease) onManualTempoIncrease();
           break;
         default:
@@ -129,7 +139,7 @@ const useKeyboardShortcuts = ({
       window.removeEventListener('keyup', handleKeyUp);
     };
   }, [
-    onTapTempo, onSetSubdivisions, onIncreaseTempo, onDecreaseTempo,
+    onSetSubdivisions, onIncreaseTempo, onDecreaseTempo,
     onSwitchToAnalog, onSwitchToCircle, onSwitchToGrid, onSwitchToMulti,
     onToggleInfoOverlay, onManualTempoIncrease
   ]); // Note: togglePlayRef is not in dependencies - we handle it separately
