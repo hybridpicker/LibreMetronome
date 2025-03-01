@@ -337,26 +337,18 @@ export default function AdvancedMetronomeWithCircle({
               currentSubIndex={logic.currentSubdivision}
             />
             <button
-              className="play-pause-button-overlay"
+              className="play-pause-button"
               onClick={handlePlayPause}
-              style={{
-                position: 'absolute',
-                left: '50%',
-                top: '85%',
-                transform: 'translate(-50%, -50%)',
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                zIndex: 10,
-                outline: 'none' // Removed outline/border
-              }}
+              data-mode="analog"
               aria-label="Toggle play/pause"
             >
-              <img
-                src={isPaused ? playIcon : pauseIcon}
-                alt={isPaused ? 'Play' : 'Pause'}
-                style={{ width: '36px', height: '36px', objectFit: 'contain' }}
-              />
+              <div className="play-pause-icon-container">
+                <img
+                  src={isPaused ? playIcon : pauseIcon}
+                  alt={isPaused ? 'Play' : 'Pause'}
+                  className="play-pause-icon"
+                />
+              </div>
             </button>
           </>
         ) : (
@@ -382,26 +374,18 @@ export default function AdvancedMetronomeWithCircle({
             />
           ))}
             <button
-              className="play-pause-button-overlay"
+              className="play-pause-button"
               onClick={handlePlayPause}
-              style={{
-                position: 'absolute',
-                left: '50%',
-                top: '50%',
-                transform: 'translate(-50%, -50%)',
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                zIndex: 10,
-                outline: 'none' // Removed outline/border
-              }}
+              data-mode="normal"
               aria-label="Toggle play/pause"
             >
-              <img
-                src={isPaused ? playIcon : pauseIcon}
-                alt={isPaused ? 'Play' : 'Pause'}
-                style={{ width: '36px', height: '36px', objectFit: 'contain' }}
-              />
+              <div className="play-pause-icon-container">
+                <img
+                  src={isPaused ? playIcon : pauseIcon}
+                  alt={isPaused ? 'Play' : 'Pause'}
+                  className="play-pause-icon"
+                />
+              </div>
             </button>
           </>
         )}

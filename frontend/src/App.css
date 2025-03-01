@@ -308,3 +308,124 @@ button[aria-label="Tap Tempo"]:active {
     justify-content: center;
   }
 }
+
+/* Mode selection buttons styling */
+.mode-selector {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.mode-button {
+  padding: 10px 16px;
+  font-size: 15px;
+  border-radius: 8px;
+  border: none;
+  background-color: #e8e8e8;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  font-family: 'Lato', sans-serif;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.mode-button:hover {
+  background-color: #f8d38d;
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.mode-button-active {
+  background-color: #00A0A0;
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 160, 160, 0.3);
+}
+
+.mode-button-active:hover {
+  background-color: #008e8e;
+  color: white;
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 600px) {
+  .mode-selector {
+    gap: 6px;
+  }
+  
+  .mode-button {
+    padding: 8px 12px;
+    font-size: 14px;
+    flex: 1 0 calc(50% - 6px);
+    max-width: calc(50% - 6px);
+    text-align: center;
+  }
+}
+/* Play/Pause button styling */
+/* Play/Pause button styling - Minimal version with scaling */
+.play-pause-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  outline: none;
+  z-index: 10;
+}
+
+.play-pause-icon {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+.play-pause-button:hover .play-pause-icon {
+  transform: scale(1.15);
+  filter: drop-shadow(0 2px 4px rgba(0, 160, 160, 0.3));
+}
+
+.play-pause-button:active .play-pause-icon {
+  transform: scale(1.05);
+}
+
+/* Specific styles for center-positioned play/pause button */
+.metronome-container .play-pause-button {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Specific styles for analog mode (positioned at bottom) */
+.metronome-container .play-pause-button[data-mode="analog"] {
+  position: absolute;
+  left: 50%;
+  top: 85%;
+  transform: translate(-50%, -50%);
+}
+
+/* Mobile adjustments */
+@media (max-width: 600px) {
+  .play-pause-icon {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+/* Specific styles for multi-circle mode play/pause button */
+.play-pause-button {
+  transform-origin: center center;
+}
+
+/* This targets the button outside of the metronome container (which is how it's positioned in multi-circle mode) */
+div > div > .play-pause-button:hover {
+  transform: scale(1.15);
+}
+
+div > div > .play-pause-button:active {
+  transform: scale(1.05);
+}
