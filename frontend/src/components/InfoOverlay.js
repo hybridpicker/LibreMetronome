@@ -49,8 +49,12 @@ const InfoModal = ({ onClose }) => {
 
 // Info button that is always visible
 const InfoButton = ({ onClick, active }) => (
-  <button className={`info-button ${active ? 'info-button-active' : ''}`} onClick={onClick} aria-label="Toggle Info Overlay">
-    <img src={infoButtonIcon} alt="Info" />
+  <button 
+    className={`info-button ${active ? 'info-button-active' : ''}`} 
+    onClick={onClick} 
+    aria-label="Toggle Info Overlay"
+  >
+    Info
   </button>
 );
 

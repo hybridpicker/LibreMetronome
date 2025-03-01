@@ -270,15 +270,24 @@ export default function AdvancedMetronomeWithCircle({
       const mx = (bd.xPos + bd2.xPos) / 2;
       const my = (bd.yPos + bd2.yPos) / 2;
       const theta = (Math.atan2(dy, dx) * 180) / Math.PI;
+      
+      // Enhanced styling with teal color matching the app's theme
       return (
         <div
           key={index}
           className="line-connection"
           style={{
             width: `${dist}px`,
+            height: "1px",
+            backgroundColor: "#00A0A0", // Teal green color (already used in the app)
             left: `calc(50% + ${mx}px - ${dist / 2}px)`,
-            top: `calc(50% + ${my}px - 1px)`,
-            transform: `rotate(${theta}deg)`
+            top: `calc(50% + ${my}px)`,
+            transform: `rotate(${theta}deg)`,
+            position: "absolute",
+            pointerEvents: "none",
+            transformOrigin: "center center",
+            boxShadow: "0 0 3px rgba(0, 160, 160, 0.6)", // Subtle teal glow
+            transition: "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)" // Smooth transitions
           }}
         />
       );
@@ -354,19 +363,24 @@ export default function AdvancedMetronomeWithCircle({
           <>
             {lineConnections}
             {beatData.map((bd) => (
-              <img
-                key={bd.i}
-                src={bd.icon}
-                alt={`Beat ${bd.i}`}
-                className="beat-icon"
-                onClick={() => { effectiveToggleAccent(bd.i); }}
-                style={{
-                  left: `calc(50% + ${bd.xPos}px - 12px)`,
-                  top: `calc(50% + ${bd.yPos}px - 12px)`,
-                  opacity: effectiveAccents[bd.i] === 0 ? 0.3 : 1
-                }}
-              />
-            ))}
+            <img
+              key={bd.i}
+              src={bd.icon}
+              alt={`Beat ${bd.i}`}
+              className="beat-icon"
+              onClick={() => { effectiveToggleAccent(bd.i); }}
+              style={{
+                left: `calc(50% + ${bd.xPos}px - 12px)`,
+                top: `calc(50% + ${bd.yPos}px - 12px)`,
+                opacity: effectiveAccents[bd.i] === 0 ? 0.3 : 1,
+                transition: "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
+                filter: logic.currentSubdivision === bd.i && !isPaused ? 
+                      "drop-shadow(0 0 5px rgba(248, 211, 141, 0.8))" : "none",
+                transform: logic.currentSubdivision === bd.i && !isPaused ? 
+                          "scale(1.05)" : "scale(1)"
+              }}
+            />
+          ))}
             <button
               className="play-pause-button-overlay"
               onClick={handlePlayPause}

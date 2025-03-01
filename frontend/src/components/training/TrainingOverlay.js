@@ -144,7 +144,10 @@ const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings, setMode
           )}
         </div>
 
-        <button className="training-save-button" onClick={handleSave}>
+        <button 
+          className="training-save-button" 
+          onClick={handleSave}
+        >
           Save Settings
         </button>
       </div>
@@ -157,8 +160,12 @@ const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings, setMode
  */
 const TrainingButton = ({ onClick, active }) => {
   return (
-    <button className="training-button" onClick={onClick} aria-label="Toggle Training Overlay">
-      <img src={active ? trainingButtonOnIcon : trainingButtonIcon} alt="Training" />
+    <button 
+      className={`training-button ${active ? 'training-button-active' : ''}`}
+      onClick={onClick} 
+      aria-label="Toggle Training Overlay"
+    >
+      Training
     </button>
   );
 };
