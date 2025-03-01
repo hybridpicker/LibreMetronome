@@ -95,10 +95,10 @@ const GridModeMetronome = (props) => {
     };
   }, [props.isPaused, animateCurrentBeat]);
 
-  // Enhanced Grid Rendering with Lighter Gold Theme
-  const squareSize = 60; // Slightly larger squares
-  const gapSize = 8; // Add space between columns for better visual separation
-  const gridWidth = props.subdivisions * (squareSize + gapSize) - gapSize; // Calculate total width with gaps
+  // UPDATED: Reduced square size and adjusted spacing
+  const squareSize = 50; // Reduced from 60 to 50
+  const gapSize = 6; // Reduced from 8 to 6
+  const gridWidth = props.subdivisions * (squareSize + gapSize) - gapSize;
   
   // Lighter Gold Color Palette based on #f8d38d
   const colors = {
@@ -147,7 +147,7 @@ const GridModeMetronome = (props) => {
           const isHighlighted = isCurrentBeat && isActive;
           
           // Calculate position from top to bottom (first row is at the top)
-          const yPosition = rowIndex * squareSize;
+          const yPosition = rowIndex * (squareSize + 2); // Added 2px vertical spacing
           
           // Select appropriate color based on state
           let fillColor = isActive ? 
@@ -188,12 +188,12 @@ const GridModeMetronome = (props) => {
         {/* Add column number label at the bottom */}
         <text
           x={squareSize / 2}
-          y={3 * squareSize + 20}
+          y={3 * (squareSize + 2) + 16} // Adjusted for new spacing
           textAnchor="middle"
           fill={colIndex === 0 ? "#f5bc5e" : "#666"}
           style={{
             fontFamily: "'Lato', sans-serif",
-            fontSize: "14px",
+            fontSize: "12px", // Reduced font size
             fontWeight: colIndex === 0 ? "bold" : "normal"
           }}
         >
@@ -265,12 +265,12 @@ const GridModeMetronome = (props) => {
           transformOrigin: 'top left',
           transform: scale < 1 ? `scale(${scale})` : 'none',
           width: gridWidth,
-          height: squareSize * 3 + 30,
+          height: (squareSize * 3) + (2 * 2) + 30, // Adjusted for new spacing
           margin: scale < 1 ? 'none' : '0 auto'
         }}>
           <svg
             width={gridWidth}
-            height={squareSize * 3 + 30}
+            height={(squareSize * 3) + (2 * 2) + 30} // Adjusted for new spacing
             style={{ display: 'block' }}
           >
             {gridSquares}
@@ -285,20 +285,17 @@ const GridModeMetronome = (props) => {
             background: 'transparent', 
             border: 'none', 
             cursor: 'pointer',
-            borderRadius: '50%',
             padding: '10px',
             transition: 'all 0.2s ease',
-            boxShadow: '0 0 0 transparent'
+            outline: 'none' // Remove outline/border
           }}
           className="play-button"
           aria-label="Toggle play/pause"
           onMouseOver={(e) => {
-            e.currentTarget.style.boxShadow = '0 0 10px rgba(248, 201, 120, 0.5)';
             const img = e.currentTarget.querySelector('img');
             if (img) img.style.transform = 'scale(1.1)';
           }}
           onMouseOut={(e) => {
-            e.currentTarget.style.boxShadow = '0 0 0 transparent';
             const img = e.currentTarget.querySelector('img');
             if (img) img.style.transform = 'scale(1)';
           }}
@@ -373,8 +370,8 @@ const GridModeMetronome = (props) => {
             border: 'none', 
             cursor: 'pointer', 
             marginTop: '20px',
-            borderRadius: '50%',
-            padding: '10px'
+            padding: '10px',
+            outline: 'none' // Remove outline/border
           }}
           aria-label="Tap Tempo"
           onMouseOver={(e) => {
