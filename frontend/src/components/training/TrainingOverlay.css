@@ -20,6 +20,8 @@
   text-align: left;
   position: relative;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Shadow for depth */
+  max-height: 90vh; /* Limit height on small screens */
+  overflow-y: auto; /* Add scrolling when needed */
 }
 
 .training-close-button {
@@ -39,6 +41,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 10; /* Make sure it's clickable */
 }
 
 .training-close-button:hover {
@@ -114,6 +117,7 @@
   border-radius: 4px;
   padding: 5px;
   margin-left: 10px;
+  max-width: 100px; /* Limit width for smaller screens */
 }
 
 /* Modern styling for select fields */
@@ -135,7 +139,50 @@ select {
 
 /* Smartphone adjustments (max-width: 600px) */
 @media (max-width: 600px) {
+  /* Updated to maintain visibility on mobile */
   .training-button {
-    display: none;
+    display: block; /* Changed from none to block */
+    top: 10px;
+    left: auto; /* Reset left position */
+    right: 10px; /* Position at right side */
+    padding: 6px 8px;
+    min-width: 60px;
+    font-size: 12px;
+    z-index: 1001; /* Make sure it appears above other elements */
+  }
+  
+  .training-modal {
+    width: 85%;
+    padding: 15px;
+    max-height: 80vh;
+  }
+  
+  .training-modal h2 {
+    font-size: 18px;
+    margin-right: 30px; /* Make room for close button */
+  }
+  
+  .training-section h3 {
+    font-size: 16px;
+  }
+  
+  .training-options label {
+    font-size: 14px;
+    margin: 10px 0;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .training-options label input,
+  .training-options select {
+    margin: 5px 0 0 0;
+    width: 100%;
+    max-width: none;
+  }
+  
+  select {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 5px;
   }
 }
