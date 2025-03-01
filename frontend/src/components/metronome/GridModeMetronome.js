@@ -3,6 +3,7 @@ import useMetronomeLogic from '../../hooks/useMetronomeLogic';
 import playIcon from '../../assets/svg/play.svg';
 import pauseIcon from '../../assets/svg/pause.svg';
 import tapButtonIcon from '../../assets/svg/tap-button.svg';
+import './GridMode/GridAnimation.css';
 
 const GridModeMetronome = (props) => {
   // Initialize gridConfig based on the current subdivisions (1 to 9)
@@ -106,7 +107,7 @@ const GridModeMetronome = (props) => {
     level1: "#fae3ad",   // Lighter version of base gold color
     level2: "#f8d38d",   // Base gold color (as specified)
     level3: "#f5c26d",   // Slightly darker, but still bright
-    highlight: "#fff5e0"  // Very light highlight color
+    highlight: "#f9d69a"  // FIXED: Softer highlight color (was too bright)
   };
   
   // First column (first beat) gets a warmer gold
@@ -115,7 +116,7 @@ const GridModeMetronome = (props) => {
     level1: "#fcd592",   // Warmer but light
     level2: "#f8c978",   // Warmer medium
     level3: "#f5bc5e",   // Warmer but still bright
-    highlight: "#fff5e0"  // Same highlight
+    highlight: "#f7ca80"  // FIXED: Softer highlight color (was too bright)
   };
   
   // Render grid as an SVG with enhanced styling
@@ -175,11 +176,14 @@ const GridModeMetronome = (props) => {
               strokeWidth={isHighlighted ? 2 : 0}
               style={{
                 opacity: isActive ? 1 : 0.3,
-                transition: 'all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)',
-                transform: isHighlighted ? 'scale(1.05)' : 'scale(1)',
+                // FIXED: Reduced scale animation and improved transition
+                transition: 'all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)',
+                transform: isHighlighted ? 'scale(1.03)' : 'scale(1)', // FIXED: Reduced from 1.05 to 1.03
                 transformOrigin: 'center center',
-                boxShadow: isHighlighted ? '0 0 10px rgba(248, 211, 141, 0.8)' : 'none',
-                filter: isHighlighted ? 'brightness(1.1)' : 'none'
+                // FIXED: Reduced shadow intensity
+                boxShadow: isHighlighted ? '0 0 6px rgba(248, 211, 141, 0.5)' : 'none', // Reduced from 10px to 6px
+                // FIXED: Removed brightness filter which was making colors too intense
+                filter: isHighlighted ? 'none' : 'none' // Removed brightness filter
               }}
             />
           );
