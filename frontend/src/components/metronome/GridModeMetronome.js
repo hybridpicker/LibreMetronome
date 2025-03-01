@@ -3,16 +3,6 @@ import useMetronomeLogic from '../../hooks/useMetronomeLogic';
 import playIcon from '../../assets/svg/play.svg';
 import pauseIcon from '../../assets/svg/pause.svg';
 import tapButtonIcon from '../../assets/svg/tap-button.svg';
-import squareActive from '../../assets/svg/grid/square_active.svg';
-import squareActivePlay from '../../assets/svg/grid/square_active_play.svg.svg';
-import squareInactive from '../../assets/svg/grid/square_inactive.svg';
-
-// Create a local object for the icons
-const subdivisionIcons = {
-  squareActive,
-  squareActivePlay,
-  squareInactive
-};
 
 const GridModeMetronome = (props) => {
   // Initialize gridConfig based on the current subdivisions (1 to 9)
@@ -57,12 +47,16 @@ const GridModeMetronome = (props) => {
     beatMultiplier: props.beatMultiplier
   });
 
-  // When a column is clicked, cycle that column's configuration.
+  // Modified column click handler to cycle through patterns:
+  // First row → First two rows → All three rows → No rows
   const handleColumnClick = useCallback((colIndex) => {
-    if (colIndex === 0) return;
+    if (colIndex === 0) return; // First column is fixed
+    
     setGridConfig((prev) => {
       const newConfig = [...prev];
+      // Cycle through the patterns: 1 → 2 → 3 → 0
       newConfig[colIndex] = (newConfig[colIndex] + 1) % 4;
+      
       if (props.updateAccents) props.updateAccents(newConfig);
       return newConfig;
     });
@@ -101,38 +95,110 @@ const GridModeMetronome = (props) => {
     };
   }, [props.isPaused, animateCurrentBeat]);
 
-  // Render grid as an SVG where each column represents a subdivision.
-  const squareSize = 50;
+  // Enhanced Grid Rendering with Lighter Gold Theme
+  const squareSize = 60; // Slightly larger squares
+  const gapSize = 8; // Add space between columns for better visual separation
+  const gridWidth = props.subdivisions * (squareSize + gapSize) - gapSize; // Calculate total width with gaps
+  
+  // Lighter Gold Color Palette based on #f8d38d
+  const colors = {
+    inactive: "#e8e8e8", // Very light gray for inactive squares
+    level1: "#fae3ad",   // Lighter version of base gold color
+    level2: "#f8d38d",   // Base gold color (as specified)
+    level3: "#f5c26d",   // Slightly darker, but still bright
+    highlight: "#fff5e0"  // Very light highlight color
+  };
+  
+  // First column (first beat) gets a warmer gold
+  const firstBeatColors = {
+    inactive: "#e8e8e8",
+    level1: "#fcd592",   // Warmer but light
+    level2: "#f8c978",   // Warmer medium
+    level3: "#f5bc5e",   // Warmer but still bright
+    highlight: "#fff5e0"  // Same highlight
+  };
+  
+  // Render grid as an SVG with enhanced styling
   const gridSquares = Array.from({ length: props.subdivisions }, (_, colIndex) => {
     const isCurrentBeat = colIndex === animationFrame && !props.isPaused;
+    const isFirstBeat = colIndex === 0;
+    const columnLevel = gridConfig[colIndex];
+    const colorSet = isFirstBeat ? firstBeatColors : colors;
+    
+    // Determine which rows are active based on the column level (0-3)
+    // 0 = no rows, 1 = bottom row, 2 = bottom two rows, 3 = all three rows
+    const activeRows = columnLevel === 0 ? [] : 
+                      columnLevel === 1 ? [2] : 
+                      columnLevel === 2 ? [1, 2] : 
+                      [0, 1, 2];
     
     return (
       <g
         key={colIndex}
         onClick={() => handleColumnClick(colIndex)}
         style={{
-          cursor: 'pointer'
+          cursor: colIndex === 0 ? 'default' : 'pointer',
+          transform: `translateX(${colIndex * (squareSize + gapSize)}px)`,
+          transition: 'transform 0.2s ease-out'
         }}
       >
         {Array.from({ length: 3 }, (_, rowIndex) => {
-          const isActive = rowIndex >= (3 - gridConfig[colIndex]);
+          const isActive = activeRows.includes(rowIndex);
           const isHighlighted = isCurrentBeat && isActive;
           
+          // Calculate position from top to bottom (first row is at the top)
+          const yPosition = rowIndex * squareSize;
+          
+          // Select appropriate color based on state
+          let fillColor = isActive ? 
+            (columnLevel === 3 ? colorSet.level3 : 
+             columnLevel === 2 && rowIndex > 0 ? colorSet.level2 : 
+             colorSet.level1) : 
+            colors.inactive;
+          
+          // Override with highlight color if currently playing
+          if (isHighlighted) {
+            fillColor = colorSet.highlight;
+          }
+          
           return (
-            <image
+            <rect
               key={rowIndex}
-              href={isHighlighted ? subdivisionIcons.squareActivePlay : (isActive ? subdivisionIcons.squareActive : subdivisionIcons.squareInactive)}
-              x={colIndex * squareSize}
-              y={rowIndex * squareSize}
+              x={0}
+              y={yPosition}
               width={squareSize}
               height={squareSize}
+              rx={6} // Rounded corners
+              ry={6}
+              fill={fillColor}
+              stroke={isHighlighted ? "#f8c978" : "transparent"}
+              strokeWidth={isHighlighted ? 2 : 0}
               style={{
-                filter: 'none',
-                transition: 'filter 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)'
+                opacity: isActive ? 1 : 0.3,
+                transition: 'all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)',
+                transform: isHighlighted ? 'scale(1.05)' : 'scale(1)',
+                transformOrigin: 'center center',
+                boxShadow: isHighlighted ? '0 0 10px rgba(248, 211, 141, 0.8)' : 'none',
+                filter: isHighlighted ? 'brightness(1.1)' : 'none'
               }}
             />
           );
         })}
+        
+        {/* Add column number label at the bottom */}
+        <text
+          x={squareSize / 2}
+          y={3 * squareSize + 20}
+          textAnchor="middle"
+          fill={colIndex === 0 ? "#f5bc5e" : "#666"}
+          style={{
+            fontFamily: "'Lato', sans-serif",
+            fontSize: "14px",
+            fontWeight: colIndex === 0 ? "bold" : "normal"
+          }}
+        >
+          {colIndex + 1}
+        </text>
       </g>
     );
   });
@@ -182,56 +248,140 @@ const GridModeMetronome = (props) => {
     };
   }, [props.registerTogglePlay, props.registerTapTempo, handlePlayPause, logic.tapTempo]);
 
+  // Calculate the container width based on screen size and grid dimensions
+  const containerWidth = Math.min(gridWidth, window.innerWidth - 40);
+  const scale = containerWidth / gridWidth;
+
   return (
-    <div style={{ textAlign: 'center' }}>
-      <svg
-        width={props.subdivisions * squareSize}
-        height={3 * squareSize}
-        style={{ margin: '0 auto', display: 'block' }}
+    <div style={{ textAlign: 'center', padding: '20px 0' }}>
+      <div 
+        style={{ 
+          margin: '0 auto', 
+          width: `${containerWidth}px`, 
+          overflow: 'hidden'
+        }}
       >
-        {gridSquares}
-      </svg>
-      <div style={{ marginTop: '10px' }}>
+        <div style={{ 
+          transformOrigin: 'top left',
+          transform: scale < 1 ? `scale(${scale})` : 'none',
+          width: gridWidth,
+          height: squareSize * 3 + 30,
+          margin: scale < 1 ? 'none' : '0 auto'
+        }}>
+          <svg
+            width={gridWidth}
+            height={squareSize * 3 + 30}
+            style={{ display: 'block' }}
+          >
+            {gridSquares}
+          </svg>
+        </div>
+      </div>
+      
+      <div style={{ marginTop: '20px' }}>
         <button
           onClick={handlePlayPause}
-          style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
+          style={{ 
+            background: 'transparent', 
+            border: 'none', 
+            cursor: 'pointer',
+            borderRadius: '50%',
+            padding: '10px',
+            transition: 'all 0.2s ease',
+            boxShadow: '0 0 0 transparent'
+          }}
+          className="play-button"
           aria-label="Toggle play/pause"
           onMouseOver={(e) => {
+            e.currentTarget.style.boxShadow = '0 0 10px rgba(248, 201, 120, 0.5)';
             const img = e.currentTarget.querySelector('img');
-            if (img) {
-              img.style.transform = 'scale(1.1)';
-              img.style.filter = 'drop-shadow(0 0 5px rgba(255, 255, 255, 0.5))';
-            }
+            if (img) img.style.transform = 'scale(1.1)';
           }}
           onMouseOut={(e) => {
+            e.currentTarget.style.boxShadow = '0 0 0 transparent';
             const img = e.currentTarget.querySelector('img');
-            if (img) {
-              img.style.transform = 'scale(1)';
-              img.style.filter = 'none';
-            }
+            if (img) img.style.transform = 'scale(1)';
           }}
         >
           <img
             src={props.isPaused ? playIcon : pauseIcon}
             alt={props.isPaused ? 'Play' : 'Pause'}
             style={{
-              width: '36px',
-              height: '36px',
-              transition: 'all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)'
+              width: '40px',
+              height: '40px',
+              transition: 'transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)'
             }}
           />
         </button>
       </div>
+
+      {/* Legend - explain what the colors mean */}
+      <div style={{ 
+        marginTop: '15px', 
+        display: 'flex', 
+        justifyContent: 'center', 
+        gap: '15px',
+        flexWrap: 'wrap',
+        fontSize: '12px',
+        color: '#666'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div style={{ 
+            width: '12px', 
+            height: '12px', 
+            backgroundColor: colors.level1, 
+            borderRadius: '2px',
+            marginRight: '5px',
+            border: '1px solid #ddd'
+          }}></div>
+          Single Square
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div style={{ 
+            width: '12px', 
+            height: '12px', 
+            backgroundColor: colors.level2, 
+            borderRadius: '2px',
+            marginRight: '5px',
+            border: '1px solid #ddd'
+          }}></div>
+          Double Squares
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div style={{ 
+            width: '12px', 
+            height: '12px', 
+            backgroundColor: colors.level3, 
+            borderRadius: '2px',
+            marginRight: '5px',
+            border: '1px solid #ddd'
+          }}></div>
+          Triple Squares
+        </div>
+      </div>
+      
+      {/* Instructions */}
+      <div style={{ marginTop: '5px', fontSize: '12px', color: '#666' }}>
+        Click columns 2-{props.subdivisions} to cycle: 1 square → 2 squares → 3 squares → none
+      </div>
+      
       {isMobile && (
         <button
           onClick={logic.tapTempo}
-          style={{ background: 'transparent', border: 'none', cursor: 'pointer', marginTop: '20px' }}
+          style={{ 
+            background: 'transparent', 
+            border: 'none', 
+            cursor: 'pointer', 
+            marginTop: '20px',
+            borderRadius: '50%',
+            padding: '10px'
+          }}
           aria-label="Tap Tempo"
           onMouseOver={(e) => {
             const img = e.currentTarget.querySelector('img');
             if (img) {
               img.style.transform = 'scale(1.1)';
-              img.style.filter = 'drop-shadow(0 0 5px rgba(255, 255, 255, 0.5))';
+              img.style.filter = 'drop-shadow(0 0 5px rgba(248, 211, 141, 0.5))';
             }
           }}
           onMouseOut={(e) => {
