@@ -117,6 +117,22 @@ export default function MultiCircleMetronome(props) {
   
   const radius = containerSize / 2;
   
+  // Handle setting subdivisions (used by keyboard shortcuts)
+  const handleSetSubdivisions = useCallback((subdivisionValue) => {
+    if (subdivisionValue < 1 || subdivisionValue > 9) return;
+    
+    console.log("Setting subdivision for active circle to:", subdivisionValue);
+    setCircleSettings(prev => {
+      const updated = [...prev];
+      updated[activeCircle] = {
+        ...updated[activeCircle],
+        subdivisions: subdivisionValue,
+        accents: Array.from({ length: subdivisionValue }, (_, i) => (i === 0 ? 3 : 1))
+      };
+      return updated;
+    });
+  }, [activeCircle]);
+  
   // ADD CIRCLE FUNCTION
   const addCircle = () => {
     console.log("addCircle triggered");
@@ -583,7 +599,8 @@ export default function MultiCircleMetronome(props) {
         handlePlayPause();
       }
     },
-    onTapTempo: logic.tapTempo
+    onTapTempo: logic.tapTempo,
+    onSetSubdivisions: handleSetSubdivisions
   });
 
   return (
@@ -605,7 +622,7 @@ export default function MultiCircleMetronome(props) {
       {/* Controls */}
       <div style={{ marginTop: "20px", display: "flex", justifyContent: "center", gap: "20px" }}>
         <button
-          class="play-pause-button"
+          className="play-pause-button"
           type="button"
           onClick={handlePlayPause}
           onKeyDown={e => { e.stopPropagation(); e.preventDefault(); }}
@@ -613,7 +630,7 @@ export default function MultiCircleMetronome(props) {
           style={{ background: "transparent", border: "none", cursor: "pointer" }}
         >
           <img 
-            class="play-pause-icon"
+            className="play-pause-icon"
             src={props.isPaused ? playIcon : pauseIcon}
             alt={props.isPaused ? "Play" : "Pause"}
             style={{
