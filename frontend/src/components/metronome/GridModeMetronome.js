@@ -357,11 +357,6 @@ const GridModeMetronome = (props) => {
         </div>
       </div>
       
-      {/* Instructions */}
-      <div style={{ marginTop: '5px', fontSize: '12px', color: '#666' }}>
-        Click columns 2-{props.subdivisions} to cycle: 1 square → 2 squares → 3 squares → none
-      </div>
-      
       {isMobile && (
         <button
           onClick={logic.tapTempo}
