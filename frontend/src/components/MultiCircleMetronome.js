@@ -605,13 +605,15 @@ export default function MultiCircleMetronome(props) {
       {/* Controls */}
       <div style={{ marginTop: "20px", display: "flex", justifyContent: "center", gap: "20px" }}>
         <button
+          class="play-pause-button"
           type="button"
           onClick={handlePlayPause}
           onKeyDown={e => { e.stopPropagation(); e.preventDefault(); }}
           aria-label="Toggle Play/Pause"
           style={{ background: "transparent", border: "none", cursor: "pointer" }}
         >
-          <img
+          <img 
+            class="play-pause-icon"
             src={props.isPaused ? playIcon : pauseIcon}
             alt={props.isPaused ? "Play" : "Pause"}
             style={{

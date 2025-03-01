@@ -407,20 +407,3 @@ button[aria-label="Tap Tempo"]:active {
   top: 85%;
   transform: translate(-50%, -50%) !important;
 }
-
-/* Override any transforms applied to buttons outside the metronome container */
-div > div > .play-pause-button {
-  transform: none !important;
-}
-
-div > div > .play-pause-button:hover {
-  transform: translate(-50%, -50%) !important;
-}
-
-div > div > .play-pause-button:hover .play-pause-icon {
-  transform: scale(1.15);
-}
-
-div > div > .play-pause-button:active .play-pause-icon {
-  transform: scale(1.05);
-}
