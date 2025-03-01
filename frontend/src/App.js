@@ -182,17 +182,29 @@ function App() {
         setIsPaused={setIsPaused}
       />
       {/* Mode selection buttons */}
-      <div style={{ marginBottom: "20px", display: "flex", gap: "10px", justifyContent: "center" }}>
-        <button onClick={() => setMode("analog")} style={{ padding: "10px 20px", fontSize: "16px", cursor: "pointer", background: mode === "analog" ? "#00A0A0" : "#ccc", color: "#fff", border: "none", borderRadius: "5px" }}>
+      <div className="mode-selector">
+        <button 
+          onClick={() => setMode("analog")} 
+          className={`mode-button ${mode === "analog" ? "mode-button-active" : ""}`}
+        >
           Analog Mode
         </button>
-        <button onClick={() => setMode("circle")} style={{ padding: "10px 20px", fontSize: "16px", cursor: "pointer", background: mode === "circle" ? "#00A0A0" : "#ccc", color: "#fff", border: "none", borderRadius: "5px" }}>
+        <button 
+          onClick={() => setMode("circle")} 
+          className={`mode-button ${mode === "circle" ? "mode-button-active" : ""}`}
+        >
           Circle Mode
         </button>
-        <button onClick={() => setMode("grid")} style={{ padding: "10px 20px", fontSize: "16px", cursor: "pointer", background: mode === "grid" ? "#00A0A0" : "#ccc", color: "#fff", border: "none", borderRadius: "5px" }}>
+        <button 
+          onClick={() => setMode("grid")} 
+          className={`mode-button ${mode === "grid" ? "mode-button-active" : ""}`}
+        >
           Grid Mode
         </button>
-        <button onClick={() => setMode("multi")} style={{ padding: "10px 20px", fontSize: "16px", cursor: "pointer", background: mode === "multi" ? "#00A0A0" : "#ccc", color: "#fff", border: "none", borderRadius: "5px" }}>
+        <button 
+          onClick={() => setMode("multi")} 
+          className={`mode-button ${mode === "multi" ? "mode-button-active" : ""}`}
+        >
           Multi Circle
         </button>
       </div>
