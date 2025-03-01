@@ -1,4 +1,3 @@
-// File: src/components/MultiCircleMetronome.js
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import useMetronomeLogic from "../hooks/useMetronomeLogic";
 import useKeyboardShortcuts from "../hooks/useKeyboardShortcuts";
@@ -59,21 +58,16 @@ export default function MultiCircleMetronome(props) {
   // Track which circle is currently playing (will advance sequentially)
   const [playingCircle, setPlayingCircle] = useState(0);
   
-  // Store a stable reference to current active circle settings
-  const currentSettings = circleSettings[activeCircle] || 
-    { subdivisions: 4, accents: [3, 1, 1, 1], beatMode: "quarter" };
-    
-  // Important: Keep a stable reference to the currently PLAYING circle's settings
+  // Stable reference to current active circle settings
+  const currentSettings = circleSettings[activeCircle] || { subdivisions: 4, accents: [3, 1, 1, 1], beatMode: "quarter" };
   const playingSettingsRef = useRef(circleSettings[playingCircle]);
   
-  // Update the playing settings reference when playingCircle changes
   useEffect(() => {
     playingSettingsRef.current = circleSettings[playingCircle];
   }, [playingCircle, circleSettings]);
   
   // Flags for state tracking
   const isTransitioningRef = useRef(false);
-  const preventDuplicateFirstBeatRef = useRef(false);
   const lastCircleSwitchCheckTimeRef = useRef(0);
   const measureCountRef = useRef(0);
   const isProcessingPlayPauseRef = useRef(false);
@@ -83,7 +77,7 @@ export default function MultiCircleMetronome(props) {
     tempo: props.tempo,
     setTempo: props.setTempo,
     subdivisions: playingSettingsRef.current.subdivisions,
-    setSubdivisions: () => {}, // Intentionally empty - we handle subdivisions ourselves
+    setSubdivisions: () => {},
     isPaused: props.isPaused,
     setIsPaused: props.setIsPaused,
     swing: props.swing,
@@ -99,7 +93,7 @@ export default function MultiCircleMetronome(props) {
     tempoIncreasePercent: props.tempoIncreasePercent,
     measuresUntilSpeedUp: props.measuresUntilSpeedUp,
     beatMultiplier: playingSettingsRef.current.beatMode === "quarter" ? 1 : 2,
-    multiCircleMode: true // Flag to indicate we're in multi circle mode
+    multiCircleMode: true
   });
 
   // Container size calculation
@@ -123,14 +117,14 @@ export default function MultiCircleMetronome(props) {
   
   const radius = containerSize / 2;
   
-  // ADD CIRCLE FUNCTION - Strict enforcement of 3 circle maximum
+  // ADD CIRCLE FUNCTION
   const addCircle = () => {
+    console.log("addCircle triggered");
     setCircleSettings(prev => {
-      // IMPORTANT: Only add if we're below the max limit
       if (prev.length >= MAX_CIRCLES) {
-        return prev; // Do not add, return unchanged
+        console.log("Max circles reached, not adding a new one.");
+        return prev;
       }
-      
       return [
         ...prev,
         {
@@ -142,9 +136,40 @@ export default function MultiCircleMetronome(props) {
     });
   };
 
+  // REMOVE CIRCLE FUNCTION
+  const removeCircle = (indexToRemove) => {
+    console.log("removeCircle triggered for index", indexToRemove);
+    if (circleSettings.length <= 1) {
+      console.log("Cannot remove the last circle.");
+      return;
+    }
+    
+    setCircleSettings(prev => {
+      const updated = prev.filter((_, idx) => idx !== indexToRemove);
+      return updated;
+    });
+    
+    // Wenn der aktive Kreis entfernt wird, setze den aktiven Kreis auf 0
+    if (activeCircle === indexToRemove) {
+      setActiveCircle(0);
+    } else if (activeCircle > indexToRemove) {
+      // Wenn ein Kreis vor dem aktiven Kreis entfernt wird, passe den Index an
+      setActiveCircle(activeCircle - 1);
+    }
+    
+    // Wenn der spielende Kreis entfernt wird, setze den spielenden Kreis auf 0
+    if (playingCircle === indexToRemove) {
+      setPlayingCircle(0);
+    } else if (playingCircle > indexToRemove) {
+      // Wenn ein Kreis vor dem spielenden Kreis entfernt wird, passe den Index an
+      setPlayingCircle(playingCircle - 1);
+    }
+  };
+
   // Update accent on beat click
   const updateAccent = (beatIndex) => {
-    setCircleSettings((prev) => {
+    console.log("updateAccent triggered on beat index", beatIndex);
+    setCircleSettings(prev => {
       const updated = [...prev];
       const acc = [...updated[activeCircle].accents];
       acc[beatIndex] = (acc[beatIndex] + 1) % 3;
@@ -153,60 +178,87 @@ export default function MultiCircleMetronome(props) {
     });
   };
 
-  // Custom function to handle subdivision changes and circle switching
+  // Funktion zum Rendern der Subdivision-Buttons
+  const renderSubdivisionButtons = () => {
+    const subIcons = [
+      subdivision1, subdivision2, subdivision3, 
+      subdivision4, subdivision5, subdivision6, 
+      subdivision7, subdivision8, subdivision9
+    ];
+    
+    const subIconsActive = [
+      subdivision1Active, subdivision2Active, subdivision3Active,
+      subdivision4Active, subdivision5Active, subdivision6Active,
+      subdivision7Active, subdivision8Active, subdivision9Active
+    ];
+    
+    return subIcons.map((icon, idx) => {
+      const subVal = idx + 1;
+      const isActive = subVal === currentSettings.subdivisions;
+      const iconToUse = isActive ? subIconsActive[idx] : icon;
+      
+      return (
+        <img
+          key={subVal}
+          src={iconToUse}
+          alt={`Subdivision ${subVal}`}
+          onClick={() => {
+            console.log("Subdivision button clicked:", subVal);
+            setCircleSettings(prev => {
+              const updated = [...prev];
+              updated[activeCircle] = {
+                ...updated[activeCircle],
+                subdivisions: subVal,
+                accents: Array.from({ length: subVal }, (_, i) => (i === 0 ? 3 : 1))
+              };
+              return updated;
+            });
+          }}
+          style={{
+            cursor: "pointer",
+            width: "36px",
+            height: "36px",
+            margin: "0 3px",
+            transition: "transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
+            transform: isActive ? "scale(1.1)" : "scale(1)",
+            filter: isActive ? "drop-shadow(0 0 5px rgba(0, 160, 160, 0.5))" : "none"
+          }}
+        />
+      );
+    });
+  };
+
+  // Handle subdivision changes and circle switching
   const prevSubdivisionRef = useRef(null);
   
   const handleSubdivisionChange = useCallback((newSubdivision) => {
-    // Only proceed if we're playing and have multiple circles
     if (props.isPaused || circleSettings.length <= 1) return;
-    
-    // Check if we've completed a measure (subdivision went back to 0)
     if (
       prevSubdivisionRef.current !== null &&
       prevSubdivisionRef.current !== newSubdivision &&
       newSubdivision === 0 &&
-      !isTransitioningRef.current // Don't switch if we're already transitioning
+      !isTransitioningRef.current
     ) {
-      // Increment measure count
       measureCountRef.current += 1;
-      
-      // Get current time to prevent rapid checks
       const now = Date.now();
-      
-      // Ensure we don't check too frequently (at least 500ms between checks)
-      if (now - lastCircleSwitchCheckTimeRef.current < 500) {
-        return;
-      }
-      
+      if (now - lastCircleSwitchCheckTimeRef.current < 500) return;
       lastCircleSwitchCheckTimeRef.current = now;
-      
-      // Set transition flag to prevent multiple transitions
       isTransitioningRef.current = true;
       
-      // Move to the next circle
       const nextCircleIndex = (playingCircle + 1) % circleSettings.length;
-      
-      // Update the playing settings reference
+      console.log("Switching to circle index:", nextCircleIndex);
       playingSettingsRef.current = circleSettings[nextCircleIndex];
-      
-      // Update the playing circle state
       setPlayingCircle(nextCircleIndex);
       
-      // Clear transition flag after a delay
       setTimeout(() => {
         isTransitioningRef.current = false;
       }, 100);
     }
-    
-    // Update the previous subdivision reference
     prevSubdivisionRef.current = newSubdivision;
   }, [props.isPaused, circleSettings, playingCircle]);
   
-  // Use a direct subscription to subdivision changes
   useEffect(() => {
-    // Only set up the handler if we're not paused
     if (!props.isPaused && logic.currentSubdivision !== undefined) {
-      // Call the handler directly when the subdivision changes
       handleSubdivisionChange(logic.currentSubdivision);
     }
   }, [logic.currentSubdivision, handleSubdivisionChange, props.isPaused, logic]);
@@ -219,10 +271,10 @@ export default function MultiCircleMetronome(props) {
       const xPos = radius * Math.cos(angle);
       const yPos = radius * Math.sin(angle);
       
-      const isActive = i === logic.currentSubdivision && 
-                        isPlaying && 
-                        !props.isPaused && 
-                        logic.audioCtx && 
+      const isActive = i === logic.currentSubdivision &&
+                        isPlaying &&
+                        !props.isPaused &&
+                        logic.audioCtx &&
                         logic.audioCtx.state === "running" &&
                         !isTransitioningRef.current;
       
@@ -256,15 +308,49 @@ export default function MultiCircleMetronome(props) {
       );
     });
     
+    // Füge einen Entfernen-Button hinzu, wenn mehr als ein Kreis vorhanden ist
+    if (circleSettings.length > 1) {
+      const removeButton = (
+        <div
+          key="remove-button"
+          onClick={(e) => {
+            e.stopPropagation(); // Verhindere, dass der Klick den Kreis aktiviert
+            removeCircle(idx);
+          }}
+          style={{
+            position: "absolute",
+            top: "-15px",
+            right: "-15px",
+            width: "30px",
+            height: "30px",
+            borderRadius: "50%",
+            backgroundColor: "#ff4d4d",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            color: "#fff",
+            fontSize: "20px",
+            fontWeight: "bold",
+            cursor: "pointer",
+            boxShadow: "0 0 5px rgba(0, 0, 0, 0.3)",
+            zIndex: 10
+          }}
+        >
+          -
+        </div>
+      );
+      
+      return [removeButton, ...beats];
+    }
+    
     return beats;
   };
 
-  // Render all circles in a VERTICAL LAYOUT
+  // Render all circles in a horizontal or vertical layout based on screen size
   const renderAllCircles = () => {
     return circleSettings.map((settings, idx) => {
       const isActiveUI = idx === activeCircle;
       const isPlaying = idx === playingCircle && !props.isPaused;
-      
       return (
         <div
           key={idx}
@@ -273,17 +359,17 @@ export default function MultiCircleMetronome(props) {
             position: "relative",
             width: containerSize,
             height: containerSize,
-            borderRadius: "50%", // Make sure circle is perfectly round
+            borderRadius: "50%",
             border: "2px solid transparent",
             boxShadow: isActiveUI
               ? "0 0 0 3px #00A0A0, 0 0 10px rgba(0, 160, 160, 0.6)"
               : isPlaying
                 ? "0 0 0 3px #FFD700, 0 0 10px rgba(255, 215, 0, 0.6)"
                 : "none",
-            margin: "15px 0", // Vertical spacing between circles
+            margin: isMobile ? "15px 0" : "15px",
             transition: "box-shadow 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)",
             cursor: "pointer",
-            overflow: "visible", // Allow beat icons to extend beyond circle if needed
+            overflow: "visible"
           }}
         >
           {renderCircle(settings, idx, isActiveUI, isPlaying)}
@@ -292,13 +378,9 @@ export default function MultiCircleMetronome(props) {
     });
   };
 
-  // Render the add circle button in the middle of a circle
+  // Render "Add Circle" button
   const renderAddCircleButton = () => {
-    // IMPORTANT: Only show if under the max limit
-    if (circleSettings.length >= MAX_CIRCLES) {
-      return null; // Don't render anything if we hit the max
-    }
-    
+    if (circleSettings.length >= MAX_CIRCLES) return null;
     return (
       <div
         onClick={addCircle}
@@ -306,9 +388,9 @@ export default function MultiCircleMetronome(props) {
           position: "relative",
           width: containerSize,
           height: containerSize,
-          borderRadius: "50%", // Perfectly round circle
+          borderRadius: "50%",
           border: "2px dashed #00A0A0",
-          margin: "15px 0", // Vertical spacing
+          margin: isMobile ? "15px 0" : "15px",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
@@ -320,7 +402,7 @@ export default function MultiCircleMetronome(props) {
           style={{
             width: "60px",
             height: "60px",
-            borderRadius: "50%", // Perfectly round inner circle
+            borderRadius: "50%",
             backgroundColor: "#00A0A0",
             display: "flex",
             justifyContent: "center",
@@ -337,62 +419,14 @@ export default function MultiCircleMetronome(props) {
     );
   };
 
-  // Render subdivision selector buttons
-  const renderSubdivisionButtons = () => {
-    const subIcons = [
-      subdivision1, subdivision2, subdivision3, 
-      subdivision4, subdivision5, subdivision6, 
-      subdivision7, subdivision8, subdivision9
-    ];
-    
-    const subIconsActive = [
-      subdivision1Active, subdivision2Active, subdivision3Active,
-      subdivision4Active, subdivision5Active, subdivision6Active,
-      subdivision7Active, subdivision8Active, subdivision9Active
-    ];
-    
-    return subIcons.map((icon, idx) => {
-      const subVal = idx + 1;
-      const isActive = subVal === currentSettings.subdivisions;
-      const iconToUse = isActive ? subIconsActive[idx] : icon;
-      
-      return (
-        <img
-          key={subVal}
-          src={iconToUse}
-          alt={`Subdivision ${subVal}`}
-          onClick={() => {
-            setCircleSettings((prev) => {
-              const updated = [...prev];
-              updated[activeCircle] = {
-                ...updated[activeCircle],
-                subdivisions: subVal,
-                accents: Array.from({ length: subVal }, (_, i) => (i === 0 ? 3 : 1))
-              };
-              return updated;
-            });
-          }}
-          style={{
-            cursor: "pointer",
-            width: "36px",
-            height: "36px",
-            margin: "0 3px",
-            transition: "transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
-            transform: isActive ? "scale(1.1)" : "scale(1)",
-            filter: isActive ? "drop-shadow(0 0 5px rgba(0, 160, 160, 0.5))" : "none"
-          }}
-        />
-      );
-    });
-  };
-
   // Render note selector (quarter/eighth)
   const renderNoteSelector = () => {
     return (
       <div style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
         <button
           onClick={() => {
-            setCircleSettings((prev) => {
+            console.log("Switching note selector to quarter.");
+            setCircleSettings(prev => {
               const updated = [...prev];
               updated[activeCircle] = { ...updated[activeCircle], beatMode: "quarter" };
               return updated;
@@ -415,7 +449,8 @@ export default function MultiCircleMetronome(props) {
         </button>
         <button
           onClick={() => {
-            setCircleSettings((prev) => {
+            console.log("Switching note selector to eighth.");
+            setCircleSettings(prev => {
               const updated = [...prev];
               updated[activeCircle] = { ...updated[activeCircle], beatMode: "eighth" };
               return updated;
@@ -440,15 +475,27 @@ export default function MultiCircleMetronome(props) {
     );
   };
 
-  // Handle play/pause with proper suspend/resume
+  // Handle Play/Pause with logging, resume/suspend and prevention of duplicate calls
   const handlePlayPause = useCallback(() => {
-    if (isProcessingPlayPauseRef.current) return;
+    console.log("handlePlayPause triggered. Current isPaused:", props.isPaused);
+    if (isProcessingPlayPauseRef.current) {
+      console.log("Play/Pause action already processing, exiting.");
+      return;
+    }
+    
+    // Setze einen Timeout, um die Sperre zurückzusetzen, falls etwas schiefgeht
+    const safetyTimeout = setTimeout(() => {
+      if (isProcessingPlayPauseRef.current) {
+        console.log("Safety timeout: Resetting processing flag after 2 seconds");
+        isProcessingPlayPauseRef.current = false;
+      }
+    }, 2000);
     
     isProcessingPlayPauseRef.current = true;
     
-    props.setIsPaused((prev) => {
+    props.setIsPaused(prev => {
       if (prev) {
-        // Starting playback
+        console.log("Resuming playback...");
         setPlayingCircle(0);
         isTransitioningRef.current = false;
         prevSubdivisionRef.current = null;
@@ -457,57 +504,68 @@ export default function MultiCircleMetronome(props) {
         playingSettingsRef.current = circleSettings[0];
         
         const startPlayback = () => {
+          console.log("Playback started via scheduler.");
           if (logic.currentSubStartRef) {
             logic.currentSubStartRef.current = 0;
           }
           logic.startScheduler();
-          setTimeout(() => {
-            isProcessingPlayPauseRef.current = false;
-          }, 100);
+          isProcessingPlayPauseRef.current = false;
+          clearTimeout(safetyTimeout); // Lösche den Sicherheits-Timeout
         };
         
-        if (logic.audioCtx) {
-          if (logic.audioCtx.state === "suspended") {
-            logic.audioCtx
-              .resume()
-              .then(startPlayback)
-              .catch(() => {
-                isProcessingPlayPauseRef.current = false;
-              });
-          } else {
-            startPlayback();
-          }
+        // Stellen Sie sicher, dass der AudioContext verfügbar ist
+        if (!logic.audioCtx) {
+          console.error("AudioContext not available. Trying to continue anyway.");
+          // Wir versuchen trotzdem, die Wiedergabe zu starten
+          startPlayback();
+        } else if (logic.audioCtx.state === "suspended") {
+          console.log("AudioContext is suspended. Attempting to resume.");
+          logic.audioCtx
+            .resume()
+            .then(() => {
+              console.log("AudioContext resumed successfully.");
+              startPlayback();
+            })
+            .catch(err => {
+              console.error("Error resuming AudioContext:", err);
+              isProcessingPlayPauseRef.current = false;
+              clearTimeout(safetyTimeout); // Lösche den Sicherheits-Timeout
+            });
         } else {
-          isProcessingPlayPauseRef.current = false;
+          startPlayback();
         }
-        
         return false;
       } else {
-        // Stopping playback
+        console.log("Suspending playback...");
         isTransitioningRef.current = false;
         prevSubdivisionRef.current = null;
         logic.stopScheduler();
         
         if (logic.audioCtx && logic.audioCtx.state === "running") {
+          console.log("AudioContext running. Attempting to suspend.");
           logic.audioCtx
             .suspend()
             .then(() => {
+              console.log("AudioContext suspended successfully.");
               isProcessingPlayPauseRef.current = false;
+              clearTimeout(safetyTimeout); // Lösche den Sicherheits-Timeout
             })
-            .catch(() => {
+            .catch(err => {
+              console.error("Error suspending AudioContext:", err);
               isProcessingPlayPauseRef.current = false;
+              clearTimeout(safetyTimeout); // Lösche den Sicherheits-Timeout
             });
         } else {
           isProcessingPlayPauseRef.current = false;
+          clearTimeout(safetyTimeout); // Lösche den Sicherheits-Timeout
         }
-        
         setPlayingCircle(0);
         return true;
       }
     });
   }, [logic, props.setIsPaused, circleSettings]);
 
-  // Register handlers with parent
+  // Register callbacks with parent if provided
   useEffect(() => {
     if (props.registerTogglePlay) {
       props.registerTogglePlay(handlePlayPause);
@@ -517,28 +575,28 @@ export default function MultiCircleMetronome(props) {
     }
   }, [handlePlayPause, logic.tapTempo, props.registerTogglePlay, props.registerTapTempo]);
 
-  // Keyboard shortcuts
+  // Global keyboard shortcuts
   useKeyboardShortcuts({
     onTogglePlayPause: () => {
-      setTimeout(() => {
-        if (!isProcessingPlayPauseRef.current) {
-          handlePlayPause();
-        }
-      }, 150);
+      // Direkt aufrufen ohne Timeout, da useKeyboardShortcuts bereits einen Timeout hat
+      if (!isProcessingPlayPauseRef.current) {
+        handlePlayPause();
+      }
     },
     onTapTempo: logic.tapTempo
   });
 
   return (
     <div style={{ textAlign: "center" }}>
-      {/* MAIN CIRCLES CONTAINER - VERTICAL STACK */}
-      <div style={{ 
-        display: "flex", 
-        flexDirection: "column", // VERTICAL LAYOUT
+      {/* Main circles container */}
+      <div style={{
+        display: "flex",
+        flexDirection: isMobile ? "column" : "row",
         alignItems: "center",
-        justifyContent: "center", 
+        justifyContent: "center",
         marginTop: "20px",
-        width: "100%"
+        width: "100%",
+        flexWrap: "wrap"
       }}>
         {renderAllCircles()}
         {renderAddCircleButton()}
@@ -547,23 +605,46 @@ export default function MultiCircleMetronome(props) {
       {/* Controls */}
       <div style={{ marginTop: "20px", display: "flex", justifyContent: "center", gap: "20px" }}>
         <button
-          onClick={handlePlayPause}
-          style={{ background: "transparent", border: "none", cursor: "pointer" }}
+          className="play-pause-button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Bypass the complex handling and directly update isPaused
+            if (isProcessingPlayPauseRef.current) return;
+            
+            isProcessingPlayPauseRef.current = true;
+            
+            const newIsPaused = !props.isPaused;
+            props.setIsPaused(newIsPaused);
+            
+            if (newIsPaused) {
+              // Pausing
+              logic.stopScheduler();
+              setPlayingCircle(0);
+            } else {
+              // Playing
+              setPlayingCircle(0);
+              playingSettingsRef.current = circleSettings[0];
+              setTimeout(() => {
+                logic.startScheduler();
+              }, 10);
+            }
+            
+            // Reset processing flag after a short delay
+            setTimeout(() => {
+              isProcessingPlayPauseRef.current = false;
+            }, 200);
+          }}
           aria-label="Toggle Play/Pause"
         >
           <img
             src={props.isPaused ? playIcon : pauseIcon}
-            alt={props.isPaused ? "Play" : "Pause"}
-            style={{
-              width: "36px",
-              height: "36px",
-              objectFit: "contain",
-              transition: "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)"
-            }}
+            alt={props.isPaused ? 'Play' : 'Pause'}
+            className="play-pause-icon"
           />
         </button>
       </div>
-      
       {/* Subdivision controls */}
       <div style={{ marginTop: "20px", textAlign: "center" }}>
         <h3>Subdivision</h3>
@@ -579,8 +660,8 @@ export default function MultiCircleMetronome(props) {
       </div>
       
       {/* Global sliders */}
-      <div className="sliders-container" style={{ marginTop: "20px", width: "100%", maxWidth: "500px", margin: "0 auto" }}>
-        <div className="slider-item" style={{ marginBottom: "10px", maxWidth: "500px", margin: "0 auto", width: "100%" }}>
+      <div className="sliders-container" style={{ marginTop: "20px", width: "100%", maxWidth: "300px", margin: "0 auto" }}>
+        <div className="slider-item" style={{ marginBottom: "10px", maxWidth: "300px", margin: "0 auto", width: "100%" }}>
           {currentSettings.subdivisions % 2 === 0 && (
             <>
               <label>Swing: {Math.round(props.swing * 200)}% </label>
@@ -590,13 +671,13 @@ export default function MultiCircleMetronome(props) {
                 max={0.5}
                 step={0.01}
                 value={props.swing}
-                onChange={(e) => props.setSwing(parseFloat(e.target.value))}
+                onChange={e => props.setSwing(parseFloat(e.target.value))}
                 style={{ width: "100%" }}
               />
             </>
           )}
         </div>
-        <div className="slider-item" style={{ marginBottom: "10px", maxWidth: "500px", margin: "0 auto", width: "100%" }}>
+        <div className="slider-item" style={{ marginBottom: "10px", maxWidth: "300px", margin: "0 auto", width: "100%" }}>
           <label>Volume: {Math.round(props.volume * 100)}% </label>
           <input
             type="range"
@@ -604,11 +685,11 @@ export default function MultiCircleMetronome(props) {
             max={1}
             step={0.01}
             value={props.volume}
-            onChange={(e) => props.setVolume(parseFloat(e.target.value))}
+            onChange={e => props.setVolume(parseFloat(e.target.value))}
             style={{ width: "100%" }}
           />
         </div>
-        <div className="slider-item tempo-slider" style={{ maxWidth: "500px", margin: "0 auto", width: "100%" }}>
+        <div className="slider-item tempo-slider" style={{ maxWidth: "300px", margin: "0 auto", width: "100%" }}>
           <label>Tempo: {props.tempo} BPM </label>
           <input
             type="range"
@@ -616,7 +697,7 @@ export default function MultiCircleMetronome(props) {
             max={240}
             step={1}
             value={props.tempo}
-            onChange={(e) => props.setTempo(parseFloat(e.target.value))}
+            onChange={e => props.setTempo(parseFloat(e.target.value))}
             style={{ width: "100%" }}
           />
         </div>
