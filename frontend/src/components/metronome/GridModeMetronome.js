@@ -331,7 +331,7 @@ const GridModeMetronome = (props) => {
             marginRight: '5px',
             border: '1px solid #ddd'
           }}></div>
-          Single Square
+          Normal Beat
         </div>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <div style={{ 
@@ -342,7 +342,7 @@ const GridModeMetronome = (props) => {
             marginRight: '5px',
             border: '1px solid #ddd'
           }}></div>
-          Double Squares
+          Accent
         </div>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <div style={{ 
@@ -353,7 +353,7 @@ const GridModeMetronome = (props) => {
             marginRight: '5px',
             border: '1px solid #ddd'
           }}></div>
-          Triple Squares
+          First Beat
         </div>
       </div>
       
