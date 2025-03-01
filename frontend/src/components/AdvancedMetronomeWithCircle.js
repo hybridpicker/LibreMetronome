@@ -270,15 +270,24 @@ export default function AdvancedMetronomeWithCircle({
       const mx = (bd.xPos + bd2.xPos) / 2;
       const my = (bd.yPos + bd2.yPos) / 2;
       const theta = (Math.atan2(dy, dx) * 180) / Math.PI;
+      
+      // Enhanced styling to match MultiCircle mode
       return (
         <div
           key={index}
           className="line-connection"
           style={{
             width: `${dist}px`,
+            height: "1px", // Make lines slightly thicker
+            backgroundColor: "#00A0A0", // Use the same teal color
             left: `calc(50% + ${mx}px - ${dist / 2}px)`,
-            top: `calc(50% + ${my}px - 1px)`,
-            transform: `rotate(${theta}deg)`
+            top: `calc(50% + ${my}px)`,
+            transform: `rotate(${theta}deg)`,
+            position: "absolute",
+            pointerEvents: "none",
+            transformOrigin: "center center",
+            boxShadow: "0 0 2px rgba(0, 160, 160, 0.4)", // Add subtle glow
+            transition: "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)" // Add transition for smoother updates
           }}
         />
       );
