@@ -605,7 +605,6 @@ export default function MultiCircleMetronome(props) {
       {/* Controls */}
       <div style={{ marginTop: "20px", display: "flex", justifyContent: "center", gap: "20px" }}>
         <button
-          className="play-pause-button"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
