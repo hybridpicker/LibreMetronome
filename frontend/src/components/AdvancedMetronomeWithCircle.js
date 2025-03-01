@@ -444,11 +444,6 @@ export default function AdvancedMetronomeWithCircle({
           />
         </button>
       )}
-      
-      {/* Render subdivision buttons - Fixed reference */}
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '15px' }}>
-        {subdivisionButtonsArray}
-      </div>
     </div>
   );
 }
