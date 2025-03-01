@@ -2,10 +2,17 @@ import React, { useState, useEffect } from 'react';
 import infoButtonIcon from '../assets/svg/info-button.svg';
 import './InfoOverlay.css';
 
-// Modal displayed when the info overlay is active
+// Updated Modal with responsive content for mobile and desktop
 const InfoModal = ({ onClose }) => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
   
   useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 600);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
         onClose();
@@ -15,9 +22,11 @@ const InfoModal = ({ onClose }) => {
     document.addEventListener('keydown', handleKeyDown);
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('resize', handleResize);
     };
   }, [onClose]);
 
+  // Responsive content based on device
   return (
     <div className="info-overlay" role="dialog" aria-modal="true">
       <div className="info-modal">
@@ -28,20 +37,57 @@ const InfoModal = ({ onClose }) => {
         >
           &times;
         </button>
-        <h2>Keyboard Shortcuts</h2>
-        <ul>
-          <li><strong>Space:</strong> Start/Pause</li>
-          <li><strong>T:</strong> Tap tempo</li>
-          <li><strong>1–9:</strong> Adjust subdivisions</li>
-          <li><strong>Left/Right Arrows:</strong> Increase/Decrease tempo by 5 BPM</li>
-          <li><strong>A:</strong> Switch to Analog Mode</li>
-          <li><strong>C:</strong> Switch to Circle Mode</li>
-          <li><strong>G:</strong> Switch to Grid Mode</li>
-          <li><strong>M:</strong> Switch to Multi Circle Mode</li>
-          <li><strong>U:</strong> Manual tempo increase</li>
-          <li><strong>I:</strong> Show Info Overlay</li>
-          <li><strong>Esc:</strong> Close any open menu</li>
-        </ul>
+        
+        {isMobile ? (
+          // Mobile view - show mode descriptions
+          <>
+            <h2>Metronome Modes</h2>
+            <ul>
+              <li>
+                <strong>Analog Mode:</strong> Traditional pendulum metronome with a swinging arm visualization.
+              </li>
+              <li>
+                <strong>Circle Mode:</strong> Modern circular visualization with customizable beats and accents.
+              </li>
+              <li>
+                <strong>Grid Mode:</strong> Visual grid pattern for complex rhythms. Click columns to change accent patterns.
+              </li>
+              <li>
+                <strong>Multi Circle:</strong> Advanced mode with multiple patterns for practicing complex rhythm changes.
+              </li>
+            </ul>
+            <h3>Beat Types</h3>
+            <ul>
+              <li>
+                <strong>Quarter Notes:</strong> Standard beat division.
+              </li>
+              <li>
+                <strong>Eighth Notes:</strong> Twice as fast with subdivisions.
+              </li>
+            </ul>
+            <p style={{ marginTop: "15px", fontSize: "13px", color: "#666" }}>
+              Use the tap button to set tempo by tapping at your desired speed.
+            </p>
+          </>
+        ) : (
+          // Desktop view - show keyboard shortcuts
+          <>
+            <h2>Keyboard Shortcuts</h2>
+            <ul>
+              <li><strong>Space:</strong> Start/Pause</li>
+              <li><strong>T:</strong> Tap tempo</li>
+              <li><strong>1–9:</strong> Adjust subdivisions</li>
+              <li><strong>Left/Right Arrows:</strong> Increase/Decrease tempo by 5 BPM</li>
+              <li><strong>A:</strong> Switch to Analog Mode</li>
+              <li><strong>C:</strong> Switch to Circle Mode</li>
+              <li><strong>G:</strong> Switch to Grid Mode</li>
+              <li><strong>M:</strong> Switch to Multi Circle Mode</li>
+              <li><strong>U:</strong> Manual tempo increase</li>
+              <li><strong>I:</strong> Show Info Overlay</li>
+              <li><strong>Esc:</strong> Close any open menu</li>
+            </ul>
+          </>
+        )}
       </div>
     </div>
   );
@@ -62,7 +108,6 @@ const InfoButton = ({ onClick, active }) => (
 const InfoOverlay = ({ setActive }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isInfoButtonActive, setIsInfoButtonActive] = useState(false);
-  const [tempo, setTempo] = useState(120);
 
   const toggleOverlay = () => {
     setIsVisible((prev) => !prev);
@@ -80,18 +125,6 @@ const InfoOverlay = ({ setActive }) => {
       } else if (event.key === 'Escape') {
         setIsVisible(false);
         setIsInfoButtonActive(false);
-      } else if (event.key === 'ArrowRight') {
-        if (event.ctrlKey || event.metaKey) {
-          setTempo((prevTempo) => prevTempo + 1);
-        } else {
-          setTempo((prevTempo) => prevTempo + 5);
-        }
-      } else if (event.key === 'ArrowLeft') {
-        if (event.ctrlKey || event.metaKey) {
-          setTempo((prevTempo) => prevTempo - 1); 
-        } else {
-          setTempo((prevTempo) => prevTempo - 5);
-        }
       }
     };
 
