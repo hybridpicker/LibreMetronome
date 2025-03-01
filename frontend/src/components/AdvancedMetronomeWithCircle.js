@@ -125,8 +125,8 @@ export default function AdvancedMetronomeWithCircle({
         logic.audioCtx.resume().then(() => {
           setIsPaused(false);
           logic.startScheduler();
-        }).catch((err) => {
-          // Error handler left empty after console.log removal
+        }).catch(() => {
+          // Error handler left empty 
         });
       } else {
         setIsPaused(false);
@@ -149,7 +149,8 @@ export default function AdvancedMetronomeWithCircle({
     onTapTempo: logic.tapTempo
   });
 
-  const subdivisionButtons = (() => {
+  // Fixed subdivisionButtons implementation - using useState instead of IIFE
+  const [subdivisionButtonsArray] = useState(() => {
     const subIcons = [
       subdivision1,
       subdivision2,
@@ -192,7 +193,7 @@ export default function AdvancedMetronomeWithCircle({
         />
       );
     });
-  })();
+  });
 
   const getContainerSize = () => {
     if (window.innerWidth < 600) {
@@ -341,14 +342,31 @@ export default function AdvancedMetronomeWithCircle({
               onClick={handlePlayPause}
               data-mode="analog"
               aria-label="Toggle play/pause"
+              style={{
+                position: 'absolute',
+                left: '50%',
+                top: '85%',
+                transform: 'translate(-50%, -50%)',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0,
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                zIndex: 10
+              }}
             >
-              <div className="play-pause-icon-container">
-                <img
-                  src={isPaused ? playIcon : pauseIcon}
-                  alt={isPaused ? 'Play' : 'Pause'}
-                  className="play-pause-icon"
-                />
-              </div>
+              <img
+                src={isPaused ? playIcon : pauseIcon}
+                alt={isPaused ? 'Play' : 'Pause'}
+                className="play-pause-icon"
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  objectFit: 'contain'
+                }}
+              />
             </button>
           </>
         ) : (
@@ -378,14 +396,31 @@ export default function AdvancedMetronomeWithCircle({
               onClick={handlePlayPause}
               data-mode="normal"
               aria-label="Toggle play/pause"
+              style={{
+                position: 'absolute',
+                left: '50%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0,
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                zIndex: 10
+              }}
             >
-              <div className="play-pause-icon-container">
-                <img
-                  src={isPaused ? playIcon : pauseIcon}
-                  alt={isPaused ? 'Play' : 'Pause'}
-                  className="play-pause-icon"
-                />
-              </div>
+              <img
+                src={isPaused ? playIcon : pauseIcon}
+                alt={isPaused ? 'Play' : 'Pause'}
+                className="play-pause-icon"
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  objectFit: 'contain'
+                }}
+              />
             </button>
           </>
         )}
@@ -409,6 +444,11 @@ export default function AdvancedMetronomeWithCircle({
           />
         </button>
       )}
+      
+      {/* Render subdivision buttons - Fixed reference */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '15px' }}>
+        {subdivisionButtonsArray}
+      </div>
     </div>
   );
 }
