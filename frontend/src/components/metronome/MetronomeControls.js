@@ -37,7 +37,14 @@ const MetronomeControls = ({
               <img
                 src={beatMode === "quarter" ? quarterNotesActive : quarterNotesInactive}
                 alt="Quarter Notes"
-                style={{ width: "50px", height: "50px" }}
+                style={{
+                  width: "50px",
+                  height: "50px",
+                  opacity: beatMode === "quarter" ? 1 : 0.5,
+                  transition: "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
+                  filter: beatMode === "quarter" ? "drop-shadow(0 0 5px rgba(0, 160, 160, 0.5))" : "none",
+                  transform: beatMode === "quarter" ? "scale(1.05)" : "scale(1)"
+                }}
               />
             </button>
             <button
@@ -51,7 +58,14 @@ const MetronomeControls = ({
               <img
                 src={beatMode === "eighth" ? eightNotesActive : eightNotesInactive}
                 alt="Eighth Notes"
-                style={{ width: "50px", height: "50px" }}
+                style={{
+                  width: "50px",
+                  height: "50px",
+                  opacity: beatMode === "eighth" ? 1 : 0.5,
+                  transition: "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
+                  filter: beatMode === "eighth" ? "drop-shadow(0 0 5px rgba(0, 160, 160, 0.5))" : "none",
+                  transform: beatMode === "eighth" ? "scale(1.05)" : "scale(1)"
+                }}
               />
             </button>
           </div>
@@ -67,10 +81,39 @@ const MetronomeControls = ({
           />
         </div>
       )}
-      {/* Global Sliders (swing is shown only if subdivisions is even and not analog) */}
-      <div className="sliders-container" style={{ marginTop: "20px", width: "100%" }}>
+      {/* Global Sliders - REORDERED with Tempo first */}
+      <div className="sliders-container" style={{ marginTop: "20px", width: "100%", maxWidth: "300px", margin: "0 auto" }}>
+        {/* Tempo slider FIRST */}
+        <div className="slider-item tempo-slider" style={{ marginBottom: "10px", maxWidth: "300px", margin: "0 auto", width: "100%" }}>
+          <label>Tempo: {tempo} BPM </label>
+          <input
+            type="range"
+            min={15}
+            max={240}
+            step={1}
+            value={tempo}
+            onChange={(e) => setTempo(parseFloat(e.target.value))}
+            style={{ width: "100%" }}
+          />
+        </div>
+        
+        {/* Volume slider SECOND */}
+        <div className="slider-item" style={{ marginBottom: "10px", maxWidth: "300px", margin: "0 auto", width: "100%" }}>
+          <label>Volume: {Math.round(volume * 100)}% </label>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.01}
+            value={volume}
+            onChange={(e) => setVolume(parseFloat(e.target.value))}
+            style={{ width: "100%" }}
+          />
+        </div>
+        
+        {/* Swing slider LAST - only shown when conditions are met */}
         {mode !== "analog" && subdivisions % 2 === 0 && subdivisions >= 2 && (
-          <div className="slider-item" style={{ marginBottom: "10px", maxWidth: "300px", margin: "0 auto" }}>
+          <div className="slider-item" style={{ marginBottom: "10px", maxWidth: "300px", margin: "0 auto", width: "100%" }}>
             <label>Swing: {Math.round(swing * 200)}% </label>
             <input
               type="range"
@@ -83,30 +126,6 @@ const MetronomeControls = ({
             />
           </div>
         )}
-        <div className="slider-item" style={{ marginBottom: "10px", maxWidth: "300px", margin: "0 auto" }}>
-          <label>Volume: {Math.round(volume * 100)}% </label>
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.01}
-            value={volume}
-            onChange={(e) => setVolume(parseFloat(e.target.value))}
-            style={{ width: "100%" }}
-          />
-        </div>
-        <div className="slider-item tempo-slider" style={{ maxWidth: "300px", margin: "0 auto" }}>
-          <label>Tempo: {tempo} BPM </label>
-          <input
-            type="range"
-            min={15}
-            max={240}
-            step={1}
-            value={tempo}
-            onChange={(e) => setTempo(parseFloat(e.target.value))}
-            style={{ width: "100%" }}
-          />
-        </div>
       </div>
     </>
   );
