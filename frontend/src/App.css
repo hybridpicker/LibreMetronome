@@ -261,7 +261,6 @@ button {
   cursor: pointer;
 }
 
-/* Remove the green border from play/pause buttons throughout the app */
 .play-pause-button-overlay,
 button[aria-label="Toggle play/pause"] {
   background: transparent !important;
@@ -364,7 +363,7 @@ button[aria-label="Tap Tempo"]:active {
   }
 }
 /* Play/Pause button styling */
-/* Play/Pause button styling - Minimal version with scaling */
+/* Play/Pause button styling - Fixed version */
 .play-pause-button {
   background: transparent;
   border: none;
@@ -373,6 +372,7 @@ button[aria-label="Tap Tempo"]:active {
   position: relative;
   outline: none;
   z-index: 10;
+  transform: none !important; /* Prevent unwanted transformations */
 }
 
 .play-pause-icon {
@@ -392,40 +392,35 @@ button[aria-label="Tap Tempo"]:active {
   transform: scale(1.05);
 }
 
-/* Specific styles for center-positioned play/pause button */
+/* Center-positioned play/pause button */
 .metronome-container .play-pause-button {
   position: absolute;
   left: 50%;
   top: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) !important; /* Use !important to override any competing styles */
 }
 
-/* Specific styles for analog mode (positioned at bottom) */
+/* Analog mode play button positioned at bottom */
 .metronome-container .play-pause-button[data-mode="analog"] {
   position: absolute;
   left: 50%;
   top: 85%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) !important;
 }
 
-/* Mobile adjustments */
-@media (max-width: 600px) {
-  .play-pause-icon {
-    width: 30px;
-    height: 30px;
-  }
+/* Override any transforms applied to buttons outside the metronome container */
+div > div > .play-pause-button {
+  transform: none !important;
 }
 
-/* Specific styles for multi-circle mode play/pause button */
-.play-pause-button {
-  transform-origin: center center;
-}
-
-/* This targets the button outside of the metronome container (which is how it's positioned in multi-circle mode) */
 div > div > .play-pause-button:hover {
+  transform: translate(-50%, -50%) !important;
+}
+
+div > div > .play-pause-button:hover .play-pause-icon {
   transform: scale(1.15);
 }
 
-div > div > .play-pause-button:active {
+div > div > .play-pause-button:active .play-pause-icon {
   transform: scale(1.05);
 }
