@@ -271,7 +271,6 @@ export default function AdvancedMetronomeWithCircle({
       const my = (bd.yPos + bd2.yPos) / 2;
       const theta = (Math.atan2(dy, dx) * 180) / Math.PI;
       
-      // Enhanced styling with teal color matching the app's theme
       return (
         <div
           key={index}
@@ -279,15 +278,15 @@ export default function AdvancedMetronomeWithCircle({
           style={{
             width: `${dist}px`,
             height: "1px",
-            backgroundColor: "#00A0A0", // Teal green color (already used in the app)
+            backgroundColor: "#00A0A0",
             left: `calc(50% + ${mx}px - ${dist / 2}px)`,
             top: `calc(50% + ${my}px)`,
             transform: `rotate(${theta}deg)`,
             position: "absolute",
             pointerEvents: "none",
             transformOrigin: "center center",
-            boxShadow: "0 0 3px rgba(0, 160, 160, 0.6)", // Subtle teal glow
-            transition: "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)" // Smooth transitions
+            boxShadow: "0 0 3px rgba(0, 160, 160, 0.6)",
+            transition: "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)"
           }}
         />
       );
@@ -348,7 +347,8 @@ export default function AdvancedMetronomeWithCircle({
                 background: 'transparent',
                 border: 'none',
                 cursor: 'pointer',
-                zIndex: 10
+                zIndex: 10,
+                outline: 'none' // Removed outline/border
               }}
               aria-label="Toggle play/pause"
             >
@@ -392,7 +392,8 @@ export default function AdvancedMetronomeWithCircle({
                 background: 'transparent',
                 border: 'none',
                 cursor: 'pointer',
-                zIndex: 10
+                zIndex: 10,
+                outline: 'none' // Removed outline/border
               }}
               aria-label="Toggle play/pause"
             >
@@ -408,7 +409,13 @@ export default function AdvancedMetronomeWithCircle({
       {isMobile && (
         <button
           onClick={logic.tapTempo}
-          style={{ background: 'transparent', border: 'none', cursor: 'pointer', marginTop: '20px' }}
+          style={{ 
+            background: 'transparent', 
+            border: 'none', 
+            cursor: 'pointer', 
+            marginTop: '20px',
+            outline: 'none'
+          }}
           aria-label="Tap Tempo"
         >
           <img
@@ -418,11 +425,6 @@ export default function AdvancedMetronomeWithCircle({
           />
         </button>
       )}
-    {/* Measure Actual tempo
-      <div style={{ marginTop: '1.5rem' }}>
-        <strong>Measured BPM:</strong> {logic.actualBpm.toFixed(2)}
-      </div>
-     */}
     </div>
   );
 }
