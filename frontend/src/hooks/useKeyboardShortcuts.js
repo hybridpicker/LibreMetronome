@@ -25,13 +25,12 @@ const useKeyboardShortcuts = ({
     tapTempoRef.current = onTapTempo;
   }, [onTapTempo]);
   
-  // Flag zur Verhinderung mehrfacher Trigger
-  const isProcessingSpaceRef = useRef(false);
+  // Remove the isProcessingSpaceRef and implement a more robust handler
   const lastSpaceKeyTimeRef = useRef(0);
   
   useEffect(() => {
     const handleKeyDown = (event) => {
-      // Falls der Fokus in einem INPUT, TEXTAREA, editierbaren Element oder BUTTON liegt, überspringen
+      // Prevent keyboard shortcuts when typing in inputs or editable elements
       if (
         event.target.tagName === 'INPUT' ||
         event.target.tagName === 'TEXTAREA' ||
@@ -41,34 +40,25 @@ const useKeyboardShortcuts = ({
         return;
       }
       
+      // Space bar handling
       if (event.code === 'Space') {
-        if (event.repeat) return;
+        // Prevent default scrolling
+        event.preventDefault();
         
-        // Zusätzliche Debounce-Logik mit Zeitstempel
+        // Prevent rapid repeated calls
         const now = Date.now();
-        if (now - lastSpaceKeyTimeRef.current < 500) {
-          // Ignoriere Tastendrücke, die zu schnell hintereinander erfolgen (500ms)
+        if (now - lastSpaceKeyTimeRef.current < 300) {
           return;
         }
         lastSpaceKeyTimeRef.current = now;
         
-        console.log("Space key pressed globally. " + (isProcessingSpaceRef.current ? "(Verarbeitung läuft)" : ""));
-        event.preventDefault();
-        
-        if (!isProcessingSpaceRef.current && togglePlayRef.current) {
-          isProcessingSpaceRef.current = true;
-          // Verwende requestAnimationFrame, um sicherzustellen, dass der Aufruf außerhalb des Rendering-Zyklus erfolgt
-          requestAnimationFrame(() => {
-            togglePlayRef.current();
-            // Setze die Sperre nach einer Verzögerung zurück
-            setTimeout(() => {
-              isProcessingSpaceRef.current = false;
-            }, 350); // Erhöht von 250ms auf 350ms für mehr Sicherheit
-          });
+        // Call toggle play/pause
+        if (togglePlayRef.current) {
+          togglePlayRef.current();
         }
       }
       
-      // Weitere Shortcuts
+      // Other shortcuts remain the same
       switch (event.code) {
         case 'KeyT':
           console.log("Key T pressed for Tap Tempo.");
