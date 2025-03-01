@@ -181,7 +181,7 @@ function App() {
         setMode={setMode}
         setIsPaused={setIsPaused}
       />
-      {/* Mode selection buttons */}
+      {/* Mode selection buttons - UPDATED */}
       <div className="mode-selector">
         <button 
           onClick={() => setMode("analog")} 
