@@ -260,3 +260,51 @@ button {
   color: #00A0A0;
   cursor: pointer;
 }
+
+/* Remove the green border from play/pause buttons throughout the app */
+.play-pause-button-overlay,
+button[aria-label="Toggle play/pause"] {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Better tap buttons for mobile */
+button[aria-label="Tap Tempo"] {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  transition: transform 0.2s ease;
+}
+
+button[aria-label="Tap Tempo"]:active {
+  transform: scale(0.95);
+}
+
+/* Make buttons more responsive on mobile */
+@media (max-width: 600px) {
+  .subdivision-button {
+    width: 32px !important; 
+    height: 32px !important;
+    margin: 0 2px !important;
+  }
+  
+  /* Adjust main container spacing */
+  .app-container {
+    padding: 15px 10px;
+  }
+  
+  /* Make mode buttons more compact */
+  .app-container > div > button {
+    padding: 8px 12px !important;
+    font-size: 14px !important;
+  }
+  
+  /* Float controls to fit smaller screens */
+  .control-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
