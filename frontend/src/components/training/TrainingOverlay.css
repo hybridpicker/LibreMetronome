@@ -100,8 +100,9 @@
 }
 
 .training-button-active {
-  background-color: rgba(0, 160, 160, 0.1);
   font-weight: bold;
+  color: #fff;
+  background-color: #00A0A0;
 }
 
 /* Increase spacing between options in training sections */

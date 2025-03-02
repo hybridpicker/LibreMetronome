@@ -32,8 +32,9 @@
 }
 
 .info-button-active {
-  background-color: rgba(0, 160, 160, 0.1);
   font-weight: bold;
+  color: #fff;
+  background-color: #00A0A0;
 }
   
 .info-overlay {
