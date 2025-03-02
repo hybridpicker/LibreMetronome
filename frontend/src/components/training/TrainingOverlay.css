@@ -69,6 +69,7 @@
 }
 
 .training-button {
+  display: none !important;
   position: fixed;
   top: 10px;
   left: 70px; /* Positioned to the right of Info button */
