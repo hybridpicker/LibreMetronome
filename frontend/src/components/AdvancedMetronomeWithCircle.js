@@ -1,4 +1,4 @@
-// File: src/components/AdvancedMetronomeWithCircle.js
+// Updated AdvancedMetronomeWithCircle.js
 import React, { useState, useEffect } from 'react';
 import useMetronomeLogic from '../hooks/useMetronomeLogic';
 import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts';
@@ -214,15 +214,28 @@ export default function AdvancedMetronomeWithCircle({
   }, []);
   const radius = containerSize / 2;
 
+  // Special positioning for one subdivision (centered)
+  // For two subdivisions, calculate positions but ensure line connection
   const beatData = Array.from({ length: subdivisions }, (_, i) => {
-    const angle = (2 * Math.PI * i) / subdivisions - Math.PI / 2;
-    const xPos = radius * Math.cos(angle);
-    const yPos = radius * Math.sin(angle);
+    let xPos, yPos;
+    
+    if (subdivisions === 1) {
+      // Center the single beat in the middle of the circle
+      xPos = 0;
+      yPos = 0;
+    } else {
+      // For 2+ subdivisions, calculate positions around the circle
+      const angle = (2 * Math.PI * i) / subdivisions - Math.PI / 2;
+      xPos = radius * Math.cos(angle);
+      yPos = radius * Math.sin(angle);
+    }
+    
     const isActive =
       logic.currentSubdivision === i &&
       !isPaused &&
       logic.audioCtx &&
       logic.audioCtx.state === 'running';
+      
     return {
       i,
       xPos,
@@ -260,8 +273,9 @@ export default function AdvancedMetronomeWithCircle({
     }
   }
 
+  // Draw line connections for 2+ subdivisions
   let lineConnections = null;
-  if (!analogMode && subdivisions >= 3) {
+  if (!analogMode && subdivisions >= 2) {
     lineConnections = beatData.map((bd, index) => {
       const nextIndex = (index + 1) % subdivisions;
       const bd2 = beatData[nextIndex];
@@ -327,104 +341,69 @@ export default function AdvancedMetronomeWithCircle({
         }}
       >
         {analogMode ? (
-          <>
-            <AnalogMetronomeCanvas
-              width={containerSize}
-              height={containerSize}
-              isPaused={isPaused}
-              audioCtxCurrentTime={() => (logic.audioCtx ? logic.audioCtx.currentTime : 0)}
-              currentSubStartTime={() => logic.currentSubStartRef.current}
-              currentSubInterval={() => logic.currentSubIntervalRef.current}
-              currentSubIndex={logic.currentSubdivision}
-            />
-            <button
-              className="play-pause-button"
-              onClick={handlePlayPause}
-              data-mode="analog"
-              aria-label="Toggle play/pause"
-              style={{
-                position: 'absolute',
-                left: '50%',
-                top: '85%',
-                transform: 'translate(-50%, -50%)',
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 0,
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                zIndex: 10
-              }}
-            >
-              <img
-                src={isPaused ? playIcon : pauseIcon}
-                alt={isPaused ? 'Play' : 'Pause'}
-                className="play-pause-icon"
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  objectFit: 'contain'
-                }}
-              />
-            </button>
-          </>
+          <AnalogMetronomeCanvas
+            width={containerSize}
+            height={containerSize}
+            isPaused={isPaused}
+            audioCtxCurrentTime={() => (logic.audioCtx ? logic.audioCtx.currentTime : 0)}
+            currentSubStartTime={() => logic.currentSubStartRef.current}
+            currentSubInterval={() => logic.currentSubIntervalRef.current}
+            currentSubIndex={logic.currentSubdivision}
+          />
         ) : (
           <>
             {lineConnections}
             {beatData.map((bd) => (
-            <img
-              key={bd.i}
-              src={bd.icon}
-              alt={`Beat ${bd.i}`}
-              className="beat-icon"
-              onClick={() => { effectiveToggleAccent(bd.i); }}
-              style={{
-                left: `calc(50% + ${bd.xPos}px - 12px)`,
-                top: `calc(50% + ${bd.yPos}px - 12px)`,
-                opacity: effectiveAccents[bd.i] === 0 ? 0.3 : 1,
-                transition: "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
-                filter: logic.currentSubdivision === bd.i && !isPaused ? 
-                      "drop-shadow(0 0 5px rgba(248, 211, 141, 0.8))" : "none",
-                transform: logic.currentSubdivision === bd.i && !isPaused ? 
-                          "scale(1.05)" : "scale(1)"
-              }}
-            />
-          ))}
-            <button
-              className="play-pause-button"
-              onClick={handlePlayPause}
-              data-mode="normal"
-              aria-label="Toggle play/pause"
-              style={{
-                position: 'absolute',
-                left: '50%',
-                top: '50%',
-                transform: 'translate(-50%, -50%)',
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 0,
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                zIndex: 10
-              }}
-            >
               <img
-                src={isPaused ? playIcon : pauseIcon}
-                alt={isPaused ? 'Play' : 'Pause'}
-                className="play-pause-icon"
+                key={bd.i}
+                src={bd.icon}
+                alt={`Beat ${bd.i}`}
+                className="beat-icon"
+                onClick={() => { effectiveToggleAccent(bd.i); }}
                 style={{
-                  width: '36px',
-                  height: '36px',
-                  objectFit: 'contain'
+                  left: `calc(50% + ${bd.xPos}px - 12px)`,
+                  top: `calc(50% + ${bd.yPos}px - 12px)`,
+                  opacity: effectiveAccents[bd.i] === 0 ? 0.3 : 1,
+                  transition: "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
+                  filter: logic.currentSubdivision === bd.i && !isPaused ? 
+                        "drop-shadow(0 0 5px rgba(248, 211, 141, 0.8))" : "none",
+                  transform: logic.currentSubdivision === bd.i && !isPaused ? 
+                            "scale(1.05)" : "scale(1)"
                 }}
               />
-            </button>
+            ))}
           </>
         )}
       </div>
+      
+      {/* Play/Pause button repositioned below the metronome (like in Grid mode) */}
+      <div style={{ marginTop: '20px' }}>
+        <button
+          className="play-pause-button"
+          onClick={handlePlayPause}
+          aria-label="Toggle play/pause"
+          style={{ 
+            background: 'transparent', 
+            border: 'none', 
+            cursor: 'pointer',
+            padding: '10px',
+            transition: 'all 0.2s ease',
+            outline: 'none'
+          }}
+        >
+          <img
+            src={isPaused ? playIcon : pauseIcon}
+            alt={isPaused ? 'Play' : 'Pause'}
+            className="play-pause-icon"
+            style={{
+              width: '40px',
+              height: '40px',
+              transition: 'transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)'
+            }}
+          />
+        </button>
+      </div>
+      
       {isMobile && (
         <button
           onClick={logic.tapTempo}
