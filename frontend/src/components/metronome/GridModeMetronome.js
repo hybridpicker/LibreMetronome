@@ -96,18 +96,20 @@ const GridModeMetronome = (props) => {
     };
   }, [props.isPaused, animateCurrentBeat]);
 
-  // UPDATED: Reduced square size and adjusted spacing
-  const squareSize = 50; // Reduced from 60 to 50
-  const gapSize = 6; // Reduced from 8 to 6
-  const gridWidth = props.subdivisions * (squareSize + gapSize) - gapSize;
+  // Square size and spacing configuration
+  const squareSize = 50;
+  const gapSize = 8;
   
-  // Lighter Gold Color Palette based on #f8d38d
+  // Calculate total grid width including ample padding to prevent cutoff
+  const gridWidth = props.subdivisions * (squareSize + gapSize);
+  
+  // Gold color palette
   const colors = {
     inactive: "#e8e8e8", // Very light gray for inactive squares
     level1: "#fae3ad",   // Lighter version of base gold color
     level2: "#f8d38d",   // Base gold color (as specified)
     level3: "#f5c26d",   // Slightly darker, but still bright
-    highlight: "#f9d69a"  // FIXED: Softer highlight color (was too bright)
+    highlight: "#f9d69a"  // Softer highlight color
   };
   
   // First column (first beat) gets a warmer gold
@@ -116,97 +118,9 @@ const GridModeMetronome = (props) => {
     level1: "#fcd592",   // Warmer but light
     level2: "#f8c978",   // Warmer medium
     level3: "#f5bc5e",   // Warmer but still bright
-    highlight: "#f7ca80"  // FIXED: Softer highlight color (was too bright)
+    highlight: "#f7ca80"  // Softer highlight color
   };
   
-  // Render grid as an SVG with enhanced styling
-  const gridSquares = Array.from({ length: props.subdivisions }, (_, colIndex) => {
-    const isCurrentBeat = colIndex === animationFrame && !props.isPaused;
-    const isFirstBeat = colIndex === 0;
-    const columnLevel = gridConfig[colIndex];
-    const colorSet = isFirstBeat ? firstBeatColors : colors;
-    
-    // Determine which rows are active based on the column level (0-3)
-    // 0 = no rows, 1 = bottom row, 2 = bottom two rows, 3 = all three rows
-    const activeRows = columnLevel === 0 ? [] : 
-                      columnLevel === 1 ? [2] : 
-                      columnLevel === 2 ? [1, 2] : 
-                      [0, 1, 2];
-    
-    return (
-      <g
-        key={colIndex}
-        onClick={() => handleColumnClick(colIndex)}
-        style={{
-          cursor: colIndex === 0 ? 'default' : 'pointer',
-          transform: `translateX(${colIndex * (squareSize + gapSize)}px)`,
-          transition: 'transform 0.2s ease-out'
-        }}
-      >
-        {Array.from({ length: 3 }, (_, rowIndex) => {
-          const isActive = activeRows.includes(rowIndex);
-          const isHighlighted = isCurrentBeat && isActive;
-          
-          // Calculate position from top to bottom (first row is at the top)
-          const yPosition = rowIndex * (squareSize + 2); // Added 2px vertical spacing
-          
-          // Select appropriate color based on state
-          let fillColor = isActive ? 
-            (columnLevel === 3 ? colorSet.level3 : 
-             columnLevel === 2 && rowIndex > 0 ? colorSet.level2 : 
-             colorSet.level1) : 
-            colors.inactive;
-          
-          // Override with highlight color if currently playing
-          if (isHighlighted) {
-            fillColor = colorSet.highlight;
-          }
-          
-          return (
-            <rect
-              key={rowIndex}
-              x={0}
-              y={yPosition}
-              width={squareSize}
-              height={squareSize}
-              rx={6} // Rounded corners
-              ry={6}
-              fill={fillColor}
-              stroke={isHighlighted ? "#f8c978" : "transparent"}
-              strokeWidth={isHighlighted ? 2 : 0}
-              style={{
-                opacity: isActive ? 1 : 0.3,
-                // FIXED: Reduced scale animation and improved transition
-                transition: 'all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)',
-                transform: isHighlighted ? 'scale(1.03)' : 'scale(1)', // FIXED: Reduced from 1.05 to 1.03
-                transformOrigin: 'center center',
-                // FIXED: Reduced shadow intensity
-                boxShadow: isHighlighted ? '0 0 6px rgba(248, 211, 141, 0.5)' : 'none', // Reduced from 10px to 6px
-                // FIXED: Removed brightness filter which was making colors too intense
-                filter: isHighlighted ? 'none' : 'none' // Removed brightness filter
-              }}
-            />
-          );
-        })}
-        
-        {/* Add column number label at the bottom */}
-        <text
-          x={squareSize / 2}
-          y={3 * (squareSize + 2) + 16} // Adjusted for new spacing
-          textAnchor="middle"
-          fill={colIndex === 0 ? "#f5bc5e" : "#666"}
-          style={{
-            fontFamily: "'Lato', sans-serif",
-            fontSize: "12px", // Reduced font size
-            fontWeight: colIndex === 0 ? "bold" : "normal"
-          }}
-        >
-          {colIndex + 1}
-        </text>
-      </g>
-    );
-  });
-
   // Responsive behavior for mobile devices
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   useEffect(() => {
@@ -252,34 +166,92 @@ const GridModeMetronome = (props) => {
     };
   }, [props.registerTogglePlay, props.registerTapTempo, handlePlayPause, logic.tapTempo]);
 
-  // Calculate the container width based on screen size and grid dimensions
-  const containerWidth = Math.min(gridWidth, window.innerWidth - 40);
-  const scale = containerWidth / gridWidth;
+  // Render grid as an SVG with enhanced styling
+  const renderGridSquares = () => {
+    return Array.from({ length: props.subdivisions }, (_, colIndex) => {
+      const isCurrentBeat = colIndex === animationFrame && !props.isPaused;
+      const isFirstBeat = colIndex === 0;
+      const columnLevel = gridConfig[colIndex];
+      const colorSet = isFirstBeat ? firstBeatColors : colors;
+      
+      // Determine which rows are active based on the column level (0-3)
+      const activeRows = columnLevel === 0 ? [] : 
+                        columnLevel === 1 ? [2] : 
+                        columnLevel === 2 ? [1, 2] : 
+                        [0, 1, 2];
+      
+      return (
+        <div 
+          key={colIndex}
+          onClick={() => handleColumnClick(colIndex)}
+          style={{
+            display: 'inline-block',
+            verticalAlign: 'top',
+            marginRight: `${gapSize}px`,
+            cursor: colIndex === 0 ? 'default' : 'pointer',
+            width: `${squareSize}px`,
+            textAlign: 'center'
+          }}
+        >
+          {Array.from({ length: 3 }, (_, rowIndex) => {
+            const isActive = activeRows.includes(rowIndex);
+            const isHighlighted = isCurrentBeat && isActive;
+            
+            // Select appropriate color based on state
+            let fillColor = isActive ? 
+              (rowIndex === 0 && columnLevel === 3 ? colorSet.level3 : 
+               rowIndex === 1 && columnLevel >= 2 ? colorSet.level2 : 
+               colorSet.level1) : 
+              colors.inactive;
+            
+            // Override with highlight color if currently playing
+            if (isHighlighted) {
+              fillColor = colorSet.highlight;
+            }
+            
+            return (
+              <div
+                key={rowIndex}
+                style={{
+                  width: `${squareSize}px`,
+                  height: `${squareSize}px`,
+                  borderRadius: '6px',
+                  backgroundColor: fillColor,
+                  marginBottom: '4px',
+                  opacity: isActive ? 1 : 0.3,
+                  transition: 'all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)',
+                  transform: isHighlighted ? 'scale(1.03)' : 'scale(1)',
+                  boxShadow: isHighlighted ? '0 0 4px rgba(248, 211, 141, 0.4)' : 'none',
+                  filter: isHighlighted ? 'brightness(1.05)' : 'none'
+                }}
+              />
+            );
+          })}
+          <div style={{ 
+            fontSize: '12px', 
+            marginTop: '8px', 
+            color: colIndex === 0 ? "#f5bc5e" : "#666",
+            fontWeight: colIndex === 0 ? "bold" : "normal"
+          }}>
+            {colIndex + 1}
+          </div>
+        </div>
+      );
+    });
+  };
 
   return (
     <div style={{ textAlign: 'center', padding: '20px 0' }}>
-      <div 
-        style={{ 
-          margin: '0 auto', 
-          width: `${containerWidth}px`, 
-          overflow: 'hidden'
-        }}
-      >
-        <div style={{ 
-          transformOrigin: 'top left',
-          transform: scale < 1 ? `scale(${scale})` : 'none',
-          width: gridWidth,
-          height: (squareSize * 3) + (2 * 2) + 30, // Adjusted for new spacing
-          margin: scale < 1 ? 'none' : '0 auto'
-        }}>
-          <svg
-            width={gridWidth}
-            height={(squareSize * 3) + (2 * 2) + 30} // Adjusted for new spacing
-            style={{ display: 'block' }}
-          >
-            {gridSquares}
-          </svg>
-        </div>
+      {/* COMPLETELY REDESIGNED CONTAINER: Using native divs instead of SVG */}
+      <div style={{ 
+        margin: '0 auto',
+        padding: '20px',
+        maxWidth: '100%',
+        overflowX: 'auto', // Allow horizontal scrolling on small screens
+        overflowY: 'visible',
+        whiteSpace: 'nowrap' // Keep squares in a row
+      }}>
+        {renderGridSquares()}
       </div>
       
       <div style={{ marginTop: '20px' }}>
@@ -291,18 +263,10 @@ const GridModeMetronome = (props) => {
             cursor: 'pointer',
             padding: '10px',
             transition: 'all 0.2s ease',
-            outline: 'none' // Remove outline/border
+            outline: 'none'
           }}
           className="play-button"
           aria-label="Toggle play/pause"
-          onMouseOver={(e) => {
-            const img = e.currentTarget.querySelector('img');
-            if (img) img.style.transform = 'scale(1.1)';
-          }}
-          onMouseOut={(e) => {
-            const img = e.currentTarget.querySelector('img');
-            if (img) img.style.transform = 'scale(1)';
-          }}
         >
           <img
             src={props.isPaused ? playIcon : pauseIcon}
@@ -370,23 +334,9 @@ const GridModeMetronome = (props) => {
             cursor: 'pointer', 
             marginTop: '20px',
             padding: '10px',
-            outline: 'none' // Remove outline/border
+            outline: 'none'
           }}
           aria-label="Tap Tempo"
-          onMouseOver={(e) => {
-            const img = e.currentTarget.querySelector('img');
-            if (img) {
-              img.style.transform = 'scale(1.1)';
-              img.style.filter = 'drop-shadow(0 0 5px rgba(248, 211, 141, 0.5))';
-            }
-          }}
-          onMouseOut={(e) => {
-            const img = e.currentTarget.querySelector('img');
-            if (img) {
-              img.style.transform = 'scale(1)';
-              img.style.filter = 'none';
-            }
-          }}
         >
           <img
             src={tapButtonIcon}

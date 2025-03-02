@@ -1,0 +1,42 @@
+/* Prevent grid mode animation from becoming too large */
+rect[style*="transform"] {
+    transform: scale(1.03) !important; /* Limit the scale to subtle 1.03 */
+    transition: all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
+  }
+  
+  /* Apply softer shadow effect */
+  rect[style*="boxShadow"] {
+    box-shadow: 0 0 6px rgba(248, 211, 141, 0.5) !important; /* Smaller, softer shadow */
+  }
+  
+  /* Remove any brightness filters that might be applied */
+  rect[style*="filter"] {
+    filter: none !important;
+  }
+  
+  /* Ensure smoother transitions */
+  rect {
+    transition: all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
+  }
+  
+  .grid-square-playing {
+    transform: scale(1.01) !important;
+    box-shadow: 0 0 6px rgba(248, 211, 141, 0.5) !important;
+    filter: none !important;
+  }
+  
+  /* Prevent any scaling transformations from going beyond 1.03 */
+  svg g rect {
+    max-width: 50px;
+    max-height: 50px;
+    transform-origin: center center;
+  }
+  
+  /* Ensure highlight colors are never too bright */
+  .grid-highlight-soft {
+    fill: #f9d69a !important; /* Softer highlight for regular beats */
+  }
+  
+  .grid-highlight-first {
+    fill: #f7ca80 !important; /* Softer highlight for first beat */
+  }
