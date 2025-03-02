@@ -43,8 +43,8 @@ import subdivision7Active from "../assets/svg/subdivision-7Active.svg";
 import subdivision8Active from "../assets/svg/subdivision-8Active.svg";
 import subdivision9Active from "../assets/svg/subdivision-9Active.svg";
 
-// Hard limit of 3 circles maximum
-const MAX_CIRCLES = 3;
+// Hard limit of 2 circles
+const MAX_CIRCLES = 2;
 
 export default function MultiCircleMetronome(props) {
   // State for circle settings and active circles
