@@ -1,0 +1,39 @@
+/* File: src/components/AdvancedMetronome.css */
+
+.metronome-container {
+  position: relative;
+  margin: 0 auto;
+}
+
+.beat-icon {
+  position: absolute;
+  transition: all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.line-connection {
+  position: absolute;
+  pointer-events: none;
+  transform-origin: center center;
+  transition: all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.play-pause-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 10px;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.play-pause-icon {
+  transition: transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.tap-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  margin-top: 20px;
+  outline: none;
+}
