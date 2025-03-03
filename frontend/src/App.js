@@ -5,7 +5,7 @@ import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
 import InfoOverlay from './components/Menu/InfoOverlay/InfoOverlay';
 import AdvancedMetronomeWithCircle from './components/AdvancedMetronome';
-import MultiCircleMetronome from './components/metronome/MultiCircleMode/MultiCircleMetronome';
+import MultiCircleMetronome from './components/metronome/MultiCircleMode';
 import GridModeMetronome from './components/metronome/GridMode/GridModeMetronome';
 import TrainingOverlay from './components/Menu/TrainingOverlay/TrainingOverlay';
 import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
