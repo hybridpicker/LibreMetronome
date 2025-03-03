@@ -1,15 +1,15 @@
 // File: src/App.js
 import React, { useState, useRef, useEffect } from 'react';
 import './App.css';
-import Header from './components/Header';
-import Footer from './components/Footer';
-import InfoOverlay from './components/InfoOverlay';
-import AdvancedMetronomeWithCircle from './components/AdvancedMetronomeWithCircle';
-import MultiCircleMetronome from './components/MultiCircleMetronome';
-import GridModeMetronome from './components/metronome/GridModeMetronome';
-import TrainingOverlay from './components/training/TrainingOverlay';
+import Header from './components/Header/Header';
+import Footer from './components/Footer/Footer';
+import InfoOverlay from './components/Menu/InfoOverlay/InfoOverlay';
+import AdvancedMetronomeWithCircle from './components/AdvancedMetronome';
+import MultiCircleMetronome from './components/metronome/MultiCircleMode/MultiCircleMetronome';
+import GridModeMetronome from './components/metronome/GridMode/GridModeMetronome';
+import TrainingOverlay from './components/Menu/TrainingOverlay/TrainingOverlay';
 import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
-import MetronomeControls from './components/metronome/MetronomeControls';
+import MetronomeControls from './components/metronome/Controls/MetronomeControls';
 
 import quarterNotesActive from './assets/svg/quarter_eight_notes/quarterNotesActive.svg';
 import quarterNotesInactive from './assets/svg/quarter_eight_notes/quarterNotesInactive.svg';

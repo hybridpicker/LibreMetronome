@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import useMetronomeLogic from '../../hooks/useMetronomeLogic';
-import playIcon from '../../assets/svg/play.svg';
-import pauseIcon from '../../assets/svg/pause.svg';
-import tapButtonIcon from '../../assets/svg/tap-button.svg';
-import './GridMode/GridAnimation.css';
+import useMetronomeLogic from '../../../hooks/useMetronomeLogic';
+import playIcon from '/Users/lukasschonsgibl/Coding/Python/LibreMetronome/frontend/src/assets/svg/play.svg';
+import pauseIcon from '/Users/lukasschonsgibl/Coding/Python/LibreMetronome/frontend/src/assets/svg/pause.svg';
+import tapButtonIcon from '/Users/lukasschonsgibl/Coding/Python/LibreMetronome/frontend/src/assets/svg/tap-button.svg';
+import './GridAnimation.css';
 
 const GridModeMetronome = (props) => {
   // Initialize gridConfig based on the current subdivisions (1 to 9)

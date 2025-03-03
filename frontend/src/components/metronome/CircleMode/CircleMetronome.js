@@ -1,6 +1,6 @@
 // File: src/components/metronome/CircleMetronome.js
 import React from 'react';
-import BaseMetronome from './BaseMetronome';
+import BaseMetronome from '../BaseMetronome';
 import firstBeat from '../../assets/svg/firstBeat.svg';
 import firstBeatActive from '../../assets/svg/firstBeatActive.svg';
 import normalBeat from '../../assets/svg/normalBeat.svg';

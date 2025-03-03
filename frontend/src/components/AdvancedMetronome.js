@@ -1,4 +1,4 @@
-// Updated AdvancedMetronomeWithCircle.js
+// src/AdvancedMetronome.js
 import React, { useState, useEffect } from 'react';
 import useMetronomeLogic from '../hooks/useMetronomeLogic';
 import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts';
@@ -38,7 +38,7 @@ import subdivision9Active from '../assets/svg/subdivision-9Active.svg';
 import playIcon from '../assets/svg/play.svg';
 import pauseIcon from '../assets/svg/pause.svg';
 
-import AnalogMetronomeCanvas from './metronome/AnalogMetronomeCanvas';
+import AnalogMetronomeCanvas from './metronome/AnalogMode/AnalogMetronomeCanvas';
 
 export default function AdvancedMetronomeWithCircle({
   tempo,

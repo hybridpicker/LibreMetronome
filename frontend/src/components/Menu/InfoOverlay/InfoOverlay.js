@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import infoButtonIcon from '../assets/svg/info-button.svg';
+import infoButtonIcon from '../../../assets/svg/info-button.svg';
 import './InfoOverlay.css';
 
 // Updated Modal with responsive content for mobile and desktop
