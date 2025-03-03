@@ -1,75 +1,57 @@
-// File: src/components/metronome/BaseMetronome.js
-import React, { useState, useEffect } from 'react';
-import useMetronomeLogic from '../../hooks/useMetronomeLogic';
-import useWindowDimensions from '../../hooks/useWindowDimensions';
+// src/components/metronome/BaseMetronomeLayout.js
+import React, { useEffect, useState } from 'react';
+// Remove the CSS import to avoid the error
+// import './BaseMetronomeLayout.css';
 
-const BaseMetronome = ({
+export default function BaseMetronomeLayout({
+  children,
   tempo, setTempo,
-  subdivisions, setSubdivisions,
-  isPaused, setIsPaused,
-  swing, setSwing,
   volume, setVolume,
-  accents, toggleAccent,
-  analogMode = false,
-  gridMode = false,
-  beatMultiplier = 1,
-  children, // Render‐prop function for mode‑specific rendering
-  ...logicOptions
-}) => {
-  // Determine container size based on window dimensions
-  const { width } = useWindowDimensions();
-  const getContainerSize = () => {
-    if (width < 600) return Math.min(width - 40, 300);
-    if (width < 1024) return Math.min(width - 40, 400);
-    return 300;
-  };
-  const [containerSize, setContainerSize] = useState(getContainerSize());
+  swing, setSwing,
+  isPaused, onTogglePlay, onTapTempo,
+  showSwingSlider = true, useTapButtonMobile = true,
+}) {
+  const [containerSize, setContainerSize] = useState(300);
+
   useEffect(() => {
-    setContainerSize(getContainerSize());
-  }, [width]);
-
-  // Initialize metronome scheduling logic
-  const logic = useMetronomeLogic({
-    tempo,
-    setTempo,
-    subdivisions,
-    setSubdivisions,
-    isPaused,
-    setIsPaused,
-    swing,
-    setSwing,
-    volume,
-    setVolume,
-    accents,
-    analogMode,
-    gridMode,
-    beatMultiplier,
-    ...logicOptions
-  });
-
-  const radius = containerSize / 2;
-  const beatData = Array.from({ length: subdivisions }, (_, i) => {
-    const angle = (2 * Math.PI * i) / subdivisions - Math.PI / 2;
-    const xPos = radius * Math.cos(angle);
-    const yPos = radius * Math.sin(angle);
-    const isActive =
-      logic.currentSubdivision === i &&
-      !isPaused &&
-      logic.audioCtx &&
-      logic.audioCtx.state === 'running';
-    return { i, xPos, yPos, isActive };
-  });
+    function handleResize() {
+      const w = window.innerWidth;
+      setContainerSize(w < 600 ? Math.min(w - 40, 300) : w < 1024 ? Math.min(w - 40, 400) : 300);
+    }
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
-    <div style={{ position: 'relative', textAlign: 'center' }}>
-      <div
-        className="metronome-container"
-        style={{ width: containerSize, height: containerSize, margin: '0 auto', position: 'relative' }}
-      >
-        {children({ beatData, containerSize, radius, logic })}
+    <div className="metronome-layout">
+      <div className="metronome-container" style={{ width: containerSize, height: containerSize }}>
+        {typeof children === 'function' ? children(containerSize) : children}
+        <button className="play-pause-button" onClick={onTogglePlay}>
+          <img src={isPaused ? '/assets/svg/play.svg' : '/assets/svg/pause.svg'} alt="Toggle Play" />
+        </button>
       </div>
+      <div className="sliders-container">
+        <label>
+          Tempo: {tempo} BPM
+          <input type="range" min={15} max={240} step={1} value={tempo} onChange={(e) => setTempo(Number(e.target.value))} />
+        </label>
+        <label>
+          Volume: {Math.round(volume * 100)}%
+          <input type="range" min={0} max={1} step={0.01} value={volume} onChange={(e) => setVolume(Number(e.target.value))} />
+        </label>
+        {showSwingSlider && (
+          <label>
+            Swing: {Math.round(swing * 200)}%
+            <input type="range" min={0} max={0.5} step={0.01} value={swing} onChange={(e) => setSwing(Number(e.target.value))} />
+          </label>
+        )}
+      </div>
+      {useTapButtonMobile && (
+        <button className="tap-button" onClick={onTapTempo}>
+          <img src="/assets/svg/tap-button.svg" alt="Tap Tempo" />
+        </button>
+      )}
     </div>
   );
-};
-
-export default BaseMetronome;
+}
