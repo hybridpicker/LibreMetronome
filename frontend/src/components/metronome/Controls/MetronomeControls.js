@@ -1,9 +1,9 @@
 // File: src/components/metronome/MetronomeControls.js
 import React from 'react';
-import quarterNotesActive from '../../assets/svg/quarter_eight_notes/quarterNotesActive.svg';
-import quarterNotesInactive from '../../assets/svg/quarter_eight_notes/quarterNotesInactive.svg';
-import eightNotesActive from '../../assets/svg/quarter_eight_notes/eightNotesActive.svg';
-import eightNotesInactive from '../../assets/svg/quarter_eight_notes/eightNotesInactive.svg';
+import quarterNotesActive from '../../../assets/svg/quarter_eight_notes/quarterNotesActive.svg';
+import quarterNotesInactive from '../../../assets/svg/quarter_eight_notes/quarterNotesInactive.svg';
+import eightNotesActive from '../../../assets/svg/quarter_eight_notes/eightNotesActive.svg';
+import eightNotesInactive from '../../../assets/svg/quarter_eight_notes/eightNotesInactive.svg';
 import SubdivisionSelector from './SubdivisionSelector';
 
 const MetronomeControls = ({

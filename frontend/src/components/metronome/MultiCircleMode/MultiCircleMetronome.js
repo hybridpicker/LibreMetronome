@@ -1,24 +1,24 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import useMetronomeLogic from "../hooks/useMetronomeLogic";
-import useKeyboardShortcuts from "../hooks/useKeyboardShortcuts";
+import useMetronomeLogic from "../../../hooks/useMetronomeLogic";
+import useKeyboardShortcuts from "../../../hooks/useKeyboardShortcuts";
 
 // Import SVG assets (beat icons, control icons, etc.)
-import firstBeat from "../assets/svg/firstBeat.svg";
-import firstBeatActive from "../assets/svg/firstBeatActive.svg";
-import normalBeat from "../assets/svg/normalBeat.svg";
-import normalBeatActive from "../assets/svg/normalBeatActive.svg";
-import accentedBeat from "../assets/svg/accentedBeat.svg";
-import accentedBeatActive from "../assets/svg/accentedBeatActive.svg";
-import tapButtonIcon from "../assets/svg/tap-button.svg";
-import playIcon from "../assets/svg/play.svg";
-import pauseIcon from "../assets/svg/pause.svg";
-import quarterNotesActive from "../assets/svg/quarter_eight_notes/quarterNotesActive.svg";
-import quarterNotesInactive from "../assets/svg/quarter_eight_notes/quarterNotesInactive.svg";
-import eightNotesActive from "../assets/svg/quarter_eight_notes/eightNotesActive.svg";
-import eightNotesInactive from "../assets/svg/quarter_eight_notes/eightNotesInactive.svg";
+import firstBeat from "../../../assets/svg/firstBeat.svg";
+import firstBeatActive from "../../../assets/svg/firstBeatActive.svg";
+import normalBeat from "../../../assets/svg/normalBeat.svg";
+import normalBeatActive from "../../../assets/svg/normalBeatActive.svg";
+import accentedBeat from "../../../assets/svg/accentedBeat.svg";
+import accentedBeatActive from "../../../assets/svg/accentedBeatActive.svg";
+import tapButtonIcon from "../../../assets/svg/tap-button.svg";
+import playIcon from "../../../assets/svg/play.svg";
+import pauseIcon from "../../../assets/svg/pause.svg";
+import quarterNotesActive from "../../../assets/svg/quarter_eight_notes/quarterNotesActive.svg";
+import quarterNotesInactive from "../../../assets/svg/quarter_eight_notes/quarterNotesInactive.svg";
+import eightNotesActive from "../../../assets/svg/quarter_eight_notes/eightNotesActive.svg";
+import eightNotesInactive from "../../../assets/svg/quarter_eight_notes/eightNotesInactive.svg";
 
 // Import subdivision icons
-import { subdivisionIcons } from "../assets/svg/subdivisionIcons";
+import { subdivisionIcons } from "../../../assets/svg/subdivisionIcons";
 
 // Initialize global silence check function
 window.isSilent = function() {
