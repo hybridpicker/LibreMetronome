@@ -716,7 +716,7 @@ export default function MultiCircleMetronome(props) {
       <div className="controls-section" style={{ marginTop: "20px" }}>
         {/* Notes section */}
         <div style={{ marginBottom: "20px", textAlign: "center" }}>
-          <h3 className="section-title" style={{marginBottom: "10px", color: "#00A0A0"}}>
+          <h3 className="section-title" style={{marginBottom: "10px"}}>
             Notes (Circle {activeCircle + 1})
           </h3>
           <NoteSelector 
@@ -727,7 +727,7 @@ export default function MultiCircleMetronome(props) {
         
         {/* Subdivision section */}
         <div style={{ marginBottom: "20px", textAlign: "center" }}>
-          <h3 className="section-title" style={{marginBottom: "10px", color: "#00A0A0"}}>
+          <h3 className="section-title" style={{marginBottom: "10px"}}>
             Subdivision (Circle {activeCircle + 1})
           </h3>
           <SubdivisionSelector
