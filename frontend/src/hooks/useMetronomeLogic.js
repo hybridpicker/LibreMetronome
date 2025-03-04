@@ -30,6 +30,13 @@ export default function useMetronomeLogic({
   measuresUntilSpeedUp = 2,
   beatMultiplier = 1,
   multiCircleMode = false,
+
+  /** 
+   * NEW optional callback:
+   * If you want the UI to know every time the single beat is triggered (in a 1-subdivision scenario), 
+   * pass a function here. It will be called each time subIndex=0 is scheduled.
+   */
+  onSingleSubTrigger = null 
 }) {
   // Track the current subdivision we are on (0..subdivisions-1)
   const [currentSubdivision, setCurrentSubdivision] = useState(0);
@@ -87,20 +94,24 @@ export default function useMetronomeLogic({
       if (beatConfig && beatConfig.length === subdivisions) {
         beatConfigRef.current = beatConfig;
       } else {
-        beatConfigRef.current = Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1));
+        beatConfigRef.current = Array.from({ length: subdivisions }, (_, i) =>
+          i === 0 ? 3 : 1
+        );
       }
     } else {
       if (beatConfig && beatConfig.length === subdivisions) {
         beatConfigRef.current = beatConfig;
       } else {
-        beatConfigRef.current = Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1));
+        beatConfigRef.current = Array.from({ length: subdivisions }, (_, i) =>
+          i === 0 ? 3 : 1
+        );
       }
     }
   }, [beatConfig, subdivisions, gridMode]);
 
-  // ===============================
+  // =====================================================
   // Macro/speed training logic
-  // ===============================
+  // =====================================================
   const handleEndOfMeasure = useCallback(() => {
     measureCountRef.current += 1;
 
@@ -132,7 +143,15 @@ export default function useMetronomeLogic({
         measureCountRef.current = 0;
       }
     }
-  }, [macroMode, speedMode, measuresUntilMute, muteDurationMeasures, measuresUntilSpeedUp, tempoIncreasePercent, setTempo]);
+  }, [
+    macroMode,
+    speedMode,
+    measuresUntilMute,
+    muteDurationMeasures,
+    measuresUntilSpeedUp,
+    tempoIncreasePercent,
+    setTempo
+  ]);
 
   // Decide if a given beat should be muted (based on macroMode)
   const shouldMuteThisBeat = useCallback(
@@ -147,9 +166,9 @@ export default function useMetronomeLogic({
     [macroMode, muteProbability]
   );
 
-  // ===============================
+  // =====================================================
   // Start/Stop the scheduler
-  // ===============================
+  // =====================================================
   const stopScheduler = useCallback(() => {
     if (lookaheadRef.current) {
       clearInterval(lookaheadRef.current);
@@ -158,9 +177,9 @@ export default function useMetronomeLogic({
     schedulerRunningRef.current = false;
   }, []);
 
-  // ===============================
+  // =====================================================
   // Scheduling audio (play buffer)
-  // ===============================
+  // =====================================================
   const schedulePlay = useCallback((buffer, when) => {
     if (!buffer || !audioCtxRef.current) return;
     const now = audioCtxRef.current.currentTime;
@@ -198,14 +217,16 @@ export default function useMetronomeLogic({
     setActualBpm(newBpm);
   }, []);
 
-  // ===============================
+  // =====================================================
   // Schedule each subdivision
-  // ===============================
+  // =====================================================
   const scheduleSubdivision = useCallback(
     (subIndex, when) => {
       // For logging: subIndex=0 => first beat
       if (subIndex === 0) {
-        console.log(`[useMetronomeLogic] Scheduling FIRST_BEAT (subIndex=0) at time = ${when.toFixed(3)}`);
+        console.log(
+          `[useMetronomeLogic] Scheduling FIRST_BEAT (subIndex=0) at time = ${when.toFixed(3)}`
+        );
       }
 
       const now = audioCtxRef.current ? audioCtxRef.current.currentTime : 0;
@@ -213,10 +234,16 @@ export default function useMetronomeLogic({
         when = now + 0.02;
       }
 
+      // ----------- NEW: Fire user callback if 1-sub and subIndex=0 -----------
+      if (subdivisionsRef.current === 1 && subIndex === 0 && onSingleSubTrigger) {
+        onSingleSubTrigger(); 
+      }
+      // -----------------------------------------------------------------------
+
       if (!shouldMuteThisBeat(subIndex)) {
         playedBeatTimesRef.current.push(performance.now());
         updateActualBpm();
-      } 
+      }
 
       if (shouldMuteThisBeat(subIndex)) {
         // If muted, skip playing
@@ -248,13 +275,19 @@ export default function useMetronomeLogic({
         schedulePlay(buffer, when);
       }
     },
-    [analogMode, gridMode, schedulePlay, shouldMuteThisBeat, updateActualBpm]
+    [
+      analogMode,
+      gridMode,
+      schedulePlay,
+      shouldMuteThisBeat,
+      updateActualBpm,
+      onSingleSubTrigger
+    ]
   );
 
-  // ===============================
+  // =====================================================
   // Interval between subdivisions
-  // Note: If beatMultiplier=2 => half the duration => double speed
-  // ===============================
+  // =====================================================
   const getCurrentSubIntervalSec = useCallback(() => {
     if (!tempoRef.current) return 0.5;
     // e.g. for quarter notes => 1, for eighth => 2
@@ -266,19 +299,23 @@ export default function useMetronomeLogic({
       const isEvenSub = currentSubRef.current % 2 === 0;
       const swingFactor = swingRef.current || 0;
       if (swingFactor > 0) {
-        return isEvenSub ? secPerHit * (1 + swingFactor) : secPerHit * (1 - swingFactor);
+        return isEvenSub
+          ? secPerHit * (1 + swingFactor)
+          : secPerHit * (1 - swingFactor);
       }
     }
     return secPerHit;
   }, [beatMultiplier]);
 
-  // ===============================
+  // =====================================================
   // The main scheduling loop
-  // ===============================
+  // =====================================================
   const scheduler = useCallback(() => {
     if (!audioCtxRef.current) return;
     const now = audioCtxRef.current.currentTime;
-    const effectiveAhead = multiCircleMode ? SCHEDULE_AHEAD_TIME * 1.2 : SCHEDULE_AHEAD_TIME;
+    const effectiveAhead = multiCircleMode
+      ? SCHEDULE_AHEAD_TIME * 1.2
+      : SCHEDULE_AHEAD_TIME;
 
     while (nextNoteTimeRef.current < now + effectiveAhead) {
       const subIndex = currentSubRef.current;
@@ -298,35 +335,43 @@ export default function useMetronomeLogic({
         handleEndOfMeasure();
       }
     }
-  }, [scheduleSubdivision, getCurrentSubIntervalSec, handleEndOfMeasure, multiCircleMode]);
+  }, [
+    scheduleSubdivision,
+    getCurrentSubIntervalSec,
+    handleEndOfMeasure,
+    multiCircleMode
+  ]);
 
-  // ===============================
+  // =====================================================
   // Start the scheduler
-  // ===============================
-  const startScheduler = useCallback((startTime = null) => {
-    console.log("[useMetronomeLogic] startScheduler() called");
-    if (schedulerRunningRef.current) return;
-    stopScheduler();
+  // =====================================================
+  const startScheduler = useCallback(
+    (startTime = null) => {
+      console.log("[useMetronomeLogic] startScheduler() called");
+      if (schedulerRunningRef.current) return;
+      stopScheduler();
 
-    if (!audioCtxRef.current) return;
-    schedulerRunningRef.current = true;
+      if (!audioCtxRef.current) return;
+      schedulerRunningRef.current = true;
 
-    currentSubRef.current = 0;
-    setCurrentSubdivision(0);
+      currentSubRef.current = 0;
+      setCurrentSubdivision(0);
 
-    const now = audioCtxRef.current.currentTime;
-    nextNoteTimeRef.current = startTime !== null ? startTime : now;
-    currentSubStartRef.current = nextNoteTimeRef.current;
-    currentSubIntervalRef.current = getCurrentSubIntervalSec();
-    playedBeatTimesRef.current = [];
+      const now = audioCtxRef.current.currentTime;
+      nextNoteTimeRef.current = startTime !== null ? startTime : now;
+      currentSubStartRef.current = nextNoteTimeRef.current;
+      currentSubIntervalRef.current = getCurrentSubIntervalSec();
+      playedBeatTimesRef.current = [];
 
-    // Start the scheduling loop
-    lookaheadRef.current = setInterval(scheduler, 20);
-  }, [stopScheduler, scheduler, getCurrentSubIntervalSec]);
+      // Start the scheduling loop
+      lookaheadRef.current = setInterval(scheduler, 20);
+    },
+    [stopScheduler, scheduler, getCurrentSubIntervalSec]
+  );
 
-  // ===============================
+  // =====================================================
   // Tap Tempo
-  // ===============================
+  // =====================================================
   const tapTimesRef = useRef([]);
   const handleTapTempo = useCallback(() => {
     const now = performance.now();
@@ -348,9 +393,9 @@ export default function useMetronomeLogic({
     }
   }, [setTempo]);
 
-  // ===============================
+  // =====================================================
   // Load Audio Buffers (Click Sounds)
-  // ===============================
+  // =====================================================
   useEffect(() => {
     if (!globalAudioCtx || globalAudioCtx.state === "closed") {
       try {
@@ -372,7 +417,7 @@ export default function useMetronomeLogic({
         .catch(() => {});
     };
 
-    // Adjust these to your correct paths
+    // Adjust these to your correct file paths
     loadSound("/assets/audio/click_new.mp3", (b) => {
       normalBufferRef.current = b;
     });
@@ -388,9 +433,9 @@ export default function useMetronomeLogic({
     };
   }, [stopScheduler]);
 
-  // ===============================
+  // =====================================================
   // Start/stop based on isPaused
-  // ===============================
+  // =====================================================
   useEffect(() => {
     if (!isPaused) {
       if (!schedulerRunningRef.current) {
@@ -401,9 +446,9 @@ export default function useMetronomeLogic({
     }
   }, [isPaused, startScheduler, stopScheduler]);
 
-  // ===============================
+  // =====================================================
   // Return the hook’s interface
-  // ===============================
+  // =====================================================
   return {
     currentSubdivision,
     actualBpm,
@@ -412,6 +457,6 @@ export default function useMetronomeLogic({
     currentSubStartRef,
     currentSubIntervalRef,
     startScheduler,
-    stopScheduler,
+    stopScheduler
   };
 }
