@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import useMetronomeLogic from '../../hooks/useMetronomeLogic';
-import playIcon from '../../assets/svg/play.svg';
-import pauseIcon from '../../assets/svg/pause.svg';
-import tapButtonIcon from '../../assets/svg/tap-button.svg';
-import './GridMode/GridAnimation.css';
+import useMetronomeLogic from '../../../hooks/useMetronomeLogic';
+import playIcon from '../../../assets/svg/play.svg';
+import pauseIcon from '../../../assets/svg/pause.svg';
+import tapButtonIcon from '../../../assets/svg/tap-button.svg';
+import './GridAnimation.css';
+import withTrainingContainer from '../../Training/withTrainingContainer';
+
 
 const GridModeMetronome = (props) => {
   // Initialize gridConfig based on the current subdivisions (1 to 9)
@@ -353,4 +355,4 @@ const GridModeMetronome = (props) => {
   );
 };
 
-export default GridModeMetronome;
+export default withTrainingContainer(GridModeMetronome);

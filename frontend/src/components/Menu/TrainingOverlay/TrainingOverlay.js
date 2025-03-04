@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './TrainingOverlay.css';
-import trainingButtonIcon from '../../assets/svg/training-button.svg';
-import trainingButtonOnIcon from '../../assets/svg/training-button-on.svg';
+import trainingButtonIcon from '../../../assets/svg/training-button.svg';
+import trainingButtonOnIcon from '../../../assets/svg/training-button-on.svg';
 
 /**
  * TrainingModal displays the training mode settings.
