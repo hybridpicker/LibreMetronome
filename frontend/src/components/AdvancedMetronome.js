@@ -42,6 +42,9 @@ import pauseIcon from '../assets/svg/pause.svg';
 import AnalogMetronomeCanvas from './metronome/AnalogMode/AnalogMetronomeCanvas';
 import withTrainingContainer from './Training/withTrainingContainer';
 
+// CSS
+import './metronome/Controls/slider-styles.css'
+
 /**
  * A reusable advanced metronome component with circle UI and optional training container.
  */
