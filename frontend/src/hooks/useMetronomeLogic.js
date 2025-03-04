@@ -1,3 +1,5 @@
+// File: src/hooks/useMetronomeLogic.js
+
 import { useEffect, useRef, useState, useCallback } from "react";
 
 let globalAudioCtx = null;
@@ -31,25 +33,24 @@ export default function useMetronomeLogic({
   beatMultiplier = 1,
   multiCircleMode = false,
 
-  /** 
-   * NEW optional callback:
-   * If you want the UI to know every time the single beat is triggered (in a 1-subdivision scenario), 
-   * pass a function here. It will be called each time subIndex=0 is scheduled.
+  /**
+   * NEW optional callback: Fired every time a beat is scheduled, regardless of subIndex.
+   * This is how we can animate each beat in the UI. 
    */
-  onSingleSubTrigger = null 
+  onAnySubTrigger = null
 }) {
   // Track the current subdivision we are on (0..subdivisions-1)
   const [currentSubdivision, setCurrentSubdivision] = useState(0);
-  // Display the actual BPM if you want to measure it from real timings
+  // Optional: track “actual BPM” if you want to measure real timings
   const [actualBpm, setActualBpm] = useState(0);
 
-  // References to the AudioContext and buffers
+  // References for the AudioContext and the loaded click buffers
   const audioCtxRef = useRef(null);
   const normalBufferRef = useRef(null);
   const accentBufferRef = useRef(null);
   const firstBufferRef = useRef(null);
 
-  // Next note scheduling
+  // Scheduling references
   const nextNoteTimeRef = useRef(0);
   const currentSubRef = useRef(0);
   const currentSubStartRef = useRef(0);
@@ -58,7 +59,7 @@ export default function useMetronomeLogic({
   const schedulerRunningRef = useRef(false);
   const playedBeatTimesRef = useRef([]);
 
-  // Keep real-time copies for immediate reading
+  // Mirror some props into refs for easy read in callbacks
   const tempoRef = useRef(tempo);
   const swingRef = useRef(swing);
   const volumeRef = useRef(volume);
@@ -71,7 +72,7 @@ export default function useMetronomeLogic({
   const isSilencePhaseRef = useRef(false);
   const muteMeasureCountRef = useRef(0);
 
-  // Keep references updated
+  // Keep them updated if parent changes
   useEffect(() => {
     tempoRef.current = tempo;
   }, [tempo]);
@@ -88,7 +89,7 @@ export default function useMetronomeLogic({
     accentsRef.current = accents;
   }, [accents]);
 
-  // Optionally handle a beatConfig array if using "gridMode"
+  // Grid beat config if needed
   useEffect(() => {
     if (gridMode) {
       if (beatConfig && beatConfig.length === subdivisions) {
@@ -115,7 +116,7 @@ export default function useMetronomeLogic({
   const handleEndOfMeasure = useCallback(() => {
     measureCountRef.current += 1;
 
-    // Macro Mode 1: “Silence after X measures, then come back”
+    // Macro mode 1: fixed silence after X measures
     if (macroMode === 1) {
       if (!isSilencePhaseRef.current) {
         if (measureCountRef.current >= measuresUntilMute) {
@@ -132,10 +133,10 @@ export default function useMetronomeLogic({
         }
       }
     } else if (macroMode === 2) {
-      // Additional “random silence” or other logic could go here
+      // Additional “random silence” logic could go here
     }
 
-    // Speed Mode 1: Increase tempo every X measures
+    // Speed mode 1: Increase tempo after X measures
     if (speedMode === 1) {
       if (measureCountRef.current >= measuresUntilSpeedUp) {
         const factor = 1 + tempoIncreasePercent / 100;
@@ -153,12 +154,11 @@ export default function useMetronomeLogic({
     setTempo
   ]);
 
-  // Decide if a given beat should be muted (based on macroMode)
   const shouldMuteThisBeat = useCallback(
     (subIndex) => {
       if (macroMode === 1 && isSilencePhaseRef.current) return true;
       if (macroMode === 2) {
-        // Possibly random mute
+        // random chance of mute
         return Math.random() < muteProbability;
       }
       return false;
@@ -178,7 +178,7 @@ export default function useMetronomeLogic({
   }, []);
 
   // =====================================================
-  // Scheduling audio (play buffer)
+  // schedulePlay - to actually schedule an audio buffer
   // =====================================================
   const schedulePlay = useCallback((buffer, when) => {
     if (!buffer || !audioCtxRef.current) return;
@@ -201,7 +201,7 @@ export default function useMetronomeLogic({
     };
   }, []);
 
-  // Keep track of “actual BPM” if you want an average
+  // For measuring actual BPM from real intervals
   const updateActualBpm = useCallback(() => {
     const MAX_BEATS = 16;
     const arr = playedBeatTimesRef.current;
@@ -218,11 +218,16 @@ export default function useMetronomeLogic({
   }, []);
 
   // =====================================================
-  // Schedule each subdivision
+  // scheduleSubdivision - called for each upcoming beat
   // =====================================================
   const scheduleSubdivision = useCallback(
     (subIndex, when) => {
-      // For logging: subIndex=0 => first beat
+      // Fire the user callback for ANY sub
+      if (onAnySubTrigger) {
+        onAnySubTrigger(subIndex);
+      }
+
+      // For logging
       if (subIndex === 0) {
         console.log(
           `[useMetronomeLogic] Scheduling FIRST_BEAT (subIndex=0) at time = ${when.toFixed(3)}`
@@ -234,41 +239,33 @@ export default function useMetronomeLogic({
         when = now + 0.02;
       }
 
-      // ----------- NEW: Fire user callback if 1-sub and subIndex=0 -----------
-      if (subdivisionsRef.current === 1 && subIndex === 0 && onSingleSubTrigger) {
-        onSingleSubTrigger(); 
-      }
-      // -----------------------------------------------------------------------
-
+      // If we’re not muting this beat:
       if (!shouldMuteThisBeat(subIndex)) {
         playedBeatTimesRef.current.push(performance.now());
-        updateActualBpm();
-      }
-
-      if (shouldMuteThisBeat(subIndex)) {
-        // If muted, skip playing
+        updateActualBpm(); // optional BPM tracking
+      } else {
+        // If muted, skip playing audio
         return;
       }
 
-      // Decide which buffer to play
+      // Decide which audio buffer to play
       let buffer = null;
       if (analogMode) {
-        // All same sound
-        buffer = normalBufferRef.current;
+        buffer = normalBufferRef.current; // all same sound in analog mode
       } else if (gridMode) {
-        // Possibly use beatConfig for accent info
+        // possibly use a beatConfig for accent info
         const state = beatConfigRef.current[subIndex];
         if (state === 3) buffer = firstBufferRef.current;
         else if (state === 2) buffer = accentBufferRef.current;
         else if (state === 1) buffer = normalBufferRef.current;
       } else {
-        // Standard circle accents
+        // Standard circle mode
         if (subIndex === 0) {
           buffer = firstBufferRef.current;
         } else {
-          const state = accentsRef.current[subIndex];
-          if (state === 2) buffer = accentBufferRef.current;
-          else if (state === 1) buffer = normalBufferRef.current;
+          const accentVal = accentsRef.current[subIndex];
+          if (accentVal === 2) buffer = accentBufferRef.current;
+          else if (accentVal === 1) buffer = normalBufferRef.current;
         }
       }
       if (buffer) {
@@ -276,74 +273,65 @@ export default function useMetronomeLogic({
       }
     },
     [
+      onAnySubTrigger,
       analogMode,
       gridMode,
       schedulePlay,
       shouldMuteThisBeat,
-      updateActualBpm,
-      onSingleSubTrigger
+      updateActualBpm
     ]
   );
 
   // =====================================================
-  // Interval between subdivisions
+  // getCurrentSubIntervalSec
   // =====================================================
   const getCurrentSubIntervalSec = useCallback(() => {
     if (!tempoRef.current) return 0.5;
-    // e.g. for quarter notes => 1, for eighth => 2
-    // => if multiplier=2, effectively the "tempo" is doubled
     const secPerHit = 60 / (tempoRef.current * beatMultiplier);
 
-    // Optional swing if we have >=2 subdivisions
+    // If we have >=2 subs and a swing factor:
     if (subdivisionsRef.current >= 2) {
       const isEvenSub = currentSubRef.current % 2 === 0;
-      const swingFactor = swingRef.current || 0;
-      if (swingFactor > 0) {
+      const sFactor = swingRef.current || 0;
+      if (sFactor > 0) {
         return isEvenSub
-          ? secPerHit * (1 + swingFactor)
-          : secPerHit * (1 - swingFactor);
+          ? secPerHit * (1 + sFactor)
+          : secPerHit * (1 - sFactor);
       }
     }
     return secPerHit;
   }, [beatMultiplier]);
 
   // =====================================================
-  // The main scheduling loop
+  // scheduler - the main loop that schedules upcoming hits
   // =====================================================
   const scheduler = useCallback(() => {
     if (!audioCtxRef.current) return;
     const now = audioCtxRef.current.currentTime;
-    const effectiveAhead = multiCircleMode
-      ? SCHEDULE_AHEAD_TIME * 1.2
-      : SCHEDULE_AHEAD_TIME;
+    const ahead = multiCircleMode ? SCHEDULE_AHEAD_TIME * 1.2 : SCHEDULE_AHEAD_TIME;
 
-    while (nextNoteTimeRef.current < now + effectiveAhead) {
+    while (nextNoteTimeRef.current < now + ahead) {
       const subIndex = currentSubRef.current;
       scheduleSubdivision(subIndex, nextNoteTimeRef.current);
 
-      // Update React state for the current subdivision
+      // update UI state
       setCurrentSubdivision(subIndex);
 
-      // Advance the scheduling time for the next sub
+      // move on to next sub
       currentSubStartRef.current = nextNoteTimeRef.current;
       currentSubIntervalRef.current = getCurrentSubIntervalSec();
       currentSubRef.current = (subIndex + 1) % subdivisionsRef.current;
       nextNoteTimeRef.current += currentSubIntervalRef.current;
 
-      // If we wrapped around => finished a measure
+      // measure boundary
       if (currentSubRef.current === 0) {
         handleEndOfMeasure();
       }
     }
-  }, [
-    scheduleSubdivision,
-    getCurrentSubIntervalSec,
-    handleEndOfMeasure,
-    multiCircleMode
-  ]);
+  }, [scheduleSubdivision, getCurrentSubIntervalSec, handleEndOfMeasure, multiCircleMode]);
 
   // =====================================================
-  // Start the scheduler
+  // startScheduler
   // =====================================================
   const startScheduler = useCallback(
     (startTime = null) => {
@@ -394,7 +382,7 @@ export default function useMetronomeLogic({
   }, [setTempo]);
 
   // =====================================================
-  // Load Audio Buffers (Click Sounds)
+  // Audio loading
   // =====================================================
   useEffect(() => {
     if (!globalAudioCtx || globalAudioCtx.state === "closed") {
@@ -417,7 +405,7 @@ export default function useMetronomeLogic({
         .catch(() => {});
     };
 
-    // Adjust these to your correct file paths
+    // Example file paths
     loadSound("/assets/audio/click_new.mp3", (b) => {
       normalBufferRef.current = b;
     });
@@ -428,13 +416,14 @@ export default function useMetronomeLogic({
       firstBufferRef.current = b;
     });
 
+    // Stop scheduler if unmount
     return () => {
       stopScheduler();
     };
   }, [stopScheduler]);
 
   // =====================================================
-  // Start/stop based on isPaused
+  // Start/Stop based on isPaused
   // =====================================================
   useEffect(() => {
     if (!isPaused) {
