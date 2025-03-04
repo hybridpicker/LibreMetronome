@@ -11,11 +11,6 @@ import TrainingOverlay from './components/Menu/TrainingOverlay/TrainingOverlay';
 import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
 import MetronomeControls from './components/metronome/Controls/MetronomeControls';
 
-import quarterNotesActive from './assets/svg/quarter_eight_notes/quarterNotesActive.svg';
-import quarterNotesInactive from './assets/svg/quarter_eight_notes/quarterNotesInactive.svg';
-import eightNotesActive from './assets/svg/quarter_eight_notes/eightNotesActive.svg';
-import eightNotesInactive from './assets/svg/quarter_eight_notes/eightNotesInactive.svg';
-
 const TEMPO_MIN = 15;
 const TEMPO_MAX = 240;
 

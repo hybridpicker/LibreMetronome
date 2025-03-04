@@ -126,13 +126,9 @@ export function AdvancedMetronomeWithCircle({
   };
 
   // =====================
-  //  Single-subdivision “Inactive→Active→Inactive” fix
+  //  Single-subdivision “Inactive→Active→Inactive”
   // =====================
-  /**
-   * We want the single beat to remain inactive until triggered, flash active, then revert inactive.
-   * We'll do that by storing a boolean that flips to true whenever logic.currentSubdivision changes.
-   * Then we flip it back to false after a short time – ensuring a visible pulse each measure.
-   */
+
   const [singleActive, setSingleActive] = useState(false);
   const prevSubRef = useRef(null);
 
