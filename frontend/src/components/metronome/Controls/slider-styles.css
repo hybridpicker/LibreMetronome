@@ -1,0 +1,120 @@
+/* src/components/metronome/Controls/slider-styles.css */
+
+/* Global slider styling for all metronome modes */
+.sliders-container {
+    margin: 0 auto;
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .sliders-container label {
+    display: block;
+    margin-bottom: 15px;
+    width: 100%;
+    text-align: center;
+    font-family: 'Lato', sans-serif;
+    color: #333;
+  }
+  
+  .sliders-container input[type="range"] {
+    width: 100%;
+    display: block;
+    margin: 10px 0 5px 0;
+    height: 10px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: #eee;
+    outline: none;
+    border-radius: 5px;
+    transition: background 0.2s;
+  }
+  
+  /* Thumb styling for different browsers */
+  .sliders-container input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #00A0A0;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+    transition: background 0.2s, transform 0.1s;
+  }
+  
+  .sliders-container input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #00A0A0;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+    transition: background 0.2s, transform 0.1s;
+  }
+  
+  /* Hover effects */
+  .sliders-container input[type="range"]:hover {
+    background: #e0e0e0;
+  }
+  
+  .sliders-container input[type="range"]:hover::-webkit-slider-thumb {
+    background: #008b8b;
+    transform: scale(1.1);
+  }
+  
+  .sliders-container input[type="range"]:hover::-moz-range-thumb {
+    background: #008b8b;
+    transform: scale(1.1);
+  }
+  
+  /* Active slider styling */
+  .sliders-container input[type="range"]:active::-webkit-slider-thumb {
+    background: #007070;
+    transform: scale(1.15);
+  }
+  
+  .sliders-container input[type="range"]:active::-moz-range-thumb {
+    background: #007070;
+    transform: scale(1.15);
+  }
+  
+  /* Specific slider customizations */
+  .tempo-slider {
+    background: #f0f0f0;
+  }
+  
+  .volume-slider {
+    background: #f0f0f0;
+  }
+  
+  .swing-slider {
+    background: #f0f0f0;
+  }
+  
+  /* Mobile responsiveness */
+  @media (max-width: 768px) {
+    .sliders-container {
+      width: 90%;
+    }
+    
+    .sliders-container label {
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    
+    .sliders-container input[type="range"] {
+      height: 8px;
+    }
+    
+    .sliders-container input[type="range"]::-webkit-slider-thumb {
+      width: 18px;
+      height: 18px;
+    }
+    
+    .sliders-container input[type="range"]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+    }
+  }

@@ -1,0 +1,196 @@
+/* src/components/metronome/MultiCircleMode/MultiCircleMetronome.css */
+
+.circles-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.metronome-circle {
+  position: relative;
+  border-radius: 50%;
+  margin: 15px;
+  border: 2px solid transparent;
+  box-sizing: border-box;
+  overflow: visible;
+  cursor: pointer;
+  transition: box-shadow 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.metronome-circle-active {
+  box-shadow: 0 0 0 3px #00A0A0, 0 0 10px rgba(0, 160, 160, 0.6);
+}
+
+.metronome-circle-playing {
+  box-shadow: 0 0 0 3px #FFD700, 0 0 10px rgba(255, 215, 0, 0.6);
+}
+
+.metronome-circle-silent {
+  box-shadow: 0 0 0 3px #ff5722, 0 0 10px rgba(255, 87, 34, 0.6);
+}
+
+.beat-icon {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  transition: filter 0.15s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.beat-icon-active {
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.7));
+}
+
+.remove-circle-button {
+  position: absolute;
+  top: -15px;
+  right: -15px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #ff4d4d;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+}
+
+.add-circle-button {
+  position: relative;
+  border-radius: 50%;
+  border: 2px dashed #00A0A0;
+  margin: 15px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.plus-button {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #00A0A0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+  font-size: 36px;
+  font-weight: bold;
+  box-shadow: 0 0 8px rgba(0, 160, 160, 0.5);
+}
+
+.training-status {
+  margin-top: 10px;
+  padding: 8px;
+  border-radius: 5px;
+  background-color: #f8f8f8;
+  border: 1px solid #ddd;
+  max-width: 300px;
+  margin: 10px auto;
+}
+
+.training-status h4 {
+  margin: 0 0 8px 0;
+  color: #00A0A0;
+}
+
+.silent-label {
+  color: #f44336;
+  font-weight: bold;
+}
+
+.play-pause-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 10px;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.play-pause-icon {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  transition: transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.tap-tempo-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  margin-top: 20px;
+  padding: 10px;
+  outline: none;
+}
+
+.tap-icon {
+  height: 35px;
+  object-fit: contain;
+  transition: all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.controls-section {
+  margin-top: 20px;
+}
+
+.section-title {
+  margin-bottom: 10px;
+}
+
+.sliders-container {
+  margin-top: 20px;
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.slider-item {
+  margin-bottom: 15px;
+  max-width: 300px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.tempo-slider {
+  margin-bottom: 15px;
+}
+
+.slider-item label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.slider-item input[type="range"] {
+  width: 100%;
+  display: block;
+  margin: 5px auto;
+}
+
+@media (max-width: 768px) {
+  .metronome-circle,
+  .add-circle-button {
+    margin: 15px 0;
+  }
+  
+  .beat-icon {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .plus-button {
+    width: 50px;
+    height: 50px;
+    font-size: 28px;
+  }
+}

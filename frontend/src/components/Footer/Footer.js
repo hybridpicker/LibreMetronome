@@ -1,6 +1,6 @@
 // File: src/components/Footer.js
 import React from 'react';
-import packageJson from '../../package.json';
+import packageJson from '../../../package.json';
 import './Footer.css';
 
 const Footer = () => {
