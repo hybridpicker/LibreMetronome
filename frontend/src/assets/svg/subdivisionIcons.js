@@ -1,4 +1,4 @@
-// File: src/assets/svg/subdivisionIcons.js
+// src/assets/svg/subdivisionIcons.js
 import subdivision1 from './subdivision-1.svg';
 import subdivision2 from './subdivision-2.svg';
 import subdivision3 from './subdivision-3.svg';
@@ -37,8 +37,18 @@ export const subdivisionIcons = {
   subdivision6Active,
   subdivision7Active,
   subdivision8Active,
-  subdivision9Active,
-  // Optionally, if you use grid squares:
-  squareActive: require('./grid/square_active.svg').default,
-  squareInactive: require('./grid/square_inactive.svg').default,
+  subdivision9Active
+};
+
+// Helper function to get subdivision icon based on number and active state
+export const getSubdivisionIcon = (number, isActive = false) => {
+  if (number < 1 || number > 9) {
+    return null;
+  }
+  
+  const key = isActive 
+    ? `subdivision${number}Active` 
+    : `subdivision${number}`;
+  
+  return subdivisionIcons[key];
 };

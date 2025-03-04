@@ -1,7 +1,6 @@
-// src/components/metronome/BaseMetronomeLayout.js
+// src/components/metronome/BaseMetronomeLayout.js - Remove CSS import
 import React, { useEffect, useState } from 'react';
-// Remove the CSS import to avoid the error
-// import './BaseMetronomeLayout.css';
+// Remove this line: import './BaseMetronomeLayout.css';
 
 export default function BaseMetronomeLayout({
   children,

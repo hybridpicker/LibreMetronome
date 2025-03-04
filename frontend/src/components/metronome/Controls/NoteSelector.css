@@ -1,0 +1,42 @@
+/* NoteSelector.css */
+
+.note-selector-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 10px 0;
+  }
+  
+  .note-selector-button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 5px;
+    transition: all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+  
+  .note-selector-button:hover {
+    background-color: rgba(0, 160, 160, 0.1);
+  }
+  
+  .note-icon {
+    width: 50px;
+    height: 50px;
+    opacity: 0.5;
+    transition: all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+  
+  .note-icon.active {
+    opacity: 1;
+    filter: drop-shadow(rgb(248, 211, 141) 0px 0px 5px);
+    transform: scale(1.05);
+  }
+  
+  /* Responsive adjustments for mobile */
+  @media (max-width: 600px) {
+    .note-icon {
+      width: 45px;
+      height: 45px;
+    }
+  }
