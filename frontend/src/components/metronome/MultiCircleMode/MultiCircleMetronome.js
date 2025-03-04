@@ -7,6 +7,9 @@ import tapButtonIcon from "../../../assets/svg/tap-button.svg";
 import playIcon from "../../../assets/svg/play.svg";
 import pauseIcon from "../../../assets/svg/pause.svg";
 import "./MultiCircleMetronome.css";
+import '../Controls/slider-styles.css'
+
+
 import NoteSelector from "../Controls/NoteSelector";
 import SubdivisionSelector from "../Controls/SubdivisionSelector";
 
@@ -733,52 +736,49 @@ export default function MultiCircleMetronome(props) {
           />
         </div>
         
-        {/* Sliders section */}
-        <div className="sliders-container" style={{ 
-          margin: "0 auto",
-          width: "100%",
-          maxWidth: "300px"
-        }}>
-          <label style={{display: "block", marginBottom: "15px", width: "100%", textAlign: "left"}}>
-            Tempo: {tempo} BPM
-            <input 
-              type="range" 
-              min={15} 
-              max={240} 
-              step={1} 
-              value={tempo} 
-              onChange={(e) => setTempo(Number(e.target.value))} 
-              style={{width: "100%", display: "block", margin: "5px 0"}}
-            />
-          </label>
-          <label style={{display: "block", marginBottom: "15px", width: "100%", textAlign: "left"}}>
-            Volume: {Math.round(volume * 100)}%
-            <input 
-              type="range" 
-              min={0} 
-              max={1} 
-              step={0.01} 
-              value={volume} 
-              onChange={(e) => setVolume(Number(e.target.value))} 
-              style={{width: "100%", display: "block", margin: "5px 0"}}
-            />
-          </label>
-          {currentSettings.subdivisions % 2 === 0 && (
-            <label style={{display: "block", marginBottom: "15px", width: "100%", textAlign: "left"}}>
-              Swing: {Math.round(swing * 200)}%
-              <input 
-                type="range" 
-                min={0} 
-                max={0.5} 
-                step={0.01} 
-                value={swing} 
-                onChange={(e) => setSwing(Number(e.target.value))} 
-                style={{width: "100%", display: "block", margin: "5px 0"}}
-              />
-            </label>
-          )}
+      {/* Sliders section */}
+      <div className="sliders-container">
+              <label>
+                Tempo: {tempo} BPM
+                <input 
+                  type="range" 
+                  min={15} 
+                  max={240} 
+                  step={1} 
+                  value={tempo} 
+                  onChange={(e) => setTempo(Number(e.target.value))} 
+                  className="tempo-slider"
+                />
+              </label>
+              <label>
+                Volume: {Math.round(volume * 100)}%
+                <input 
+                  type="range" 
+                  min={0} 
+                  max={1} 
+                  step={0.01} 
+                  value={volume} 
+                  onChange={(e) => setVolume(Number(e.target.value))} 
+                  className="volume-slider"
+                />
+              </label>
+              {currentSettings.subdivisions % 2 === 0 && (
+                <label>
+                  Swing: {Math.round(swing * 200)}%
+                  <input 
+                    type="range" 
+                    min={0} 
+                    max={0.5} 
+                    step={0.01} 
+                    value={swing} 
+                    onChange={(e) => setSwing(Number(e.target.value))} 
+                    className="swing-slider"
+                  />
+                </label>
+              )}
         </div>
       </div>
+      
       
       {/* Tap tempo button for mobile */}
       {isMobile && (
