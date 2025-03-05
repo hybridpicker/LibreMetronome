@@ -23,14 +23,17 @@ export default function AnalogMetronomeCanvas({
 
     const drawPendulumArm = (ctx, w, h, angleRad) => {
       ctx.save();
-      const pivotOffsetY = h * 0.15; 
-      ctx.translate(w / 2, h / 2 + pivotOffsetY);
+      // Position the pivot point much lower in the canvas (closer to the bottom)
+      const pivotOffsetY = h * 0.1; // Reduced offset as we're positioning it directly
+      // Translate to the pivot point - centered horizontally, much lower vertically
+      ctx.translate(w / 2, h * 0.85); // Position at 85% of the height (very close to bottom)
       
-      const armLength = (Math.min(w, h) / 2) * 1.6; 
+      // Arm length based on smaller dimension - make it longer
+      const armLength = (Math.min(w, h) / 2) * 1.3; // Adjusted for better proportions with new position
       
       ctx.beginPath();
       ctx.arc(0, 0, 3, 0, Math.PI * 2);
-      ctx.fillStyle = '#00A0A0';
+      ctx.fillStyle = '#00A0A0'; // Changed back to cyan
       ctx.fill();
       
       ctx.rotate(angleRad);
@@ -44,7 +47,7 @@ export default function AnalogMetronomeCanvas({
       
       ctx.beginPath();
       ctx.arc(0, -armLength, 7, 0, Math.PI * 2); 
-      ctx.fillStyle = '#00A0A0';
+      ctx.fillStyle = '#f8d38d'; // Changed to yellow
       ctx.fill();
       
       ctx.restore();
