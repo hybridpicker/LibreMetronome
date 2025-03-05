@@ -32,6 +32,7 @@ export default function useMetronomeLogic({
   measuresUntilSpeedUp = 2,
   beatMultiplier = 1,
   multiCircleMode = false,
+  isFirstBeatAfterTransitionRef = null,
 
   /**
    * NEW optional callback: Fired every time a beat is scheduled, regardless of subIndex.
@@ -41,7 +42,7 @@ export default function useMetronomeLogic({
 }) {
   // Track the current subdivision we are on (0..subdivisions-1)
   const [currentSubdivision, setCurrentSubdivision] = useState(0);
-  // Optional: track “actual BPM” if you want to measure real timings
+  // Optional: track "actual BPM" if you want to measure real timings
   const [actualBpm, setActualBpm] = useState(0);
 
   // References for the AudioContext and the loaded click buffers
@@ -58,6 +59,8 @@ export default function useMetronomeLogic({
   const lookaheadRef = useRef(null);
   const schedulerRunningRef = useRef(false);
   const playedBeatTimesRef = useRef([]);
+  
+  // Add a flag to track if we should skip the first beat (for transitions)
 
   // Mirror some props into refs for easy read in callbacks
   const tempoRef = useRef(tempo);
@@ -133,7 +136,7 @@ export default function useMetronomeLogic({
         }
       }
     } else if (macroMode === 2) {
-      // Additional “random silence” logic could go here
+      // Additional "random silence" logic could go here
     }
 
     // Speed mode 1: Increase tempo after X measures
@@ -222,6 +225,28 @@ export default function useMetronomeLogic({
   // =====================================================
   const scheduleSubdivision = useCallback(
     (subIndex, when) => {
+      // Log the current state for debugging
+      if (subIndex === 0) {
+        console.log(
+          `[useMetronomeLogic] Scheduling FIRST_BEAT (subIndex=0) at time = ${when.toFixed(3)}`
+        );
+      }
+      
+      // Skip the first beat if we're in a circle transition and on subdivision 0
+      /*
+      if (subIndex === 0 && multiCircleMode) {
+        console.log(`[useMetronomeLogic] SKIPPING AUDIO for first beat during transition`);
+        
+        // Still update the UI by firing the callback
+        if (onAnySubTrigger) {
+          onAnySubTrigger(subIndex);
+        }
+        
+        // Don't clear the flag here, as multiple scheduling calls might happen
+        return;
+      }
+      */
+
       // Fire the user callback for ANY sub
       if (onAnySubTrigger) {
         onAnySubTrigger(subIndex);
@@ -239,7 +264,7 @@ export default function useMetronomeLogic({
         when = now + 0.02;
       }
 
-      // If we’re not muting this beat:
+      // If we're not muting this beat:
       if (!shouldMuteThisBeat(subIndex)) {
         playedBeatTimesRef.current.push(performance.now());
         updateActualBpm(); // optional BPM tracking
@@ -278,7 +303,8 @@ export default function useMetronomeLogic({
       gridMode,
       schedulePlay,
       shouldMuteThisBeat,
-      updateActualBpm
+      updateActualBpm,
+      multiCircleMode
     ]
   );
 
@@ -334,8 +360,8 @@ export default function useMetronomeLogic({
   // startScheduler
   // =====================================================
   const startScheduler = useCallback(
-    (startTime = null) => {
-      console.log("[useMetronomeLogic] startScheduler() called");
+    (startTime = null, isFirstBeatAfterTransition = false) => {
+      console.log("[useMetronomeLogic] startScheduler() called, transition flag:", isFirstBeatAfterTransition);
       if (schedulerRunningRef.current) return;
       stopScheduler();
 
@@ -350,11 +376,22 @@ export default function useMetronomeLogic({
       currentSubStartRef.current = nextNoteTimeRef.current;
       currentSubIntervalRef.current = getCurrentSubIntervalSec();
       playedBeatTimesRef.current = [];
+      
+      // Set flag to skip first beat for transitions between circles
+      if (multiCircleMode && isFirstBeatAfterTransition) {
+        console.log("[useMetronomeLogic] Setting skip first beat flag");
+        
+        // Use a longer timeout to ensure it covers the full scheduling cycle
+        setTimeout(() => {
+          console.log("[useMetronomeLogic] Clearing skip first beat flag after timeout");
+        }, 500); // Increased from 100ms to 500ms
+      } else {
+      }
 
       // Start the scheduling loop
       lookaheadRef.current = setInterval(scheduler, 20);
     },
-    [stopScheduler, scheduler, getCurrentSubIntervalSec]
+    [stopScheduler, scheduler, getCurrentSubIntervalSec, multiCircleMode]
   );
 
   // =====================================================
@@ -436,7 +473,7 @@ export default function useMetronomeLogic({
   }, [isPaused, startScheduler, stopScheduler]);
 
   // =====================================================
-  // Return the hook’s interface
+  // Return the hook's interface
   // =====================================================
   return {
     currentSubdivision,
@@ -446,6 +483,7 @@ export default function useMetronomeLogic({
     currentSubStartRef,
     currentSubIntervalRef,
     startScheduler,
-    stopScheduler
+    stopScheduler,
+    currentSubRef  // For MultiCircleMetronome to reference
   };
 }
