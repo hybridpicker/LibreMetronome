@@ -74,8 +74,6 @@ export default function useMetronomeLogic({
       
       // Don't reset silence phase when paused, as we want to resume in the same state
       
-      // Log the reset
-      console.log('Training counters reset due to mode change or pause');
     }
   }, [speedMode, macroMode, isPaused, measuresUntilSpeedUp]);
 

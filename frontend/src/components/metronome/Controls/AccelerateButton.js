@@ -8,18 +8,17 @@ import React, { useEffect } from 'react';
 const AccelerateButton = ({ onClick, speedMode }) => {
   // Debug logging
   useEffect(() => {
-    console.log('AccelerateButton rendered with speedMode:', speedMode);
+    
   }, [speedMode]);
 
   // Only show when speedMode is 1 (Auto Increase) or 2 (Manual Increase Only)
   // Convert to number to handle string values from select elements
   const speedModeNum = Number(speedMode);
   if (speedModeNum !== 1 && speedModeNum !== 2) {
-    console.log('AccelerateButton not showing, speedMode is:', speedMode);
+    
     return null;
   }
 
-  console.log('AccelerateButton showing, speedMode is:', speedMode);
   
   return (
     <button

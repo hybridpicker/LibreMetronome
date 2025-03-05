@@ -53,7 +53,7 @@ function App() {
 
   // Debug logging for trainingSettings
   useEffect(() => {
-    console.log('App.js - trainingSettings updated:', trainingSettings);
+    
   }, [trainingSettings]);
 
   const togglePlayRef = useRef(null);
