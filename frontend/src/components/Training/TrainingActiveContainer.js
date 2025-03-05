@@ -46,7 +46,7 @@ const TrainingActiveContainer = ({
       {/* Speed Training Status */}
       {speedMode !== 0 && (
         <div className="training-active-status">
-          Speed Training: Auto Increase
+          Speed Training: {speedMode === 1 ? 'Auto Increase' : 'Manual Increase'}
         </div>
       )}
       

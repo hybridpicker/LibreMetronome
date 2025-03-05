@@ -51,6 +51,11 @@ function App() {
     tempoIncreasePercent: 5
   });
 
+  // Debug logging for trainingSettings
+  useEffect(() => {
+    console.log('App.js - trainingSettings updated:', trainingSettings);
+  }, [trainingSettings]);
+
   const togglePlayRef = useRef(null);
   const tapTempoRef = useRef(null);
   const registerTogglePlay = (fn) => { togglePlayRef.current = fn; };

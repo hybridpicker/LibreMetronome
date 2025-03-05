@@ -11,6 +11,8 @@ import '../Controls/slider-styles.css';
 
 import NoteSelector from "../Controls/NoteSelector";
 import SubdivisionSelector from "../Controls/SubdivisionSelector";
+import AccelerateButton from "../Controls/AccelerateButton";
+import { manualTempoAcceleration } from "../../../hooks/useMetronomeLogic/trainingLogic";
 
 // Initialize global silence check function
 window.isSilent = function() {
@@ -466,6 +468,23 @@ export default function MultiCircleMetronome(props) {
     setPlayingCircle
   ]);
 
+  // Handle manual tempo acceleration
+  const handleAccelerate = useCallback(() => {
+    console.log('handleAccelerate called, speedMode:', speedMode);
+    if (!isPaused) {
+      manualTempoAcceleration({
+        tempoIncreasePercent,
+        tempoRef: { current: tempo },
+        setTempo
+      });
+    }
+  }, [isPaused, tempo, tempoIncreasePercent, setTempo, speedMode]);
+
+  // Debug logging for speedMode
+  useEffect(() => {
+    console.log('MultiCircleMetronome rendered with speedMode:', speedMode);
+  }, [speedMode]);
+
   // Register callbacks with parent if provided
   useEffect(() => {
     if (registerTogglePlay) {
@@ -545,6 +564,19 @@ export default function MultiCircleMetronome(props) {
         muteMeasureCountRef={logic.muteMeasureCountRef}
         muteDurationMeasures={muteDurationMeasures}
       />
+      
+      {/* Accelerate button for Training Mode */}
+      <AccelerateButton 
+        onClick={handleAccelerate} 
+        speedMode={speedMode}
+      />
+      
+      {/* Debug info */}
+      {process.env.NODE_ENV === 'development' && (
+        <div style={{ fontSize: '10px', color: '#999', marginTop: '5px' }}>
+          Speed Mode: {speedMode}
+        </div>
+      )}
       
       {/* Main circles container */}
       <div className="circles-container" style={{

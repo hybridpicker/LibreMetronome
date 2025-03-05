@@ -5,7 +5,8 @@ import pauseIcon from '../../../assets/svg/pause.svg';
 import tapButtonIcon from '../../../assets/svg/tap-button.svg';
 import './GridAnimation.css';
 import withTrainingContainer from '../../Training/withTrainingContainer';
-
+import AccelerateButton from '../Controls/AccelerateButton';
+import { manualTempoAcceleration } from '../../../hooks/useMetronomeLogic/trainingLogic';
 
 const GridModeMetronome = (props) => {
   // Initialize gridConfig based on the current subdivisions (1 to 9)
@@ -168,6 +169,17 @@ const GridModeMetronome = (props) => {
     };
   }, [props.registerTogglePlay, props.registerTapTempo, handlePlayPause, logic.tapTempo]);
 
+  // Handle manual tempo acceleration
+  const handleAccelerate = useCallback(() => {
+    if (!props.isPaused) {
+      manualTempoAcceleration({
+        tempoIncreasePercent: props.tempoIncreasePercent,
+        tempoRef: { current: props.tempo },
+        setTempo: props.setTempo
+      });
+    }
+  }, [props.isPaused, props.tempo, props.tempoIncreasePercent, props.setTempo]);
+
   // Render grid as an SVG with enhanced styling
   const renderGridSquares = () => {
     return Array.from({ length: props.subdivisions }, (_, colIndex) => {
@@ -255,6 +267,19 @@ const GridModeMetronome = (props) => {
       }}>
         {renderGridSquares()}
       </div>
+      
+      {/* Accelerate button for Training Mode */}
+      <AccelerateButton 
+        onClick={handleAccelerate} 
+        speedMode={props.speedMode}
+      />
+      
+      {/* Debug info */}
+      {process.env.NODE_ENV === 'development' && (
+        <div style={{ fontSize: '10px', color: '#999', marginTop: '5px' }}>
+          Speed Mode: {props.speedMode}
+        </div>
+      )}
       
       <div style={{ marginTop: '20px' }}>
         <button

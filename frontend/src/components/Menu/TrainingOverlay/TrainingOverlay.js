@@ -120,18 +120,21 @@ const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings, setMode
             >
               <option value={0}>Off</option>
               <option value={1}>Auto Increase Tempo</option>
+              <option value={2}>Manual Increase Only</option>
             </select>
           </label>
-          {localSettings.speedMode === 1 && (
+          {(localSettings.speedMode === 1 || localSettings.speedMode === 2) && (
             <div className="training-options">
-              <label>
-                Measures until Speed Up:
-                <input
-                  type="number"
-                  value={localSettings.measuresUntilSpeedUp}
-                  onChange={(e) => handleChange('measuresUntilSpeedUp', Number(e.target.value))}
-                />
-              </label>
+              {localSettings.speedMode === 1 && (
+                <label>
+                  Measures until Speed Up:
+                  <input
+                    type="number"
+                    value={localSettings.measuresUntilSpeedUp}
+                    onChange={(e) => handleChange('measuresUntilSpeedUp', Number(e.target.value))}
+                  />
+                </label>
+              )}
               <label>
                 Tempo Increase (%):
                 <input
@@ -140,6 +143,33 @@ const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings, setMode
                   onChange={(e) => handleChange('tempoIncreasePercent', Number(e.target.value))}
                 />
               </label>
+              <div className="training-info-text" style={{
+                marginTop: '10px',
+                padding: '8px',
+                backgroundColor: '#f0f8ff',
+                border: '1px solid #cce5ff',
+                borderRadius: '4px',
+                fontSize: '14px'
+              }}>
+                <p style={{ margin: '0 0 5px 0' }}>
+                  <strong>Speed Training Modes:</strong>
+                </p>
+                {localSettings.speedMode === 1 && (
+                  <>
+                    <p style={{ margin: '0 0 5px 0' }}>
+                      <strong>Auto Increase:</strong> Tempo increases automatically after the specified number of measures.
+                    </p>
+                    <p style={{ margin: '0' }}>
+                      The "Accelerate" button also appears, allowing you to manually increase tempo at any time.
+                    </p>
+                  </>
+                )}
+                {localSettings.speedMode === 2 && (
+                  <p style={{ margin: '0' }}>
+                    <strong>Manual Increase Only:</strong> An "Accelerate" button will appear. Click it to manually increase tempo by the specified percentage.
+                  </p>
+                )}
+              </div>
             </div>
           )}
         </div>

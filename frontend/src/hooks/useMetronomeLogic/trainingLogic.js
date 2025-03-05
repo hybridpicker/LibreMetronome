@@ -3,8 +3,8 @@
 /**
  * Called every time subIndex returns to 0 (i.e. at the start of each measure).
  * 
- * In “fixed silence” or “random silence” modes, we track measure counts and
- * possibly enable or disable silence. In “speed mode,” we might automatically
+ * In "fixed silence" or "random silence" modes, we track measure counts and
+ * possibly enable or disable silence. In "speed mode," we might automatically
  * increase the BPM after a certain # of measures.
  */
 export function handleMeasureBoundary({
@@ -23,7 +23,7 @@ export function handleMeasureBoundary({
 }) {
   measureCountRef.current += 1;
 
-  // Macro mode 1: “fixed silence after X measures”
+  // Macro mode 1: "fixed silence after X measures"
   if (macroMode === 1) {
     if (!isSilencePhaseRef.current) {
       // check if we should enter silence
@@ -71,4 +71,18 @@ export function shouldMuteThisBeat({
     return Math.random() < muteProbability;
   }
   return false;
+}
+
+/**
+ * Manually accelerate tempo using the same logic as auto tempo increase
+ */
+export function manualTempoAcceleration({
+  tempoIncreasePercent,
+  tempoRef,
+  setTempo
+}) {
+  const factor = 1 + tempoIncreasePercent / 100;
+  const newTempo = Math.round(tempoRef.current * factor);
+  setTempo(prev => Math.min(newTempo, 240));
+  return newTempo;
 }
