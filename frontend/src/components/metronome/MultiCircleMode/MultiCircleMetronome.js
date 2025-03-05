@@ -308,10 +308,6 @@ function MultiCircleMetronome(props) {
       // Simply update our reference of the current subdivision
       // We no longer need to manually switch circles here, as it's handled
       // automatically in the useMultiCircleMetronomeLogic hook
-      console.log(`[Multi-Circle] Beat 0 detected, circle transitions now handled automatically`);
-      
-      // Note: The circle switching is now handled directly in the metronome logic
-      // by detecting the last beat of each measure and triggering the transition there
     }
 
     prevSubdivisionRef.current = newSubdivision;
@@ -360,7 +356,6 @@ function MultiCircleMetronome(props) {
         lastCircleSwitchTimeRef.current = 0;
         
         // We don't need to set beatModeRef directly anymore since we're using circleSettings
-        console.log(`[Multi-Circle] Starting playback with first circle beatMode: ${circleSettings[0]?.beatMode}`);
 
         const startPlayback = () => {
           if (logic && logic.startScheduler) {
@@ -380,7 +375,6 @@ function MultiCircleMetronome(props) {
               startPlayback();
             })
             .catch(err => {
-              console.error("Error resuming AudioContext:", err);
               isProcessingPlayPauseRef.current = false;
               clearTimeout(safetyTimeout);
             });
@@ -404,7 +398,6 @@ function MultiCircleMetronome(props) {
               clearTimeout(safetyTimeout);
             })
             .catch(err => {
-              console.error("Error suspending AudioContext:", err);
               isProcessingPlayPauseRef.current = false;
               clearTimeout(safetyTimeout);
             });
@@ -426,7 +419,6 @@ function MultiCircleMetronome(props) {
 
   // Handle manual tempo acceleration
   const handleAccelerate = useCallback(() => {
-    console.log('handleAccelerate called, speedMode:', speedMode);
     if (!isPaused) {
       manualTempoAcceleration({
         tempoIncreasePercent,
@@ -438,7 +430,7 @@ function MultiCircleMetronome(props) {
 
   // Debug logging for speedMode
   useEffect(() => {
-    console.log('MultiCircleMetronome rendered with speedMode:', speedMode);
+    
   }, [speedMode]);
 
   // Register callbacks with parent if provided
@@ -476,18 +468,14 @@ function MultiCircleMetronome(props) {
   const handleNoteSelection = useCallback((mode) => {
     // Don't change note mode during playback if we're in a transition
     if (!isPaused && logic && logic.isTransitioning && logic.isTransitioning()) {
-      console.log("[Multi-Circle] Note selection ignored during transition");
       return;
     }
-    
-    console.log(`[Multi-Circle] handleNoteSelection called with mode=${mode} for circle=${activeCircle}`);
     
     setCircleSettings(prev => {
       const updated = [...prev];
       
       // Only update if the mode is actually changing
       if (updated[activeCircle]?.beatMode === mode) {
-        console.log(`[Multi-Circle] No change needed, circle ${activeCircle} already has beatMode=${mode}`);
         return prev;
       }
       
@@ -495,13 +483,12 @@ function MultiCircleMetronome(props) {
       
       // We don't need to update the beatModeRef directly anymore since we're using
       // circleSettings directly in the getBeatMultiplier function
-      console.log(`[Multi-Circle] Updated circle ${activeCircle} beatMode to ${mode}, full settings:`, JSON.stringify(updated));
-      
+
       // If this is the currently playing circle and we're not paused,
       // we need to restart the scheduler to apply the new beat mode
       if (!isPaused && activeCircle === playingCircle && logic) {
-        console.log(`[Multi-Circle] This is the active playing circle, restarting scheduler`);
         // The scheduler will be restarted by the useEffect in the hook
+        logic.beatModeRef.current = mode;
       }
       
       return updated;

@@ -138,7 +138,7 @@ const GridModeMetronome = (props) => {
         logic.audioCtx.resume().then(() => {
           props.setIsPaused(false);
           logic.startScheduler();
-        }).catch((err) => console.error(err));
+        }).catch((err) => {});
       } else {
         props.setIsPaused(false);
         logic.startScheduler();

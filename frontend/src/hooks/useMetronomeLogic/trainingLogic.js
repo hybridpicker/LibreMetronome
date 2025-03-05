@@ -24,9 +24,6 @@ export function handleMeasureBoundary({
   // Increment measure count
   measureCountRef.current += 1;
   
-  // Debug logging
-  console.log(`[TrainingLogic] Measure boundary reached: ${measureCountRef.current}`);
-
   // Macro mode 1: "fixed silence after X measures"
   if (macroMode === 1) {
     if (!isSilencePhaseRef.current) {
@@ -35,7 +32,7 @@ export function handleMeasureBoundary({
         isSilencePhaseRef.current = true;
         muteMeasureCountRef.current = 0;
         measureCountRef.current = 0;
-        console.log('[TrainingLogic] Entering silence phase');
+        
       }
     } else {
       // we are in silence → keep counting
@@ -44,7 +41,7 @@ export function handleMeasureBoundary({
         isSilencePhaseRef.current = false;
         muteMeasureCountRef.current = 0;
         measureCountRef.current = 0;
-        console.log('[TrainingLogic] Exiting silence phase');
+        
       }
     }
   }
@@ -57,7 +54,7 @@ export function handleMeasureBoundary({
       const newTempo = Math.round(tempoRef.current * factor);
       setTempo(prev => Math.min(newTempo, 240));
       measureCountRef.current = 0;
-      console.log(`[TrainingLogic] Speed training: Increased tempo to ${newTempo}`);
+      
     }
   }
   
