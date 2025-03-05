@@ -287,7 +287,7 @@ function MultiCircleMetronome(props) {
       if (!circle.accents || beatIndex >= circle.accents.length) return prev;
       
       const acc = [...circle.accents];
-      acc[beatIndex] = (acc[beatIndex] + 1) % 3;
+      acc[beatIndex] = (acc[beatIndex] + 1) % 4; // cycle 0→1→2→3→0
       updated[activeCircle] = { ...circle, accents: acc };
       return updated;
     });

@@ -69,10 +69,9 @@ export function AdvancedMetronomeWithCircle({
 
   const localToggleAccent = (index) => {
     if (analogMode) return;  // no toggling in analog mode
-    if (index === 0) return; // skip first beat accent toggle
     setLocalAccents((prev) => {
       const copy = [...prev];
-      copy[index] = (copy[index] + 1) % 3; // cycle 0→1→2→0
+      copy[index] = (copy[index] + 1) % 4; // cycle 0→1→2→3→0
       return copy;
     });
   };
@@ -257,19 +256,20 @@ export function AdvancedMetronomeWithCircle({
 
               // Decide which icon to use (first / accent / normal)
               let icon;
-              if (bd.i === 0) {
-                icon = useActive ? firstBeatActive : firstBeat;
-              } else {
-                const acc = effectiveAccents[bd.i];
-                if (acc === 2) {
-                  icon = useActive ? accentedBeatActive : accentedBeat;
-                } else {
-                  icon = useActive ? normalBeatActive : normalBeat;
-                }
+              const beatState = effectiveAccents[bd.i];
+              
+              // Skip rendering this beat if it's muted (state 0)
+              if (beatState === 0) {
+                return null;
               }
-
-              // Possibly dim if accent=0
-              const dim = (effectiveAccents[bd.i] === 0);
+              
+              if (beatState === 3) {
+                icon = useActive ? firstBeatActive : firstBeat;
+              } else if (beatState === 2) {
+                icon = useActive ? accentedBeatActive : accentedBeat;
+              } else {
+                icon = useActive ? normalBeatActive : normalBeat;
+              }
 
               return (
                 <img
@@ -281,7 +281,6 @@ export function AdvancedMetronomeWithCircle({
                   style={{
                     left: `calc(50% + ${bd.xPos}px - 12px)`,
                     top: `calc(50% + ${bd.yPos}px - 12px)`,
-                    opacity: dim ? 0.3 : 1,
                     transition: 'all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)',
                     // short highlight
                     filter: useActive

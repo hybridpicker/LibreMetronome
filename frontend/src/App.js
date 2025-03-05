@@ -32,10 +32,9 @@ function App() {
   }, [subdivisions]);
 
   const toggleAccent = (index) => {
-    if (index === 0) return;
     setAccents(prev => {
       const newAccents = [...prev];
-      newAccents[index] = (newAccents[index] + 1) % 3;
+      newAccents[index] = (newAccents[index] + 1) % 4; 
       return newAccents;
     });
   };

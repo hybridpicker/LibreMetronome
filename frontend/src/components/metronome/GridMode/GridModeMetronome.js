@@ -52,13 +52,11 @@ const GridModeMetronome = (props) => {
   });
 
   // Modified column click handler to cycle through patterns:
-  // First row → First two rows → All three rows → No rows
+  // 0 → mute, 1 → normal beat, 2 → accent, 3 → first beat
   const handleColumnClick = useCallback((colIndex) => {
-    if (colIndex === 0) return; // First column is fixed
-    
     setGridConfig((prev) => {
       const newConfig = [...prev];
-      // Cycle through the patterns: 1 → 2 → 3 → 0
+      // Cycle through the patterns: 0→1→2→3→0
       newConfig[colIndex] = (newConfig[colIndex] + 1) % 4;
       
       if (props.updateAccents) props.updateAccents(newConfig);
@@ -188,6 +186,54 @@ const GridModeMetronome = (props) => {
       const columnLevel = gridConfig[colIndex];
       const colorSet = isFirstBeat ? firstBeatColors : colors;
       
+      // Skip rendering squares if column level is 0 (muted)
+      if (columnLevel === 0) {
+        return (
+          <div 
+            key={colIndex}
+            onClick={() => handleColumnClick(colIndex)}
+            style={{
+              display: 'inline-block',
+              verticalAlign: 'top',
+              marginRight: `${gapSize}px`,
+              cursor: 'pointer',
+              width: `${squareSize}px`,
+              textAlign: 'center'
+            }}
+          >
+            <div style={{ 
+              height: `${3 * squareSize + 8}px`, // Height of 3 squares + 2 gaps
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}>
+              <div style={{ 
+                width: '24px', 
+                height: '24px', 
+                border: '2px dashed #ccc',
+                borderRadius: '50%',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                color: '#ccc',
+                fontSize: '18px'
+              }}>
+                +
+              </div>
+            </div>
+            <div style={{ 
+              fontSize: '12px', 
+              marginTop: '8px', 
+              color: colIndex === 0 ? "#f5bc5e" : "#666",
+              fontWeight: colIndex === 0 ? "bold" : "normal"
+            }}>
+              {colIndex + 1}
+            </div>
+          </div>
+        );
+      }
+      
       // Determine which rows are active based on the column level (0-3)
       const activeRows = columnLevel === 0 ? [] : 
                         columnLevel === 1 ? [2] : 
@@ -202,7 +248,7 @@ const GridModeMetronome = (props) => {
             display: 'inline-block',
             verticalAlign: 'top',
             marginRight: `${gapSize}px`,
-            cursor: colIndex === 0 ? 'default' : 'pointer',
+            cursor: 'pointer',
             width: `${squareSize}px`,
             textAlign: 'center'
           }}
@@ -310,6 +356,17 @@ const GridModeMetronome = (props) => {
         fontSize: '12px',
         color: '#666'
       }}>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div style={{ 
+            width: '12px', 
+            height: '12px', 
+            backgroundColor: colors.inactive, 
+            borderRadius: '2px',
+            marginRight: '5px',
+            border: '1px solid #ddd'
+          }}></div>
+          Mute
+        </div>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <div style={{ 
             width: '12px', 
