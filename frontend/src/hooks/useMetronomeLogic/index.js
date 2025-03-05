@@ -57,6 +57,27 @@ export default function useMetronomeLogic({
   const measureCountRef = useRef(0);
   const muteMeasureCountRef = useRef(0);
   const isSilencePhaseRef = useRef(false);
+  
+  // Reset training counters when mode changes
+  useEffect(() => {
+    // Reset counters when training mode is turned off
+    if (speedMode === 0 && macroMode === 0) {
+      measureCountRef.current = 0;
+      muteMeasureCountRef.current = 0;
+      isSilencePhaseRef.current = false;
+    }
+    
+    // Reset counters when metronome is paused
+    if (isPaused) {
+      measureCountRef.current = 0;
+      muteMeasureCountRef.current = 0;
+      
+      // Don't reset silence phase when paused, as we want to resume in the same state
+      
+      // Log the reset
+      console.log('Training counters reset due to mode change or pause');
+    }
+  }, [speedMode, macroMode, isPaused, measuresUntilSpeedUp]);
 
   // 2) Keep local copies of changing values in refs for the scheduling loop
   const tempoRef = useRef(tempo);
@@ -260,6 +281,9 @@ export default function useMetronomeLogic({
     currentSubStartRef,
     currentSubIntervalRef,
     startScheduler,
-    stopScheduler
+    stopScheduler,
+    measureCountRef,
+    muteMeasureCountRef,
+    isSilencePhaseRef
   };
 }

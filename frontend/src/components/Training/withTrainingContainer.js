@@ -53,6 +53,8 @@ const withTrainingContainer = (WrappedMetronome) => {
           measuresUntilMute={measuresUntilMute}
           muteMeasureCountRef={muteMeasureCountRef}
           muteDurationMeasures={muteDurationMeasures}
+          tempoIncreasePercent={tempoIncreasePercent}
+          measuresUntilSpeedUp={measuresUntilSpeedUp}
         />
         {/* Render the wrapped Metronome mode below with ALL training props */}
         <WrappedMetronome 

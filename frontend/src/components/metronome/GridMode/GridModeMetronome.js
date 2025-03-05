@@ -274,13 +274,6 @@ const GridModeMetronome = (props) => {
         speedMode={props.speedMode}
       />
       
-      {/* Debug info */}
-      {process.env.NODE_ENV === 'development' && (
-        <div style={{ fontSize: '10px', color: '#999', marginTop: '5px' }}>
-          Speed Mode: {props.speedMode}
-        </div>
-      )}
-      
       <div style={{ marginTop: '20px' }}>
         <button
           onClick={handlePlayPause}

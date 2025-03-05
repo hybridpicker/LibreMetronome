@@ -170,6 +170,10 @@ export function runScheduler({
     // If we've hit the start of a new measure
     if (currentSubRef.current === 0) {
       handleMeasureBoundary();
+      
+      // Dispatch a custom event to notify components that a measure is complete
+      const measureCompleteEvent = new CustomEvent('measure-complete');
+      window.dispatchEvent(measureCompleteEvent);
     }
   }
 }

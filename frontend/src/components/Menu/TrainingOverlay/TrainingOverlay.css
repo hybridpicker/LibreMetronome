@@ -15,13 +15,226 @@
   background: #f9f9f9; /* Lighter background for the modal */
   padding: 30px; /* Increased padding for a more spacious layout */
   border-radius: 12px; /* Rounded corners */
-  max-width: 450px; /* Wider modal */
+  max-width: 500px; /* Wider modal */
   width: 90%;
   text-align: left;
   position: relative;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Shadow for depth */
   max-height: 90vh; /* Limit height on small screens */
   overflow-y: auto; /* Add scrolling when needed */
+}
+
+.training-modal h2 {
+  color: #00A0A0;
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 24px;
+}
+
+.training-tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.training-tab {
+  background: transparent;
+  border: none;
+  padding: 10px 20px;
+  margin: 0 5px;
+  cursor: pointer;
+  font-size: 16px;
+  color: #666;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.training-tab.active {
+  color: #00A0A0;
+  font-weight: bold;
+}
+
+.training-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: #00A0A0;
+  border-radius: 3px 3px 0 0;
+}
+
+.training-tab:hover {
+  color: #00A0A0;
+}
+
+.training-section {
+  display: none;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.training-section.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.training-overview {
+  background-color: #f0f8ff;
+  border-left: 4px solid #00A0A0;
+  padding: 12px 15px;
+  margin-bottom: 20px;
+  border-radius: 0 4px 4px 0;
+}
+
+.training-overview p {
+  margin: 0;
+  color: #333;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.training-control {
+  margin-bottom: 15px;
+}
+
+.training-select-label {
+  display: flex;
+  align-items: center;
+  font-weight: bold;
+  color: #444;
+}
+
+.training-select {
+  flex: 1;
+  margin-left: 10px;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: white;
+  font-size: 14px;
+}
+
+.training-options {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 15px;
+  margin-top: 15px;
+  border: 1px solid #eee;
+}
+
+.training-explanation {
+  margin-bottom: 15px;
+  font-size: 14px;
+  color: #555;
+  line-height: 1.4;
+}
+
+.training-input-label {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+}
+
+.training-input-label span:first-child {
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #444;
+}
+
+.training-input {
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 100%;
+  max-width: 150px;
+  font-size: 14px;
+}
+
+.training-slider {
+  width: 100%;
+  margin: 10px 0;
+  -webkit-appearance: none;
+  height: 8px;
+  border-radius: 4px;
+  background: #ddd;
+  outline: none;
+}
+
+.training-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #00A0A0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.training-slider::-webkit-slider-thumb:hover {
+  background: #008080;
+  transform: scale(1.1);
+}
+
+.slider-value {
+  font-weight: bold;
+  color: #00A0A0;
+  margin-bottom: 5px;
+}
+
+.input-description {
+  font-size: 12px;
+  color: #777;
+  margin-top: 5px;
+  font-style: italic;
+}
+
+.training-tip {
+  display: flex;
+  background-color: #fffbea;
+  border: 1px solid #f0e6c1;
+  border-radius: 6px;
+  padding: 12px;
+  margin-top: 15px;
+}
+
+.tip-icon {
+  font-size: 18px;
+  margin-right: 10px;
+}
+
+.tip-content {
+  font-size: 13px;
+  color: #5a5a5a;
+  line-height: 1.4;
+}
+
+.training-footer {
+  margin-top: 25px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.training-status {
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+
+.status-active {
+  color: #00A0A0;
+  font-weight: bold;
+}
+
+.status-inactive {
+  color: #888;
 }
 
 .training-close-button {
@@ -54,12 +267,14 @@
   color: #fff;
   border: none;
   border-radius: 5px;
-  padding: 12px 20px; /* Increased padding for the button */
+  padding: 12px 25px; /* Increased padding for the button */
   cursor: pointer;
-  font-size: 1rem; /* Uniform font size */
+  font-size: 16px; /* Larger font size */
+  font-weight: bold;
   transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1); /* Transition effect */
   display: block;
-  margin: 15px auto;
+  margin: 0 auto;
+  min-width: 150px;
 }
 
 .training-save-button:hover {
@@ -83,7 +298,7 @@
   font-size: 14px;
   line-height: 1.5;
   height: 30px; /* Fixed height */
-  min-width: 70px; /* Minimum width */
+  min-width: 90px; /* Increased minimum width */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -105,39 +320,6 @@
   background-color: #00A0A0;
 }
 
-/* Increase spacing between options in training sections */
-.training-options label {
-  display: block;
-  margin: 15px 0;
-}
-
-.training-options label input {
-  border-color: #ccc;
-  border-style: solid;
-  border-width: 1px;
-  border-radius: 4px;
-  padding: 5px;
-  margin-left: 10px;
-  max-width: 100px; /* Limit width for smaller screens */
-}
-
-/* Modern styling for select fields */
-select {
-  background: #fff;
-  border: 1px solid #ccc;
-  padding: 5px 10px;
-  border-radius: 4px;
-  margin-left: 10px;
-}
-
-/* Training section headings */
-.training-section h3 {
-  color: #00A0A0;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 8px;
-  margin-top: 20px;
-}
-
 /* Smartphone adjustments (max-width: 600px) */
 @media (max-width: 600px) {
   /* Updated to maintain visibility on mobile */
@@ -147,43 +329,55 @@ select {
     left: auto; /* Reset left position */
     right: 10px; /* Position at right side */
     padding: 6px 8px;
-    min-width: 60px;
+    min-width: 80px;
     font-size: 12px;
     z-index: 1001; /* Make sure it appears above other elements */
   }
   
   .training-modal {
-    width: 85%;
-    padding: 15px;
-    max-height: 80vh;
+    width: 90%;
+    padding: 20px 15px;
+    max-height: 85vh;
   }
   
   .training-modal h2 {
-    font-size: 18px;
+    font-size: 20px;
     margin-right: 30px; /* Make room for close button */
   }
   
-  .training-section h3 {
-    font-size: 16px;
-  }
-  
-  .training-options label {
+  .training-tab {
+    padding: 8px 12px;
     font-size: 14px;
-    margin: 10px 0;
-    display: flex;
-    flex-direction: column;
   }
   
-  .training-options label input,
-  .training-options select {
-    margin: 5px 0 0 0;
-    width: 100%;
-    max-width: none;
+  .training-options {
+    padding: 12px 10px;
   }
   
-  select {
-    width: 100%;
-    margin-left: 0;
-    margin-top: 5px;
+  .training-input-label {
+    margin-bottom: 12px;
+  }
+  
+  .training-input {
+    max-width: 100%;
+  }
+  
+  .training-save-button {
+    padding: 10px 20px;
+    font-size: 14px;
+    min-width: 120px;
+  }
+  
+  .training-overview p,
+  .training-explanation p {
+    font-size: 13px;
+  }
+  
+  .input-description {
+    font-size: 11px;
+  }
+  
+  .tip-content {
+    font-size: 12px;
   }
 }
