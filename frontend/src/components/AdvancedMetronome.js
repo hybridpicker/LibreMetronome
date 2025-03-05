@@ -20,6 +20,8 @@ import tapButtonIcon from '../assets/svg/tap-button.svg';
 // Optional analog mode
 import AnalogMetronomeCanvas from './metronome/AnalogMode/AnalogMetronomeCanvas';
 import withTrainingContainer from './Training/withTrainingContainer';
+import AccelerateButton from './metronome/Controls/AccelerateButton';
+import { manualTempoAcceleration } from '../hooks/useMetronomeLogic/trainingLogic';
 
 // Import some CSS that includes @keyframes
 import './AdvancedMetronome.css';
@@ -186,6 +188,16 @@ export function AdvancedMetronomeWithCircle({
       logic.stopScheduler();
     }
   }, [isPaused, logic, setIsPaused]);
+
+  const handleAccelerate = useCallback(() => {
+    if (!isPaused) {
+      manualTempoAcceleration({
+        tempoIncreasePercent,
+        tempoRef: { current: tempo },
+        setTempo
+      });
+    }
+  }, [isPaused, tempo, tempoIncreasePercent, setTempo]);
 
   // --------------------------
   //  Layout & circle geometry
@@ -356,6 +368,19 @@ export function AdvancedMetronomeWithCircle({
           />
         </button>
       </div>
+
+      {/* Accelerate button for Training Mode */}
+      <AccelerateButton 
+        onClick={handleAccelerate} 
+        speedMode={speedMode}
+      />
+
+      {/* Debug info */}
+      {process.env.NODE_ENV === 'development' && (
+        <div style={{ fontSize: '10px', color: '#999', marginTop: '5px' }}>
+          Speed Mode: {speedMode}
+        </div>
+      )}
 
       {/* Tap tempo if mobile */}
       {isMobile && (
