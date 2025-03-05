@@ -45,12 +45,11 @@ const CircleRenderer = ({
     const xPos = radius * Math.cos(angle);
     const yPos = radius * Math.sin(angle);
     
-    // Don't show active beat during transitions for visual stability
+    // Show active beat regardless of transition state to ensure visual feedback matches audio
     const isActive = i === currentSubdivision &&
                      isPlaying &&
                      !isPaused &&
-                     audioCtxRunning &&
-                     !isTransitioning;
+                     audioCtxRunning;
     
     let icon;
     if (i === 0) {

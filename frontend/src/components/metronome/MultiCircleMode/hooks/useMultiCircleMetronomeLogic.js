@@ -268,20 +268,11 @@ export default function useMultiCircleMetronomeLogic({
         circleTransitionRef.current.alreadySwitched = false;
         console.log(`[MultiCircleLogic] 🏁 Transition state fully reset`);
       }
-    } else {
-      // Log other beats with less detail
-      console.log(`[MultiCircleLogic] Beat ${subIndex}/${totalSubs} scheduled at time ${when.toFixed(3)}, circle: ${currentCircleIndex}`);
-
-      // Check if this is the last beat of the measure
-      if (subIndex === totalSubs - 1 && 
-          !circleTransitionRef.current.isTransitioning &&
-          !circleTransitionRef.current.transitionLockout &&
-          circleSettings.length > 1) {
-        
-        // Calculate next circle index
+      
+      // Trigger auto-transition to the next circle
+      if (circleSettings.length > 1) {
         const nextCircle = (currentCircleIndex + 1) % circleSettings.length;
-        
-        console.log(`[MultiCircleLogic] 🔄 Auto-transition triggered at last beat: ${currentCircleIndex} -> ${nextCircle}`);
+        console.log(`[MultiCircleLogic] 🔄 Auto-transition triggered at start of measure: ${currentCircleIndex} -> ${nextCircle}`);
         
         // Prepare for transition
         prepareCircleTransition(currentCircleIndex, nextCircle);
@@ -293,6 +284,16 @@ export default function useMultiCircleMetronomeLogic({
         if (onCircleChange) {
           onCircleChange(nextCircle);
         }
+      }
+    } else {
+      // Log other beats with less detail
+      console.log(`[MultiCircleLogic] Beat ${subIndex}/${totalSubs} scheduled at time ${when.toFixed(3)}, circle: ${currentCircleIndex}`);
+      
+      // End of circle reached: deferring circle transition until beginning of next measure
+      if (subIndex === totalSubs - 1) {
+        console.log('End of circle reached: deferring circle transition until beginning of next measure.');
+        beatModeRef.current = false;
+        circleTransitionRef.current.isTransitioning = false;
       }
     }
     

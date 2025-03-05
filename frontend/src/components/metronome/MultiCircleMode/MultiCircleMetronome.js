@@ -345,12 +345,14 @@ export default function MultiCircleMetronome(props) {
     isPaused,
     circleSettings
   ]);
-  
-  useEffect(() => {
-    if (!isPaused && logic && logic.currentSubdivision !== undefined) {
-      handleSubdivisionChange(logic.currentSubdivision);
-    }
-  }, [logic?.currentSubdivision, handleSubdivisionChange, isPaused, logic]);
+
+  // The circle switching is handled automatically in the metronome logic.
+  // Hence, this effect is redundant and has been removed to fix the beat animation issues.
+  // useEffect(() => {
+  //   if (!isPaused && logic && logic.currentSubdivision !== undefined) {
+  //     handleSubdivisionChange(logic.currentSubdivision);
+  //   }
+  // }, [logic?.currentSubdivision, handleSubdivisionChange, isPaused, logic]);
 
   // Handle Play/Pause
   const handlePlayPause = useCallback(() => {
