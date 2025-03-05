@@ -375,13 +375,6 @@ export function AdvancedMetronomeWithCircle({
         speedMode={speedMode}
       />
 
-      {/* Debug info */}
-      {process.env.NODE_ENV === 'development' && (
-        <div style={{ fontSize: '10px', color: '#999', marginTop: '5px' }}>
-          Speed Mode: {speedMode}
-        </div>
-      )}
-
       {/* Tap tempo if mobile */}
       {isMobile && (
         <button

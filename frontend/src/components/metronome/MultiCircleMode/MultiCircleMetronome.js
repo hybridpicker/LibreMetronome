@@ -8,6 +8,7 @@ import playIcon from "../../../assets/svg/play.svg";
 import pauseIcon from "../../../assets/svg/pause.svg";
 import "./MultiCircleMetronome.css";
 import '../Controls/slider-styles.css';
+import withTrainingContainer from "../../Training/withTrainingContainer";
 
 import NoteSelector from "../Controls/NoteSelector";
 import SubdivisionSelector from "../Controls/SubdivisionSelector";
@@ -91,52 +92,7 @@ const AddCircleButton = ({ addCircle, containerSize, isMobile }) => (
   </div>
 );
 
-const TrainingStatus = ({
-  macroMode,
-  speedMode,
-  isSilencePhaseRef,
-  measureCountRef,
-  measuresUntilMute,
-  muteMeasureCountRef,
-  muteDurationMeasures
-}) => {
-  if (macroMode === 0 && speedMode === 0) return null;
-  
-  return (
-    <div style={{
-      marginTop: '10px',
-      padding: '8px',
-      borderRadius: '5px',
-      backgroundColor: '#f8f8f8',
-      border: '1px solid #ddd',
-      maxWidth: '300px',
-      margin: '10px auto'
-    }}>
-      <h4 style={{margin: '0 0 8px 0', color: '#00A0A0'}}>Training Active</h4>
-      {macroMode !== 0 && (
-        <div style={{marginBottom: '5px', fontSize: '14px'}}>
-          Macro-Timing: {macroMode === 1 ? 'Fixed Silence' : 'Random Silence'}
-          {isSilencePhaseRef?.current && 
-            <span style={{color: '#f44336', fontWeight: 'bold'}}> (Silent)</span>
-          }
-        </div>
-      )}
-      {speedMode !== 0 && (
-        <div style={{fontSize: '14px'}}>
-          Speed Training: Auto Increase
-        </div>
-      )}
-      
-      {/* Diagnostic counters */}
-      <div style={{fontSize: '14px', color: '#666', marginTop: '5px'}}>
-        Measures: {measureCountRef?.current || 0}/{measuresUntilMute}
-        {isSilencePhaseRef?.current && ` | Silence: ${muteMeasureCountRef?.current || 0}/${muteDurationMeasures}`}
-      </div>
-    </div>
-  );
-};
-
-export default function MultiCircleMetronome(props) {
+function MultiCircleMetronome(props) {
   // Destructure props for clarity
   const {
     tempo,
@@ -554,29 +510,11 @@ export default function MultiCircleMetronome(props) {
 
   return (
     <div style={{ textAlign: "center" }}>
-      {/* Training status indicator */}
-      <TrainingStatus
-        macroMode={macroMode}
-        speedMode={speedMode}
-        isSilencePhaseRef={logic.isSilencePhaseRef}
-        measureCountRef={logic.measureCountRef}
-        measuresUntilMute={measuresUntilMute}
-        muteMeasureCountRef={logic.muteMeasureCountRef}
-        muteDurationMeasures={muteDurationMeasures}
-      />
-      
       {/* Accelerate button for Training Mode */}
       <AccelerateButton 
         onClick={handleAccelerate} 
         speedMode={speedMode}
       />
-      
-      {/* Debug info */}
-      {process.env.NODE_ENV === 'development' && (
-        <div style={{ fontSize: '10px', color: '#999', marginTop: '5px' }}>
-          Speed Mode: {speedMode}
-        </div>
-      )}
       
       {/* Main circles container */}
       <div className="circles-container" style={{
@@ -718,3 +656,5 @@ export default function MultiCircleMetronome(props) {
     </div>
   );
 }
+
+export default withTrainingContainer(MultiCircleMetronome);
