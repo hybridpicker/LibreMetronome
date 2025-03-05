@@ -43,17 +43,18 @@ export default function UniversalAnalogAnimation({
 
     const drawPendulumArm = (ctx, w, h, angleRad) => {
       ctx.save();
-      // Calculate pivot offset - move it higher up for better visibility
-      const pivotOffsetY = h * 0.15; // Reduced from 0.25 to place it higher
-      ctx.translate(w / 2, h / 2 + pivotOffsetY);
+      // Position the pivot point much lower in the canvas (closer to the bottom)
+      const pivotOffsetY = h * 0.1; // Reduced offset as we're positioning it directly
+      // Translate to the pivot point - centered horizontally, much lower vertically
+      ctx.translate(w / 2, h * 0.85); // Position at 85% of the height (very close to bottom)
       
       // Arm length based on smaller dimension - make it longer
-      const armLength = (Math.min(w, h) / 2) * 1.6; // Increased from 1.4 for better proportions
+      const armLength = (Math.min(w, h) / 2) * 1.3; // Adjusted for better proportions with new position
       
-      // Draw pivot point (small circle)
+      // Draw pivot point (small circle) with cyan color
       ctx.beginPath();
       ctx.arc(0, 0, 3, 0, Math.PI * 2);
-      ctx.fillStyle = color;
+      ctx.fillStyle = color; // Changed back to cyan (using the color prop which is typically #00A0A0)
       ctx.fill();
       
       // Rotate the context to the current angle
@@ -67,10 +68,10 @@ export default function UniversalAnalogAnimation({
       ctx.lineTo(0, -armLength);
       ctx.stroke();
       
-      // Draw pendulum bob (circle at end) - smaller size
+      // Draw pendulum bob (circle at end) with yellow color
       ctx.beginPath();
-      ctx.arc(0, -armLength, 7, 0, Math.PI * 2); // Reduced from 10 to 7
-      ctx.fillStyle = color;
+      ctx.arc(0, -armLength, 7, 0, Math.PI * 2);
+      ctx.fillStyle = '#f8d38d'; // Changed to yellow
       ctx.fill();
       
       ctx.restore();
