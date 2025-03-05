@@ -36,8 +36,7 @@ export default function useMultiCircleMetronomeLogic({
   playingCircle = 0, // Index of currently playing circle
   onCircleChange = null // New callback to sync UI when circle changes
 }) {
-  // Create a ref to track the current beatMode for interval calculations
-  const beatModeRef = useRef(beatMode);
+  // We no longer need beatModeRef as we're using circleSettings directly
   
   // Track current and next circle data for smooth transitions
   const circleTransitionRef = useRef({
@@ -58,20 +57,6 @@ export default function useMultiCircleMetronomeLogic({
     measureStartTime: 0
   });
   
-  // Update beatModeRef when beatMode prop changes
-  useEffect(() => {
-    // Only update if not in transition to prevent mid-measure changes
-    if (!circleTransitionRef.current.isTransitioning) {
-      beatModeRef.current = beatMode;
-      console.log(`[MultiCircleLogic] Using beatMode: ${beatMode}`);
-    }
-  }, [beatMode]);
-
-  // Derive beatMultiplier from beatMode (1 for quarter, 2 for eighth)
-  const getBeatMultiplier = useCallback(() => {
-    return beatModeRef.current === "eighth" ? 2 : 1;
-  }, []);
-
   // Same refs as regular metronome logic
   const {
     audioCtxRef,
@@ -114,6 +99,15 @@ export default function useMultiCircleMetronomeLogic({
   useEffect(() => { accentsRef.current = accents; }, [accents]);
   useEffect(() => { playingCircleRef.current = playingCircle; }, [playingCircle]);
 
+  // Derive beatMultiplier from beatMode (1 for quarter, 2 for eighth)
+  const getBeatMultiplier = useCallback(() => {
+    const currentCircleIndex = playingCircleRef.current;
+    const currentBeatMode = circleSettings[currentCircleIndex]?.beatMode;
+    const multiplier = currentBeatMode === "eighth" ? 2 : 1;
+    console.log(`[MultiCircleLogic] getBeatMultiplier: circle=${currentCircleIndex}, beatMode=${currentBeatMode}, multiplier=${multiplier}`);
+    return multiplier;
+  }, [circleSettings, playingCircleRef]);
+
   // Initialize audio context
   useEffect(() => {
     const audioCtx = initAudioContext();
@@ -139,6 +133,8 @@ export default function useMultiCircleMetronomeLogic({
     // Calculate using the CURRENT beatMode from the ref, not the initial value
     const beatMultiplier = getBeatMultiplier();
     const secPerHit = 60 / (localTempo * beatMultiplier);
+
+    console.log(`[MultiCircleLogic] getCurrentSubIntervalSec: subIndex=${subIndex}, tempo=${localTempo}, multiplier=${beatMultiplier}, secPerHit=${secPerHit.toFixed(4)}`);
 
     // Handle swing timing if needed
     const totalSubs = subdivisionsRef.current;
@@ -219,7 +215,7 @@ export default function useMultiCircleMetronomeLogic({
     
     // For debugging - log every beat with its timing information
     const currentCircleIndex = playingCircleRef.current;
-    const currentBeatMode = beatModeRef.current;
+    const currentBeatMode = circleSettings[currentCircleIndex]?.beatMode;
     const totalSubs = subdivisionsRef.current;
     
     if (subIndex === 0) {
@@ -240,8 +236,8 @@ export default function useMultiCircleMetronomeLogic({
         // Update the beat mode for the next circle
         const nextCircleIndex = circleTransitionRef.current.toCircle;
         if (circleSettings[nextCircleIndex]) {
-          beatModeRef.current = circleSettings[nextCircleIndex].beatMode;
-          console.log(`[MultiCircleLogic] 🔄 TRANSITION COMPLETE: Now using beatMode=${beatModeRef.current} for circle ${nextCircleIndex}`);
+          // We don't need to update beatModeRef anymore since we're using circleSettings directly
+          console.log(`[MultiCircleLogic] 🔄 TRANSITION COMPLETE: Now using beatMode=${circleSettings[nextCircleIndex].beatMode} for circle ${nextCircleIndex}`);
           
           // Reset transition state to allow future transitions
           circleTransitionRef.current.isTransitioning = false;
@@ -292,7 +288,8 @@ export default function useMultiCircleMetronomeLogic({
       // End of circle reached: deferring circle transition until beginning of next measure
       if (subIndex === totalSubs - 1) {
         console.log('End of circle reached: deferring circle transition until beginning of next measure.');
-        beatModeRef.current = false;
+        // Remove this line as we don't need to reset beatModeRef anymore
+        // beatModeRef.current = false;
         circleTransitionRef.current.isTransitioning = false;
       }
     }
@@ -404,61 +401,43 @@ export default function useMultiCircleMetronomeLogic({
     setTempo
   ]);
 
-  // Start scheduler with optional start time
-  function startScheduler(startTime) {
-    if (schedulerRunningRef.current) return;
-    stopScheduler();
-
-    const audioCtx = audioCtxRef.current;
-    if (!audioCtx) return;
-
-    schedulerRunningRef.current = true;
-    currentSubRef.current = 0;
-    setCurrentSubdivision(0);
-
-    const now = startTime || audioCtx.currentTime;
-    nextNoteTimeRef.current = now;
-    currentSubStartRef.current = now;
-    currentSubIntervalRef.current = getCurrentSubIntervalSec(0);
-    playedBeatTimesRef.current = [];
-    lastBeatTimeRef.current = now;
-    
-    // Reset transition state
-    circleTransitionRef.current = {
-      isTransitioning: false,
-      fromCircle: 0,
-      toCircle: 0,
-      nextCircleScheduled: false,
-      lastBeatTime: now,
-      transitionStartTime: 0,
-      transitionLockout: false,
-      measureCompleted: false,
-      alreadySwitched: false
-    };
-
-    // Log the current settings for debugging
-    console.log(`[MultiCircleLogic] 🎵 Starting scheduler with beatMode=${beatModeRef.current}, multiplier=${getBeatMultiplier()}, tempo=${tempoRef.current}`);
-
-    // Start the scheduling loop
-    lookaheadRef.current = setInterval(doSchedulerLoop, 20);
-  }
-
-  function stopScheduler() {
+  const stopScheduler = useCallback(() => {
     if (lookaheadRef.current) {
       clearInterval(lookaheadRef.current);
       lookaheadRef.current = null;
     }
     schedulerRunningRef.current = false;
-    
-    // Reset transition state
-    if (circleTransitionRef.current) {
-      circleTransitionRef.current.isTransitioning = false;
-      circleTransitionRef.current.nextCircleScheduled = false;
-      circleTransitionRef.current.measureCompleted = false;
-      circleTransitionRef.current.alreadySwitched = false;
-      console.log(`[MultiCircleLogic] ⏹️ Scheduler stopped, transition state reset`);
+    console.log("[MultiCircleLogic] Scheduler stopped");
+  }, []);
+
+  // Start scheduler with optional start time
+  const startScheduler = useCallback(() => {
+    if (schedulerRunningRef.current) {
+      console.log("[MultiCircleLogic] Scheduler already running, stopping first");
+      stopScheduler();
     }
-  }
+
+    // Initialize timing variables
+    const audioCtx = audioCtxRef.current;
+    if (!audioCtx) {
+      console.error("No AudioContext available");
+      return;
+    }
+
+    // Reset counters
+    nextNoteTimeRef.current = audioCtx.currentTime;
+    currentSubRef.current = 0;
+    currentSubStartRef.current = 0;
+    currentSubIntervalRef.current = getCurrentSubIntervalSec(0);
+    playedBeatTimesRef.current = [];
+    schedulerRunningRef.current = true;
+
+    // Log the current settings for debugging
+    console.log(`[MultiCircleLogic] 🎵 Starting scheduler with beatMode=${circleSettings[playingCircleRef.current]?.beatMode}, multiplier=${getBeatMultiplier()}, tempo=${tempoRef.current}`);
+
+    // Start the scheduling loop
+    lookaheadRef.current = setInterval(doSchedulerLoop, 20);
+  }, [getCurrentSubIntervalSec, doSchedulerLoop, circleSettings, getBeatMultiplier]);
 
   // Auto-start/stop based on isPaused
   useEffect(() => {
@@ -471,11 +450,25 @@ export default function useMultiCircleMetronomeLogic({
     }
   }, [isPaused]);
 
+  // Restart scheduler when circleSettings change and we're not paused
+  useEffect(() => {
+    if (!isPaused && schedulerRunningRef.current) {
+      console.log("[MultiCircleLogic] Restarting scheduler due to circleSettings change");
+      stopScheduler();
+      startScheduler();
+    }
+  }, [circleSettings, isPaused, startScheduler, stopScheduler]);
+
   // Tap Tempo handler
   const handleTapTempo = useCallback(
     createTapTempoLogic(setTempo),
     [setTempo]
   );
+
+  // Function to check if we're currently in a transition
+  const isTransitioning = useCallback(() => {
+    return circleTransitionRef.current.isTransitioning;
+  }, []);
 
   // Return the enhanced logic object
   return {
@@ -487,13 +480,12 @@ export default function useMultiCircleMetronomeLogic({
     currentSubIntervalRef,
     startScheduler,
     stopScheduler,
-    beatModeRef, // Expose beatModeRef for circle transitions
     getBeatMultiplier, // Expose function to get current beat multiplier
     measureCountRef,
     muteMeasureCountRef,
     isSilencePhaseRef,
     switchToNextCircle, // New function to trigger circle switch
-    isTransitioning: () => circleTransitionRef.current.isTransitioning,
+    isTransitioning, // Expose function to check if we're in a transition
     lastBeatTimeRef // Expose last beat time for stability checks
   };
 }

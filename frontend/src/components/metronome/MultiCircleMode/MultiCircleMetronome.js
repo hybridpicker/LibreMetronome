@@ -226,7 +226,23 @@ export default function MultiCircleMetronome(props) {
     circleSettings,
     playingCircle,
     onCircleChange: setPlayingCircle
-  });
+  }, [
+    tempo, 
+    setTempo, 
+    circleSettings, 
+    playingCircle, 
+    isPaused, 
+    setIsPaused, 
+    swing, 
+    volume, 
+    macroMode, 
+    speedMode, 
+    measuresUntilMute, 
+    muteDurationMeasures, 
+    muteProbability, 
+    tempoIncreasePercent, 
+    measuresUntilSpeedUp
+  ]);
 
   // Make silence phase ref globally available to metronome logic
   useEffect(() => {
@@ -385,11 +401,8 @@ export default function MultiCircleMetronome(props) {
         
         lastCircleSwitchTimeRef.current = 0;
         
-        // Make sure beatMode is set correctly for first circle
-        if (logic.beatModeRef && circleSettings.length > 0) {
-          logic.beatModeRef.current = circleSettings[0].beatMode;
-          console.log(`[Multi-Circle] Setting initial beatMode to ${circleSettings[0].beatMode}`);
-        }
+        // We don't need to set beatModeRef directly anymore since we're using circleSettings
+        console.log(`[Multi-Circle] Starting playback with first circle beatMode: ${circleSettings[0]?.beatMode}`);
 
         const startPlayback = () => {
           if (logic && logic.startScheduler) {
@@ -492,24 +505,28 @@ export default function MultiCircleMetronome(props) {
       return;
     }
     
+    console.log(`[Multi-Circle] handleNoteSelection called with mode=${mode} for circle=${activeCircle}`);
+    
     setCircleSettings(prev => {
       const updated = [...prev];
       
       // Only update if the mode is actually changing
       if (updated[activeCircle]?.beatMode === mode) {
+        console.log(`[Multi-Circle] No change needed, circle ${activeCircle} already has beatMode=${mode}`);
         return prev;
       }
       
       updated[activeCircle] = { ...updated[activeCircle], beatMode: mode };
       
+      // We don't need to update the beatModeRef directly anymore since we're using
+      // circleSettings directly in the getBeatMultiplier function
+      console.log(`[Multi-Circle] Updated circle ${activeCircle} beatMode to ${mode}, full settings:`, JSON.stringify(updated));
+      
       // If this is the currently playing circle and we're not paused,
-      // we need to update the beatMode in the logic
-      if (!isPaused && activeCircle === playingCircle && logic?.beatModeRef) {
-        // Only update the beatMode if we're not in a transition
-        if (!logic.isTransitioning()) {
-          logic.beatModeRef.current = mode;
-          console.log(`[Multi-Circle] Updated active circle beatMode to ${mode}`);
-        }
+      // we need to restart the scheduler to apply the new beat mode
+      if (!isPaused && activeCircle === playingCircle && logic) {
+        console.log(`[Multi-Circle] This is the active playing circle, restarting scheduler`);
+        // The scheduler will be restarted by the useEffect in the hook
       }
       
       return updated;
