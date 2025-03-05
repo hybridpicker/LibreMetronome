@@ -287,9 +287,8 @@ export function AdvancedMetronomeWithCircle({
             width={containerSize}
             height={containerSize}
             isPaused={isPaused}
+            tempo={tempo}
             audioCtxCurrentTime={() => logic.audioCtx?.currentTime || 0}
-            currentSubStartTime={() => logic.currentSubStartRef.current}
-            currentSubInterval={() => logic.currentSubIntervalRef.current}
             currentSubIndex={logic.currentSubdivision}
           />
         ) : (

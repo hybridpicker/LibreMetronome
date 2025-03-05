@@ -11,15 +11,14 @@ export default function UniversalAnalogAnimation({
   width,
   height,
   isPaused,
-  audioCtxCurrentTime,
-  currentSubStartTime,
-  currentSubInterval,
-  currentSubIndex,
+  tempo, // Added tempo parameter for continuous animation
   opacity = 0.6, // Allow customizing the opacity for different modes
   color = "#00A0A0", // Allow customizing the pendulum color
   showBackground = false // Option to show/hide the background
 }) {
   const canvasRef = useRef(null);
+  // Use a ref to store a continuous start time
+  const startTimeRef = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -28,6 +27,9 @@ export default function UniversalAnalogAnimation({
     let animationId;
     const maxAngleDeg = 45;
     const maxAngleRad = (maxAngleDeg * Math.PI) / 180;
+    
+    // Store the previous angle to prevent snapping during pauses or tempo changes
+    let prevAngle = 0;
 
     // Clear canvas with optional background
     const clearCanvas = () => {
@@ -41,12 +43,12 @@ export default function UniversalAnalogAnimation({
 
     const drawPendulumArm = (ctx, w, h, angleRad) => {
       ctx.save();
-      // Calculate pivot offset (adjust as needed)
-      const pivotOffsetY = h * 0.25 - 10;
+      // Calculate pivot offset - move it higher up for better visibility
+      const pivotOffsetY = h * 0.15; // Reduced from 0.25 to place it higher
       ctx.translate(w / 2, h / 2 + pivotOffsetY);
       
-      // Arm length based on smaller dimension
-      const armLength = (Math.min(w, h) / 2) * 1.4;
+      // Arm length based on smaller dimension - make it longer
+      const armLength = (Math.min(w, h) / 2) * 1.6; // Increased from 1.4 for better proportions
       
       // Draw pivot point (small circle)
       ctx.beginPath();
@@ -65,9 +67,9 @@ export default function UniversalAnalogAnimation({
       ctx.lineTo(0, -armLength);
       ctx.stroke();
       
-      // Draw pendulum bob (circle at end)
+      // Draw pendulum bob (circle at end) - smaller size
       ctx.beginPath();
-      ctx.arc(0, -armLength, 10, 0, Math.PI * 2);
+      ctx.arc(0, -armLength, 7, 0, Math.PI * 2); // Reduced from 10 to 7
       ctx.fillStyle = color;
       ctx.fill();
       
@@ -77,20 +79,41 @@ export default function UniversalAnalogAnimation({
     const animate = () => {
       clearCanvas();
 
-      const interval = currentSubInterval();
-      if (isPaused || !interval) {
+      // When not paused, if we don't yet have a start time, record one
+      if (!isPaused && startTimeRef.current === null) {
+        startTimeRef.current = performance.now();
+      }
+      
+      // Reset start time when paused
+      if (isPaused) {
+        startTimeRef.current = null;
+        // Draw pendulum at center position when paused
         drawPendulumArm(ctx, canvas.width, canvas.height, 0);
+        prevAngle = 0;
       } else {
-        const now = audioCtxCurrentTime();
-        const startT = currentSubStartTime();
-        let fraction = (now - startT) / interval;
-        fraction = Math.min(Math.max(fraction, 0), 1);
+        // Use continuous time for smooth animation
+        const now = performance.now();
+        const elapsed = now - (startTimeRef.current || now);
         
-        // Alternate swing direction based on current beat index
-        const angle = currentSubIndex % 2 === 0
-          ? -maxAngleRad + fraction * (2 * maxAngleRad)
-          : maxAngleRad - fraction * (2 * maxAngleRad);
-          
+        // Compute the beat interval (in ms) from tempo
+        const beatInterval = (60 / tempo) * 1000;
+        // The full oscillation period is twice the beat interval
+        const period = 2 * beatInterval;
+        const phase = (elapsed % period) / period; // range [0, 1)
+        
+        // Compute the angle using a cosine function
+        // At phase 0: cos(0)=1 → angle = -maxAngleRad (left extreme)
+        // At phase 0.5: cos(π)=-1 → angle = +maxAngleRad (right extreme)
+        // At phase 1: cos(2π)=1 → angle = -maxAngleRad again
+        const targetAngle = -maxAngleRad * Math.cos(2 * Math.PI * phase);
+        
+        // Apply a small amount of smoothing for transitions during tempo changes
+        const smoothingFactor = 0.3; // Increased from 0.15 for smoother transitions
+        let angle = prevAngle + (targetAngle - prevAngle) * smoothingFactor;
+        
+        // Save the current angle for the next frame
+        prevAngle = angle;
+        
         drawPendulumArm(ctx, canvas.width, canvas.height, angle);
       }
       animationId = requestAnimationFrame(animate);
@@ -98,7 +121,7 @@ export default function UniversalAnalogAnimation({
 
     animationId = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationId);
-  }, [isPaused, audioCtxCurrentTime, currentSubStartTime, currentSubInterval, currentSubIndex, color, showBackground]);
+  }, [isPaused, tempo, color, showBackground]);
 
   return (
     <canvas
