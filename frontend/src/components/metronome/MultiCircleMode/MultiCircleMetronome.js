@@ -184,6 +184,9 @@ export default function MultiCircleMetronome(props) {
   const measureCountRef = useRef(0);
   const isProcessingPlayPauseRef = useRef(false);
   
+  // Add new ref for tracking first beat after transition
+  const isFirstBeatAfterTransitionRef = useRef(false);
+  
   // Training-specific references
   const isSilencePhaseRef = useRef(false);
   const muteMeasureCountRef = useRef(0);
@@ -277,7 +280,8 @@ export default function MultiCircleMetronome(props) {
     tempoIncreasePercent,
     measuresUntilSpeedUp,
     beatMultiplier: playingSettingsRef.current?.beatMode === "quarter" ? 1 : 2,
-    multiCircleMode: true
+    multiCircleMode: true,
+    isFirstBeatAfterTransitionRef: isFirstBeatAfterTransitionRef
   });
 
   // Handle setting subdivisions (used by keyboard shortcuts)
@@ -366,7 +370,7 @@ export default function MultiCircleMetronome(props) {
   
   const handleSubdivisionChange = useCallback((newSubdivision) => {
     if (isPaused || !circleSettings || circleSettings.length <= 1) return;
-    
+
     // Only detect end of measure when current subdivision is 0 and previous wasn't
     if (
       prevSubdivisionRef.current !== null &&
@@ -377,13 +381,13 @@ export default function MultiCircleMetronome(props) {
       // Update measure counter
       const newMeasureCount = measureCountRef.current + 1;
       measureCountRef.current = newMeasureCount;
-      
-      // TRAINING MODE LOGIC - Completely separate from circle switching
+
+      // TRAINING MODE LOGIC - Process BEFORE circle switching
       if (macroMode === 1) {
         if (!isSilencePhaseRef.current) {
           // Check if we should enter silence phase
           if (newMeasureCount >= measuresUntilMute) {
-            isSilencePhaseRef.current = true; 
+            isSilencePhaseRef.current = true;
             window.isSilencePhaseRef = isSilencePhaseRef; // Update global reference
             muteMeasureCountRef.current = 0;
           }
@@ -391,7 +395,7 @@ export default function MultiCircleMetronome(props) {
           // Already in silence phase, increment counter
           const newMuteCount = muteMeasureCountRef.current + 1;
           muteMeasureCountRef.current = newMuteCount;
-          
+
           // Check if we should exit silence phase
           if (newMuteCount >= muteDurationMeasures) {
             isSilencePhaseRef.current = false;
@@ -401,7 +405,7 @@ export default function MultiCircleMetronome(props) {
           }
         }
       }
-      
+
       // SPEED TRAINING LOGIC
       if (speedMode === 1 && !isSilencePhaseRef.current) {
         if (newMeasureCount >= measuresUntilSpeedUp) {
@@ -411,26 +415,20 @@ export default function MultiCircleMetronome(props) {
           measureCountRef.current = 0; // Reset measure count after tempo increase
         }
       }
-      
-      // CIRCLE SWITCHING LOGIC - Independent of training mode
+
+      // CIRCLE SWITCHING LOGIC - Now happens AFTER training logic processing
       const now = Date.now();
       if (now - lastCircleSwitchCheckTimeRef.current < 500) return;
       lastCircleSwitchCheckTimeRef.current = now;
-      
-      // Begin transition between circles
-      isTransitioningRef.current = true;
-      const nextCircleIndex = (playingCircle + 1) % circleSettings.length;
-      
-      // Make sure silence phase is consistent
-      if (isSilencePhaseRef.current) {
-        window.isSilencePhaseRef = isSilencePhaseRef;
+
+      if (logic && logic.stopScheduler) {
+        logic.stopScheduler();
       }
-      
-      // Store the current and next beat modes
-      const currentBeatMode = playingSettingsRef.current.beatMode;
-      const nextBeatMode = circleSettings[nextCircleIndex].beatMode;
-      
-      // Update the playing settings
+
+      const nextCircleIndex = (playingCircle + 1) % circleSettings.length;
+      setPlayingCircle(nextCircleIndex);
+
+      // Update playingSettingsRef, if needed
       playingSettingsRef.current = {
         ...circleSettings[nextCircleIndex],
         macroMode,
@@ -441,42 +439,17 @@ export default function MultiCircleMetronome(props) {
         tempoIncreasePercent,
         measuresUntilSpeedUp,
       };
-      
-      // First stop the current scheduler
-      if (logic && logic.stopScheduler) {
-        logic.stopScheduler();
+
+      if (!isPaused && logic && logic.startScheduler) {
+        logic.startScheduler();
+        // no skipFirstBeatRef
       }
-      
-      // Update the playing circle
-      setPlayingCircle(nextCircleIndex);
-      
-      // Use a minimal delay for the audio transition to avoid double beats
-      if (!isPaused && logic && logic.audioCtx) {
-        const currentTime = logic.audioCtx.currentTime;
-        const secondsPerBeat = 60 / (tempo * (nextBeatMode === "eighth" ? 2 : 1));
-        
-        setTimeout(() => {
-          if (!isPaused && !isTransitioningRef.current && logic && logic.startScheduler) {
-            try {
-              // Start at precisely the next beat time
-              logic.startScheduler(currentTime + secondsPerBeat);
-            } catch (err) {
-              console.error("Error starting next circle:", err);
-            }
-          }
-        }, 20);
-      }
-      
-      // Clear transition flag with delay
-      setTimeout(() => {
-        isTransitioningRef.current = false;
-      }, 100);
     }
-    
+
     prevSubdivisionRef.current = newSubdivision;
   }, [
-    isPaused, 
-    circleSettings, 
+    isPaused,
+    circleSettings,
     playingCircle,
     logic,
     tempo,
@@ -511,6 +484,9 @@ export default function MultiCircleMetronome(props) {
     }, 2000);
     
     isProcessingPlayPauseRef.current = true;
+    
+    // Reset transition flags when play/pause is toggled
+    isFirstBeatAfterTransitionRef.current = false;
     
     setIsPaused(prev => {
       if (prev) {
