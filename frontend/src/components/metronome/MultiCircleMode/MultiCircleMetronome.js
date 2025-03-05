@@ -7,7 +7,7 @@ import tapButtonIcon from "../../../assets/svg/tap-button.svg";
 import playIcon from "../../../assets/svg/play.svg";
 import pauseIcon from "../../../assets/svg/pause.svg";
 import "./MultiCircleMetronome.css";
-import '../Controls/slider-styles.css'
+import '../Controls/slider-styles.css';
 
 import NoteSelector from "../Controls/NoteSelector";
 import SubdivisionSelector from "../Controls/SubdivisionSelector";
@@ -178,10 +178,8 @@ export default function MultiCircleMetronome(props) {
   };
   
   // State tracking references
-  const isTransitioningRef = useRef(false);
-  const lastCircleSwitchCheckTimeRef = useRef(0);
   const isProcessingPlayPauseRef = useRef(false);
-  const isFirstBeatAfterTransitionRef = useRef(false);
+  const lastCircleSwitchTimeRef = useRef(0);
   
   // Container size calculation
   const getContainerSize = () => {
@@ -330,72 +328,32 @@ export default function MultiCircleMetronome(props) {
     if (
       prevSubdivisionRef.current !== null &&
       prevSubdivisionRef.current !== newSubdivision &&
-      newSubdivision === 0 &&
-      !isTransitioningRef.current
+      newSubdivision === 0
     ) {
-      // Update measure counter - now using logic's measureCountRef directly
-      const newMeasureCount = (logic.measureCountRef?.current || 0) + 1;
-      if (logic.measureCountRef) logic.measureCountRef.current = newMeasureCount;
-
-      // TRAINING MODE LOGIC is handled by the useMultiCircleMetronomeLogic hook
-
-      // CIRCLE SWITCHING LOGIC - Now happens AFTER training logic processing
+      // Increment local counter (logic will handle its own counters)
       const now = Date.now();
-      if (now - lastCircleSwitchCheckTimeRef.current < 500) return;
-      lastCircleSwitchCheckTimeRef.current = now;
-
-      if (logic && logic.stopScheduler) {
-        logic.stopScheduler();
+      if (now - lastCircleSwitchTimeRef.current < 500) {
+        prevSubdivisionRef.current = newSubdivision;
+        return;
       }
-
-      // Flag that we're transitioning
-      isTransitioningRef.current = true;
       
-      // Calculate the next circle index
-      const nextCircleIndex = (playingCircle + 1) % circleSettings.length;
+      lastCircleSwitchTimeRef.current = now;
       
-      console.log(`[Multi-Circle] Switching from circle ${playingCircle} to ${nextCircleIndex}`);
-      console.log(`[Multi-Circle] Beat mode changing from ${circleSettings[playingCircle].beatMode} to ${circleSettings[nextCircleIndex].beatMode}`);
-      
-      // Update to the next circle
-      setPlayingCircle(nextCircleIndex);
-      
-      // Use a delay to let the state update
-      setTimeout(() => {
-        if (!isPaused && logic && logic.startScheduler) {
-          try {
-            // We need to update the beatMode in the logic hook
-            if (logic.beatModeRef) {
-              logic.beatModeRef.current = circleSettings[nextCircleIndex].beatMode;
-            }
-            
-            // Start a new scheduler with the updated beatMode
-            const audioCtx = logic.audioCtx;
-            const currentTime = audioCtx?.currentTime || 0;
-            const beatMultiplier = circleSettings[nextCircleIndex].beatMode === "eighth" ? 2 : 1;
-            const secondsPerBeat = 60 / (tempo * beatMultiplier);
-            
-            // Start scheduler at the next beat time
-            logic.startScheduler(currentTime + secondsPerBeat);
-            
-            console.log(`[Multi-Circle] Started next circle with beatMode=${circleSettings[nextCircleIndex].beatMode}, multiplier=${beatMultiplier}`);
-          } catch (err) {
-            console.error("Error starting next circle:", err);
-          }
-        }
+      // Check if it's time to switch circles (and avoid rapid transitions)
+      if (logic.switchToNextCircle && !logic.isTransitioning()) {
+        // Use logic's function to prepare switching circles
+        const nextCircleIndex = logic.switchToNextCircle();
         
-        // Clear transition flag
-        isTransitioningRef.current = false;
-      }, 50);
+        // When the transition is prepared, update our local state
+        setPlayingCircle(nextCircleIndex);
+      }
     }
 
     prevSubdivisionRef.current = newSubdivision;
   }, [
     isPaused,
     circleSettings,
-    playingCircle,
     logic,
-    tempo,
     setPlayingCircle
   ]);
   
@@ -420,14 +378,10 @@ export default function MultiCircleMetronome(props) {
     
     isProcessingPlayPauseRef.current = true;
     
-    // Reset transition flags when play/pause is toggled
-    isFirstBeatAfterTransitionRef.current = false;
-    
     setIsPaused(prev => {
       if (prev) {
         // Starting playback
         setPlayingCircle(0);
-        isTransitioningRef.current = false;
         prevSubdivisionRef.current = null;
         
         // Reset counters
@@ -438,7 +392,7 @@ export default function MultiCircleMetronome(props) {
         // Update global reference
         window.isSilencePhaseRef = logic.isSilencePhaseRef;
         
-        lastCircleSwitchCheckTimeRef.current = 0;
+        lastCircleSwitchTimeRef.current = 0;
         
         // Make sure beatMode is set correctly for first circle
         if (logic.beatModeRef && circleSettings.length > 0) {
@@ -474,7 +428,6 @@ export default function MultiCircleMetronome(props) {
         return false;
       } else {
         // Stopping playback
-        isTransitioningRef.current = false;
         prevSubdivisionRef.current = null;
         
         if (logic && logic.stopScheduler) {
@@ -582,7 +535,7 @@ export default function MultiCircleMetronome(props) {
             currentSubdivision={logic?.currentSubdivision}
             isPaused={isPaused}
             audioCtxRunning={logic?.audioCtx && logic.audioCtx.state === "running"}
-            isTransitioning={isTransitioningRef.current}
+            isTransitioning={logic.isTransitioning && logic.isTransitioning()}
             updateAccent={updateAccent}
             radius={containerSize / 2}
             containerSize={containerSize}
