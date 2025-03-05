@@ -128,6 +128,7 @@ const CircleRenderer = ({
     );
     
     // Add a subtle indicator for the beat mode
+    // eslint-disable-next-line no-unused-vars
     const beatModeIndicator = (
       <div
         key="beat-mode-indicator"
@@ -166,34 +167,11 @@ const CircleRenderer = ({
         }}
       >
         {removeButton}
-        {beatModeIndicator}
         {beats}
       </div>
     );
   }
-  
-  // Add a subtle indicator for the beat mode
-  const beatModeIndicator = (
-    <div
-      key="beat-mode-indicator"
-      style={{
-        position: "absolute",
-        bottom: "-10px",
-        left: "50%",
-        transform: "translateX(-50%)",
-        fontSize: "12px",
-        fontWeight: "bold",
-        color: isPlaying ? "#FFD700" : "#00A0A0",
-        backgroundColor: "rgba(0, 0, 0, 0.7)",
-        padding: "2px 8px",
-        borderRadius: "10px",
-        zIndex: 5
-      }}
-    >
-      {settings.beatMode === "quarter" ? "♩" : "♪"}
-    </div>
-  );
-  
+
   return (
     <div
       onClick={() => setActiveCircle(idx)}
@@ -210,7 +188,6 @@ const CircleRenderer = ({
         overflow: "visible"
       }}
     >
-      {beatModeIndicator}
       {beats}
     </div>
   );
