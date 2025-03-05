@@ -51,14 +51,43 @@ const CircleRenderer = ({
                      !isPaused &&
                      audioCtxRunning;
     
+    const beatState = settings.accents?.[i] || 1;
+    
+    // For muted beats (state 0), render a placeholder that can be clicked
+    if (beatState === 0) {
+      return (
+        <div
+          key={i}
+          onClick={() => { if (isActiveUI) updateAccent(i); }}
+          style={{
+            position: "absolute",
+            left: `calc(50% + ${xPos}px - ${iconSize / 2}px)`,
+            top: `calc(50% + ${yPos}px - ${iconSize / 2}px)`,
+            width: `${iconSize}px`,
+            height: `${iconSize}px`,
+            borderRadius: '50%',
+            border: '2px dashed #ccc',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            color: '#ccc',
+            fontSize: '14px',
+            cursor: isActiveUI ? "pointer" : "default",
+            transition: "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)"
+          }}
+        >
+          +
+        </div>
+      );
+    }
+    
     let icon;
-    if (i === 0) {
+    if (beatState === 3) {
       icon = isActive ? firstBeatActive : firstBeat;
+    } else if (beatState === 2) {
+      icon = isActive ? accentedBeatActive : accentedBeat;
     } else {
-      const accent = settings.accents?.[i] || 1;
-      icon = accent === 2
-        ? isActive ? accentedBeatActive : accentedBeat
-        : isActive ? normalBeatActive : normalBeat;
+      icon = isActive ? normalBeatActive : normalBeat;
     }
     
     // Add a subtle pulse animation during transitions
@@ -76,7 +105,7 @@ const CircleRenderer = ({
         key={i}
         src={icon}
         alt={`Beat ${i}`}
-        onClick={() => { if (isActiveUI && i !== 0) updateAccent(i); }}
+        onClick={() => { if (isActiveUI) updateAccent(i); }}
         className={`beat-icon ${isActive ? 'beat-icon-active' : ''} ${isTransitioning && isPlaying ? 'transitioning' : ''}`}
         style={{
           position: "absolute",
@@ -84,7 +113,7 @@ const CircleRenderer = ({
           top: `calc(50% + ${yPos}px - ${iconSize / 2}px)`,
           width: `${iconSize}px`,
           height: `${iconSize}px`,
-          cursor: isActiveUI && i !== 0 ? "pointer" : "default",
+          cursor: isActiveUI ? "pointer" : "default",
           filter: isActive ? "drop-shadow(0 0 5px rgba(255, 255, 255, 0.7))" : "none",
           transition: "filter 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
           ...transitionStyle

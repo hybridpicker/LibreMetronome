@@ -98,15 +98,18 @@ export function scheduleSubdivision({
     // (0 means no sound, effectively muted)
   } else {
     // circle mode
-    if (subIndex === 0) {
-      buffer = firstBufferRef.current;
-      soundType = 'first';
-    } else {
-      const accentVal = accentsRef.current[subIndex];
-      if (accentVal === 2) { buffer = accentBufferRef.current; soundType = 'accent'; }
-      else if (accentVal === 1) { buffer = normalBufferRef.current; soundType = 'normal'; }
-      // accentVal = 0 => no sound
+    const accentVal = accentsRef.current[subIndex];
+    if (accentVal === 3) { 
+      buffer = firstBufferRef.current; 
+      soundType = 'first'; 
+    } else if (accentVal === 2) { 
+      buffer = accentBufferRef.current; 
+      soundType = 'accent'; 
+    } else if (accentVal === 1) { 
+      buffer = normalBufferRef.current; 
+      soundType = 'normal'; 
     }
+    // accentVal = 0 => no sound
   }
 
   // Log for MultiCircle mode
