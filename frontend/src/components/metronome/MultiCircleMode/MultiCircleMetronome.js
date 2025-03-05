@@ -224,7 +224,8 @@ export default function MultiCircleMetronome(props) {
     beatMode: circleSettings[playingCircle]?.beatMode || "quarter",
     // Pass all circle settings for reference
     circleSettings,
-    playingCircle
+    playingCircle,
+    onCircleChange: setPlayingCircle
   });
 
   // Make silence phase ref globally available to metronome logic
@@ -330,31 +331,19 @@ export default function MultiCircleMetronome(props) {
       prevSubdivisionRef.current !== newSubdivision &&
       newSubdivision === 0
     ) {
-      // Increment local counter (logic will handle its own counters)
-      const now = Date.now();
-      if (now - lastCircleSwitchTimeRef.current < 500) {
-        prevSubdivisionRef.current = newSubdivision;
-        return;
-      }
+      // Simply update our reference of the current subdivision
+      // We no longer need to manually switch circles here, as it's handled
+      // automatically in the useMultiCircleMetronomeLogic hook
+      console.log(`[Multi-Circle] Beat 0 detected, circle transitions now handled automatically`);
       
-      lastCircleSwitchTimeRef.current = now;
-      
-      // Check if it's time to switch circles (and avoid rapid transitions)
-      if (logic.switchToNextCircle && !logic.isTransitioning()) {
-        // Use logic's function to prepare switching circles
-        const nextCircleIndex = logic.switchToNextCircle();
-        
-        // When the transition is prepared, update our local state
-        setPlayingCircle(nextCircleIndex);
-      }
+      // Note: The circle switching is now handled directly in the metronome logic
+      // by detecting the last beat of each measure and triggering the transition there
     }
 
     prevSubdivisionRef.current = newSubdivision;
   }, [
     isPaused,
-    circleSettings,
-    logic,
-    setPlayingCircle
+    circleSettings
   ]);
   
   useEffect(() => {
@@ -494,13 +483,36 @@ export default function MultiCircleMetronome(props) {
   });
 
   // Toggle functionality for the note selector
-  const handleNoteSelection = (mode) => {
+  const handleNoteSelection = useCallback((mode) => {
+    // Don't change note mode during playback if we're in a transition
+    if (!isPaused && logic && logic.isTransitioning && logic.isTransitioning()) {
+      console.log("[Multi-Circle] Note selection ignored during transition");
+      return;
+    }
+    
     setCircleSettings(prev => {
       const updated = [...prev];
+      
+      // Only update if the mode is actually changing
+      if (updated[activeCircle]?.beatMode === mode) {
+        return prev;
+      }
+      
       updated[activeCircle] = { ...updated[activeCircle], beatMode: mode };
+      
+      // If this is the currently playing circle and we're not paused,
+      // we need to update the beatMode in the logic
+      if (!isPaused && activeCircle === playingCircle && logic?.beatModeRef) {
+        // Only update the beatMode if we're not in a transition
+        if (!logic.isTransitioning()) {
+          logic.beatModeRef.current = mode;
+          console.log(`[Multi-Circle] Updated active circle beatMode to ${mode}`);
+        }
+      }
+      
       return updated;
     });
-  };
+  }, [activeCircle, isPaused, logic, playingCircle]);
 
   return (
     <div style={{ textAlign: "center" }}>

@@ -7,7 +7,8 @@ function schedulePlay({
   buffer,
   audioCtx,
   volumeRef,
-  when
+  when,
+  debugInfo = {}
 }) {
   if (!buffer || !audioCtx) return;
   const now = audioCtx.currentTime;
@@ -24,6 +25,11 @@ function schedulePlay({
 
   source.connect(gainNode).connect(audioCtx.destination);
   source.start(when);
+  
+  // Log when the sound actually plays
+  if (debugInfo.multiCircleMode) {
+    console.log(`[MultiCirclePlayback] 🔊 Playing sound at ${when.toFixed(3)}, circle: ${debugInfo.currentCircle || 'unknown'}, volume: ${volumeRef.current.toFixed(2)}, type: ${debugInfo.soundType || 'normal'}`);
+  }
 
   // Clean up to prevent memory leaks
   source.onended = () => {
@@ -56,7 +62,9 @@ export function scheduleSubdivision({
   // Training
   shouldMute,
   playedBeatTimesRef,
-  updateActualBpm
+  updateActualBpm,
+  // Debug info for logging
+  debugInfo = {}
 }) {
   // Fire user callback to animate each beat
   if (onAnySubTrigger) {
@@ -65,6 +73,9 @@ export function scheduleSubdivision({
 
   // If we are muting, skip playback
   if (shouldMute) {
+    if (multiCircleMode) {
+      console.log(`[MultiCirclePlayback] 🔇 Beat ${subIndex} MUTED (training mode)`);
+    }
     return;
   } else {
     // record the time for actual BPM measurement
@@ -74,24 +85,33 @@ export function scheduleSubdivision({
 
   // Decide which buffer to use:
   let buffer = null;
+  let soundType = 'none';
+  
   if (analogMode) {
     buffer = normalBufferRef.current; // all the same in analog
+    soundType = 'normal';
   } else if (gridMode) {
     const state = beatConfigRef.current[subIndex]; // 3=first,2=accent,1=normal,0=off
-    if (state === 3) buffer = firstBufferRef.current;
-    else if (state === 2) buffer = accentBufferRef.current;
-    else if (state === 1) buffer = normalBufferRef.current;
+    if (state === 3) { buffer = firstBufferRef.current; soundType = 'first'; }
+    else if (state === 2) { buffer = accentBufferRef.current; soundType = 'accent'; }
+    else if (state === 1) { buffer = normalBufferRef.current; soundType = 'normal'; }
     // (0 means no sound, effectively muted)
   } else {
     // circle mode
     if (subIndex === 0) {
       buffer = firstBufferRef.current;
+      soundType = 'first';
     } else {
       const accentVal = accentsRef.current[subIndex];
-      if (accentVal === 2) buffer = accentBufferRef.current;
-      else if (accentVal === 1) buffer = normalBufferRef.current;
+      if (accentVal === 2) { buffer = accentBufferRef.current; soundType = 'accent'; }
+      else if (accentVal === 1) { buffer = normalBufferRef.current; soundType = 'normal'; }
       // accentVal = 0 => no sound
     }
+  }
+
+  // Log for MultiCircle mode
+  if (multiCircleMode) {
+    console.log(`[MultiCirclePlayback] 🎯 Beat ${subIndex} scheduled, sound: ${soundType}, circle: ${debugInfo.currentCircle || 'unknown'}`);
   }
 
   // If we got a buffer, schedule it:
@@ -100,7 +120,12 @@ export function scheduleSubdivision({
       buffer,
       audioCtx,
       volumeRef,
-      when
+      when,
+      debugInfo: {
+        ...debugInfo,
+        multiCircleMode,
+        soundType
+      }
     });
   }
 }
@@ -122,6 +147,14 @@ export function runScheduler({
   const now = audioCtxRef.current?.currentTime || 0;
   const lookaheadTime = multiCircleMode ? SCHEDULE_AHEAD_TIME * 1.2 : SCHEDULE_AHEAD_TIME;
 
+  // For multicircle mode, log the scheduling pass
+  if (multiCircleMode) {
+    const nextScheduleTime = nextNoteTimeRef.current;
+    if (nextScheduleTime && nextScheduleTime < now + lookaheadTime) {
+      console.log(`[MultiCircleScheduler] 🔄 Scheduling loop, current time: ${now.toFixed(3)}, next note: ${nextScheduleTime.toFixed(3)}`);
+    }
+  }
+
   while (nextNoteTimeRef.current < now + lookaheadTime) {
     const subIndex = currentSubRef.current;
     scheduleSubFn(subIndex, nextNoteTimeRef.current);
@@ -130,7 +163,8 @@ export function runScheduler({
     currentSubdivisionSetter(subIndex);
 
     // Move on to next sub
-    nextNoteTimeRef.current += getCurrentSubIntervalSec(subIndex);
+    const intervalSec = getCurrentSubIntervalSec(subIndex);
+    nextNoteTimeRef.current += intervalSec;
     currentSubRef.current = (subIndex + 1) % subdivisionsRef.current;
 
     // If we've hit the start of a new measure
