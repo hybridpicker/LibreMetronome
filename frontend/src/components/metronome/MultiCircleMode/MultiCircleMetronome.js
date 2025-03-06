@@ -466,11 +466,6 @@ function MultiCircleMetronome(props) {
 
   // Toggle functionality for the note selector
   const handleNoteSelection = useCallback((mode) => {
-    // Don't change note mode during playback if we're in a transition
-    if (!isPaused && logic && logic.isTransitioning && logic.isTransitioning()) {
-      return;
-    }
-    
     setCircleSettings(prev => {
       const updated = [...prev];
       
@@ -480,20 +475,9 @@ function MultiCircleMetronome(props) {
       }
       
       updated[activeCircle] = { ...updated[activeCircle], beatMode: mode };
-      
-      // We don't need to update the beatModeRef directly anymore since we're using
-      // circleSettings directly in the getBeatMultiplier function
-
-      // If this is the currently playing circle and we're not paused,
-      // we need to restart the scheduler to apply the new beat mode
-      if (!isPaused && activeCircle === playingCircle && logic) {
-        // The scheduler will be restarted by the useEffect in the hook
-        logic.beatModeRef.current = mode;
-      }
-      
       return updated;
     });
-  }, [activeCircle, isPaused, logic, playingCircle]);
+  }, [activeCircle, setCircleSettings]);
 
   return (
     <div style={{ textAlign: "center" }}>
