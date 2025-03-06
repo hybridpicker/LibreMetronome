@@ -255,19 +255,17 @@
 .training-button {
   position: fixed;
   top: 10px;
-  left: 70px;
-  background: transparent;
-  border: 1px solid var(--primary-teal);
-  border-radius: 5px;
+  left: 80px;
+  background-color: #e8e8e8;
+  border: none;
+  border-radius: 8px;
   cursor: pointer;
-  padding: 6px 12px;
+  padding: 10px 16px;
   z-index: 100;
-  color: var(--primary-teal);
+  color: #666;
   font-weight: normal;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.5;
-  height: 30px;
-  min-width: 90px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -279,14 +277,16 @@
 }
 
 .training-button:hover {
-  background-color: rgba(0, 160, 160, 0.1);
-  box-shadow: 0 0 8px rgba(0, 160, 160, 0.4);
+  background-color: #f8d38d;
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
 }
 
 .training-button-active {
-  font-weight: bold;
-  color: #fff;
   background-color: var(--primary-teal);
+  color: #fff;
+  font-weight: bold;
 }
 
 /* Smartphone adjustments (max-width: 600px) */
