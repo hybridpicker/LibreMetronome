@@ -20,6 +20,8 @@ import tapButtonIcon from '../assets/svg/tap-button.svg';
 // Optional analog mode
 import AnalogMetronomeCanvas from './metronome/AnalogMode/AnalogMetronomeCanvas';
 import withTrainingContainer from './Training/withTrainingContainer';
+import AccelerateButton from './metronome/Controls/AccelerateButton';
+import { manualTempoAcceleration } from '../hooks/useMetronomeLogic/trainingLogic';
 
 // Import some CSS that includes @keyframes
 import './AdvancedMetronome.css';
@@ -80,11 +82,11 @@ export function AdvancedMetronomeWithCircle({
 
   const localToggleAccent = useCallback(
     (index) => {
-      // Skip toggles for first beat or analog mode
-      if (index === 0 || analogMode) return;
+      // Skip toggles for analog mode only
+      if (analogMode) return;
       setLocalAccents((prev) => {
         const newArr = [...prev];
-        newArr[index] = (newArr[index] + 1) % 3;
+        newArr[index] = (newArr[index] + 1) % 4; // cycle 0→1→2→3→0
         return newArr;
       });
     },
@@ -187,6 +189,16 @@ export function AdvancedMetronomeWithCircle({
     }
   }, [isPaused, logic, setIsPaused]);
 
+  const handleAccelerate = useCallback(() => {
+    if (!isPaused) {
+      manualTempoAcceleration({
+        tempoIncreasePercent,
+        tempoRef: { current: tempo },
+        setTempo
+      });
+    }
+  }, [isPaused, tempo, tempoIncreasePercent, setTempo]);
+
   // --------------------------
   //  Layout & circle geometry
   // --------------------------
@@ -275,9 +287,8 @@ export function AdvancedMetronomeWithCircle({
             width={containerSize}
             height={containerSize}
             isPaused={isPaused}
+            tempo={tempo}
             audioCtxCurrentTime={() => logic.audioCtx?.currentTime || 0}
-            currentSubStartTime={() => logic.currentSubStartRef.current}
-            currentSubInterval={() => logic.currentSubIntervalRef.current}
             currentSubIndex={logic.currentSubdivision}
           />
         ) : (
@@ -285,27 +296,58 @@ export function AdvancedMetronomeWithCircle({
             {lineConnections}
 
             {beatData.map((bd) => {
+              // Get the current state from effectiveAccents (applies to all beats)
+              const state = effectiveAccents[bd.i];
+              
               // "isActive" for real-time highlight if it's the current sub
               const isActive = (bd.i === logic.currentSubdivision && !isPaused);
 
               // "isPulsing" if the logic triggered it in the last 200ms
               const isPulsing = pulseStates[bd.i];
 
-              // Decide which icon (first, accent, normal)
-              let icon;
-              if (bd.i === 0) {
-                icon = isActive ? firstBeatActive : firstBeat;
-              } else {
-                const state = effectiveAccents[bd.i];
-                if (state === 2) {
-                  icon = isActive ? accentedBeatActive : accentedBeat;
-                } else {
-                  icon = isActive ? normalBeatActive : normalBeat;
-                }
+              // For muted beats (state 0), render a placeholder that can be clicked
+              if (state === 0) {
+                return (
+                  <div
+                    key={bd.i}
+                    onClick={() => effectiveToggleAccent(bd.i)}
+                    style={{
+                      position: 'absolute',
+                      left: `calc(50% + ${bd.xPos}px - 12px)`,
+                      top: `calc(50% + ${bd.yPos}px - 12px)`,
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      border: '2px dashed #ccc',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      color: '#ccc',
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)'
+                    }}
+                  >
+                    +
+                  </div>
+                );
               }
 
-              // Possibly dim if accent=0
-              const isDim = (effectiveAccents[bd.i] === 0);
+              // Choose icon based on state
+              let icon;
+              switch (state) {
+                case 1:
+                  icon = isActive ? normalBeatActive : normalBeat;
+                  break;
+                case 2:
+                  icon = isActive ? accentedBeatActive : accentedBeat;
+                  break;
+                case 3:
+                  icon = isActive ? firstBeatActive : firstBeat;
+                  break;
+                default:
+                  icon = isActive ? normalBeatActive : normalBeat;
+              }
 
               return (
                 <img
@@ -317,16 +359,12 @@ export function AdvancedMetronomeWithCircle({
                   style={{
                     left: `calc(50% + ${bd.xPos}px - 12px)`,
                     top: `calc(50% + ${bd.yPos}px - 12px)`,
-                    opacity: isDim ? 0.3 : 1,
                     transition: 'all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)',
                     filter: isActive
                       ? 'drop-shadow(0 0 5px rgba(248, 211, 141, 0.8))'
                       : 'none',
                     transform: isActive ? 'scale(1.05)' : 'scale(1)',
-                    // If "isPulsing" is true, run the short keyframe
-                    animation: isPulsing
-                      ? 'pulse-beat 0.2s ease-out'
-                      : 'none'
+                    animation: isPulsing ? 'pulse-beat 0.2s ease-out' : 'none'
                   }}
                 />
               );
@@ -357,6 +395,12 @@ export function AdvancedMetronomeWithCircle({
         </button>
       </div>
 
+      {/* Accelerate button for Training Mode */}
+      <AccelerateButton 
+        onClick={handleAccelerate} 
+        speedMode={speedMode}
+      />
+
       {/* Tap tempo if mobile */}
       {isMobile && (
         <button
@@ -375,6 +419,64 @@ export function AdvancedMetronomeWithCircle({
             style={{ height: 35, objectFit: 'contain' }}
           />
         </button>
+      )}
+
+      {/* Legend - explain what the beat states mean */}
+      {!analogMode && (
+        <div style={{ 
+          marginTop: '15px', 
+          display: 'flex', 
+          justifyContent: 'center', 
+          gap: '15px',
+          flexWrap: 'wrap',
+          fontSize: '12px',
+          color: '#666'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <div style={{ 
+              width: '12px', 
+              height: '12px', 
+              backgroundColor: '#e8e8e8', 
+              borderRadius: '50%',
+              marginRight: '5px',
+              border: '1px solid #ddd'
+            }}></div>
+            Mute
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <div style={{ 
+              width: '12px', 
+              height: '12px', 
+              backgroundColor: '#fce9c6', 
+              borderRadius: '50%',
+              marginRight: '5px',
+              border: '1px solid #ddd'
+            }}></div>
+            Normal Beat
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <div style={{ 
+              width: '12px', 
+              height: '12px', 
+              backgroundColor: '#f6cc7c', 
+              borderRadius: '50%',
+              marginRight: '5px',
+              border: '1px solid #ddd'
+            }}></div>
+            Accent
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <div style={{ 
+              width: '12px', 
+              height: '12px', 
+              backgroundColor: '#00a0a0', 
+              borderRadius: '50%',
+              marginRight: '5px',
+              border: '1px solid #ddd'
+            }}></div>
+            First Beat
+          </div>
+        </div>
       )}
     </div>
   );
