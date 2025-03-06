@@ -11,6 +11,6 @@
   .separator {
     margin-bottom: 20px;
     border: 0;
-    border-top: 1px solid #00a0a01f;
+    border-top: 1px solid var(--primary-teal-light);
   }
   

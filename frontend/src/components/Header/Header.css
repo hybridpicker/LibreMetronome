@@ -15,11 +15,11 @@
   
   /* Styling for 'Libre' part of the title */
   .header h1 .libre {
-    color: #f8d38d;
+    color: var(--secondary-gold);
   }
   
   /* Styling for 'Metronome' part of the title */
   .header h1 .metronome {
-    color: #00A0A0;
+    color: var(--primary-teal);
   }
   

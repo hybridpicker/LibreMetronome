@@ -351,16 +351,16 @@ export function AdvancedMetronomeWithCircle({
         gap: '15px',
         flexWrap: 'wrap',
         fontSize: '12px',
-        color: '#666'
+        color: 'var(--text-secondary)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <div style={{ 
             width: '12px', 
             height: '12px', 
-            backgroundColor: '#e8e8e8', 
+            backgroundColor: 'var(--beat-muted)', 
             borderRadius: '2px',
             marginRight: '5px',
-            border: '1px solid #ddd'
+            border: '1px solid var(--neutral-border)'
           }}></div>
           Mute
         </div>
@@ -368,10 +368,10 @@ export function AdvancedMetronomeWithCircle({
           <div style={{ 
             width: '12px', 
             height: '12px', 
-            backgroundColor: '#fae3ad', 
+            backgroundColor: 'var(--beat-normal)', 
             borderRadius: '2px',
             marginRight: '5px',
-            border: '1px solid #ddd'
+            border: '1px solid var(--neutral-border)'
           }}></div>
           Normal Beat
         </div>
@@ -379,10 +379,10 @@ export function AdvancedMetronomeWithCircle({
           <div style={{ 
             width: '12px', 
             height: '12px', 
-            backgroundColor: '#f8d38d', 
+            backgroundColor: 'var(--beat-accent)', 
             borderRadius: '2px',
             marginRight: '5px',
-            border: '1px solid #ddd'
+            border: '1px solid var(--neutral-border)'
           }}></div>
           Accent
         </div>
@@ -390,10 +390,10 @@ export function AdvancedMetronomeWithCircle({
           <div style={{ 
             width: '12px', 
             height: '12px', 
-            backgroundColor: '#f5c26d', 
+            backgroundColor: 'var(--beat-first)', 
             borderRadius: '2px',
             marginRight: '5px',
-            border: '1px solid #ddd'
+            border: '1px solid var(--neutral-border)'
           }}></div>
           First Beat
         </div>
