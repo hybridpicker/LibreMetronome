@@ -342,6 +342,62 @@ export function AdvancedMetronomeWithCircle({
           />
         </button>
       )}
+
+      {/* Legend - explain what the beat states mean */}
+      <div style={{ 
+        marginTop: '15px', 
+        display: 'flex', 
+        justifyContent: 'center', 
+        gap: '15px',
+        flexWrap: 'wrap',
+        fontSize: '12px',
+        color: '#666'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div style={{ 
+            width: '12px', 
+            height: '12px', 
+            backgroundColor: '#e8e8e8', 
+            borderRadius: '2px',
+            marginRight: '5px',
+            border: '1px solid #ddd'
+          }}></div>
+          Mute
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div style={{ 
+            width: '12px', 
+            height: '12px', 
+            backgroundColor: '#fae3ad', 
+            borderRadius: '2px',
+            marginRight: '5px',
+            border: '1px solid #ddd'
+          }}></div>
+          Normal Beat
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div style={{ 
+            width: '12px', 
+            height: '12px', 
+            backgroundColor: '#f8d38d', 
+            borderRadius: '2px',
+            marginRight: '5px',
+            border: '1px solid #ddd'
+          }}></div>
+          Accent
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div style={{ 
+            width: '12px', 
+            height: '12px', 
+            backgroundColor: '#f5c26d', 
+            borderRadius: '2px',
+            marginRight: '5px',
+            border: '1px solid #ddd'
+          }}></div>
+          First Beat
+        </div>
+      </div>
     </div>
   );
 }
