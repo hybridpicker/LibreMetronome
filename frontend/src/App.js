@@ -11,6 +11,7 @@ import GridModeMetronome from './components/metronome/GridMode/GridModeMetronome
 import TrainingOverlay from './components/Menu/TrainingOverlay/TrainingOverlay';
 import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
 import MetronomeControls from './components/metronome/Controls/MetronomeControls';
+import { Helmet } from 'react-helmet';
 
 const TEMPO_MIN = 15;
 const TEMPO_MAX = 240;
@@ -76,6 +77,45 @@ function App() {
   });
 
   const [isInfoActive, setIsInfoActive] = useState(false);
+
+  // Get the version from package.json or use a default if unavailable
+  const [version, setVersion] = useState('');
+
+  useEffect(() => {
+    try {
+      // Attempt to fetch the version from package.json
+      fetch('/package.json')
+        .then(response => response.json())
+        .then(data => {
+          if (data.version) {
+            setVersion(data.version);
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching version from package.json:', error);
+        });
+    } catch (error) {
+      console.error('Error in version retrieval:', error);
+    }
+  }, []);
+
+  // Helper function to get mode-specific metadata
+  const getModeDescription = () => {
+    const baseDescription = "LibreMetronome – An advanced, modular metronome service featuring various visualizations and training effects.";
+    
+    switch (mode) {
+      case "analog":
+        return `${baseDescription} Currently in Analog Mode with realistic pendulum animation.`;
+      case "circle":
+        return `${baseDescription} Currently in Circle Mode with interactive beat visualization.`;
+      case "grid":
+        return `${baseDescription} Currently in Grid Mode with customizable beat patterns.`;
+      case "multi":
+        return `${baseDescription} Currently in Multi-Circle Mode for polyrhythm practice.`;
+      default:
+        return baseDescription;
+    }
+  };
 
   // Render the metronome view based on the current mode.
   const renderMetronome = () => {
@@ -173,6 +213,20 @@ function App() {
 
   return (
     <div className="app-container">
+      <Helmet>
+        <title>{`LibreMetronome - ${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode`}</title>
+        <meta name="description" content={getModeDescription()} />
+        <meta name="keywords" content={`Metronome, Music, Timing, Training, React, Web Audio, ${mode} mode`} />
+        <meta name="application-version" content={version} />
+        
+        {/* Dynamic Open Graph meta tags */}
+        <meta property="og:title" content={`LibreMetronome - ${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode`} />
+        <meta property="og:description" content={getModeDescription()} />
+        
+        {/* Dynamic Twitter Card meta tags */}
+        <meta name="twitter:title" content={`LibreMetronome - ${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode`} />
+        <meta name="twitter:description" content={getModeDescription()} />
+      </Helmet>
       <InfoOverlay setActive={setIsInfoActive} />
       <FeedbackOverlay currentMode={mode} currentTempo={tempo} />
       <Header />
