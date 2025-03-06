@@ -3,8 +3,8 @@
 /**
  * Called every time subIndex returns to 0 (i.e. at the start of each measure).
  * 
- * In “fixed silence” or “random silence” modes, we track measure counts and
- * possibly enable or disable silence. In “speed mode,” we might automatically
+ * In "fixed silence" or "random silence" modes, we track measure counts and
+ * possibly enable or disable silence. In "speed mode," we might automatically
  * increase the BPM after a certain # of measures.
  */
 export function handleMeasureBoundary({
@@ -21,9 +21,10 @@ export function handleMeasureBoundary({
   tempoRef, // so we can read the current tempo
   setTempo
 }) {
+  // Increment measure count
   measureCountRef.current += 1;
-
-  // Macro mode 1: “fixed silence after X measures”
+  
+  // Macro mode 1: "fixed silence after X measures"
   if (macroMode === 1) {
     if (!isSilencePhaseRef.current) {
       // check if we should enter silence
@@ -31,6 +32,7 @@ export function handleMeasureBoundary({
         isSilencePhaseRef.current = true;
         muteMeasureCountRef.current = 0;
         measureCountRef.current = 0;
+        
       }
     } else {
       // we are in silence → keep counting
@@ -39,6 +41,7 @@ export function handleMeasureBoundary({
         isSilencePhaseRef.current = false;
         muteMeasureCountRef.current = 0;
         measureCountRef.current = 0;
+        
       }
     }
   }
@@ -51,8 +54,19 @@ export function handleMeasureBoundary({
       const newTempo = Math.round(tempoRef.current * factor);
       setTempo(prev => Math.min(newTempo, 240));
       measureCountRef.current = 0;
+      
     }
   }
+  
+  // Dispatch event to notify components of measure count update
+  const measureUpdateEvent = new CustomEvent('training-measure-update', {
+    detail: {
+      measureCount: measureCountRef.current,
+      muteMeasureCount: muteMeasureCountRef.current,
+      isSilencePhase: isSilencePhaseRef.current
+    }
+  });
+  window.dispatchEvent(measureUpdateEvent);
 }
 
 /**
@@ -71,4 +85,18 @@ export function shouldMuteThisBeat({
     return Math.random() < muteProbability;
   }
   return false;
+}
+
+/**
+ * Manually accelerate tempo using the same logic as auto tempo increase
+ */
+export function manualTempoAcceleration({
+  tempoIncreasePercent,
+  tempoRef,
+  setTempo
+}) {
+  const factor = 1 + tempoIncreasePercent / 100;
+  const newTempo = Math.round(tempoRef.current * factor);
+  setTempo(prev => Math.min(newTempo, 240));
+  return newTempo;
 }

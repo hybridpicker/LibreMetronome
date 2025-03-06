@@ -7,6 +7,7 @@
   margin-top: 20px;
   width: 100%;
   flex-wrap: wrap;
+  position: relative;
 }
 
 .metronome-circle {
@@ -37,11 +38,15 @@
   width: 24px;
   height: 24px;
   cursor: pointer;
-  transition: filter 0.15s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transition: all 0.2s ease-in-out;
+}
+
+.beat-icon.transitioning {
+  animation: pulse 1s infinite;
 }
 
 .beat-icon-active {
-  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.7));
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.7)) !important;
 }
 
 .remove-circle-button {
@@ -175,6 +180,22 @@
   width: 100%;
   display: block;
   margin: 5px auto;
+}
+
+/* Transition animation for beat icons */
+@keyframes pulse {
+  0% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
 }
 
 @media (max-width: 768px) {

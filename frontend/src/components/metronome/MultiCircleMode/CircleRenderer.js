@@ -25,11 +25,13 @@ const CircleRenderer = ({
   isSilencePhaseRef,
   isMobile
 }) => {
-  // Add visual indicators for macro-timing training
+  // Add visual indicators for different states
   let activeBoxShadow = isActiveUI
     ? "0 0 0 3px #00A0A0, 0 0 10px rgba(0, 160, 160, 0.6)"
     : isPlaying
-      ? "0 0 0 3px #FFD700, 0 0 10px rgba(255, 215, 0, 0.6)"
+      ? isTransitioning 
+        ? "0 0 0 3px #FFA500, 0 0 10px rgba(255, 165, 0, 0.6)" // Orange for transition
+        : "0 0 0 3px #FFD700, 0 0 10px rgba(255, 215, 0, 0.6)" // Gold for normal playing
       : "none";
   
   // Add visual indicator for silence phase
@@ -43,38 +45,78 @@ const CircleRenderer = ({
     const xPos = radius * Math.cos(angle);
     const yPos = radius * Math.sin(angle);
     
+    // Show active beat regardless of transition state to ensure visual feedback matches audio
     const isActive = i === currentSubdivision &&
                      isPlaying &&
                      !isPaused &&
-                     audioCtxRunning &&
-                     !isTransitioning;
+                     audioCtxRunning;
+    
+    const beatState = settings.accents?.[i] || 1;
+    
+    // For muted beats (state 0), render a placeholder that can be clicked
+    if (beatState === 0) {
+      return (
+        <div
+          key={i}
+          onClick={() => { if (isActiveUI) updateAccent(i); }}
+          style={{
+            position: "absolute",
+            left: `calc(50% + ${xPos}px - ${iconSize / 2}px)`,
+            top: `calc(50% + ${yPos}px - ${iconSize / 2}px)`,
+            width: `${iconSize}px`,
+            height: `${iconSize}px`,
+            borderRadius: '50%',
+            border: '2px dashed #ccc',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            color: '#ccc',
+            fontSize: '14px',
+            cursor: isActiveUI ? "pointer" : "default",
+            transition: "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)"
+          }}
+        >
+          +
+        </div>
+      );
+    }
     
     let icon;
-    if (i === 0) {
+    if (beatState === 3) {
       icon = isActive ? firstBeatActive : firstBeat;
+    } else if (beatState === 2) {
+      icon = isActive ? accentedBeatActive : accentedBeat;
     } else {
-      const accent = settings.accents?.[i] || 1;
-      icon = accent === 2
-        ? isActive ? accentedBeatActive : accentedBeat
-        : isActive ? normalBeatActive : normalBeat;
+      icon = isActive ? normalBeatActive : normalBeat;
     }
+    
+    // Add a subtle pulse animation during transitions
+    const transitionStyle = isTransitioning && isPlaying ? {
+      animation: 'pulse 1s infinite',
+      '@keyframes pulse': {
+        '0%': { opacity: 0.7 },
+        '50%': { opacity: 1 },
+        '100%': { opacity: 0.7 }
+      }
+    } : {};
     
     return (
       <img
         key={i}
         src={icon}
         alt={`Beat ${i}`}
-        onClick={() => { if (isActiveUI && i !== 0) updateAccent(i); }}
-        className={`beat-icon ${isActive ? 'beat-icon-active' : ''}`}
+        onClick={() => { if (isActiveUI) updateAccent(i); }}
+        className={`beat-icon ${isActive ? 'beat-icon-active' : ''} ${isTransitioning && isPlaying ? 'transitioning' : ''}`}
         style={{
           position: "absolute",
           left: `calc(50% + ${xPos}px - ${iconSize / 2}px)`,
           top: `calc(50% + ${yPos}px - ${iconSize / 2}px)`,
           width: `${iconSize}px`,
           height: `${iconSize}px`,
-          cursor: isActiveUI && i !== 0 ? "pointer" : "default",
+          cursor: isActiveUI ? "pointer" : "default",
           filter: isActive ? "drop-shadow(0 0 5px rgba(255, 255, 255, 0.7))" : "none",
-          transition: "filter 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)"
+          transition: "filter 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
+          ...transitionStyle
         }}
       />
     );
@@ -113,6 +155,29 @@ const CircleRenderer = ({
       </div>
     );
     
+    // Add a subtle indicator for the beat mode
+    // eslint-disable-next-line no-unused-vars
+    const beatModeIndicator = (
+      <div
+        key="beat-mode-indicator"
+        style={{
+          position: "absolute",
+          bottom: "-10px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          fontSize: "12px",
+          fontWeight: "bold",
+          color: isPlaying ? "#FFD700" : "#00A0A0",
+          backgroundColor: "rgba(0, 0, 0, 0.7)",
+          padding: "2px 8px",
+          borderRadius: "10px",
+          zIndex: 5
+        }}
+      >
+        {settings.beatMode === "quarter" ? "♩" : "♪"}
+      </div>
+    );
+    
     return (
       <div
         onClick={() => setActiveCircle(idx)}
@@ -134,7 +199,7 @@ const CircleRenderer = ({
       </div>
     );
   }
-  
+
   return (
     <div
       onClick={() => setActiveCircle(idx)}
