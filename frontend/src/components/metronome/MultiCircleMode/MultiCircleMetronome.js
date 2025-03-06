@@ -1,17 +1,19 @@
 // src/components/metronome/MultiCircleMode/MultiCircleMetronome.js
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import useMetronomeLogic from "../../../hooks/useMetronomeLogic";
+import useMultiCircleMetronomeLogic from "./hooks/useMultiCircleMetronomeLogic";
 import useKeyboardShortcuts from "../../../hooks/useKeyboardShortcuts";
 import CircleRenderer from "./CircleRenderer";
 import tapButtonIcon from "../../../assets/svg/tap-button.svg";
 import playIcon from "../../../assets/svg/play.svg";
 import pauseIcon from "../../../assets/svg/pause.svg";
 import "./MultiCircleMetronome.css";
-import '../Controls/slider-styles.css'
-
+import '../Controls/slider-styles.css';
+import withTrainingContainer from "../../Training/withTrainingContainer";
 
 import NoteSelector from "../Controls/NoteSelector";
 import SubdivisionSelector from "../Controls/SubdivisionSelector";
+import AccelerateButton from "../Controls/AccelerateButton";
+import { manualTempoAcceleration } from "../../../hooks/useMetronomeLogic/trainingLogic";
 
 // Initialize global silence check function
 window.isSilent = function() {
@@ -90,52 +92,7 @@ const AddCircleButton = ({ addCircle, containerSize, isMobile }) => (
   </div>
 );
 
-const TrainingStatus = ({
-  macroMode,
-  speedMode,
-  isSilencePhaseRef,
-  measureCountRef,
-  measuresUntilMute,
-  muteMeasureCountRef,
-  muteDurationMeasures
-}) => {
-  if (macroMode === 0 && speedMode === 0) return null;
-  
-  return (
-    <div style={{
-      marginTop: '10px',
-      padding: '8px',
-      borderRadius: '5px',
-      backgroundColor: '#f8f8f8',
-      border: '1px solid #ddd',
-      maxWidth: '300px',
-      margin: '10px auto'
-    }}>
-      <h4 style={{margin: '0 0 8px 0', color: '#00A0A0'}}>Training Active</h4>
-      {macroMode !== 0 && (
-        <div style={{marginBottom: '5px', fontSize: '14px'}}>
-          Macro-Timing: {macroMode === 1 ? 'Fixed Silence' : 'Random Silence'}
-          {isSilencePhaseRef?.current && 
-            <span style={{color: '#f44336', fontWeight: 'bold'}}> (Silent)</span>
-          }
-        </div>
-      )}
-      {speedMode !== 0 && (
-        <div style={{fontSize: '14px'}}>
-          Speed Training: Auto Increase
-        </div>
-      )}
-      
-      {/* Diagnostic counters */}
-      <div style={{fontSize: '14px', color: '#666', marginTop: '5px'}}>
-        Measures: {measureCountRef?.current || 0}/{measuresUntilMute}
-        {isSilencePhaseRef?.current && ` | Silence: ${muteMeasureCountRef?.current || 0}/${muteDurationMeasures}`}
-      </div>
-    </div>
-  );
-};
-
-export default function MultiCircleMetronome(props) {
+function MultiCircleMetronome(props) {
   // Destructure props for clarity
   const {
     tempo,
@@ -179,18 +136,8 @@ export default function MultiCircleMetronome(props) {
   };
   
   // State tracking references
-  const isTransitioningRef = useRef(false);
-  const lastCircleSwitchCheckTimeRef = useRef(0);
-  const measureCountRef = useRef(0);
   const isProcessingPlayPauseRef = useRef(false);
-  
-  // Add new ref for tracking first beat after transition
-  const isFirstBeatAfterTransitionRef = useRef(false);
-  
-  // Training-specific references
-  const isSilencePhaseRef = useRef(false);
-  const muteMeasureCountRef = useRef(0);
-  const lastTempoIncreaseRef = useRef(0);
+  const lastCircleSwitchTimeRef = useRef(0);
   
   // Container size calculation
   const getContainerSize = () => {
@@ -211,65 +158,17 @@ export default function MultiCircleMetronome(props) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
   
-  // Make silence phase ref globally available to metronome logic
-  useEffect(() => {
-    window.isSilencePhaseRef = isSilencePhaseRef;
-    
-    return () => {
-      // Cleanup global refs when component unmounts
-      delete window.isSilencePhaseRef;
-    };
-  }, []);
-  
-  // Create ref for playing settings (includes training settings)
-  const playingSettingsRef = useRef({
-    ...circleSettings[playingCircle],
-    macroMode,
-    speedMode,
-    measuresUntilMute,
-    muteDurationMeasures,
-    muteProbability,
-    tempoIncreasePercent,
-    measuresUntilSpeedUp
-  });
-  
-  // Update the playing settings ref whenever relevant props change
-  useEffect(() => {
-    if (circleSettings && playingCircle < circleSettings.length) {
-      playingSettingsRef.current = {
-        ...circleSettings[playingCircle],
-        macroMode,
-        speedMode,
-        measuresUntilMute,
-        muteDurationMeasures,
-        muteProbability,
-        tempoIncreasePercent,
-        measuresUntilSpeedUp
-      };
-    }
-  }, [
-    playingCircle, 
-    circleSettings, 
-    macroMode,
-    speedMode,
-    measuresUntilMute,
-    muteDurationMeasures,
-    muteProbability,
-    tempoIncreasePercent,
-    measuresUntilSpeedUp
-  ]);
-  
-  // Create metronome logic with current playing settings
-  const logic = useMetronomeLogic({
+  // Use our specialized multi-circle metronome logic
+  const logic = useMultiCircleMetronomeLogic({
     tempo,
     setTempo,
-    subdivisions: playingSettingsRef.current?.subdivisions || 4,
+    subdivisions: circleSettings[playingCircle]?.subdivisions || 4,
     setSubdivisions: () => {},
     isPaused,
     setIsPaused,
     swing,
     volume,
-    accents: playingSettingsRef.current?.accents || [3, 1, 1, 1],
+    accents: circleSettings[playingCircle]?.accents || [3, 1, 1, 1],
     analogMode: false,
     gridMode: false,
     macroMode,
@@ -279,10 +178,39 @@ export default function MultiCircleMetronome(props) {
     muteProbability,
     tempoIncreasePercent,
     measuresUntilSpeedUp,
-    beatMultiplier: playingSettingsRef.current?.beatMode === "quarter" ? 1 : 2,
-    multiCircleMode: true,
-    isFirstBeatAfterTransitionRef: isFirstBeatAfterTransitionRef
-  });
+    // Pass the current circle's beat mode
+    beatMode: circleSettings[playingCircle]?.beatMode || "quarter",
+    // Pass all circle settings for reference
+    circleSettings,
+    playingCircle,
+    onCircleChange: setPlayingCircle
+  }, [
+    tempo, 
+    setTempo, 
+    circleSettings, 
+    playingCircle, 
+    isPaused, 
+    setIsPaused, 
+    swing, 
+    volume, 
+    macroMode, 
+    speedMode, 
+    measuresUntilMute, 
+    muteDurationMeasures, 
+    muteProbability, 
+    tempoIncreasePercent, 
+    measuresUntilSpeedUp
+  ]);
+
+  // Make silence phase ref globally available to metronome logic
+  useEffect(() => {
+    window.isSilencePhaseRef = logic.isSilencePhaseRef;
+    
+    return () => {
+      // Cleanup global refs when component unmounts
+      delete window.isSilencePhaseRef;
+    };
+  }, [logic.isSilencePhaseRef]);
 
   // Handle setting subdivisions (used by keyboard shortcuts)
   const handleSetSubdivisions = useCallback((subdivisionValue) => {
@@ -341,7 +269,7 @@ export default function MultiCircleMetronome(props) {
     } else if (activeCircle > indexToRemove) {
       setActiveCircle(prev => prev - 1);
     }
-  }, [circleSettings, playingCircle, activeCircle, setPlayingCircle, setActiveCircle]);
+  }, [circleSettings, playingCircle, activeCircle]);
 
   // Update accent on beat click
   const updateAccent = useCallback((beatIndex, circleIndex) => {
@@ -359,7 +287,7 @@ export default function MultiCircleMetronome(props) {
       if (!circle.accents || beatIndex >= circle.accents.length) return prev;
       
       const acc = [...circle.accents];
-      acc[beatIndex] = (acc[beatIndex] + 1) % 3;
+      acc[beatIndex] = (acc[beatIndex] + 1) % 4; // cycle 0→1→2→3→0
       updated[activeCircle] = { ...circle, accents: acc };
       return updated;
     });
@@ -375,100 +303,26 @@ export default function MultiCircleMetronome(props) {
     if (
       prevSubdivisionRef.current !== null &&
       prevSubdivisionRef.current !== newSubdivision &&
-      newSubdivision === 0 &&
-      !isTransitioningRef.current
+      newSubdivision === 0
     ) {
-      // Update measure counter
-      const newMeasureCount = measureCountRef.current + 1;
-      measureCountRef.current = newMeasureCount;
-
-      // TRAINING MODE LOGIC - Process BEFORE circle switching
-      if (macroMode === 1) {
-        if (!isSilencePhaseRef.current) {
-          // Check if we should enter silence phase
-          if (newMeasureCount >= measuresUntilMute) {
-            isSilencePhaseRef.current = true;
-            window.isSilencePhaseRef = isSilencePhaseRef; // Update global reference
-            muteMeasureCountRef.current = 0;
-          }
-        } else {
-          // Already in silence phase, increment counter
-          const newMuteCount = muteMeasureCountRef.current + 1;
-          muteMeasureCountRef.current = newMuteCount;
-
-          // Check if we should exit silence phase
-          if (newMuteCount >= muteDurationMeasures) {
-            isSilencePhaseRef.current = false;
-            window.isSilencePhaseRef = isSilencePhaseRef; // Update global reference
-            muteMeasureCountRef.current = 0;
-            measureCountRef.current = 0; // Only reset measure count AFTER silence ends
-          }
-        }
-      }
-
-      // SPEED TRAINING LOGIC
-      if (speedMode === 1 && !isSilencePhaseRef.current) {
-        if (newMeasureCount >= measuresUntilSpeedUp) {
-          const factor = 1 + tempoIncreasePercent / 100;
-          const newTempo = Math.min(Math.round(tempo * factor), 240);
-          setTempo(newTempo);
-          measureCountRef.current = 0; // Reset measure count after tempo increase
-        }
-      }
-
-      // CIRCLE SWITCHING LOGIC - Now happens AFTER training logic processing
-      const now = Date.now();
-      if (now - lastCircleSwitchCheckTimeRef.current < 500) return;
-      lastCircleSwitchCheckTimeRef.current = now;
-
-      if (logic && logic.stopScheduler) {
-        logic.stopScheduler();
-      }
-
-      const nextCircleIndex = (playingCircle + 1) % circleSettings.length;
-      setPlayingCircle(nextCircleIndex);
-
-      // Update playingSettingsRef, if needed
-      playingSettingsRef.current = {
-        ...circleSettings[nextCircleIndex],
-        macroMode,
-        speedMode,
-        measuresUntilMute,
-        muteDurationMeasures,
-        muteProbability,
-        tempoIncreasePercent,
-        measuresUntilSpeedUp,
-      };
-
-      if (!isPaused && logic && logic.startScheduler) {
-        logic.startScheduler();
-        // no skipFirstBeatRef
-      }
+      // Simply update our reference of the current subdivision
+      // We no longer need to manually switch circles here, as it's handled
+      // automatically in the useMultiCircleMetronomeLogic hook
     }
 
     prevSubdivisionRef.current = newSubdivision;
   }, [
     isPaused,
-    circleSettings,
-    playingCircle,
-    logic,
-    tempo,
-    macroMode,
-    speedMode,
-    measuresUntilMute,
-    muteDurationMeasures,
-    muteProbability,
-    tempoIncreasePercent,
-    measuresUntilSpeedUp,
-    setTempo,
-    setPlayingCircle
+    circleSettings
   ]);
-  
-  useEffect(() => {
-    if (!isPaused && logic && logic.currentSubdivision !== undefined) {
-      handleSubdivisionChange(logic.currentSubdivision);
-    }
-  }, [logic?.currentSubdivision, handleSubdivisionChange, isPaused, logic]);
+
+  // The circle switching is handled automatically in the metronome logic.
+  // Hence, this effect is redundant and has been removed to fix the beat animation issues.
+  // useEffect(() => {
+  //   if (!isPaused && logic && logic.currentSubdivision !== undefined) {
+  //     handleSubdivisionChange(logic.currentSubdivision);
+  //   }
+  // }, [logic?.currentSubdivision, handleSubdivisionChange, isPaused, logic]);
 
   // Handle Play/Pause
   const handlePlayPause = useCallback(() => {
@@ -485,43 +339,25 @@ export default function MultiCircleMetronome(props) {
     
     isProcessingPlayPauseRef.current = true;
     
-    // Reset transition flags when play/pause is toggled
-    isFirstBeatAfterTransitionRef.current = false;
-    
     setIsPaused(prev => {
       if (prev) {
         // Starting playback
         setPlayingCircle(0);
-        isTransitioningRef.current = false;
         prevSubdivisionRef.current = null;
-        measureCountRef.current = 0;
-        lastCircleSwitchCheckTimeRef.current = 0;
         
-        // Reset training mode counters
-        const wasInSilence = isSilencePhaseRef.current;
-        isSilencePhaseRef.current = false;
-        window.isSilencePhaseRef = isSilencePhaseRef; // Update global reference
-        muteMeasureCountRef.current = 0;
-        lastTempoIncreaseRef.current = 0;
+        // Reset counters
+        if (logic.measureCountRef) logic.measureCountRef.current = 0;
+        if (logic.muteMeasureCountRef) logic.muteMeasureCountRef.current = 0;
+        if (logic.isSilencePhaseRef) logic.isSilencePhaseRef.current = false;
         
-        // Update playing settings with both circle and training settings
-        if (circleSettings && circleSettings.length > 0) {
-          playingSettingsRef.current = {
-            ...circleSettings[0],
-            macroMode,
-            speedMode,
-            measuresUntilMute,
-            muteDurationMeasures,
-            muteProbability,
-            tempoIncreasePercent,
-            measuresUntilSpeedUp
-          };
-        }
+        // Update global reference
+        window.isSilencePhaseRef = logic.isSilencePhaseRef;
         
+        lastCircleSwitchTimeRef.current = 0;
+        
+        // We don't need to set beatModeRef directly anymore since we're using circleSettings
+
         const startPlayback = () => {
-          if (logic && logic.currentSubStartRef) {
-            logic.currentSubStartRef.current = 0;
-          }
           if (logic && logic.startScheduler) {
             logic.startScheduler();
           }
@@ -539,7 +375,6 @@ export default function MultiCircleMetronome(props) {
               startPlayback();
             })
             .catch(err => {
-              console.error("Error resuming AudioContext:", err);
               isProcessingPlayPauseRef.current = false;
               clearTimeout(safetyTimeout);
             });
@@ -549,7 +384,6 @@ export default function MultiCircleMetronome(props) {
         return false;
       } else {
         // Stopping playback
-        isTransitioningRef.current = false;
         prevSubdivisionRef.current = null;
         
         if (logic && logic.stopScheduler) {
@@ -564,7 +398,6 @@ export default function MultiCircleMetronome(props) {
               clearTimeout(safetyTimeout);
             })
             .catch(err => {
-              console.error("Error suspending AudioContext:", err);
               isProcessingPlayPauseRef.current = false;
               clearTimeout(safetyTimeout);
             });
@@ -581,15 +414,24 @@ export default function MultiCircleMetronome(props) {
     setIsPaused, 
     circleSettings, 
     isPaused,
-    macroMode,
-    speedMode,
-    measuresUntilMute,
-    muteDurationMeasures,
-    muteProbability,
-    tempoIncreasePercent,
-    measuresUntilSpeedUp,
     setPlayingCircle
   ]);
+
+  // Handle manual tempo acceleration
+  const handleAccelerate = useCallback(() => {
+    if (!isPaused) {
+      manualTempoAcceleration({
+        tempoIncreasePercent,
+        tempoRef: { current: tempo },
+        setTempo
+      });
+    }
+  }, [isPaused, tempo, tempoIncreasePercent, setTempo, speedMode]);
+
+  // Debug logging for speedMode
+  useEffect(() => {
+    
+  }, [speedMode]);
 
   // Register callbacks with parent if provided
   useEffect(() => {
@@ -623,25 +465,42 @@ export default function MultiCircleMetronome(props) {
   });
 
   // Toggle functionality for the note selector
-  const handleNoteSelection = (mode) => {
+  const handleNoteSelection = useCallback((mode) => {
+    // Don't change note mode during playback if we're in a transition
+    if (!isPaused && logic && logic.isTransitioning && logic.isTransitioning()) {
+      return;
+    }
+    
     setCircleSettings(prev => {
       const updated = [...prev];
+      
+      // Only update if the mode is actually changing
+      if (updated[activeCircle]?.beatMode === mode) {
+        return prev;
+      }
+      
       updated[activeCircle] = { ...updated[activeCircle], beatMode: mode };
+      
+      // We don't need to update the beatModeRef directly anymore since we're using
+      // circleSettings directly in the getBeatMultiplier function
+
+      // If this is the currently playing circle and we're not paused,
+      // we need to restart the scheduler to apply the new beat mode
+      if (!isPaused && activeCircle === playingCircle && logic) {
+        // The scheduler will be restarted by the useEffect in the hook
+        logic.beatModeRef.current = mode;
+      }
+      
       return updated;
     });
-  };
+  }, [activeCircle, isPaused, logic, playingCircle]);
 
   return (
     <div style={{ textAlign: "center" }}>
-      {/* Training status indicator */}
-      <TrainingStatus
-        macroMode={macroMode}
+      {/* Accelerate button for Training Mode */}
+      <AccelerateButton 
+        onClick={handleAccelerate} 
         speedMode={speedMode}
-        isSilencePhaseRef={isSilencePhaseRef}
-        measureCountRef={measureCountRef}
-        measuresUntilMute={measuresUntilMute}
-        muteMeasureCountRef={muteMeasureCountRef}
-        muteDurationMeasures={muteDurationMeasures}
       />
       
       {/* Main circles container */}
@@ -664,14 +523,14 @@ export default function MultiCircleMetronome(props) {
             currentSubdivision={logic?.currentSubdivision}
             isPaused={isPaused}
             audioCtxRunning={logic?.audioCtx && logic.audioCtx.state === "running"}
-            isTransitioning={isTransitioningRef.current}
+            isTransitioning={logic.isTransitioning && logic.isTransitioning()}
             updateAccent={updateAccent}
             radius={containerSize / 2}
             containerSize={containerSize}
             setActiveCircle={setActiveCircle}
             circleSettings={circleSettings}
             macroMode={macroMode}
-            isSilencePhaseRef={isSilencePhaseRef}
+            isSilencePhaseRef={logic.isSilencePhaseRef}
             isMobile={isMobile}
           />
         ))}
@@ -784,3 +643,5 @@ export default function MultiCircleMetronome(props) {
     </div>
   );
 }
+
+export default withTrainingContainer(MultiCircleMetronome);
