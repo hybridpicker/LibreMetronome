@@ -4,6 +4,7 @@ import './App.css';
 import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
 import InfoOverlay from './components/Menu/InfoOverlay/InfoOverlay';
+import FeedbackOverlay from './components/Menu/FeedbackOverlay/FeedbackOverlay';
 import AdvancedMetronomeWithCircle from './components/AdvancedMetronome';
 import MultiCircleMetronome from './components/metronome/MultiCircleMode';
 import GridModeMetronome from './components/metronome/GridMode/GridModeMetronome';
@@ -173,6 +174,7 @@ function App() {
   return (
     <div className="app-container">
       <InfoOverlay setActive={setIsInfoActive} />
+      <FeedbackOverlay currentMode={mode} currentTempo={tempo} />
       <Header />
       <TrainingOverlay
         trainingSettings={trainingSettings}
