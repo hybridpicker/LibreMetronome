@@ -1,8 +1,11 @@
-from django.contrib import admin
-from django.urls import path, include
-from .views import serve_react  # Import the React serving function
+from django.urls import path, re_path
+from django.views.generic import TemplateView
+from . import views
 
+# API endpoints will be added here as needed
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', serve_react),  # Root URL serves React
+    # API endpoints go here
+    
+    # Catch all URLs to serve React frontend
+    re_path(r'^(?P<path>.*)$', views.serve_react, name='serve_react'),
 ]
