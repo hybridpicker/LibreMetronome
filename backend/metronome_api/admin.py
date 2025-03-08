@@ -1,12 +1,8 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import MetronomeSettings, MetronomeSoundSet
+from .models import MetronomeSoundSet
 
 # Register your models here.
-
-@admin.register(MetronomeSettings)
-class MetronomeSettingsAdmin(admin.ModelAdmin):
-    list_display = ('tempo', 'volume', 'swing', 'subdivisions')
 
 @admin.register(MetronomeSoundSet)
 class MetronomeSoundSetAdmin(admin.ModelAdmin):
