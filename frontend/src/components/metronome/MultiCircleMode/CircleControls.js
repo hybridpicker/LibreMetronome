@@ -2,7 +2,6 @@
 import React from 'react';
 import NoteSelector from '../Controls/NoteSelector';
 import SubdivisionSelector from '../Controls/SubdivisionSelector';
-import BaseMetronomeLayout from '../BaseMetronomeLayout';
 
 const CircleControls = ({
   currentSettings,
@@ -16,12 +15,8 @@ const CircleControls = ({
   swing,
   setSwing,
   isPaused,
-  handlePlayPause,
-  logic
+  handlePlayPause
 }) => {
-  // Note: This will be null if children is a function
-  const nullRendererForContainer = null;
-  
   // Toggle functionality for the note selector
   const handleNoteSelection = (mode) => {
     setCircleSettings(prev => {
@@ -42,16 +37,16 @@ const CircleControls = ({
         />
       </div>
       
-      {/* Subdivision section */}
+      {/* Beats per Bar section */}
       <div style={{ marginBottom: "20px", textAlign: "center" }}>
-        <h3 className="section-title">Subdivision (Circle {activeCircle + 1})</h3>
+        <h3 className="section-title">Beats per Bar (Circle {activeCircle + 1})</h3>
         <SubdivisionSelector
           subdivisions={currentSettings.subdivisions}
           onSelect={handleSetSubdivisions}
         />
       </div>
       
-      {/* Use the BaseMetronomeLayout for sliders only */}
+      {/* Sliders for tempo, volume, and swing */}
       <div className="sliders-container">
         <label>
           Tempo: {tempo} BPM
