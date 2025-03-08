@@ -13,7 +13,6 @@ import withTrainingContainer from "../../Training/withTrainingContainer";
 import NoteSelector from "../Controls/NoteSelector";
 import SubdivisionSelector from "../Controls/SubdivisionSelector";
 import AccelerateButton from "../Controls/AccelerateButton";
-import { manualTempoAcceleration } from "../../../hooks/useMetronomeLogic/trainingLogic";
 
 // Initialize global silence check function
 window.isSilent = function() {
@@ -137,7 +136,6 @@ function MultiCircleMetronome(props) {
   
   // State tracking references
   const isProcessingPlayPauseRef = useRef(false);
-  const lastCircleSwitchTimeRef = useRef(0);
   
   // Container size calculation
   const getContainerSize = () => {
@@ -212,24 +210,96 @@ function MultiCircleMetronome(props) {
     };
   }, [logic.isSilencePhaseRef]);
 
+  // This function will be implemented in future updates for advanced subdivision handling
+  const handleSubdivisionChange = useCallback((newSubdivision) => {
+    // Reserved for future implementation of advanced subdivision change handling
+  }, []); // Empty dependency array since it's not actively used
+
   // Handle setting subdivisions (used by keyboard shortcuts)
   const handleSetSubdivisions = useCallback((subdivisionValue) => {
     if (subdivisionValue < 1 || subdivisionValue > 9) return;
     
     setCircleSettings(prev => {
-      if (!prev || !prev.length) return prev;
       const updated = [...prev];
-      if (activeCircle >= updated.length) return prev;
-      
       updated[activeCircle] = {
         ...updated[activeCircle],
-        subdivisions: subdivisionValue,
-        accents: Array.from({ length: subdivisionValue }, (_, i) => (i === 0 ? 3 : 1))
+        subdivisions: subdivisionValue
       };
       return updated;
     });
   }, [activeCircle]);
-  
+
+  // Handle Play/Pause with proper state management
+  const handlePlayPause = useCallback(() => {
+    if (isProcessingPlayPauseRef.current) {
+      return;
+    }
+
+    isProcessingPlayPauseRef.current = true;
+    setIsPaused(prev => !prev);
+
+    // Reset the processing flag after a short delay
+    setTimeout(() => {
+      isProcessingPlayPauseRef.current = false;
+    }, 200);
+  }, [setIsPaused]); // Include setIsPaused in dependencies
+
+  // Handle manual tempo acceleration
+  const handleAccelerate = useCallback(() => {
+    if (tempoIncreasePercent > 0) {
+      setTempo(prevTempo => {
+        const newTempo = Math.min(240, prevTempo * (1 + tempoIncreasePercent / 100));
+        return Math.round(newTempo);
+      });
+    }
+  }, [tempoIncreasePercent, setTempo]); // Include setTempo in dependencies
+
+  // Register callbacks with parent if provided
+  useEffect(() => {
+    if (registerTogglePlay) {
+      registerTogglePlay(handlePlayPause);
+    }
+    if (registerTapTempo && logic && logic.tapTempo) {
+      registerTapTempo(logic.tapTempo);
+    }
+    
+    return () => {
+      // Clean up callbacks when component unmounts
+      if (registerTogglePlay) {
+        registerTogglePlay(null);
+      }
+      if (registerTapTempo) {
+        registerTapTempo(null);
+      }
+    };
+  }, [handlePlayPause, logic, registerTogglePlay, registerTapTempo]);
+
+  // Global keyboard shortcuts
+  useKeyboardShortcuts({
+    onTogglePlayPause: () => {
+      if (!isProcessingPlayPauseRef.current) {
+        handlePlayPause();
+      }
+    },
+    onTapTempo: logic?.tapTempo,
+    onSetSubdivisions: handleSetSubdivisions
+  });
+
+  // Toggle functionality for the note selector
+  const handleNoteSelection = useCallback((mode) => {
+    setCircleSettings(prev => {
+      const updated = [...prev];
+      
+      // Only update if the mode is actually changing
+      if (updated[activeCircle]?.beatMode === mode) {
+        return prev;
+      }
+      
+      updated[activeCircle] = { ...updated[activeCircle], beatMode: mode };
+      return updated;
+    });
+  }, [activeCircle, setCircleSettings]);
+
   // ADD CIRCLE FUNCTION
   const addCircle = useCallback(() => {
     setCircleSettings(prev => {
@@ -292,192 +362,6 @@ function MultiCircleMetronome(props) {
       return updated;
     });
   }, [activeCircle, removeCircle]);
-
-  // Handle subdivision changes and circle switching
-  const prevSubdivisionRef = useRef(null);
-  
-  const handleSubdivisionChange = useCallback((newSubdivision) => {
-    if (isPaused || !circleSettings || circleSettings.length <= 1) return;
-
-    // Only detect end of measure when current subdivision is 0 and previous wasn't
-    if (
-      prevSubdivisionRef.current !== null &&
-      prevSubdivisionRef.current !== newSubdivision &&
-      newSubdivision === 0
-    ) {
-      // Simply update our reference of the current subdivision
-      // We no longer need to manually switch circles here, as it's handled
-      // automatically in the useMultiCircleMetronomeLogic hook
-    }
-
-    prevSubdivisionRef.current = newSubdivision;
-  }, [
-    isPaused,
-    circleSettings
-  ]);
-
-  // The circle switching is handled automatically in the metronome logic.
-  // Hence, this effect is redundant and has been removed to fix the beat animation issues.
-  // useEffect(() => {
-  //   if (!isPaused && logic && logic.currentSubdivision !== undefined) {
-  //     handleSubdivisionChange(logic.currentSubdivision);
-  //   }
-  // }, [logic?.currentSubdivision, handleSubdivisionChange, isPaused, logic]);
-
-  // Handle Play/Pause
-  const handlePlayPause = useCallback(() => {
-    if (isProcessingPlayPauseRef.current) {
-      return;
-    }
-    
-    // Set a timeout to reset the lock in case something goes wrong
-    const safetyTimeout = setTimeout(() => {
-      if (isProcessingPlayPauseRef.current) {
-        isProcessingPlayPauseRef.current = false;
-      }
-    }, 2000);
-    
-    isProcessingPlayPauseRef.current = true;
-    
-    setIsPaused(prev => {
-      if (prev) {
-        // Starting playback
-        setPlayingCircle(0);
-        prevSubdivisionRef.current = null;
-        
-        // Reset counters
-        if (logic.measureCountRef) logic.measureCountRef.current = 0;
-        if (logic.muteMeasureCountRef) logic.muteMeasureCountRef.current = 0;
-        if (logic.isSilencePhaseRef) logic.isSilencePhaseRef.current = false;
-        
-        // Update global reference
-        window.isSilencePhaseRef = logic.isSilencePhaseRef;
-        
-        lastCircleSwitchTimeRef.current = 0;
-        
-        // We don't need to set beatModeRef directly anymore since we're using circleSettings
-
-        const startPlayback = () => {
-          if (logic && logic.startScheduler) {
-            logic.startScheduler();
-          }
-          isProcessingPlayPauseRef.current = false;
-          clearTimeout(safetyTimeout);
-        };
-        
-        // Make sure the AudioContext is available
-        if (!logic || !logic.audioCtx) {
-          startPlayback();
-        } else if (logic.audioCtx.state === "suspended") {
-          logic.audioCtx
-            .resume()
-            .then(() => {
-              startPlayback();
-            })
-            .catch(err => {
-              isProcessingPlayPauseRef.current = false;
-              clearTimeout(safetyTimeout);
-            });
-        } else {
-          startPlayback();
-        }
-        return false;
-      } else {
-        // Stopping playback
-        prevSubdivisionRef.current = null;
-        
-        if (logic && logic.stopScheduler) {
-          logic.stopScheduler();
-        }
-        
-        if (logic && logic.audioCtx && logic.audioCtx.state === "running") {
-          logic.audioCtx
-            .suspend()
-            .then(() => {
-              isProcessingPlayPauseRef.current = false;
-              clearTimeout(safetyTimeout);
-            })
-            .catch(err => {
-              isProcessingPlayPauseRef.current = false;
-              clearTimeout(safetyTimeout);
-            });
-        } else {
-          isProcessingPlayPauseRef.current = false;
-          clearTimeout(safetyTimeout);
-        }
-        setPlayingCircle(0);
-        return true;
-      }
-    });
-  }, [
-    logic, 
-    setIsPaused, 
-    circleSettings, 
-    isPaused,
-    setPlayingCircle
-  ]);
-
-  // Handle manual tempo acceleration
-  const handleAccelerate = useCallback(() => {
-    if (!isPaused) {
-      manualTempoAcceleration({
-        tempoIncreasePercent,
-        tempoRef: { current: tempo },
-        setTempo
-      });
-    }
-  }, [isPaused, tempo, tempoIncreasePercent, setTempo, speedMode]);
-
-  // Debug logging for speedMode
-  useEffect(() => {
-    
-  }, [speedMode]);
-
-  // Register callbacks with parent if provided
-  useEffect(() => {
-    if (registerTogglePlay) {
-      registerTogglePlay(handlePlayPause);
-    }
-    if (registerTapTempo && logic && logic.tapTempo) {
-      registerTapTempo(logic.tapTempo);
-    }
-    
-    return () => {
-      // Clean up callbacks when component unmounts
-      if (registerTogglePlay) {
-        registerTogglePlay(null);
-      }
-      if (registerTapTempo) {
-        registerTapTempo(null);
-      }
-    };
-  }, [handlePlayPause, logic, registerTogglePlay, registerTapTempo]);
-
-  // Global keyboard shortcuts
-  useKeyboardShortcuts({
-    onTogglePlayPause: () => {
-      if (!isProcessingPlayPauseRef.current) {
-        handlePlayPause();
-      }
-    },
-    onTapTempo: logic?.tapTempo,
-    onSetSubdivisions: handleSetSubdivisions
-  });
-
-  // Toggle functionality for the note selector
-  const handleNoteSelection = useCallback((mode) => {
-    setCircleSettings(prev => {
-      const updated = [...prev];
-      
-      // Only update if the mode is actually changing
-      if (updated[activeCircle]?.beatMode === mode) {
-        return prev;
-      }
-      
-      updated[activeCircle] = { ...updated[activeCircle], beatMode: mode };
-      return updated;
-    });
-  }, [activeCircle, setCircleSettings]);
 
   return (
     <div style={{ textAlign: "center" }}>
@@ -544,13 +428,13 @@ function MultiCircleMetronome(props) {
           />
         </div>
         
-        {/* Subdivision section */}
+        {/* Beats per Bar section */}
         <div style={{ marginBottom: "20px", textAlign: "center" }}>
           <h3 className="section-title" style={{marginBottom: "10px"}}>
-            Subdivision (Circle {activeCircle + 1})
+            Beats per Bar (Circle {activeCircle + 1})
           </h3>
           <SubdivisionSelector
-            subdivisions={currentSettings.subdivisions}
+            subdivisions={circleSettings[activeCircle].subdivisions}
             onSelect={handleSetSubdivisions}
           />
         </div>

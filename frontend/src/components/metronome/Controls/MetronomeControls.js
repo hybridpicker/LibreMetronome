@@ -32,7 +32,7 @@ const MetronomeControls = ({
       {/* Render Subdivision Selector for all modes except analog */}
       {mode !== "analog" && mode !== "multi" && (
         <div style={{ marginBottom: "20px", textAlign: "center" }}>
-          <h3>Subdivision</h3>
+          <h3>Beats per Bar</h3>
           <SubdivisionSelector
             subdivisions={subdivisions}
             onSelect={(num) => setSubdivisions(num)}
