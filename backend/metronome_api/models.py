@@ -10,16 +10,6 @@ def validate_audio_file(value):
     if not ext in valid_extensions:
         raise ValidationError('Unsupported file type. Please use WAV, MP3, or OGG files.')
 
-class MetronomeSettings(models.Model):
-    """Stores metronome settings for a user or globally."""
-    tempo = models.IntegerField(default=120)
-    volume = models.FloatField(default=1.0)
-    swing = models.FloatField(default=0.0)
-    subdivisions = models.IntegerField(default=4)
-
-    def __str__(self):
-        return f"Settings(tempo={self.tempo}, vol={self.volume}, swing={self.swing}, subs={self.subdivisions})"
-
 class MetronomeSoundSet(models.Model):
     """A collection of related metronome sounds."""
     name = models.CharField(max_length=100, unique=True)
@@ -46,6 +36,8 @@ class MetronomeSoundSet(models.Model):
 
     class Meta:
         ordering = ['-is_default', 'name']
+        verbose_name = "Metronome Sound Set"
+        verbose_name_plural = "Metronome Sound Sets"
 
     def __str__(self):
         return self.name
