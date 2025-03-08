@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import infoButtonIcon from '../../../assets/svg/info-button.svg';
 import './InfoOverlay.css';
 
 // Updated Modal with responsive content for mobile and desktop
@@ -76,7 +75,7 @@ const InfoModal = ({ onClose }) => {
             <ul>
               <li><strong>Space:</strong> Start/Pause</li>
               <li><strong>T:</strong> Tap tempo</li>
-              <li><strong>1–9:</strong> Adjust subdivisions</li>
+              <li><strong>1–9:</strong> Set Beats per Bar</li>
               <li><strong>Left/Right Arrows:</strong> Increase/Decrease tempo by 5 BPM</li>
               <li><strong>A:</strong> Switch to Analog Mode</li>
               <li><strong>C:</strong> Switch to Circle Mode</li>
