@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Audio Test</title>
+</head>
+<body>
+    <h1>Audio Test Page</h1>
+    
+    <h3>Test Direct Audio Elements</h3>
+    <div>
+        <p>Normal Click:</p>
+        <audio controls src="/assets/audio/click_new.mp3"></audio>
+    </div>
+    <div>
+        <p>Accent Click:</p>
+        <audio controls src="/assets/audio/click_new_accent.mp3"></audio>
+    </div>
+    <div>
+        <p>First Beat Click:</p>
+        <audio controls src="/assets/audio/click_new_first.mp3"></audio>
+    </div>
+    
+    <h3>Test Fetch API (will log to console)</h3>
+    <button id="testFetch">Test Fetch API</button>
+    
+    <script>
+        document.getElementById('testFetch').addEventListener('click', async () => {
+            try {
+                console.log('Testing fetch for click_new.mp3');
+                const response = await fetch('/assets/audio/click_new.mp3');
+                if (!response.ok) {
+                    throw new Error(`HTTP error: ${response.status}`);
+                }
+                const buffer = await response.arrayBuffer();
+                console.log('Successfully loaded audio buffer:', buffer.byteLength, 'bytes');
+                
+                // Test with AudioContext
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                try {
+                    const audioBuffer = await audioCtx.decodeAudioData(buffer);
+                    console.log('Successfully decoded audio data:', audioBuffer);
+                } catch (decodeErr) {
+                    console.error('Failed to decode audio data:', decodeErr);
+                }
+            } catch (err) {
+                console.error('Error fetching audio:', err);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -5,6 +5,7 @@ import { useMetronomeRefs } from '../../../../hooks/useMetronomeLogic/references
 import { createTapTempoLogic } from '../../../../hooks/useMetronomeLogic/tapTempo';
 import { handleMeasureBoundary, shouldMuteThisBeat } from '../../../../hooks/useMetronomeLogic/trainingLogic';
 import { runScheduler, scheduleSubdivision } from '../../../../hooks/useMetronomeLogic/scheduler';
+import { getActiveSoundSet } from '../../../../services/soundSetService';
 // CONSTANTS:
 // Audio context lookahead time in seconds
 // Not using these currently but keeping for reference as they may be needed again
@@ -165,12 +166,34 @@ export default function useMultiCircleMetronomeLogic({
     const audioCtx = initAudioContext();
     audioCtxRef.current = audioCtx;
 
-    loadClickBuffers({
-      audioCtx,
-      normalBufferRef,
-      accentBufferRef,
-      firstBufferRef
-    });
+    // Fetch the active sound set from the API and load it
+    const loadSounds = async () => {
+      try {
+        // Get the active sound set from the API
+        const soundSet = await getActiveSoundSet();
+        console.log('MultiCircleMetronome: Loaded sound set from API:', soundSet);
+        
+        // Load the sound buffers with the sound set
+        loadClickBuffers({
+          audioCtx,
+          normalBufferRef,
+          accentBufferRef,
+          firstBufferRef,
+          soundSet
+        });
+      } catch (error) {
+        console.error('MultiCircleMetronome: Failed to load sound set from API:', error);
+        // Fallback to default sounds if the API call fails
+        loadClickBuffers({
+          audioCtx,
+          normalBufferRef,
+          accentBufferRef,
+          firstBufferRef
+        });
+      }
+    };
+
+    loadSounds();
 
     return () => {
       stopScheduler();
