@@ -1,7 +1,8 @@
 from rest_framework import serializers
-from .models import MetronomeSettings
+from .models import MetronomeSoundSet
 
-class MetronomeSettingsSerializer(serializers.ModelSerializer):
+class MetronomeSoundSetSerializer(serializers.ModelSerializer):
     class Meta:
-        model = MetronomeSettings
-        fields = ['id', 'tempo', 'volume', 'swing', 'subdivisions']
+        model = MetronomeSoundSet
+        fields = ['id', 'name', 'description', 'is_active', 'created_at', 'updated_at',
+                  'first_beat_sound', 'accent_sound', 'normal_beat_sound']

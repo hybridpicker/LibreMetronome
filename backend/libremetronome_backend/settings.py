@@ -143,6 +143,9 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+MEDIA_URL = '/metronome_sounds/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'metronome_sounds')
+
 # Security settings for production
 SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SECURE = True
