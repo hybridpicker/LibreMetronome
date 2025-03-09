@@ -5,7 +5,12 @@ import { useMetronomeRefs } from '../../../../hooks/useMetronomeLogic/references
 import { createTapTempoLogic } from '../../../../hooks/useMetronomeLogic/tapTempo';
 import { handleMeasureBoundary, shouldMuteThisBeat } from '../../../../hooks/useMetronomeLogic/trainingLogic';
 import { runScheduler, scheduleSubdivision } from '../../../../hooks/useMetronomeLogic/scheduler';
-import { TEMPO_MIN, TEMPO_MAX, SCHEDULE_AHEAD_TIME } from '../../../../hooks/useMetronomeLogic/constants';
+// CONSTANTS:
+// Audio context lookahead time in seconds
+// Not using these currently but keeping for reference as they may be needed again
+// const TEMPO_MIN = 30;
+// const TEMPO_MAX = 300;
+// const SCHEDULE_AHEAD_TIME = 0.1; 
 
 /**
  * A specialized version of useMetronomeLogic for Multi Circle Mode
@@ -79,7 +84,9 @@ export default function useMultiCircleMetronomeLogic({
   const measureCountRef = useRef(0);
   const muteMeasureCountRef = useRef(0);
   const isSilencePhaseRef = useRef(false);
-  const lastCircleSwitchTimeRef = useRef(0);
+  // Controls lastly when a circle switched
+  // Commenting out unused ref but keeping for potential future use
+  // const lastCircleSwitchTimeRef = useRef(0);
   
   // Add a ref to track the last beat time for stability
   const lastBeatTimeRef = useRef(0);
@@ -95,9 +102,54 @@ export default function useMultiCircleMetronomeLogic({
   useEffect(() => { tempoRef.current = tempo; }, [tempo]);
   useEffect(() => { swingRef.current = swing; }, [swing]);
   useEffect(() => { volumeRef.current = volume; }, [volume]);
-  useEffect(() => { subdivisionsRef.current = subdivisions; }, [subdivisions]);
+  useEffect(() => { 
+    // Update subdivisions based on the currently playing circle's settings
+    const currentCircleIndex = playingCircleRef.current;
+    const currentCircleData = circleSettings[currentCircleIndex];
+    if (currentCircleData) {
+      // Use the exact subdivision value from the current circle
+      // Do NOT apply any beat mode multiplier here - that's handled in the scheduler
+      const exactSubdivisions = currentCircleData.subdivisions || 4;
+      
+      console.log(`[MultiCircleLogic] Updating subdivisions: exact=${exactSubdivisions}`);
+      subdivisionsRef.current = exactSubdivisions;
+    } else {
+      subdivisionsRef.current = subdivisions;
+    }
+  }, [subdivisions, circleSettings, playingCircle, playingCircleRef]);
+  
   useEffect(() => { accentsRef.current = accents; }, [accents]);
-  useEffect(() => { playingCircleRef.current = playingCircle; }, [playingCircle]);
+  useEffect(() => { 
+    playingCircleRef.current = playingCircle;
+    
+    // When playing circle changes, update the subdivisions to match the new circle
+    const currentCircleData = circleSettings[playingCircle];
+    if (currentCircleData) {
+      // Use the exact subdivision value from the current circle
+      // Do NOT apply any beat mode multiplier here - that's handled in the scheduler
+      const exactSubdivisions = currentCircleData.subdivisions || 4;
+      
+      console.log(`[MultiCircleLogic] Circle changed: updating subdivisions to exact=${exactSubdivisions}`);
+      subdivisionsRef.current = exactSubdivisions;
+      
+      // Also update accents array length if needed
+      if (currentCircleData.accents && currentCircleData.accents.length !== exactSubdivisions) {
+        // Create or extend the accents array to match the exact subdivisions
+        const newAccents = Array(exactSubdivisions).fill(1);
+        for (let i = 0; i < Math.min(currentCircleData.accents.length, exactSubdivisions); i++) {
+          newAccents[i] = currentCircleData.accents[i];
+        }
+        // First beat should be 3 (first beat) by default
+        if (newAccents.length > 0 && newAccents[0] !== 3) {
+          newAccents[0] = 3;
+        }
+        accentsRef.current = newAccents;
+        console.log(`[MultiCircleLogic] Updated accents array to match ${exactSubdivisions} subdivisions:`, newAccents);
+      } else {
+        accentsRef.current = currentCircleData.accents || [3, 1, 1, 1];
+      }
+    }
+  }, [playingCircle, circleSettings]);
 
   // Derive beatMultiplier from beatMode (1 for quarter, 2 for eighth)
   const getBeatMultiplier = useCallback(() => {
@@ -130,22 +182,37 @@ export default function useMultiCircleMetronomeLogic({
     const localTempo = tempoRef.current;
     if (!localTempo) return 0.5;
     
-    // Calculate using the CURRENT beatMode from the ref, not the initial value
+    // Get the beat mode multiplier (1 for quarter, 2 for eighth)
     const beatMultiplier = getBeatMultiplier();
-    const secPerHit = 60 / (localTempo * beatMultiplier);
-
-    console.log(`[MultiCircleLogic] getCurrentSubIntervalSec: subIndex=${subIndex}, tempo=${localTempo}, multiplier=${beatMultiplier}, secPerHit=${secPerHit.toFixed(4)}`);
+    
+    // Standard calculation for quarter note duration at the given tempo
+    // In standard metronome behavior, BPM directly corresponds to quarter notes
+    const quarterNoteDuration = 60 / localTempo;
+    
+    // In quarter note mode, one subdivision equals one quarter note
+    // In eighth note mode, one subdivision equals one eighth note (half as long)
+    const basicBeatDuration = quarterNoteDuration / beatMultiplier;
+    
+    // For subdivisions, we need to divide the beat duration by the number of subdivisions per beat
+    const totalSubs = subdivisionsRef.current;
+    
+    // In a standard 4/4 measure with quarter notes:
+    // - Each beat is one quarter note
+    // - If subdivisions = 4, we play one note per beat (4 notes per measure)
+    // - If subdivisions = 8, we play two notes per beat (8 notes per measure)
+    const subDivisionDuration = basicBeatDuration;
+    
+    console.log(`[MultiCircleLogic] getCurrentSubIntervalSec: subIndex=${subIndex}, tempo=${localTempo}, beatMode=${beatMultiplier === 2 ? 'eighth' : 'quarter'}, quarterNote=${quarterNoteDuration.toFixed(4)}, subDivision=${subDivisionDuration.toFixed(4)}`);
 
     // Handle swing timing if needed
-    const totalSubs = subdivisionsRef.current;
     const sFactor = swingRef.current || 0;
     if (totalSubs >= 2 && sFactor > 0) {
       const isEvenSub = (subIndex % 2 === 0);
       return isEvenSub
-        ? secPerHit * (1 + sFactor)
-        : secPerHit * (1 - sFactor);
+        ? subDivisionDuration * (1 + sFactor)
+        : subDivisionDuration * (1 - sFactor);
     }
-    return secPerHit;
+    return subDivisionDuration;
   }, [getBeatMultiplier]); // Only depend on getBeatMultiplier function
 
   function updateActualBpm() {

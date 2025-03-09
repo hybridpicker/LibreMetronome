@@ -60,6 +60,7 @@ export default function useMultiCircleScheduler({
   const [currentBar, setCurrentBar] = useState(0);
   const lookaheadTimerRef = useRef(null);
   const isRunningRef = useRef(false);
+  const measureStartTimeRef = useRef(null);
 
   // Keep a stable reference to tempo in a ref
   const tempoRef = useRef(tempo);
@@ -93,42 +94,39 @@ export default function useMultiCircleScheduler({
   // 2) A helper that schedules the entire next measure
   //    for ALL circles in parallel.
   // ─────────────────────────────────────────────────────────
-  const scheduleMeasure = useCallback((barStartTime) => {
+  const scheduleMeasure = useCallback((measureStartTime, debug = false) => {
+    console.log(`[MultiCircleScheduler] Scheduling measure starting at ${measureStartTime.toFixed(3)}`);
+
     const audioCtx = audioCtxRef.current;
     if (!audioCtx) return;
 
-    // We'll treat ONE measure as exactly 4 quarter-note durations
-    // (i.e. 4 beats). If tempo=120 BPM, then 4 beats = 2 seconds total.
-    // If you prefer a different measure length, adjust here:
-    const measureDurationSec = (4 * 60) / tempoRef.current;
-
     // SCHEDULING ALL circles now:
     circleSettings.forEach((circle, circleIndex) => {
-      // circle.subdivisions can be 4, 8, etc.
-      // If circle is set to "quarter", that means 4 hits. 
-      // If "eighth", that means 8 hits in the same measure time, etc.
       const { subdivisions, accents, beatMode = "quarter" } = circle;
 
-      // If beatMode === "eighth", effectively we do 8 hits per 4 beats
-      // If beatMode === "quarter", effectively 4 hits per 4 beats
-      // Alternatively, if your data literally says subdivisions=8, 
-      // you can ignore beatMode and rely solely on subdivisions.
+      // Get the multiplier for this beat mode (1 for quarter, 2 for eighth)
+      const beatMultiplier = beatMode === "eighth" ? 2 : 1;
       
-      // For example, if subdivisions=4 => 4 hits in measureDurationSec
-      // if subdivisions=8 => 8 hits in measureDurationSec
-      // We'll schedule them evenly across the measure.
+      // Use the exact number of subdivisions as specified by the user
+      const exactSubdivisions = subdivisions;
       
-      const hitsPerMeasure = subdivisions; 
-      for (let subIndex = 0; subIndex < hitsPerMeasure; subIndex++) {
-        // Calculate time offset within the measure
-        let fraction = subIndex / hitsPerMeasure;
-        // If you have a swing factor, apply it for even/odd subs 
-        // to shift the fraction slightly. Example:
-        //   if swing>0 and subIndex is odd => fraction -= some delta
-        //   if subIndex is even => fraction += some delta
-        // (Omitted for brevity)
-        
-        const hitTime = barStartTime + measureDurationSec * fraction;
+      // Calculate the duration of one quarter note at the current tempo
+      const quarterNoteDuration = 60 / tempoRef.current;
+      
+      // Calculate the note duration based on beat mode 
+      // For quarter notes (beatMultiplier=1), use quarter note duration
+      // For eighth notes (beatMultiplier=2), use eighth note duration (half as long)
+      const noteDuration = quarterNoteDuration / beatMultiplier;
+      
+      // Log for debugging
+      console.log(`[MultiCircleScheduler] circle=${circleIndex}, subdivisions=${subdivisions}, beatMode=${beatMode}, quarterNote=${quarterNoteDuration.toFixed(3)}s, noteDuration=${noteDuration.toFixed(3)}s`);
+      
+      // Schedule exactly the number of subdivisions specified by the user
+      for (let subIndex = 0; subIndex < exactSubdivisions; subIndex++) {
+        // For each subdivision, calculate the hit time
+        // In quarter note mode: each subdivision is a quarter note
+        // In eighth note mode: each subdivision is an eighth note
+        const hitTime = measureStartTime + (subIndex * noteDuration);
         
         // Possibly skip if silent
         const doMute = shouldMuteThisBeat({
@@ -227,26 +225,31 @@ export default function useMultiCircleScheduler({
   // ─────────────────────────────────────────────────────────
   const scheduleNextBar = useCallback(
     (barIndex, startTime) => {
+      measureStartTimeRef.current = startTime;
       // Schedule everything for barIndex at startTime
       scheduleMeasure(startTime);
       
       // On measure boundary, do training logic (silence or speed change)
       handleMeasureBoundary();
 
-      // One measure is (4 * 60/tempo)
-      const measureDurationSec = (4 * 60) / tempoRef.current;
-
       // After that measure finishes, schedule the next one
       const nextBarIndex = barIndex + 1;
-      const nextStartTime = startTime + measureDurationSec;
+      
+      // For quarter note mode, each measure contains 4 quarter notes
+      // For eighth note mode, each measure contains 8 eighth notes
+      // Either way, the duration is the same (4 quarter notes)
+      const quarterNoteDuration = 60 / tempoRef.current;
+      const measureDuration = quarterNoteDuration * 4;
+      
+      const nextMeasureStartTime = measureStartTimeRef.current + measureDuration;
 
       // Use setTimeout to queue the next measure about 100ms before it
       // is due, or you can be more sophisticated with a “lookahead loop.”
       lookaheadTimerRef.current = setTimeout(() => {
         if (!isRunningRef.current) return;
         setCurrentBar(nextBarIndex);
-        scheduleNextBar(nextBarIndex, nextStartTime);
-      }, Math.max(0, (measureDurationSec * 1000) - 100));
+        scheduleNextBar(nextBarIndex, nextMeasureStartTime);
+      }, Math.max(0, (measureDuration * 1000) - 100));
     },
     [scheduleMeasure, handleMeasureBoundary]
   );

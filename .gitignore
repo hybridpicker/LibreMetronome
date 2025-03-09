@@ -48,3 +48,7 @@ backend/metronome_sounds/*.mp3
 backend/metronome_sounds/*.ogg
 backend/metronome_sounds/test*
 !backend/metronome_sounds/.gitkeep
+
+# Django static files
+staticfiles/
+backend/staticfiles/
