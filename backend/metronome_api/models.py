@@ -12,6 +12,19 @@ def validate_audio_file(value):
 
 class MetronomeSoundSet(models.Model):
     """A collection of related metronome sounds."""
+    def __init__(self, *args, **kwargs):
+        if 'is_default' in kwargs:
+            kwargs['is_active'] = kwargs.pop('is_default')
+        super(MetronomeSoundSet, self).__init__(*args, **kwargs)
+
+    @property
+    def is_default(self):
+        return self.is_active
+
+    @is_default.setter
+    def is_default(self, value):
+        self.is_active = value
+
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     is_active = models.BooleanField(default=False, help_text="Only one sound set can be active at a time.")
