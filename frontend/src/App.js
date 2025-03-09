@@ -52,11 +52,6 @@ function App() {
     tempoIncreasePercent: 5
   });
 
-  // Debug logging for trainingSettings
-  useEffect(() => {
-    
-  }, [trainingSettings]);
-
   const togglePlayRef = useRef(null);
   const tapTempoRef = useRef(null);
   const registerTogglePlay = (fn) => { togglePlayRef.current = fn; };
@@ -73,31 +68,10 @@ function App() {
     onSwitchToGrid: () => { setMode("grid"); },
     onSwitchToMulti: () => { setMode("multi"); },
     onToggleInfoOverlay: () => { },
-    onManualTempoIncrease: () => { }
   });
 
-  const [isInfoActive, setIsInfoActive] = useState(false);
-
-  // Get the version from package.json or use a default if unavailable
-  const [version, setVersion] = useState('');
-
-  useEffect(() => {
-    try {
-      // Attempt to fetch the version from package.json
-      fetch('/package.json')
-        .then(response => response.json())
-        .then(data => {
-          if (data.version) {
-            setVersion(data.version);
-          }
-        })
-        .catch(error => {
-          console.error('Error fetching version from package.json:', error);
-        });
-    } catch (error) {
-      console.error('Error in version retrieval:', error);
-    }
-  }, []);
+  // Use the version from package.json directly
+  const version = '0.4.6'; // App version from package.json
 
   // Helper function to get mode-specific metadata
   const getModeDescription = () => {
@@ -227,7 +201,7 @@ function App() {
         <meta name="twitter:title" content={`LibreMetronome - ${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode`} />
         <meta name="twitter:description" content={getModeDescription()} />
       </Helmet>
-      <InfoOverlay setActive={setIsInfoActive} />
+      <InfoOverlay />
       <FeedbackOverlay currentMode={mode} currentTempo={tempo} />
       <Header />
       <TrainingOverlay
