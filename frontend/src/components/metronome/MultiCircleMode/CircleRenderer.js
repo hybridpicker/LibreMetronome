@@ -51,29 +51,40 @@ const CircleRenderer = ({
                      !isPaused &&
                      audioCtxRunning;
     
-    const beatState = settings.accents?.[i] || 1;
+    // Fix: Ensure we correctly handle state 0 (muted)
+    // The original code was using || 1 which would never allow a 0 value
+    const beatState = settings.accents && i < settings.accents.length 
+      ? settings.accents[i] 
+      : 1;
+    
+    console.log(`Circle ${idx}, Beat ${i}: beatState=${beatState}, accents array:`, settings.accents);
     
     // For muted beats (state 0), render a placeholder that can be clicked
     if (beatState === 0) {
+      console.log(`Rendering muted beat (state 0) for Circle ${idx}, Beat ${i}`);
       return (
         <div
           key={i}
-          onClick={() => { if (isActiveUI) updateAccent(i); }}
+          onClick={() => { 
+            console.log("Muted beat clicked, isActiveUI:", isActiveUI);
+            if (isActiveUI) updateAccent(i); 
+          }}
           style={{
             position: "absolute",
-            left: `calc(50% + ${xPos}px - ${iconSize / 2}px)`,
-            top: `calc(50% + ${yPos}px - ${iconSize / 2}px)`,
-            width: `${iconSize}px`,
-            height: `${iconSize}px`,
-            borderRadius: '50%',
-            border: '2px dashed #ccc',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            color: '#ccc',
-            fontSize: '14px',
+            left: `calc(50% + ${xPos}px - 12px)`,
+            top: `calc(50% + ${yPos}px - 12px)`,
+            width: "24px",
+            height: "24px",
+            borderRadius: "50%",
+            border: "2px dashed rgb(204, 204, 204)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            color: "rgb(204, 204, 204)",
+            fontSize: "14px",
             cursor: isActiveUI ? "pointer" : "default",
-            transition: "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)"
+            transition: "0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
+            zIndex: 5 // Ensure it's visible above other elements
           }}
         >
           +

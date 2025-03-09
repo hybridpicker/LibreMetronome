@@ -348,6 +348,8 @@ function MultiCircleMetronome(props) {
       return;
     }
     
+    console.log("Before update - beatIndex:", beatIndex, "activeCircle:", activeCircle);
+    
     setCircleSettings(prev => {
       if (!prev || !prev.length) return prev;
       const updated = [...prev];
@@ -357,8 +359,19 @@ function MultiCircleMetronome(props) {
       if (!circle.accents || beatIndex >= circle.accents.length) return prev;
       
       const acc = [...circle.accents];
+      const oldState = acc[beatIndex];
+      
+      // Ensure we properly cycle through all states including 0
       acc[beatIndex] = (acc[beatIndex] + 1) % 4; // cycle 0→1→2→3→0
-      updated[activeCircle] = { ...circle, accents: acc };
+      
+      console.log("Updating accent - from:", oldState, "to:", acc[beatIndex], "full array:", acc);
+      
+      // Force a deep copy to ensure React detects the change
+      updated[activeCircle] = { 
+        ...circle, 
+        accents: [...acc] 
+      };
+      
       return updated;
     });
   }, [activeCircle, removeCircle]);
