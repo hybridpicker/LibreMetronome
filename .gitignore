@@ -41,3 +41,10 @@ bower_components
 
 # Miscellaneous
 *.sublime*
+
+# Test metronome sounds
+backend/metronome_sounds/*.wav
+backend/metronome_sounds/*.mp3
+backend/metronome_sounds/*.ogg
+backend/metronome_sounds/test*
+!backend/metronome_sounds/.gitkeep

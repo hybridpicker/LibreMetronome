@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 VERSION = "0.4.6"
 
@@ -23,10 +24,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'SECRET'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['libremetronome.com', 'www.libremetronome.com']
 
 # Application definition
 
@@ -46,7 +46,8 @@ INSTALLED_APPS += [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # Erlaubt React Zugriff auf Django
+    "https://libremetronome.com",
+    "https://www.libremetronome.com",
 ]
 
 MIDDLEWARE = [
@@ -66,7 +67,9 @@ ROOT_URLCONF = 'libremetronome_backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'metronome_api/templates'),
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -126,11 +129,12 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
-import os
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, '../frontend/build/static'),
+    os.path.join(BASE_DIR, 'metronome_api/static'),
 ]
 
 
@@ -138,6 +142,13 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Security settings for production
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
 
 try:
     from .local_settings import *
