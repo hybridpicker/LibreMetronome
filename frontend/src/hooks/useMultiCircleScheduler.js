@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 
 // Reuse or adapt from your single circle logic
-import { initAudioContext } from "./useMetronomeLogic/audioBuffers"; 
-import { loadClickBuffers } from "./useMetronomeLogic/audioBuffers";
+import { runScheduler, scheduleSubdivision } from "./useMetronomeLogic/scheduler";
+import { initAudioContext, loadClickBuffers } from "./useMetronomeLogic/audioBuffers";
+import { getActiveSoundSet } from '../services/soundSetService';
 import { shouldMuteThisBeat } from "./useMetronomeLogic/trainingLogic";
 
 /**
@@ -75,13 +76,34 @@ export default function useMultiCircleScheduler({
     const audioCtx = initAudioContext();
     audioCtxRef.current = audioCtx;
 
-    // Load your accent, first-beat, normal-beat sound files
-    loadClickBuffers({
-      audioCtx,
-      normalBufferRef,
-      accentBufferRef,
-      firstBufferRef
-    });
+    // Fetch the active sound set from the API and load it
+    const loadSounds = async () => {
+      try {
+        // Get the active sound set from the API
+        const soundSet = await getActiveSoundSet();
+        console.log('MultiCircle: Loaded sound set from API:', soundSet);
+        
+        // Load the sound buffers with the sound set
+        loadClickBuffers({
+          audioCtx,
+          normalBufferRef,
+          accentBufferRef,
+          firstBufferRef,
+          soundSet
+        });
+      } catch (error) {
+        console.error('MultiCircle: Failed to load sound set from API:', error);
+        // Fallback to default sounds if the API call fails
+        loadClickBuffers({
+          audioCtx,
+          normalBufferRef,
+          accentBufferRef,
+          firstBufferRef
+        });
+      }
+    };
+
+    loadSounds();
     
     return () => {
       stop(); // cleanup any intervals
