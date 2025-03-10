@@ -6,11 +6,11 @@ from .models import MetronomeSoundSet
 
 @admin.register(MetronomeSoundSet)
 class MetronomeSoundSetAdmin(admin.ModelAdmin):
-    list_display = ('name', 'is_default', 'created_at', 'sound_preview')
-    list_editable = ('is_default',)
+    list_display = ('name', 'is_active', 'created_at', 'sound_preview')
+    list_editable = ('is_active',)
     search_fields = ('name', 'description')
     readonly_fields = ('created_at', 'updated_at')
-    list_filter = ('is_default', 'created_at')
+    list_filter = ('is_active', 'created_at')
     
     def sound_preview(self, obj):
         preview_html = ''

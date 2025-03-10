@@ -5,6 +5,7 @@ import { createTapTempoLogic } from './tapTempo';
 import { handleMeasureBoundary, shouldMuteThisBeat } from './trainingLogic';
 import { runScheduler, scheduleSubdivision } from './scheduler';
 import { TEMPO_MIN, TEMPO_MAX } from './constants';
+import { getActiveSoundSet } from '../../services/soundSetService';
 
 /**
  * A simplified main hook that ties everything together.
@@ -97,12 +98,34 @@ export default function useMetronomeLogic({
     const audioCtx = initAudioContext();
     audioCtxRef.current = audioCtx;
 
-    loadClickBuffers({
-      audioCtx,
-      normalBufferRef,
-      accentBufferRef,
-      firstBufferRef
-    });
+    // Fetch the active sound set from the API and load it
+    const loadSounds = async () => {
+      try {
+        // Get the active sound set from the API
+        const soundSet = await getActiveSoundSet();
+        console.log('Loaded sound set from API:', soundSet);
+        
+        // Load the sound buffers with the sound set
+        loadClickBuffers({
+          audioCtx,
+          normalBufferRef,
+          accentBufferRef,
+          firstBufferRef,
+          soundSet
+        });
+      } catch (error) {
+        console.error('Failed to load sound set from API:', error);
+        // Fallback to default sounds if the API call fails
+        loadClickBuffers({
+          audioCtx,
+          normalBufferRef,
+          accentBufferRef,
+          firstBufferRef
+        });
+      }
+    };
+
+    loadSounds();
 
     // On unmount, stop the scheduler
     return () => {
