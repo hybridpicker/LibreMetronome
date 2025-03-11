@@ -20,7 +20,7 @@ const Footer = () => {
             rel="noopener noreferrer"
           >
             View Source Code
-          </a>{' '}|{' '}Version: {version} {isBeta ? '(Beta)' : ''}
+          </a>
         </p>
       </div>
     </footer>
