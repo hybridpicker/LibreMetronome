@@ -3,14 +3,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import './App.css';
 import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
-import InfoOverlay from './components/Menu/InfoOverlay/InfoOverlay';
-import FeedbackOverlay from './components/Menu/FeedbackOverlay/FeedbackOverlay';
 import AdvancedMetronomeWithCircle from './components/AdvancedMetronome';
 import MultiCircleMetronome from './components/metronome/MultiCircleMode';
 import GridModeMetronome from './components/metronome/GridMode/GridModeMetronome';
-import TrainingOverlay from './components/Menu/TrainingOverlay/TrainingOverlay';
 import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
 import MetronomeControls from './components/metronome/Controls/MetronomeControls';
+import MainMenu from './components/Menu/mainMenu';
 import { Helmet } from 'react-helmet';
 
 const TEMPO_MIN = 15;
@@ -201,16 +199,25 @@ function App() {
         <meta name="twitter:title" content={`LibreMetronome - ${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode`} />
         <meta name="twitter:description" content={getModeDescription()} />
       </Helmet>
-      <InfoOverlay />
-      <FeedbackOverlay currentMode={mode} currentTempo={tempo} />
-      <Header />
-      <TrainingOverlay
+      
+      {/* Unified Menu System */}
+      <MainMenu
         trainingSettings={trainingSettings}
         setTrainingSettings={setTrainingSettings}
         setMode={setMode}
         setIsPaused={setIsPaused}
+        volume={volume}
+        setVolume={setVolume}
+        defaultTempo={tempo}
+        setDefaultTempo={setTempo}
+        defaultSubdivisions={subdivisions}
+        setDefaultSubdivisions={setSubdivisions}
+        currentMode={mode}
       />
-      {/* Mode selection buttons - UPDATED */}
+      
+      <Header />
+      
+      {/* Mode selection buttons */}
       <div className="mode-selector">
         <button 
           onClick={() => setMode("analog")} 
@@ -241,8 +248,7 @@ function App() {
       {/* Render the metronome view */}
       {renderMetronome()}
 
-      {/* Render common controls only if mode is not multi.
-          In analog mode, the SubdivisionSelector is hidden; notes and sliders appear once. */}
+      {/* Render common controls only if mode is not multi */}
       {mode !== "multi" && (
         <MetronomeControls
           mode={mode}
