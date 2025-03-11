@@ -1,4 +1,4 @@
-// File: src/components/AdvancedMetronome.js
+// src/components/AdvancedMetronome.js
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import useMetronomeLogic from '../hooks/useMetronomeLogic';
@@ -23,12 +23,19 @@ import withTrainingContainer from './Training/withTrainingContainer';
 import AccelerateButton from './metronome/Controls/AccelerateButton';
 import { manualTempoAcceleration } from '../hooks/useMetronomeLogic/trainingLogic';
 
-// Import some CSS that includes @keyframes
+// Import sound set functions and audio buffer loader:
+import { getActiveSoundSet } from '../services/soundSetService';
+import { loadClickBuffers } from '../hooks/useMetronomeLogic/audioBuffers';
+
 import './AdvancedMetronome.css';
 
 /**
- * A reusable circle-based metronome that triggers a pulse animation on EVERY beat,
- * by listening to "onAnySubTrigger" from the logic.
+ * AdvancedMetronomeWithCircle:
+ * A circle-based metronome component that reloads its audio buffers
+ * when the active sound set changes.
+ *
+ * A new prop "soundSetReloadTrigger" should be passed from the parent.
+ * Incrementing it will force this component to fetch the active sound set and reload its buffers.
  */
 export function AdvancedMetronomeWithCircle({
   // Metronome props
@@ -49,7 +56,7 @@ export function AdvancedMetronomeWithCircle({
   accents,
   toggleAccent,
 
-  // Possibly from training mode
+  // Training mode props
   macroMode,
   speedMode,
   measuresUntilMute,
@@ -59,8 +66,11 @@ export function AdvancedMetronomeWithCircle({
   measuresUntilSpeedUp,
   beatMultiplier = 1,
 
-  // If you want to register a toggle function
-  registerTogglePlay
+  // Register toggle function
+  registerTogglePlay,
+
+  // New prop: trigger to reload sound set
+  soundSetReloadTrigger
 }) {
   // --------------------------
   //  Local Accents (fallback)
@@ -72,7 +82,6 @@ export function AdvancedMetronomeWithCircle({
 
   useEffect(() => {
     if (!accents) {
-      // Keep localAccents in sync if user changes "subdivisions"
       setLocalAccents((prev) => {
         if (prev.length === subdivisions) return prev;
         return Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1));
@@ -82,11 +91,10 @@ export function AdvancedMetronomeWithCircle({
 
   const localToggleAccent = useCallback(
     (index) => {
-      // Skip toggles for analog mode only
       if (analogMode) return;
       setLocalAccents((prev) => {
         const newArr = [...prev];
-        newArr[index] = (newArr[index] + 1) % 4; // cycle 0→1→2→3→0
+        newArr[index] = (newArr[index] + 1) % 4; // Cycle: 0→1→2→3→0
         return newArr;
       });
     },
@@ -95,17 +103,12 @@ export function AdvancedMetronomeWithCircle({
   const effectiveToggleAccent = toggleAccent || localToggleAccent;
 
   // --------------------------
-  //  PULSE ANIMATION STATES
+  //  Pulse Animation States
   // --------------------------
-  /**
-   * We'll track a boolean for each beat, set it to true for ~200ms
-   * whenever the logic schedules that beat (subIndex).
-   */
-  const [pulseStates, setPulseStates] = useState(
-    () => new Array(subdivisions).fill(false)
+  const [pulseStates, setPulseStates] = useState(() =>
+    new Array(subdivisions).fill(false)
   );
 
-  // Whenever a beat is scheduled, we do a short "true" -> revert "false"
   const handleSubTriggered = useCallback(
     (subIndex) => {
       setPulseStates((prev) => {
@@ -119,7 +122,7 @@ export function AdvancedMetronomeWithCircle({
           arr[subIndex] = false;
           return arr;
         });
-      }, 200); // Adjust for the length of your CSS animation
+      }, 200);
     },
     [subdivisions]
   );
@@ -149,18 +152,17 @@ export function AdvancedMetronomeWithCircle({
     tempoIncreasePercent,
     measuresUntilSpeedUp,
     beatMultiplier,
-
-    // The new callback to fire for each subIndex scheduled:
-    onAnySubTrigger: handleSubTriggered 
+    onAnySubTrigger: handleSubTriggered
   });
 
-  // Keyboard shortcuts
+  // --------------------------
+  //  Keyboard Shortcuts
+  // --------------------------
   useKeyboardShortcuts({
     onTogglePlayPause: () => handlePlayPause(),
     onTapTempo: logic.tapTempo
   });
 
-  // If parent wants to store a handle to the toggle function
   useEffect(() => {
     if (registerTogglePlay) {
       registerTogglePlay(handlePlayPause);
@@ -168,11 +170,10 @@ export function AdvancedMetronomeWithCircle({
   }, [registerTogglePlay]);
 
   // --------------------------
-  //  Play/Pause
+  //  Play/Pause Handling
   // --------------------------
   const handlePlayPause = useCallback(() => {
     if (isPaused) {
-      // Resume
       if (logic.audioCtx && logic.audioCtx.state === 'suspended') {
         logic.audioCtx.resume().then(() => {
           setIsPaused(false);
@@ -183,7 +184,6 @@ export function AdvancedMetronomeWithCircle({
         logic.startScheduler();
       }
     } else {
-      // Pause
       setIsPaused(true);
       logic.stopScheduler();
     }
@@ -200,7 +200,7 @@ export function AdvancedMetronomeWithCircle({
   }, [isPaused, tempo, tempoIncreasePercent, setTempo]);
 
   // --------------------------
-  //  Layout & circle geometry
+  //  Layout & Geometry
   // --------------------------
   const [containerSize, setContainerSize] = useState(getContainerSize());
   useEffect(() => {
@@ -211,7 +211,6 @@ export function AdvancedMetronomeWithCircle({
 
   const radius = containerSize / 2;
 
-  // Generate an array of (i, xPos, yPos)
   const beatData = Array.from({ length: subdivisions }, (_, i) => {
     if (subdivisions === 1) {
       return { i, xPos: 0, yPos: 0 };
@@ -225,7 +224,6 @@ export function AdvancedMetronomeWithCircle({
     }
   });
 
-  // Optionally connect lines for multi-sub
   let lineConnections = null;
   if (!analogMode && subdivisions > 1) {
     lineConnections = beatData.map((bd, index) => {
@@ -237,7 +235,6 @@ export function AdvancedMetronomeWithCircle({
       const mx = (bd.xPos + bd2.xPos) / 2;
       const my = (bd.yPos + bd2.yPos) / 2;
       const angleDeg = (Math.atan2(dy, dx) * 180) / Math.PI;
-
       return (
         <div
           key={`line-${index}`}
@@ -260,13 +257,40 @@ export function AdvancedMetronomeWithCircle({
     });
   }
 
-  // For mobile, show tap tempo
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // --------------------------
+  //  Reload Audio Buffers on Active Sound Set Change
+  // --------------------------
+  // This effect will run every time soundSetReloadTrigger changes.
+  useEffect(() => {
+    // This effect will run every time soundSetReloadTrigger changes.
+    if (logic && logic.audioCtx && soundSetReloadTrigger > 0) {
+      console.log("Reload trigger changed:", soundSetReloadTrigger);
+
+      // Use the reloadSounds function from logic instead of accessing buffer refs directly
+      if (logic.reloadSounds) {
+        logic.reloadSounds()
+          .then(success => {
+            if (success) {
+              console.log("Audio buffers reloaded successfully with active sound set");
+            } else {
+              console.warn("Failed to reload audio buffers");
+            }
+          })
+          .catch(err => {
+            console.error("Error during sound reload:", err);
+          });
+      } else {
+        console.warn("reloadSounds function not available in logic object");
+      }
+    }
+  }, [soundSetReloadTrigger, logic]); // Only depend on the trigger and logic
 
   // --------------------------
   //  Render
@@ -296,16 +320,10 @@ export function AdvancedMetronomeWithCircle({
             {lineConnections}
 
             {beatData.map((bd) => {
-              // Get the current state from effectiveAccents (applies to all beats)
               const state = effectiveAccents[bd.i];
-              
-              // "isActive" for real-time highlight if it's the current sub
               const isActive = (bd.i === logic.currentSubdivision && !isPaused);
-
-              // "isPulsing" if the logic triggered it in the last 200ms
               const isPulsing = pulseStates[bd.i];
 
-              // For muted beats (state 0), render a placeholder that can be clicked
               if (state === 0) {
                 return (
                   <div
@@ -333,7 +351,6 @@ export function AdvancedMetronomeWithCircle({
                 );
               }
 
-              // Choose icon based on state
               let icon;
               switch (state) {
                 case 1:
@@ -373,7 +390,7 @@ export function AdvancedMetronomeWithCircle({
         )}
       </div>
 
-      {/* Play/Pause button */}
+      {/* Play/Pause Button */}
       <div style={{ marginTop: 20 }}>
         <button
           onClick={handlePlayPause}
@@ -395,13 +412,13 @@ export function AdvancedMetronomeWithCircle({
         </button>
       </div>
 
-      {/* Accelerate button for Training Mode */}
+      {/* Accelerate Button for Training Mode */}
       <AccelerateButton 
         onClick={handleAccelerate} 
         speedMode={speedMode}
       />
 
-      {/* Tap tempo if mobile */}
+      {/* Tap Tempo for Mobile */}
       {isMobile && (
         <button
           onClick={logic.tapTempo}
@@ -421,7 +438,7 @@ export function AdvancedMetronomeWithCircle({
         </button>
       )}
 
-      {/* Legend - explain what the beat states mean */}
+      {/* Legend */}
       {!analogMode && (
         <div style={{ 
           marginTop: '15px', 
@@ -482,8 +499,8 @@ export function AdvancedMetronomeWithCircle({
   );
 }
 
-/** 
- * Helper for sizing the container based on the viewport.
+/**
+ * Helper for calculating container size based on viewport width.
  */
 function getContainerSize() {
   const w = window.innerWidth;

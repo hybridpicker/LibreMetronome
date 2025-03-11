@@ -1,22 +1,4 @@
-/**
- * Utility function to retrieve a cookie by name.
- * This is used to read the CSRF token.
- */
-function getCookie(name) {
-  let cookieValue = null;
-  if (document.cookie && document.cookie !== '') {
-    const cookies = document.cookie.split(';');
-    for (let cookie of cookies) {
-      cookie = cookie.trim();
-      // Check if the cookie starts with the given name
-      if (cookie.startsWith(name + '=')) {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
-      }
-    }
-  }
-  return cookieValue;
-}
+import { getCookie } from './cookieUtils';
 
 // Base URL for the API requests
 const API_BASE_URL =
@@ -53,25 +35,23 @@ export const getAllSoundSets = async () => {
  * @param {number} id - The ID of the sound set to activate.
  * @returns {Promise<Object>} - The updated sound set object.
  */
-
-  export const setActiveSoundSet = async (id) => {
-    const url = getApiUrl(`/sound-sets/${id}/set-active/`);
-    const csrfToken = getCookie('csrftoken');
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': csrfToken,
-      },
-      credentials: 'include',
-      body: JSON.stringify({ is_active: true }),
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
-    }
-    return await response.json();
-  };
-  
+export const setActiveSoundSet = async (id) => {
+  const url = getApiUrl(`/sound-sets/${id}/set-active/`);
+  const csrfToken = getCookie('csrftoken');
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': csrfToken,
+    },
+    credentials: 'include',
+    body: JSON.stringify({ is_active: true }),
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
+  }
+  return await response.json();
+};
 
 /**
  * Retrieves the currently active sound set.

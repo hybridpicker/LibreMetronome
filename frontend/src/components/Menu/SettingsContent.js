@@ -1,5 +1,7 @@
+// File: src/components/Menu/SettingsContent.js
 import React, { useState, useEffect } from 'react';
 import { getAllSoundSets, setActiveSoundSet } from '../../services/soundSetService';
+import { getCookie } from '../../services/cookieUtils';
 
 const SettingsContent = ({
   volume,
@@ -9,15 +11,16 @@ const SettingsContent = ({
   defaultSubdivisions,
   setDefaultSubdivisions,
   currentMode,
-  onClose // Callback to close the overlay
+  onClose, // Callback to close the overlay
+  setSoundSetReloadTrigger // Add this new prop
 }) => {
-  // Local state for basic settings (tempo, beats per bar, etc.)
+  // Local state for basic values (tempo, beats per bar, etc.)
   const [localVolume, setLocalVolume] = useState(volume);
   const [localTempo, setLocalTempo] = useState(defaultTempo || 120);
   const [localSubdivisions, setLocalSubdivisions] = useState(defaultSubdivisions || 4);
   const [activeSubTab, setActiveSubTab] = useState('general');
 
-  // New states for sound sets from the API
+  // State for sound sets from the API
   const [soundSets, setSoundSets] = useState([]);
   const [activeSoundSetId, setActiveSoundSetId] = useState(null);
   const [loadingSoundSets, setLoadingSoundSets] = useState(false);
@@ -36,7 +39,7 @@ const SettingsContent = ({
     getAllSoundSets()
       .then((data) => {
         setSoundSets(data);
-        // Find and set the currently active sound set, if any
+        // Determine the currently active sound set and set its ID
         const activeSet = data.find((set) => set.is_active);
         if (activeSet) {
           setActiveSoundSetId(activeSet.id);
@@ -49,28 +52,43 @@ const SettingsContent = ({
       });
   }, []);
 
-  // Handler to change the active sound set by sending a request to the API.
+  // Handler to change the active sound set
   const handleSoundSetChange = (id) => {
-    setActiveSoundSet(id)
+    // Read CSRF token from cookies
+    const csrfToken = getCookie('csrftoken');
+    setActiveSoundSet(id, csrfToken)
       .then((updatedSet) => {
         setActiveSoundSetId(updatedSet.id);
+        
+        // Trigger reload of audio buffers
+        if (setSoundSetReloadTrigger) {
+          setSoundSetReloadTrigger(prev => prev + 1);
+          console.log("Sound set changed, triggering audio buffer reload");
+        }
       })
       .catch((error) => {
         console.error('Error updating sound set:', error);
       });
   };
 
-  // Handler for volume changes (updates both local state and the actual metronome volume)
+  // Handler for volume changes
   const handleVolumeChange = (e) => {
     const newVolume = parseFloat(e.target.value);
     setLocalVolume(newVolume);
     setVolume(newVolume);
   };
 
-  // Apply the settings (update tempo, subdivisions) and close the overlay
+  // Apply settings and close the overlay
   const handleApply = () => {
     setDefaultTempo(localTempo);
     setDefaultSubdivisions(localSubdivisions);
+    
+    // Trigger reload of audio buffers if any sound settings were changed
+    if (setSoundSetReloadTrigger) {
+      setSoundSetReloadTrigger(prev => prev + 1);
+      console.log("Settings applied, triggering audio buffer reload");
+    }
+    
     if (onClose) {
       onClose();
     }
@@ -80,7 +98,7 @@ const SettingsContent = ({
     <div className="settings-content">
       <h2>Settings</h2>
       
-      {/* Settings Tabs */}
+      {/* Tabs for settings */}
       <div className="settings-subtabs">
         <button
           className={`settings-subtab ${activeSubTab === 'general' ? 'active' : ''}`}
@@ -96,7 +114,7 @@ const SettingsContent = ({
         </button>
       </div>
       
-      {/* General Settings Section */}
+      {/* General settings */}
       <div className={`settings-section ${activeSubTab === 'general' ? 'active' : ''}`}>
         <div className="settings-group">
           <h3>Values</h3>
@@ -140,7 +158,7 @@ const SettingsContent = ({
         </div>
       </div>
       
-      {/* Audio Settings Section */}
+      {/* Audio settings */}
       <div className={`settings-section ${activeSubTab === 'audio' ? 'active' : ''}`}>
         <div className="settings-group">
           <h3>Volume Control</h3>

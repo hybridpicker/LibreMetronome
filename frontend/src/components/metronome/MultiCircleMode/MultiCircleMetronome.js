@@ -9,10 +9,13 @@ import pauseIcon from "../../../assets/svg/pause.svg";
 import "./MultiCircleMetronome.css";
 import '../Controls/slider-styles.css';
 import withTrainingContainer from "../../Training/withTrainingContainer";
+import { getActiveSoundSet } from "../../../services/soundSetService";
+import { loadClickBuffers } from "../../../hooks/useMetronomeLogic/audioBuffers";
 
 import NoteSelector from "../Controls/NoteSelector";
 import SubdivisionSelector from "../Controls/SubdivisionSelector";
 import AccelerateButton from "../Controls/AccelerateButton";
+import { manualTempoAcceleration } from "../../../hooks/useMetronomeLogic/trainingLogic";
 
 // Initialize global silence check function
 window.isSilent = function() {
@@ -110,7 +113,8 @@ function MultiCircleMetronome(props) {
     muteDurationMeasures = 1,
     muteProbability = 0.3,
     tempoIncreasePercent = 5,
-    measuresUntilSpeedUp = 2
+    measuresUntilSpeedUp = 2,
+    soundSetReloadTrigger = 0 // Add this new prop with default 0
   } = props;
 
   // State for circle settings
@@ -209,6 +213,34 @@ function MultiCircleMetronome(props) {
       delete window.isSilencePhaseRef;
     };
   }, [logic.isSilencePhaseRef]);
+
+  // Add a new effect to handle audio buffer reloading when soundSetReloadTrigger changes
+  useEffect(() => {
+    if (!logic || !logic.audioCtx || !soundSetReloadTrigger) return;
+    
+    console.log("MultiCircleMetronome: Reload trigger changed:", soundSetReloadTrigger);
+    
+    // Fetch the active sound set and reload buffers
+    getActiveSoundSet()
+      .then((soundSet) => {
+        if (soundSet && logic.normalBufferRef && logic.accentBufferRef && logic.firstBufferRef) {
+          loadClickBuffers({
+            audioCtx: logic.audioCtx,
+            normalBufferRef: logic.normalBufferRef,
+            accentBufferRef: logic.accentBufferRef,
+            firstBufferRef: logic.firstBufferRef,
+            soundSet: soundSet
+          })
+            .then(() => {
+              console.log("MultiCircleMetronome: Audio buffers reloaded with active sound set:", soundSet.name);
+            })
+            .catch((err) => {
+              console.error("MultiCircleMetronome: Error loading audio buffers:", err);
+            });
+        }
+      })
+      .catch((err) => console.error("MultiCircleMetronome: Error fetching active sound set:", err));
+  }, [soundSetReloadTrigger, logic]);
 
   // This function will be implemented in future updates for advanced subdivision handling
   const handleSubdivisionChange = useCallback((newSubdivision) => {
@@ -452,8 +484,8 @@ function MultiCircleMetronome(props) {
           />
         </div>
         
-      {/* Sliders section */}
-      <div className="sliders-container">
+        {/* Sliders section */}
+        <div className="sliders-container">
               <label>
                 Tempo: {tempo} BPM
                 <input 

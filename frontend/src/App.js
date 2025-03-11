@@ -9,6 +9,7 @@ import GridModeMetronome from './components/metronome/GridMode/GridModeMetronome
 import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
 import MetronomeControls from './components/metronome/Controls/MetronomeControls';
 import MainMenu from './components/Menu/mainMenu';
+import SettingsContent from './components/Menu/SettingsContent';
 import { Helmet } from 'react-helmet';
 
 const TEMPO_MIN = 15;
@@ -50,6 +51,12 @@ function App() {
     tempoIncreasePercent: 5
   });
 
+  // This trigger is incremented when settings are applied.
+  const [soundSetReloadTrigger, setSoundSetReloadTrigger] = useState(0);
+  
+  // State for showing the settings overlay
+  const [settingsVisible, setSettingsVisible] = useState(false);
+
   const togglePlayRef = useRef(null);
   const tapTempoRef = useRef(null);
   const registerTogglePlay = (fn) => { togglePlayRef.current = fn; };
@@ -69,12 +76,11 @@ function App() {
   });
 
   // Use the version from package.json directly
-  const version = '0.4.6'; // App version from package.json
+  const version = '0.4.6';
 
-  // Helper function to get mode-specific metadata
+  // Helper function to generate a description for the current mode.
   const getModeDescription = () => {
     const baseDescription = "LibreMetronome – An advanced, modular metronome service featuring various visualizations and training effects.";
-    
     switch (mode) {
       case "analog":
         return `${baseDescription} Currently in Analog Mode with realistic pendulum animation.`;
@@ -89,7 +95,15 @@ function App() {
     }
   };
 
-  // Render the metronome view based on the current mode.
+  // This function is called when the user applies new settings.
+  // It updates the backend and increments soundSetReloadTrigger.
+  const handleApplySettings = () => {
+    // (Assume that settings are sent to the backend here.)
+    setSoundSetReloadTrigger(prev => prev + 1);
+    setSettingsVisible(false);
+  };
+
+  // Render metronome view based on current mode.
   const renderMetronome = () => {
     switch (mode) {
       case "analog":
@@ -112,6 +126,7 @@ function App() {
             {...trainingSettings}
             registerTogglePlay={registerTogglePlay}
             beatMultiplier={beatMode === "quarter" ? 1 : 2}
+            soundSetReloadTrigger={soundSetReloadTrigger}
           />
         );
       case "circle":
@@ -134,6 +149,7 @@ function App() {
             {...trainingSettings}
             registerTogglePlay={registerTogglePlay}
             beatMultiplier={beatMode === "quarter" ? 1 : 2}
+            soundSetReloadTrigger={soundSetReloadTrigger}
           />
         );
       case "grid":
@@ -158,6 +174,7 @@ function App() {
             registerTogglePlay={registerTogglePlay}
             registerTapTempo={registerTapTempo}
             beatMultiplier={beatMode === "quarter" ? 1 : 2}
+            soundSetReloadTrigger={soundSetReloadTrigger} // Add this prop
           />
         );
       case "multi":
@@ -176,6 +193,7 @@ function App() {
             registerTogglePlay={registerTogglePlay}
             registerTapTempo={registerTapTempo}
             key="multicircle"
+            soundSetReloadTrigger={soundSetReloadTrigger} // Add this prop
           />
         );
       default:
@@ -190,17 +208,13 @@ function App() {
         <meta name="description" content={getModeDescription()} />
         <meta name="keywords" content={`Metronome, Music, Timing, Training, React, Web Audio, ${mode} mode`} />
         <meta name="application-version" content={version} />
-        
-        {/* Dynamic Open Graph meta tags */}
         <meta property="og:title" content={`LibreMetronome - ${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode`} />
         <meta property="og:description" content={getModeDescription()} />
-        
-        {/* Dynamic Twitter Card meta tags */}
         <meta name="twitter:title" content={`LibreMetronome - ${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode`} />
         <meta name="twitter:description" content={getModeDescription()} />
       </Helmet>
-      
-      {/* Unified Menu System */}
+
+      {/* Main Menu */}
       <MainMenu
         trainingSettings={trainingSettings}
         setTrainingSettings={setTrainingSettings}
@@ -213,11 +227,12 @@ function App() {
         defaultSubdivisions={subdivisions}
         setDefaultSubdivisions={setSubdivisions}
         currentMode={mode}
+        setSoundSetReloadTrigger={setSoundSetReloadTrigger} // Add this prop
       />
-      
+
       <Header />
-      
-      {/* Mode selection buttons */}
+
+      {/* Mode Selection Buttons */}
       <div className="mode-selector">
         <button 
           onClick={() => setMode("analog")} 
@@ -244,11 +259,11 @@ function App() {
           Multi Circle
         </button>
       </div>
-      
-      {/* Render the metronome view */}
+
+      {/* Render Metronome View */}
       {renderMetronome()}
 
-      {/* Render common controls only if mode is not multi */}
+      {/* Render Controls only if mode is not multi */}
       {mode !== "multi" && (
         <MetronomeControls
           mode={mode}
@@ -265,7 +280,25 @@ function App() {
         />
       )}
 
+      {/* Settings Overlay */}
+      {settingsVisible && (
+        <SettingsContent
+          volume={volume}
+          setVolume={setVolume}
+          defaultTempo={tempo}
+          setDefaultTempo={setTempo}
+          defaultSubdivisions={subdivisions}
+          setDefaultSubdivisions={setSubdivisions}
+          currentMode={mode}
+          onClose={() => setSettingsVisible(false)}
+          setSoundSetReloadTrigger={setSoundSetReloadTrigger}
+        />
+      )}
+
       <Footer />
+
+      {/* Button to open Settings */}
+      <button onClick={() => setSettingsVisible(true)}>Open Settings</button>
     </div>
   );
 }
