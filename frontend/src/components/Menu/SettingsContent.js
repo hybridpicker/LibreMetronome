@@ -1,4 +1,3 @@
-// src/components/Menu/SettingsContent.js
 import React, { useState, useEffect } from 'react';
 
 const SettingsContent = ({
@@ -60,22 +59,16 @@ const SettingsContent = ({
         >
           Audio
         </button>
-        <button 
-          className={`settings-subtab ${activeSubTab === 'appearance' ? 'active' : ''}`}
-          onClick={() => setActiveSubTab('appearance')}
-        >
-          Appearance
-        </button>
       </div>
       
       {/* General Settings */}
       <div className={`settings-section ${activeSubTab === 'general' ? 'active' : ''}`}>
         <div className="settings-group">
-          <h3>Default Values</h3>
+          <h3>Values</h3>
           
           <div className="settings-row">
             <label>
-              <span>Default Tempo (BPM):</span>
+              <span>Tempo (BPM):</span>
               <input 
                 type="number" 
                 min="15" 
@@ -89,7 +82,7 @@ const SettingsContent = ({
           
           <div className="settings-row">
             <label>
-              <span>Default Beats per Bar:</span>
+              <span>Beats per Bar:</span>
               <select 
                 value={localSubdivisions}
                 onChange={(e) => setLocalSubdivisions(Number(e.target.value))}
@@ -106,34 +99,6 @@ const SettingsContent = ({
             <label>
               <span>Current Mode:</span>
               <span className="settings-value">{currentMode.charAt(0).toUpperCase() + currentMode.slice(1)} Mode</span>
-            </label>
-          </div>
-        </div>
-        
-        <div className="settings-group">
-          <h3>Behavior</h3>
-          
-          <div className="settings-row">
-            <label className="settings-checkbox-label">
-              <input 
-                type="checkbox" 
-                checked={true} 
-                onChange={() => {}}
-                className="settings-checkbox"
-              />
-              <span>Start paused when switching modes</span>
-            </label>
-          </div>
-          
-          <div className="settings-row">
-            <label className="settings-checkbox-label">
-              <input 
-                type="checkbox" 
-                checked={true} 
-                onChange={() => {}}
-                className="settings-checkbox"
-              />
-              <span>Enable keyboard shortcuts</span>
             </label>
           </div>
         </div>
@@ -156,77 +121,6 @@ const SettingsContent = ({
                 onChange={handleVolumeChange}
                 className="settings-slider"
               />
-            </label>
-          </div>
-        </div>
-        
-        <div className="settings-group">
-          <h3>Sound Settings</h3>
-          
-          <div className="settings-row">
-            <label>
-              <span>Sound Set:</span>
-              <select 
-                className="settings-select"
-                disabled={true}
-              >
-                <option>Default</option>
-                <option>Electronic</option>
-                <option>Acoustic</option>
-              </select>
-              <span className="input-description">Sound set selection coming in a future update</span>
-            </label>
-          </div>
-        </div>
-      </div>
-      
-      {/* Appearance Settings */}
-      <div className={`settings-section ${activeSubTab === 'appearance' ? 'active' : ''}`}>
-        <div className="settings-group">
-          <h3>Theme</h3>
-          
-          <div className="settings-row">
-            <label>
-              <span>Color Theme:</span>
-              <select 
-                className="settings-select"
-                disabled={true}
-              >
-                <option>Light (Default)</option>
-                <option>Dark</option>
-                <option>High Contrast</option>
-              </select>
-              <span className="input-description">Theme selection coming in a future update</span>
-            </label>
-          </div>
-        </div>
-        
-        <div className="settings-group">
-          <h3>Visualization</h3>
-          
-          <div className="settings-row">
-            <label className="settings-checkbox-label">
-              <input 
-                type="checkbox" 
-                checked={true} 
-                onChange={() => {}}
-                className="settings-checkbox"
-                disabled={true}
-              />
-              <span>Show beat accent indicators</span>
-            </label>
-          </div>
-          
-          <div className="settings-row">
-            <label className="settings-checkbox-label">
-              <input 
-                type="checkbox" 
-                checked={true} 
-                onChange={() => {}}
-                className="settings-checkbox"
-                disabled={true}
-              />
-              <span>Enable animation effects</span>
             </label>
           </div>
         </div>
