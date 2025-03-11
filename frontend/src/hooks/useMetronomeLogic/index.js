@@ -1,3 +1,4 @@
+// src/hooks/useMetronomeLogic/index.js
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { initAudioContext, loadClickBuffers } from './audioBuffers';
 import { useMetronomeRefs } from './references';
@@ -293,6 +294,35 @@ export default function useMetronomeLogic({
     [setTempo]
   );
 
+  // Add a new reloadSounds function that can be called to reload sound buffers
+  const reloadSounds = useCallback(async () => {
+    if (!audioCtxRef.current) {
+      console.error("No audio context available for reloading sounds");
+      return false;
+    }
+
+    try {
+      // Get the active sound set
+      const soundSet = await getActiveSoundSet();
+      console.log('Reloading sounds with sound set:', soundSet);
+      
+      // Load the buffers
+      await loadClickBuffers({
+        audioCtx: audioCtxRef.current,
+        normalBufferRef,
+        accentBufferRef,
+        firstBufferRef,
+        soundSet
+      });
+      
+      console.log('Audio buffers reloaded successfully');
+      return true;
+    } catch (error) {
+      console.error('Failed to reload sound buffers:', error);
+      return false;
+    }
+  }, [audioCtxRef, normalBufferRef, accentBufferRef, firstBufferRef]);
+
   // Return the entire logic object
   return {
     currentSubdivision,
@@ -305,6 +335,7 @@ export default function useMetronomeLogic({
     stopScheduler,
     measureCountRef,
     muteMeasureCountRef,
-    isSilencePhaseRef
+    isSilencePhaseRef,
+    reloadSounds // Add this new function
   };
 }
