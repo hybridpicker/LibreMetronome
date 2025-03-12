@@ -1,4 +1,4 @@
-// File: src/hooks/useKeyboardShortcuts.js
+// src/hooks/useKeyboardShortcuts.js
 
 import { useEffect, useRef } from 'react';
 
@@ -13,6 +13,7 @@ const useKeyboardShortcuts = ({
   onSwitchToGrid,
   onSwitchToMulti,
   onToggleInfoOverlay,
+  onToggleTrainingOverlay,
   onManualTempoIncrease
 }) => {
   const togglePlayRef = useRef(onTogglePlayPause);
@@ -56,10 +57,15 @@ const useKeyboardShortcuts = ({
         }
       }
 
-      // Other shortcuts remain the same:
+      // Handle other shortcuts based on key code
       switch (event.code) {
         case 'KeyT':
+          // Only use T for tap tempo, not for training menu
           if (tapTempoRef.current) tapTempoRef.current();
+          break;
+        case 'KeyR':
+          // Use R for training menu (new key combination)
+          if (onToggleTrainingOverlay) onToggleTrainingOverlay();
           break;
         case 'Digit1':
         case 'Numpad1':
@@ -139,6 +145,7 @@ const useKeyboardShortcuts = ({
     onSwitchToGrid,
     onSwitchToMulti,
     onToggleInfoOverlay,
+    onToggleTrainingOverlay,
     onManualTempoIncrease
   ]);
 };

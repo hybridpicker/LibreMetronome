@@ -63,7 +63,7 @@ const InfoContent = () => {
             <li><span className="key">M</span> Switch to Multi Circle Mode</li>
             <li><span className="key">U</span> Manual tempo increase</li>
             <li><span className="key">I</span> Show Menu (Info tab)</li>
-            <li><span className="key">T</span> Show Menu (Training tab)</li>
+            <li><span className="key">R</span> Show Menu (Training tab)</li>
             <li><span className="key">S</span> Show Menu (Settings tab)</li>
             <li><span className="key">Esc</span> Close the menu</li>
           </ul>
@@ -97,7 +97,7 @@ const InfoContent = () => {
           It offers multiple visualization modes, customizable accent patterns, and training features.
         </p>
         <p className="version-info">
-          Version 0.4.6
+          Version 0.4.6 | GPL v3 License
         </p>
       </div>
     </div>
