@@ -8,6 +8,7 @@ function schedulePlay({
   audioCtx,
   volumeRef,
   when,
+  nodeRefs, // Add nodeRefs parameter to track audio nodes
   debugInfo = {}
 }) {
   if (!buffer || !audioCtx) return;
@@ -26,6 +27,11 @@ function schedulePlay({
   source.connect(gainNode).connect(audioCtx.destination);
   source.start(when);
   
+  // Register the source with nodeRefs for cleanup when stopping
+  if (nodeRefs && Array.isArray(nodeRefs.current)) {
+    nodeRefs.current.push(source);
+  }
+  
   // Log when the sound actually plays
   if (debugInfo.multiCircleMode) {
     console.log(`[MultiCirclePlayback] 🔊 Playing sound at ${when.toFixed(3)}, circle: ${debugInfo.currentCircle || 'unknown'}, volume: ${volumeRef.current.toFixed(2)}, type: ${debugInfo.soundType || 'normal'}`);
@@ -35,7 +41,17 @@ function schedulePlay({
   source.onended = () => {
     source.disconnect();
     gainNode.disconnect();
+    
+    // Remove the source from nodeRefs when it's done playing
+    if (nodeRefs && Array.isArray(nodeRefs.current)) {
+      const index = nodeRefs.current.indexOf(source);
+      if (index !== -1) {
+        nodeRefs.current.splice(index, 1);
+      }
+    }
   };
+  
+  return source;
 }
 
 /**
@@ -64,7 +80,8 @@ export function scheduleSubdivision({
   playedBeatTimesRef,
   updateActualBpm,
   // Debug info for logging
-  debugInfo = {}
+  debugInfo = {},
+  nodeRefs // Add nodeRefs parameter to track audio nodes
 }) {
   // Fire user callback to animate each beat
   if (onAnySubTrigger) {
@@ -124,6 +141,7 @@ export function scheduleSubdivision({
       audioCtx,
       volumeRef,
       when,
+      nodeRefs,
       debugInfo: {
         ...debugInfo,
         multiCircleMode,
@@ -145,7 +163,8 @@ export function runScheduler({
   handleMeasureBoundary,
   scheduleSubFn,
   subdivisionsRef,
-  multiCircleMode
+  multiCircleMode,
+  nodeRefs // Add nodeRefs parameter to track audio nodes
 }) {
   const now = audioCtxRef.current?.currentTime || 0;
   const lookaheadTime = multiCircleMode ? SCHEDULE_AHEAD_TIME * 1.2 : SCHEDULE_AHEAD_TIME;
@@ -160,7 +179,7 @@ export function runScheduler({
 
   while (nextNoteTimeRef.current < now + lookaheadTime) {
     const subIndex = currentSubRef.current;
-    scheduleSubFn(subIndex, nextNoteTimeRef.current);
+    scheduleSubFn(subIndex, nextNoteTimeRef.current, nodeRefs);
 
     // Update UI
     currentSubdivisionSetter(subIndex);

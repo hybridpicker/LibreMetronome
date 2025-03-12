@@ -174,16 +174,32 @@ export function AdvancedMetronomeWithCircle({
   // --------------------------
   const handlePlayPause = useCallback(() => {
     if (isPaused) {
-      if (logic.audioCtx && logic.audioCtx.state === 'suspended') {
+      // Initialize audio context if needed
+      if (!logic.audioCtx) {
+        console.log('Advanced Metronome: No AudioContext, initializing...');
+        // The startScheduler method will handle initialization
+        setIsPaused(false);
+        logic.startScheduler();
+        return;
+      }
+      
+      // If we have audio but it's suspended, resume it
+      if (logic.audioCtx.state === 'suspended') {
+        console.log('Advanced Metronome: Resuming suspended AudioContext...');
         logic.audioCtx.resume().then(() => {
+          console.log('Advanced Metronome: AudioContext resumed successfully');
           setIsPaused(false);
           logic.startScheduler();
+        }).catch(err => {
+          console.error('Advanced Metronome: Failed to resume AudioContext:', err);
         });
       } else {
+        console.log('Advanced Metronome: Starting playback with active AudioContext');
         setIsPaused(false);
         logic.startScheduler();
       }
     } else {
+      console.log('Advanced Metronome: Stopping playback');
       setIsPaused(true);
       logic.stopScheduler();
     }
