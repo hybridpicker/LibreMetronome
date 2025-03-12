@@ -29,7 +29,10 @@ const MainMenu = ({
   setDefaultSubdivisions,
   
   // For all tabs
-  currentMode
+  currentMode,
+  
+  // Add this new prop for sound reload
+  setSoundSetReloadTrigger
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [activeTab, setActiveTab] = useState('info'); // 'info', 'training', 'settings'
@@ -91,6 +94,7 @@ const MainMenu = ({
             setDefaultSubdivisions={setDefaultSubdivisions}
             currentMode={currentMode}
             onClose={handleClose}
+            setSoundSetReloadTrigger={setSoundSetReloadTrigger} // Pass the new prop
           />
         );
       default:

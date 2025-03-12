@@ -48,7 +48,11 @@ INSTALLED_APPS += [
 CORS_ALLOWED_ORIGINS = [
     "https://libremetronome.com",
     "https://www.libremetronome.com",
+    'http://localhost:3000',
 ]
+
+# Allow cookies and credentials
+CORS_ALLOW_CREDENTIALS = True
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -150,6 +154,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'metronome_sounds')
 SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+CSRF_TRUSTED_ORIGINS = ["http://localhost:3000"]
+
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 
