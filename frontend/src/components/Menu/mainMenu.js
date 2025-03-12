@@ -66,7 +66,7 @@ const MainMenu = ({
       } else if (event.key === 'I' || event.key === 'i') {
         setIsVisible(true);
         setActiveTab('info');
-      } else if (event.key === 'T' || event.key === 't') {
+      } else if (event.key === 'R' || event.key === 'r') {
         setIsVisible(true);
         setActiveTab('training');
       } else if (event.key === 'S' || event.key === 's') {
@@ -137,7 +137,7 @@ const MainMenu = ({
           className={`quick-button training-button ${activeTab === 'training' && isVisible ? 'active' : ''} ${trainingActive ? 'training-active' : ''}`}
           onClick={() => openMenuWithTab('training')}
           aria-label="Training Settings"
-          title="Training Settings (T)"
+          title="Training Settings (R)"
         >
           <span role="img" aria-hidden="true">🎯</span>
           {!isMobile && <span>{trainingActive ? 'Training On' : 'Training'}</span>}
@@ -172,7 +172,7 @@ const MainMenu = ({
                 className={`menu-tab ${activeTab === 'info' ? 'active' : ''}`}
                 onClick={() => setActiveTab('info')}
               >
-                        <span className="tab-icon">ℹ️</span>
+                <span className="tab-icon">ℹ️</span>
                 <span>Info</span>
               </button>
               <button 
