@@ -264,9 +264,19 @@ export function AdvancedMetronomeWithCircle({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // --------------------------
-  //  Reload Audio Buffers on Active Sound Set Change
-  // --------------------------
+  // Store audio buffers in global debug helper
+  useEffect(() => {
+    if (logic && logic.audioCtx && logic.audioBuffers) {
+      console.log('!!!!! [Metronome] STORING AUDIO BUFFERS AND CONTEXT IN GLOBAL DEBUG HELPER !!!!!');
+      if (window.metronomeDebug) {
+        window.metronomeDebug.audioBuffers = logic.audioBuffers;
+        window.metronomeDebug.audioContext = logic.audioCtx;
+        console.log('!!!!! [Metronome] GLOBAL DEBUG HELPER IS READY FOR TESTING !!!!!');
+      } else {
+        console.warn('!!!!! [Metronome] GLOBAL DEBUG HELPER NOT FOUND !!!!!');
+      }
+    }
+  }, [logic.audioBuffers, logic.audioCtx]);
   // This effect will run every time soundSetReloadTrigger changes.
   useEffect(() => {
     // This effect will run every time soundSetReloadTrigger changes.
@@ -291,6 +301,139 @@ export function AdvancedMetronomeWithCircle({
       }
     }
   }, [soundSetReloadTrigger, logic]); // Only depend on the trigger and logic
+
+  // --------------------------
+  //  Sound Preview Event Handlers
+  // --------------------------
+  useEffect(() => {
+    // Make sure we're listening to events
+    console.log('!!!!! [Metronome] SETTING UP SOUND PREVIEW EVENT LISTENERS !!!!!');
+    
+    // Handle preview sound events from Settings
+    const handlePreviewSound = (event) => {
+      const { type, volume } = event.detail;
+      
+      console.log(`!!!!! [Metronome] RECEIVED PREVIEW SOUND EVENT: ${type} (volume: ${volume}) !!!!!`);
+      
+      // Only proceed if we have valid audioContext and buffers
+      if (!logic.audioCtx) {
+        console.warn('!!!!! [Metronome] NO AUDIO CONTEXT AVAILABLE !!!!!');
+        return;
+      }
+      
+      if (!logic.audioBuffers) {
+        console.warn('!!!!! [Metronome] NO AUDIO BUFFERS AVAILABLE !!!!!');
+        console.log('!!!!! [Metronome] Logic object:', logic);
+        return;
+      }
+      
+      // Map the type to the correct buffer
+      let bufferKey;
+      switch (type) {
+        case 'first':
+          bufferKey = 'first';
+          break;
+        case 'accent':
+          bufferKey = 'accent';
+          break;
+        case 'normal':
+          bufferKey = 'normal';
+          break;
+        default:
+          console.warn(`!!!!! [Metronome] INVALID SOUND TYPE: ${type} !!!!!`);
+          return; // Exit if invalid type
+      }
+      
+      // Play the requested sound type using existing audio system
+      if (logic.audioBuffers[bufferKey]) {
+        // Resume context if suspended
+        if (logic.audioCtx.state === 'suspended') {
+          console.log('!!!!! [Metronome] RESUMING SUSPENDED AUDIO CONTEXT !!!!!');
+          logic.audioCtx.resume();
+        }
+        
+        console.log(`!!!!! [Metronome] CREATING AUDIO SOURCE FOR ${bufferKey} !!!!!`);
+        const source = logic.audioCtx.createBufferSource();
+        source.buffer = logic.audioBuffers[bufferKey];
+        
+        const gainNode = logic.audioCtx.createGain();
+        gainNode.gain.value = volume || 1.0;
+        
+        source.connect(gainNode);
+        gainNode.connect(logic.audioCtx.destination);
+        
+        console.log(`!!!!! [Metronome] PLAYING ${type} SOUND WITH BUFFER:`, logic.audioBuffers[bufferKey]);
+        source.start(0);
+      } else {
+        console.warn(`!!!!! [Metronome] BUFFER NOT FOUND FOR SOUND TYPE: ${bufferKey} !!!!!`);
+        console.log('!!!!! [Metronome] Available buffers:', logic.audioBuffers);
+      }
+    };
+    
+    // Handle preview pattern events
+    const handlePreviewPattern = (event) => {
+      const { volume } = event.detail;
+      
+      console.log(`!!!!! [Metronome] RECEIVED PATTERN PREVIEW EVENT (volume: ${volume}) !!!!!`);
+      
+      // Only proceed if we have valid audioContext and buffers
+      if (!logic.audioCtx) {
+        console.warn('!!!!! [Metronome] NO AUDIO CONTEXT AVAILABLE !!!!!');
+        return;
+      }
+      
+      if (!logic.audioBuffers) {
+        console.warn('!!!!! [Metronome] NO AUDIO BUFFERS AVAILABLE !!!!!');
+        console.log('!!!!! [Metronome] Logic object:', logic);
+        return;
+      }
+      
+      // Check if we have all required buffers
+      if (!logic.audioBuffers.first || !logic.audioBuffers.normal || !logic.audioBuffers.accent) {
+        console.warn('!!!!! [Metronome] MISSING BUFFERS FOR PATTERN PREVIEW !!!!!');
+        console.log('!!!!! [Metronome] Available buffers:', logic.audioBuffers);
+        return;
+      }
+      
+      // Resume context if suspended
+      if (logic.audioCtx.state === 'suspended') {
+        console.log('!!!!! [Metronome] RESUMING SUSPENDED AUDIO CONTEXT !!!!!');
+        logic.audioCtx.resume();
+      }
+      
+      console.log("!!!!! [Metronome] STARTING PATTERN PREVIEW SEQUENCE !!!!!!");
+      
+      const beatDuration = 60 / 120; // Fixed 120 BPM for preview
+      const types = ['first', 'normal', 'normal', 'accent'];
+      
+      types.forEach((type, index) => {
+        setTimeout(() => {
+          console.log(`!!!!! [Metronome] PLAYING ${type} SOUND (pattern beat ${index+1}) !!!!!`);
+          const source = logic.audioCtx.createBufferSource();
+          source.buffer = logic.audioBuffers[type];
+          
+          const gainNode = logic.audioCtx.createGain();
+          gainNode.gain.value = volume || 1.0;
+          
+          source.connect(gainNode);
+          gainNode.connect(logic.audioCtx.destination);
+          
+          source.start(0);
+        }, index * beatDuration * 1000);
+      });
+    };
+    
+    // Add event listeners
+    window.addEventListener('metronome-preview-sound', handlePreviewSound);
+    window.addEventListener('metronome-preview-pattern', handlePreviewPattern);
+    
+    // Clean up
+    return () => {
+      console.log('!!!!! [Metronome] REMOVING SOUND PREVIEW EVENT LISTENERS !!!!!');
+      window.removeEventListener('metronome-preview-sound', handlePreviewSound);
+      window.removeEventListener('metronome-preview-pattern', handlePreviewPattern);
+    };
+  }, [logic]);
 
   // --------------------------
   //  Render

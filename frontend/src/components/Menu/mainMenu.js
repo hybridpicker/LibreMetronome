@@ -7,11 +7,12 @@ import SettingsContent from './SettingsContent';
 import { ReactComponent as MenuIcon } from '../../assets/svg/menu-icon.svg';
 
 /**
- * MainMenu Component
- * A unified menu system for LibreMetronome that includes:
+ * Unified MainMenu Component
+ * A consolidated menu system for LibreMetronome that integrates:
  * - Info page
  * - Training settings
  * - App settings
+ * - Quick access buttons
  */
 const MainMenu = ({
   // For Training
@@ -20,7 +21,7 @@ const MainMenu = ({
   setMode,
   setIsPaused,
   
-  // For Settings (new)
+  // For Settings
   volume,
   setVolume,
   defaultTempo,
@@ -30,31 +31,46 @@ const MainMenu = ({
   
   // For all tabs
   currentMode,
+  currentTempo,
   
-  // Add this new prop for sound reload
+  // For sound reload
   setSoundSetReloadTrigger
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [activeTab, setActiveTab] = useState('info'); // 'info', 'training', 'settings'
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
+  
+  // State to track if training mode is active
+  const trainingActive = trainingSettings.macroMode !== 0 || trainingSettings.speedMode !== 0;
+  
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 600);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   // Close menu function
   const handleClose = () => {
     setIsVisible(false);
   };
   
-  // Close menu when Escape is pressed
+  // Close menu when Escape is pressed and handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
         handleClose();
       } else if (event.key === 'I' || event.key === 'i') {
-        setIsVisible(prev => !prev);
+        setIsVisible(true);
         setActiveTab('info');
       } else if (event.key === 'T' || event.key === 't') {
-        setIsVisible(prev => !prev);
+        setIsVisible(true);
         setActiveTab('training');
       } else if (event.key === 'S' || event.key === 's') {
-        setIsVisible(prev => !prev);
+        setIsVisible(true);
         setActiveTab('settings');
       }
     };
@@ -63,9 +79,10 @@ const MainMenu = ({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Toggle the menu visibility
-  const toggleMenu = () => {
-    setIsVisible(prev => !prev);
+  // Function to open the menu with a specific tab
+  const openMenuWithTab = (tab) => {
+    setActiveTab(tab);
+    setIsVisible(true);
   };
   
   // Render tab content based on active tab
@@ -94,7 +111,7 @@ const MainMenu = ({
             setDefaultSubdivisions={setDefaultSubdivisions}
             currentMode={currentMode}
             onClose={handleClose}
-            setSoundSetReloadTrigger={setSoundSetReloadTrigger} // Pass the new prop
+            setSoundSetReloadTrigger={setSoundSetReloadTrigger}
           />
         );
       default:
@@ -104,18 +121,42 @@ const MainMenu = ({
 
   return (
     <>
-      {/* Menu Button */}
+      {/* Quick Access Buttons */}
+      <div className="quick-access-buttons">
+        <button 
+          className={`quick-button info-button ${activeTab === 'info' && isVisible ? 'active' : ''}`}
+          onClick={() => openMenuWithTab('info')}
+          aria-label="Information"
+          title="Information (I)"
+        >
+          <span role="img" aria-hidden="true">ℹ️</span>
+          {!isMobile && <span>Info</span>}
+        </button>
+        
+        <button 
+          className={`quick-button training-button ${activeTab === 'training' && isVisible ? 'active' : ''} ${trainingActive ? 'training-active' : ''}`}
+          onClick={() => openMenuWithTab('training')}
+          aria-label="Training Settings"
+          title="Training Settings (T)"
+        >
+          <span role="img" aria-hidden="true">🎯</span>
+          {!isMobile && <span>{trainingActive ? 'Training On' : 'Training'}</span>}
+        </button>
+      </div>
+      
+      {/* Main Menu Button */}
       <button 
-        className="menu-button"
-        onClick={toggleMenu}
-        aria-label="Open Menu"
+        className={`menu-button ${isVisible ? 'active' : ''}`}
+        onClick={() => setIsVisible(prev => !prev)}
+        aria-label="Main Menu"
+        title="Settings (S)"
       >
         <MenuIcon />
       </button>
       
       {/* Menu Overlay */}
       {isVisible && (
-        <div className="menu-overlay">
+        <div className="menu-overlay" role="dialog" aria-modal="true">
           <div className="menu-modal">
             <button 
               className="menu-close-button" 
@@ -131,19 +172,22 @@ const MainMenu = ({
                 className={`menu-tab ${activeTab === 'info' ? 'active' : ''}`}
                 onClick={() => setActiveTab('info')}
               >
-                Info
+                        <span className="tab-icon">ℹ️</span>
+                <span>Info</span>
               </button>
               <button 
                 className={`menu-tab ${activeTab === 'training' ? 'active' : ''}`}
                 onClick={() => setActiveTab('training')}
               >
-                Training
+                <span className="tab-icon">🎯</span>
+                <span>Training</span>
               </button>
               <button 
                 className={`menu-tab ${activeTab === 'settings' ? 'active' : ''}`}
                 onClick={() => setActiveTab('settings')}
               >
-                Settings
+                <span className="tab-icon">⚙️</span>
+                <span>Settings</span>
               </button>
             </div>
             
