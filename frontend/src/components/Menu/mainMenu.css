@@ -1,5 +1,399 @@
-/* src/components/Menu/MainMenu.css */
+/* src/components/Menu/mainMenu.css */
 
+:root {
+  --primary-teal: #00A0A0;
+  --primary-teal-dark: #008080;
+  --primary-teal-light: rgba(0, 160, 160, 0.1);
+  --secondary-gold: #f8d38d;
+  --overlay-bg: rgba(0, 0, 0, 0.7);
+  --neutral-bg: #f9f9f9;
+  --neutral-bg-alt: #ffffff;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-tertiary: #999999;
+  --neutral-border: #dddddd;
+  --neutral-border-light: #eeeeee;
+  --beat-muted: #f0f0f0;
+  --beat-normal: #a8d4d4;
+  --beat-accent: #f8d38d;
+  --beat-first: #00A0A0;
+  --training-overview-bg: #f0f8f8;
+  --training-tip-bg: #fff8e8;
+  --modal-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  --button-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  --transition-standard: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* Main Menu Button */
+.menu-button {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  width: 40px;
+  height: 40px;
+  background-color: var(--primary-teal);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: var(--button-shadow);
+  z-index: 100;
+  transition: var(--transition-standard);
+}
+
+.menu-button:hover {
+  transform: scale(1.05);
+  background-color: var(--primary-teal-dark);
+}
+
+.menu-button.active {
+  background-color: var(--primary-teal-dark);
+  transform: rotate(180deg);
+}
+
+.menu-button svg {
+  width: 22px;
+  height: 22px;
+  color: white;
+}
+
+/* Menu Overlay & Modal */
+.menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--overlay-bg);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.menu-modal {
+  background: var(--neutral-bg-alt);
+  padding: 25px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 550px;
+  position: relative;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: var(--modal-shadow);
+  animation: modalSlide 0.3s ease-out;
+}
+
+@keyframes modalSlide {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.menu-close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: var(--primary-teal);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.menu-close-button:hover {
+  background-color: var(--primary-teal-light);
+  transform: scale(1.1);
+}
+
+/* Menu Tabs */
+.menu-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--neutral-border);
+  margin-bottom: 20px;
+}
+
+.menu-tab {
+  flex: 1;
+  padding: 15px 10px;
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.menu-tab .tab-label {
+  margin-bottom: 2px;
+}
+
+.menu-tab:hover {
+  color: var(--primary-teal);
+}
+
+.menu-tab.active {
+  color: var(--primary-teal);
+  font-weight: 600;
+}
+
+.menu-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: var(--primary-teal);
+  border-radius: 3px 3px 0 0;
+}
+
+/* Training indicator */
+.training-indicator {
+  position: absolute;
+  top: 8px;
+  right: 25%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--secondary-gold);
+}
+
+/* Menu Content Scrollbar Styling */
+.menu-content {
+  padding: 10px 5px;
+  overflow-y: auto;
+  max-height: calc(85vh - 120px);
+}
+
+.menu-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.menu-content::-webkit-scrollbar-track {
+  background: var(--neutral-bg);
+  border-radius: 10px;
+}
+
+.menu-content::-webkit-scrollbar-thumb {
+  background-color: var(--neutral-border);
+  border-radius: 10px;
+}
+
+.menu-content::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text-tertiary);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .menu-modal {
+    width: 95%;
+    padding: 20px 15px;
+  }
+  
+  .menu-tab {
+    padding: 12px 5px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 600px) {
+  .menu-modal {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    border-radius: 0;
+    padding: 20px 15px 80px;
+  }
+  
+  .menu-content {
+    max-height: calc(100vh - 120px);
+  }
+  
+  .menu-tabs {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: white;
+    margin-bottom: 0;
+    border-top: 1px solid var(--neutral-border);
+    border-bottom: none;
+    z-index: 10;
+    padding: 8px 0;
+  }
+  
+  .menu-tab {
+    padding: 8px 5px;
+    font-size: 12px;
+  }
+  
+  .menu-tab.active::after {
+    bottom: auto;
+    top: -1px;
+  }
+}
+
+/* Training/Settings Content Shared Styles */
+.training-save-button,
+.settings-save-button {
+  background: var(--primary-teal);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 25px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: var(--transition-standard);
+  margin: 20px auto 0;
+  display: block;
+  min-width: 140px;
+}
+
+.training-save-button:hover,
+.settings-save-button:hover {
+  background: var(--primary-teal-dark);
+  transform: scale(1.05);
+}
+
+/* Hide any quick access buttons that might be injected from other components */
+.quick-access-buttons,
+.info-button,
+.training-button,
+.quick-button {
+  display: none !important;
+}
+
+/* Sound Sets styling */
+.sound-sets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.sound-set-option {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: var(--neutral-bg);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sound-set-option:hover {
+  background-color: var(--neutral-border-light);
+}
+
+.sound-set-option input {
+  margin-right: 10px;
+}
+
+.sound-set-divider {
+  height: 1px;
+  background-color: var(--neutral-border);
+  margin: 10px 0;
+}
+
+/* Sound Preview styling */
+.settings-description {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 15px;
+}
+
+.sound-preview-buttons {
+  display: inline-flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.preview-button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.preview-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.preview-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.first-beat {
+  background-color: var(--beat-first);
+  color: white;
+}
+
+.accent-beat {
+  background-color: var(--beat-accent);
+  color: var(--text-primary);
+}
+
+.normal-beat {
+  background-color: var(--beat-normal);
+  color: var(--text-primary);
+}
+
+.preview-pattern-button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  background-color: var(--primary-teal-light);
+  color: var(--primary-teal-dark);
+  border: 1px solid var(--primary-teal);
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.preview-pattern-button:hover:not(:disabled) {
+  background-color: var(--primary-teal-light);
+  transform: translateY(-2px);
+}
+
+.preview-button.playing {
+  transform: scale(0.95);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.preview-pattern-button.playing {
+  transform: scale(0.98);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
+  background-color: var(--primary-teal-dark);
+  color: white;
+}
 /* Menu Button (Entry Point) */
 .menu-button {
     position: fixed;
@@ -532,6 +926,7 @@
     border-radius: 4px;
     font-size: 14px;
     max-width: 200px;
+    margin: auto;
   }
   
   .settings-value {

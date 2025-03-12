@@ -15,6 +15,78 @@ import { Helmet } from 'react-helmet';
 const TEMPO_MIN = 15;
 const TEMPO_MAX = 240;
 
+// Global debug helper for sound preview
+window.metronomeDebug = {
+  // Store audio buffers globally for testing
+  audioBuffers: null,
+  audioContext: null,
+  
+  // Test function to play sounds directly
+  playSound: function(type, volume = 0.5) {
+    console.log(`!!!!! [GLOBAL] ATTEMPTING TO PLAY ${type} SOUND DIRECTLY !!!!!`);
+    
+    if (!this.audioContext) {
+      console.error('!!!!! [GLOBAL] NO AUDIO CONTEXT AVAILABLE !!!!!');
+      return false;
+    }
+    
+    if (!this.audioBuffers || !this.audioBuffers[type]) {
+      console.error(`!!!!! [GLOBAL] NO AUDIO BUFFER FOR ${type} AVAILABLE !!!!!`);
+      console.log('Available buffers:', this.audioBuffers);
+      return false;
+    }
+    
+    try {
+      // Resume context if needed
+      if (this.audioContext.state === 'suspended') {
+        this.audioContext.resume();
+      }
+      
+      // Create audio source
+      const source = this.audioContext.createBufferSource();
+      source.buffer = this.audioBuffers[type];
+      
+      // Set volume
+      const gainNode = this.audioContext.createGain();
+      gainNode.gain.value = volume;
+      
+      // Connect and play
+      source.connect(gainNode);
+      gainNode.connect(this.audioContext.destination);
+      source.start(0);
+      
+      console.log(`!!!!! [GLOBAL] SUCCESSFULLY PLAYED ${type} SOUND !!!!!`);
+      return true;
+    } catch (error) {
+      console.error('!!!!! [GLOBAL] ERROR PLAYING SOUND:', error);
+      return false;
+    }
+  },
+  
+  // Log all registered event listeners
+  checkEventListeners: function() {
+    console.log('!!!!! [GLOBAL] CHECKING EVENT LISTENERS !!!!!');
+    
+    // Create test events
+    const soundEvent = new CustomEvent('metronome-preview-sound', { 
+      detail: { type: 'first', volume: 0.5 } 
+    });
+    
+    const patternEvent = new CustomEvent('metronome-preview-pattern', { 
+      detail: { volume: 0.5 } 
+    });
+    
+    // Dispatch test events to check if listeners are working
+    console.log('!!!!! [GLOBAL] DISPATCHING TEST SOUND EVENT !!!!!');
+    window.dispatchEvent(soundEvent);
+    
+    console.log('!!!!! [GLOBAL] DISPATCHING TEST PATTERN EVENT !!!!!');
+    window.dispatchEvent(patternEvent);
+    
+    return 'Check console for events';
+  }
+};
+
 function App() {
   // Mode can be: "analog", "circle", "grid", or "multi"
   const [mode, setMode] = useState("circle");
@@ -296,9 +368,6 @@ function App() {
       )}
 
       <Footer />
-
-      {/* Button to open Settings */}
-      <button onClick={() => setSettingsVisible(true)}>Open Settings</button>
     </div>
   );
 }

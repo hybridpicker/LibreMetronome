@@ -22,11 +22,16 @@ const getApiUrl = (endpoint) => {
  */
 export const getAllSoundSets = async () => {
   const url = getApiUrl('/sound-sets/');
-  const response = await fetch(url, { credentials: 'include' });
-  if (!response.ok) {
-    throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
+  try {
+    const response = await fetch(url, { credentials: 'include' });
+    if (!response.ok) {
+      throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching all sound sets from", url, ":", error);
+    throw error;
   }
-  return await response.json();
 };
 
 /**
@@ -59,6 +64,16 @@ export const setActiveSoundSet = async (id) => {
  * @returns {Promise<Object|null>} - The active sound set or null if none is active.
  */
 export const getActiveSoundSet = async () => {
-  const sets = await getAllSoundSets();
-  return sets.find((set) => set.is_active) || null;
+  try {
+    const sets = await getAllSoundSets();
+    const storedId = localStorage.getItem('activeSoundSetId');
+    if (storedId) {
+      const found = sets.find(set => set.id === storedId);
+      if (found) return found;
+    }
+    return sets.find((set) => set.is_active) || null;
+  } catch (error) {
+    console.error("Error fetching active sound set:", error);
+    return null;
+  }
 };
