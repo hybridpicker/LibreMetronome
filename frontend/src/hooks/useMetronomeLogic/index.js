@@ -410,6 +410,48 @@ export default function useMetronomeLogic({
     }
   }, [audioCtxRef, normalBufferRef, accentBufferRef, firstBufferRef]);
 
+  // Forces a reload of sound buffers when the active sound set changes
+  const [soundSetUpdateTrigger, setSoundSetUpdateTrigger] = useState(0);
+  
+  useEffect(() => {
+    // Listen for sound set changes from the settings menu
+    const handleSoundSetChange = (event) => {
+      console.log('Sound set changed event detected:', event.detail);
+      setSoundSetUpdateTrigger(prev => prev + 1);
+    };
+    
+    window.addEventListener('soundSetChanged', handleSoundSetChange);
+    
+    return () => {
+      window.removeEventListener('soundSetChanged', handleSoundSetChange);
+    };
+  }, []);
+  
+  // Reload sound buffers when triggered
+  useEffect(() => {
+    if (soundSetUpdateTrigger > 0 && audioCtxRef.current) {
+      (async () => {
+        try {
+          console.log('Reloading sound buffers due to sound set change');
+          const soundSet = await getActiveSoundSet();
+          
+          if (soundSet) {
+            console.log('Loading new sound set:', soundSet.name);
+            await loadClickBuffers({
+              audioCtx: audioCtxRef.current,
+              normalBufferRef,
+              accentBufferRef,
+              firstBufferRef,
+              soundSet
+            });
+          }
+        } catch (error) {
+          console.error('Failed to reload sound buffers:', error);
+        }
+      })();
+    }
+  }, [soundSetUpdateTrigger]);
+
   // Return the entire logic object
   return {
     currentSubdivision,
