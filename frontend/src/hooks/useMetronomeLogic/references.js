@@ -24,6 +24,9 @@ export function useMetronomeRefs() {
   // For measuring actual BPM if you want:
   const [actualBpm, setActualBpm] = useState(0);
 
+  // Track active audio nodes for proper cleanup
+  const nodeRefs = useRef([]);
+
   return {
     audioCtxRef,
     normalBufferRef,
@@ -36,6 +39,7 @@ export function useMetronomeRefs() {
     playedBeatTimesRef,
     schedulerRunningRef,
     lookaheadRef,
-    actualBpm, setActualBpm
+    actualBpm, setActualBpm,
+    nodeRefs
   };
 }

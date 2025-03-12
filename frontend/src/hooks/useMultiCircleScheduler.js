@@ -242,63 +242,86 @@ export default function useMultiCircleScheduler({
   ]);
 
   // ─────────────────────────────────────────────────────────
-  // 4) The main scheduling loop. 
-  //    Once we schedule one measure, we set a timer to schedule the next.
+  // 5) start/stop the scheduler
   // ─────────────────────────────────────────────────────────
-  const scheduleNextBar = useCallback(
-    (barIndex, startTime) => {
-      measureStartTimeRef.current = startTime;
-      // Schedule everything for barIndex at startTime
-      scheduleMeasure(startTime);
-      
-      // On measure boundary, do training logic (silence or speed change)
-      handleMeasureBoundary();
+  const start = useCallback(async () => {
+    const audioCtx = audioCtxRef.current;
+    if (!audioCtx) {
+      console.error('No AudioContext available');
+      return;
+    }
 
-      // After that measure finishes, schedule the next one
-      const nextBarIndex = barIndex + 1;
-      
-      // For quarter note mode, each measure contains 4 quarter notes
-      // For eighth note mode, each measure contains 8 eighth notes
-      // Either way, the duration is the same (4 quarter notes)
-      const quarterNoteDuration = 60 / tempoRef.current;
-      const measureDuration = quarterNoteDuration * 4;
-      
-      const nextMeasureStartTime = measureStartTimeRef.current + measureDuration;
+    // Ensure audio context is running
+    if (audioCtx.state === 'suspended') {
+      try {
+        await audioCtx.resume();
+        console.log('AudioContext resumed successfully');
+      } catch (err) {
+        console.error('Failed to resume AudioContext:', err);
+        return;
+      }
+    }
 
-      // Use setTimeout to queue the next measure about 100ms before it
-      // is due, or you can be more sophisticated with a “lookahead loop.”
-      lookaheadTimerRef.current = setTimeout(() => {
-        if (!isRunningRef.current) return;
-        setCurrentBar(nextBarIndex);
-        scheduleNextBar(nextBarIndex, nextMeasureStartTime);
-      }, Math.max(0, (measureDuration * 1000) - 100));
-    },
-    [scheduleMeasure, handleMeasureBoundary]
-  );
+    // Check if we have our sound buffers
+    if (!normalBufferRef.current || !accentBufferRef.current || !firstBufferRef.current) {
+      console.error('Sound buffers not loaded');
+      return;
+    }
 
-  // ─────────────────────────────────────────────────────────
-  // 5) Start/Stop
-  // ─────────────────────────────────────────────────────────
-  const start = useCallback(() => {
-    if (isRunningRef.current) return;
+    if (isRunningRef.current) {
+      console.log('Scheduler already running');
+      return;
+    }
+
+    console.log('Starting scheduler...');
     isRunningRef.current = true;
-    setCurrentBar(0);
-    measureCountRef.current = 0;
-    muteMeasureCountRef.current = 0;
-    isSilencePhaseRef.current = false;
+    measureStartTimeRef.current = audioCtx.currentTime;
 
-    const now = audioCtxRef.current?.currentTime || 0;
-    // first measure starts at now + 0.1 for safety
-    scheduleNextBar(0, now + 0.1);
-  }, [scheduleNextBar]);
+    // Schedule first measure immediately
+    scheduleMeasure(measureStartTimeRef.current, true);
+
+    // Start the scheduling loop
+    const scheduleLoop = () => {
+      if (!isRunningRef.current) return;
+
+      const audioCtx = audioCtxRef.current;
+      if (!audioCtx) return;
+
+      const now = audioCtx.currentTime;
+      const quarterNoteDuration = 60 / tempoRef.current;
+
+      // Find the longest measure duration among all circles
+      const longestMeasureDuration = circleSettings.reduce((maxDur, circle) => {
+        const { subdivisions, beatMode = "quarter" } = circle;
+        const beatMultiplier = beatMode === "eighth" ? 2 : 1;
+        const measureDuration = (subdivisions / beatMultiplier) * quarterNoteDuration;
+        return Math.max(maxDur, measureDuration);
+      }, 0);
+
+      // If we're approaching the end of the current measure, schedule the next one
+      if (now >= measureStartTimeRef.current + (longestMeasureDuration * 0.75)) {
+        const nextMeasureStart = measureStartTimeRef.current + longestMeasureDuration;
+        scheduleMeasure(nextMeasureStart);
+        measureStartTimeRef.current = nextMeasureStart;
+        handleMeasureBoundary();
+        setCurrentBar(bar => bar + 1);
+      }
+
+      // Schedule next check
+      lookaheadTimerRef.current = setTimeout(scheduleLoop, 25);
+    };
+
+    scheduleLoop();
+  }, [scheduleMeasure, handleMeasureBoundary, circleSettings]);
 
   const stop = useCallback(() => {
+    console.log('Stopping scheduler...');
     isRunningRef.current = false;
     if (lookaheadTimerRef.current) {
       clearTimeout(lookaheadTimerRef.current);
       lookaheadTimerRef.current = null;
     }
-    // you might also want to flush out any ongoing schedule...
+    measureStartTimeRef.current = null;
   }, []);
 
   // ─────────────────────────────────────────────────────────
