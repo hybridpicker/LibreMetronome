@@ -26,7 +26,7 @@ SECRET_KEY = 'SECRET'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['libremetronome.com', 'www.libremetronome.com']
+ALLOWED_HOSTS = ['libremetronome.com', 'www.libremetronome.com', 'localhost', '127.0.0.1']
 
 # Application definition
 
@@ -49,6 +49,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://libremetronome.com",
     "https://www.libremetronome.com",
     'http://localhost:3000',
+    'http://localhost:3001',
 ]
 
 # Allow cookies and credentials
@@ -151,10 +152,10 @@ MEDIA_URL = '/metronome_sounds/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'metronome_sounds')
 
 # Security settings for production
-SECURE_SSL_REDIRECT = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-CSRF_TRUSTED_ORIGINS = ["http://localhost:3000"]
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+CSRF_TRUSTED_ORIGINS = ["http://localhost:3000", "http://localhost:3001"]
 
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
