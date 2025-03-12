@@ -1,7 +1,6 @@
 // Updated src/components/Menu/SettingsContent.js
 import React, { useState, useEffect } from 'react';
 import { getAllSoundSets, setActiveSoundSet } from '../../services/soundSetService';
-import { getCookie } from '../../services/cookieUtils';
 
 const SettingsContent = ({
   volume,
@@ -251,6 +250,10 @@ const SettingsContent = ({
     if (setSoundSetReloadTrigger) {
       setSoundSetReloadTrigger(prev => prev + 1);
       console.log("Settings applied, triggering audio buffer reload");
+      // Ensure the event with sound set ID is properly dispatched to trigger reload
+      window.dispatchEvent(new CustomEvent('soundSetChanged', { 
+        detail: { soundSetId: activeSoundSetId } 
+      }));
     }
     
     if (onClose) {

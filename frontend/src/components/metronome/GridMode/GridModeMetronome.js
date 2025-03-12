@@ -158,16 +158,31 @@ const GridModeMetronome = (props) => {
 
   const handlePlayPause = () => {
     if (props.isPaused) {
-      if (logic.audioCtx && logic.audioCtx.state === 'suspended') {
+      // Initialize audio context if needed
+      if (!logic.audioCtx) {
+        console.log('Grid Mode: No AudioContext, initializing...');
+        // The startScheduler method will handle initialization
+        props.setIsPaused(false);
+        return;
+      }
+      
+      // If we have audio but it's suspended, resume it
+      if (logic.audioCtx.state === 'suspended') {
+        console.log('Grid Mode: Resuming suspended AudioContext...');
         logic.audioCtx.resume().then(() => {
+          console.log('Grid Mode: AudioContext resumed successfully');
           props.setIsPaused(false);
           logic.startScheduler();
-        }).catch((err) => {});
+        }).catch((err) => {
+          console.error('Grid Mode: Failed to resume AudioContext:', err);
+        });
       } else {
+        console.log('Grid Mode: Starting playback with active AudioContext');
         props.setIsPaused(false);
         logic.startScheduler();
       }
     } else {
+      console.log('Grid Mode: Stopping playback');
       props.setIsPaused(true);
       logic.stopScheduler();
     }

@@ -50,7 +50,8 @@ export default function useMetronomeLogic({
     playedBeatTimesRef,
     schedulerRunningRef,
     lookaheadRef,
-    actualBpm, setActualBpm
+    actualBpm, setActualBpm,
+    nodeRefs // Collection of active audio nodes for cleanup
   } = useMetronomeRefs();
 
   const [currentSubdivision, setCurrentSubdivision] = useState(0);
@@ -118,7 +119,15 @@ export default function useMetronomeLogic({
           firstBufferRef
         });
       }
+    } else if (audioCtxRef.current.state === 'suspended') {
+      try {
+        await audioCtxRef.current.resume();
+        console.log('AudioContext resumed successfully');
+      } catch (err) {
+        console.error('Failed to resume AudioContext:', err);
+      }
     }
+    return audioCtxRef.current;
   };
 
   // 4) The scheduling logic
@@ -139,7 +148,8 @@ export default function useMetronomeLogic({
     return secPerHit;
   }, [beatMultiplier]);
 
-  function updateActualBpm() {
+  // Move updateActualBpm into a useCallback to prevent it from changing on every render
+  const updateActualBpm = useCallback(() => {
     // average the last few intervals in playedBeatTimesRef
     const arr = playedBeatTimesRef.current;
     const MAX_BEATS = 16;
@@ -155,10 +165,10 @@ export default function useMetronomeLogic({
     const avgDiff = totalDiff / (arr.length - 1);
     const newBpm = 60000 / avgDiff;
     setActualBpm(newBpm);
-  }
+  }, [playedBeatTimesRef, setActualBpm]);
 
   // Wrap our scheduleSubdivision in a single function we can pass to runScheduler
-  const scheduleSubFn = useCallback((subIndex, when) => {
+  const scheduleSubFn = useCallback((subIndex, when, nodeRefs) => {
     // Should we mute?
     const muteThisBeat = shouldMuteThisBeat({
       macroMode,
@@ -182,7 +192,8 @@ export default function useMetronomeLogic({
       accentsRef,
       shouldMute: muteThisBeat,
       playedBeatTimesRef,
-      updateActualBpm
+      updateActualBpm,
+      nodeRefs
     });
   }, [
     macroMode, 
@@ -192,7 +203,15 @@ export default function useMetronomeLogic({
     gridMode, 
     multiCircleMode, 
     volumeRef, 
-    onAnySubTrigger
+    onAnySubTrigger, 
+    normalBufferRef, 
+    accentBufferRef, 
+    firstBufferRef, 
+    beatConfigRef, 
+    accentsRef, 
+    updateActualBpm, 
+    playedBeatTimesRef,
+    audioCtxRef
   ]);
 
   const doSchedulerLoop = useCallback(() => {
@@ -218,9 +237,13 @@ export default function useMetronomeLogic({
       }),
       scheduleSubFn,
       subdivisionsRef,
-      multiCircleMode
+      multiCircleMode,
+      nodeRefs
     });
   }, [
+    audioCtxRef,
+    nextNoteTimeRef,
+    currentSubRef,
     getCurrentSubIntervalSec,
     scheduleSubFn,
     macroMode,
@@ -231,7 +254,8 @@ export default function useMetronomeLogic({
     measuresUntilSpeedUp,
     tempoIncreasePercent,
     setTempo,
-    multiCircleMode
+    multiCircleMode,
+    nodeRefs
   ]);
 
   // 5) start/stop the scheduler
@@ -239,9 +263,51 @@ export default function useMetronomeLogic({
     if (schedulerRunningRef.current) return;
     stopScheduler();
 
-    const audioCtx = audioCtxRef.current;
-    if (!audioCtx) return;
+    // Initialize audio if needed
+    if (!audioCtxRef.current) {
+      console.log('AudioContext not initialized, initializing now...');
+      initializeAudio().then(audioCtx => {
+        if (audioCtx) {
+          console.log('AudioContext initialized, starting scheduler...');
+          startSchedulerWithAudio(audioCtx);
+        } else {
+          console.error('Failed to initialize AudioContext');
+        }
+      }).catch(err => {
+        console.error('Error initializing audio:', err);
+      });
+      return;
+    }
 
+    // Audio exists but might be suspended
+    if (audioCtxRef.current.state === 'suspended') {
+      console.log('AudioContext suspended, resuming...');
+      audioCtxRef.current.resume().then(() => {
+        console.log('AudioContext resumed, starting scheduler...');
+        startSchedulerWithAudio(audioCtxRef.current);
+      }).catch(err => {
+        console.error('Error resuming AudioContext:', err);
+      });
+      return;
+    }
+
+    // Audio is ready, start scheduler
+    startSchedulerWithAudio(audioCtxRef.current);
+  }
+
+  function startSchedulerWithAudio(audioCtx) {
+    if (!audioCtx) {
+      console.error('Cannot start scheduler without AudioContext');
+      return;
+    }
+    
+    // Make sure we have our sound buffers
+    if (!normalBufferRef.current || !accentBufferRef.current || !firstBufferRef.current) {
+      console.error('Sound buffers not loaded, cannot start scheduler');
+      return;
+    }
+
+    console.log('Starting scheduler with audio:', audioCtx.state);
     schedulerRunningRef.current = true;
     currentSubRef.current = 0;
     setCurrentSubdivision(0);
@@ -257,11 +323,45 @@ export default function useMetronomeLogic({
   }
 
   function stopScheduler() {
+    console.log('[Scheduler] Stopping scheduler');
+    
+    // 1. Clear the scheduling lookahead interval
     if (lookaheadRef.current) {
       clearInterval(lookaheadRef.current);
       lookaheadRef.current = null;
     }
+    
+    // 2. Reset running state
     schedulerRunningRef.current = false;
+    
+    // 3. Stop all active audio nodes
+    if (nodeRefs.current && nodeRefs.current.length > 0) {
+      console.log(`[Scheduler] Stopping ${nodeRefs.current.length} active audio nodes`);
+      try {
+        // Loop through all tracked audio nodes and stop them
+        nodeRefs.current.forEach(node => {
+          if (node && typeof node.stop === 'function') {
+            try {
+              node.stop(0);
+            } catch (e) {
+              // Ignore errors when stopping nodes that might already be done
+            }
+          }
+        });
+        // Clear the nodeRefs array
+        nodeRefs.current = [];
+      } catch (err) {
+        console.error('[Scheduler] Error stopping audio nodes:', err);
+      }
+    }
+    
+    // 4. Reset timing references
+    nextNoteTimeRef.current = 0;
+    currentSubRef.current = 0;
+    playedBeatTimesRef.current = [];
+    
+    // 5. Update visual state
+    setCurrentSubdivision(0);
   }
 
   // 6) Toggling play/pause from external
@@ -309,6 +409,48 @@ export default function useMetronomeLogic({
       return false;
     }
   }, [audioCtxRef, normalBufferRef, accentBufferRef, firstBufferRef]);
+
+  // Forces a reload of sound buffers when the active sound set changes
+  const [soundSetUpdateTrigger, setSoundSetUpdateTrigger] = useState(0);
+  
+  useEffect(() => {
+    // Listen for sound set changes from the settings menu
+    const handleSoundSetChange = (event) => {
+      console.log('Sound set changed event detected:', event.detail);
+      setSoundSetUpdateTrigger(prev => prev + 1);
+    };
+    
+    window.addEventListener('soundSetChanged', handleSoundSetChange);
+    
+    return () => {
+      window.removeEventListener('soundSetChanged', handleSoundSetChange);
+    };
+  }, []);
+  
+  // Reload sound buffers when triggered
+  useEffect(() => {
+    if (soundSetUpdateTrigger > 0 && audioCtxRef.current) {
+      (async () => {
+        try {
+          console.log('Reloading sound buffers due to sound set change');
+          const soundSet = await getActiveSoundSet();
+          
+          if (soundSet) {
+            console.log('Loading new sound set:', soundSet.name);
+            await loadClickBuffers({
+              audioCtx: audioCtxRef.current,
+              normalBufferRef,
+              accentBufferRef,
+              firstBufferRef,
+              soundSet
+            });
+          }
+        } catch (error) {
+          console.error('Failed to reload sound buffers:', error);
+        }
+      })();
+    }
+  }, [soundSetUpdateTrigger]);
 
   // Return the entire logic object
   return {

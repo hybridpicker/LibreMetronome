@@ -9,11 +9,20 @@ export function initAudioContext() {
   if (!globalAudioCtx || globalAudioCtx.state === 'closed') {
     try {
       globalAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      console.log('AudioContext initialized:', globalAudioCtx.state);
     } catch (err) {
       console.error("Error creating AudioContext:", err);
       globalAudioCtx = null;
     }
   }
+  
+  // Always try to resume the context when initializing
+  if (globalAudioCtx && globalAudioCtx.state === 'suspended') {
+    globalAudioCtx.resume().catch(err => {
+      console.error('Failed to resume AudioContext:', err);
+    });
+  }
+  
   return globalAudioCtx;
 }
 
@@ -62,38 +71,7 @@ function loadSound(url, audioCtx) {
         throw new Error('Invalid audio buffer (too small)');
       }
       
-      return audioCtx.decodeAudioData(buffer).catch(decodeErr => {
-        console.error(`Error decoding audio data for ${url}:`, decodeErr);
-        
-        // Try to fetch directly as Blob and convert (fallback method)
-        console.log(`Trying alternative method to load ${url}...`);
-        return fetch(fetchUrl, { 
-          headers: { 'Accept': 'audio/mpeg,audio/*' }
-        })
-          .then(res => res.blob())
-          .then(blob => {
-            // Create object URL from blob
-            const objectUrl = URL.createObjectURL(blob);
-            
-            // Load audio element and convert to buffer
-            return new Promise((resolve, reject) => {
-              const audio = new Audio();
-              audio.src = objectUrl;
-              
-              audio.onloadedmetadata = () => {
-                console.log(`Alternative load succeeded for ${url}`);
-                // Revoke URL to prevent memory leak
-                URL.revokeObjectURL(objectUrl);
-                resolve(null); // Return null to indicate fallback to default sounds
-              };
-              
-              audio.onerror = () => {
-                URL.revokeObjectURL(objectUrl);
-                reject(new Error(`Alternative method failed for ${url}`));
-              };
-            });
-          });
-      });
+      return audioCtx.decodeAudioData(buffer);
     })
     .catch(err => {
       console.error(`Failed loading sound ${url}:`, err);
@@ -125,7 +103,10 @@ export async function loadClickBuffers({
   firstBufferRef,
   soundSet = null
 }) {
-  if (!audioCtx) return;
+  if (!audioCtx) {
+    console.error('No AudioContext provided to loadClickBuffers');
+    return;
+  }
   
   // Default paths (fallback)
   let normalPath = '/assets/audio/click_new.mp3';
@@ -141,16 +122,36 @@ export async function loadClickBuffers({
     console.log('Using custom sound set:', soundSet.name);
     console.log('Loading sound files:', { normalPath, accentPath, firstPath });
   } else {
-    console.log('No custom sound set provided, using default sounds');
+    console.log('Using default sounds');
   }
 
-  const [normal, accent, first] = await Promise.all([
-    loadSound(normalPath, audioCtx),
-    loadSound(accentPath, audioCtx),
-    loadSound(firstPath, audioCtx)
-  ]);
+  try {
+    const [normal, accent, first] = await Promise.all([
+      loadSound(normalPath, audioCtx),
+      loadSound(accentPath, audioCtx),
+      loadSound(firstPath, audioCtx)
+    ]);
 
-  if (normal) normalBufferRef.current = normal;
-  if (accent) accentBufferRef.current = accent;
-  if (first) firstBufferRef.current = first;
+    if (!normal || !accent || !first) {
+      throw new Error('Failed to load one or more sound buffers');
+    }
+
+    normalBufferRef.current = normal;
+    accentBufferRef.current = accent;
+    firstBufferRef.current = first;
+    
+    console.log('Successfully loaded all sound buffers');
+  } catch (error) {
+    console.error('Error loading sound buffers:', error);
+    // Try loading default sounds as fallback
+    if (soundSet) {
+      console.log('Attempting to load default sounds as fallback');
+      return loadClickBuffers({
+        audioCtx,
+        normalBufferRef,
+        accentBufferRef,
+        firstBufferRef
+      });
+    }
+  }
 }
