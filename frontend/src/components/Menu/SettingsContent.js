@@ -79,66 +79,63 @@ const SettingsContent = ({
   }, []);
 
   // State for sound paths
+  const getBackendUrl = (path) => {
+    const base =
+      process.env.NODE_ENV === 'production'
+        ? window.location.origin
+        : 'http://localhost:8000';
+    return `${base}${path}`;
+  };
   const [soundPaths, setSoundPaths] = useState({
-    normal: "/metronome_sounds/wood_normal_sound.mp3",
-    accent: "/metronome_sounds/wood_accent_sound.mp3",
-    first: "/metronome_sounds/wood_first_sound.mp3"
+    normal: getBackendUrl("/metronome_sounds/wood_normal_sound.mp3"),
+    accent: getBackendUrl("/metronome_sounds/wood_accent_sound.mp3"),
+    first: getBackendUrl("/metronome_sounds/wood_first_sound.mp3")
   });
+  
+  useEffect(() => {
+    if (activeSoundSetId) {
+      if (activeSoundSetId === 'woodblock') {
+        setSoundPaths({
+          normal: getBackendUrl("/metronome_sounds/wood_normal_sound.mp3"),
+          accent: getBackendUrl("/metronome_sounds/wood_accent_sound.mp3"),
+          first: getBackendUrl("/metronome_sounds/wood_first_sound.mp3")
+        });
+      } else if (activeSoundSetId === 'drums') {
+        setSoundPaths({
+          normal: getBackendUrl("/metronome_sounds/drum_normal_sound.mp3"),
+          accent: getBackendUrl("/metronome_sounds/drum_accent_sound.mp3"),
+          first: getBackendUrl("/metronome_sounds/drum_first_sound.mp3")
+        });
+      } else {
+        const activeSet = soundSets.find(set => set.id === activeSoundSetId);
+        if (activeSet && activeSet.first_beat_sound_url && activeSet.accent_sound_url && activeSet.normal_beat_sound_url) {
+          setSoundPaths({
+            normal: getBackendUrl(activeSet.normal_beat_sound_url),
+            accent: getBackendUrl(activeSet.accent_sound_url),
+            first: getBackendUrl(activeSet.first_beat_sound_url)
+          });
+        }
+      }
+    }
+  }, [activeSoundSetId, soundSets]);
 
   // Sound preview functions
   const playSound = async (type) => {
     if (isPreviewPlaying) return;
     
     try {
-      // Create audio context on demand if it doesn't exist
-      const ctx = audioContext || new (window.AudioContext || window.webkitAudioContext)();
-      if (!audioContext) {
-        setAudioContext(ctx);
+      const url = soundPaths[type];
+      if (!url) {
+        console.error(`No sound URL found for type: ${type}`);
+        return;
       }
-      
-      // Resume context if suspended
-      if (ctx.state === 'suspended') {
-        await ctx.resume();
-      }
-      
       setIsPreviewPlaying(true);
-      
-      // Create oscillator for preview
-      const oscillator = ctx.createOscillator();
-      const gainNode = ctx.createGain();
-      
-      // Configure based on beat type
-      switch(type) {
-        case 'first':
-          oscillator.type = 'triangle';
-          oscillator.frequency.setValueAtTime(880, ctx.currentTime); // A5
-          break;
-        case 'accent':
-          oscillator.type = 'triangle';
-          oscillator.frequency.setValueAtTime(659.25, ctx.currentTime); // E5
-          break;
-        case 'normal':
-        default:
-          oscillator.type = 'triangle';
-          oscillator.frequency.setValueAtTime(440, ctx.currentTime); // A4
-          break;
-      }
-      
-      // Set volume and envelope
-      gainNode.gain.setValueAtTime(localVolume, ctx.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
-      
-      // Connect and play
-      oscillator.connect(gainNode);
-      gainNode.connect(ctx.destination);
-      
-      oscillator.start();
-      oscillator.stop(ctx.currentTime + 0.1);
-      
-      // Reset playing state
-      setTimeout(() => {
+      const audio = new Audio(url);
+      audio.volume = localVolume;
+      audio.play();
+      audio.onended = () => {
         setIsPreviewPlaying(false);
-      }, 100);
+      };
     } catch (error) {
       console.error('Error playing sound:', error);
       setIsPreviewPlaying(false);
@@ -230,6 +227,7 @@ const SettingsContent = ({
         if (setSoundSetReloadTrigger) {
           setSoundSetReloadTrigger(prev => prev + 1);
           console.log("Sound set changed, triggering audio buffer reload");
+          window.dispatchEvent(new Event('soundSetChanged'));
         }
       })
       .catch((error) => {

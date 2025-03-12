@@ -13,6 +13,10 @@ const DirectSoundPreview = ({ volume = 1.0 }) => {
   });
   const [isLoading, setIsLoading] = useState(true);
   
+  useEffect(() => {
+    console.log("[DirectSoundPreview] Updated soundPaths:", soundPaths);
+  }, [soundPaths]);
+  
   // Refs for audio context and buffers
   const audioContextRef = useRef(null);
   const audioBuffersRef = useRef({});
@@ -40,11 +44,8 @@ const DirectSoundPreview = ({ volume = 1.0 }) => {
           normal: soundSet.normal_beat_sound_url
         });
         
-        // Initialize audio context if needed
-        if (!audioContextRef.current) {
-          audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-          console.log('Created new AudioContext');
-        }
+        // Removed automatic creation of AudioContext.
+        // The AudioContext will be created on demand in the playSound function.
         
         // Load the sound files
         await loadSoundBuffers(
@@ -102,10 +103,32 @@ const DirectSoundPreview = ({ volume = 1.0 }) => {
     if (isPlaying) return;
     
     try {
+      // Fetch the latest active sound set and update soundPaths and audio buffers
+      const soundSet = await getActiveSoundSet();
+      if (soundSet) {
+        setSoundPaths({
+          first: soundSet.first_beat_sound_url,
+          accent: soundSet.accent_sound_url,
+          normal: soundSet.normal_beat_sound_url
+        });
+        if (!audioContextRef.current) {
+          audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        await loadSoundBuffers(
+          audioContextRef.current,
+          audioBuffersRef.current,
+          {
+            first: soundSet.first_beat_sound_url,
+            accent: soundSet.accent_sound_url,
+            normal: soundSet.normal_beat_sound_url
+          }
+        );
+      }
       setIsPlaying(true);
       setSelectedSound(type);
       
       console.log(`⏺️ Playing ${type} sound preview`);
+      console.log(`[DirectSoundPreview] Sound details: type=${type}, soundPaths=${JSON.stringify(soundPaths)}, audioBuffers available: ${JSON.stringify(Object.keys(audioBuffersRef.current))}`);
       
       // Make sure we have a context
       if (!audioContextRef.current) {
@@ -116,6 +139,7 @@ const DirectSoundPreview = ({ volume = 1.0 }) => {
       if (audioContextRef.current.state === 'suspended') {
         await audioContextRef.current.resume();
       }
+      console.log(`[DirectSoundPreview] [playSound] AudioContext state after resume: ${audioContextRef.current.state}`);
       
       // Make sure we have the buffer
       if (!audioBuffersRef.current[type]) {
@@ -223,23 +247,23 @@ const DirectSoundPreview = ({ volume = 1.0 }) => {
       </p>
       
       <div className="sound-preview-buttons">
-        <button 
+        <button
           className={`preview-button first-beat ${selectedSound === 'first' ? 'playing' : ''}`}
-          onClick={() => playSound('first')}
+          onClick={() => { console.log('[DirectSoundPreview] First Beat button clicked.'); playSound('first'); }}
           disabled={isPlaying || isLoading}
         >
           First Beat
         </button>
-        <button 
+        <button
           className={`preview-button accent-beat ${selectedSound === 'accent' ? 'playing' : ''}`}
-          onClick={() => playSound('accent')}
+          onClick={() => { console.log('[DirectSoundPreview] Accent button clicked.'); playSound('accent'); }}
           disabled={isPlaying || isLoading}
         >
           Accent
         </button>
-        <button 
+        <button
           className={`preview-button normal-beat ${selectedSound === 'normal' ? 'playing' : ''}`}
-          onClick={() => playSound('normal')}
+          onClick={() => { console.log('[DirectSoundPreview] Normal button clicked.'); playSound('normal'); }}
           disabled={isPlaying || isLoading}
         >
           Normal

@@ -94,20 +94,15 @@ export default function useMetronomeLogic({
   useEffect(() => { accentsRef.current = accents; }, [accents]);
   useEffect(() => { beatConfigRef.current = beatConfig; }, [beatConfig]);
 
-  // 3) AudioContext and buffers
-  useEffect(() => {
-    const audioCtx = initAudioContext();
-    audioCtxRef.current = audioCtx;
-
-    // Fetch the active sound set from the API and load it
-    const loadSounds = async () => {
+  // 3) Audio initialization is deferred until user interaction.
+  const initializeAudio = async () => {
+    if (!audioCtxRef.current) {
+      const audioCtx = initAudioContext();
+      audioCtxRef.current = audioCtx;
       try {
-        // Get the active sound set from the API
         const soundSet = await getActiveSoundSet();
         console.log('Loaded sound set from API:', soundSet);
-        
-        // Load the sound buffers with the sound set
-        loadClickBuffers({
+        await loadClickBuffers({
           audioCtx,
           normalBufferRef,
           accentBufferRef,
@@ -116,23 +111,15 @@ export default function useMetronomeLogic({
         });
       } catch (error) {
         console.error('Failed to load sound set from API:', error);
-        // Fallback to default sounds if the API call fails
-        loadClickBuffers({
+        await loadClickBuffers({
           audioCtx,
           normalBufferRef,
           accentBufferRef,
           firstBufferRef
         });
       }
-    };
-
-    loadSounds();
-
-    // On unmount, stop the scheduler
-    return () => {
-      stopScheduler();
-    };
-  }, []);
+    }
+  };
 
   // 4) The scheduling logic
   const getCurrentSubIntervalSec = useCallback((subIndex) => {

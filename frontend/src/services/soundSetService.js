@@ -60,5 +60,10 @@ export const setActiveSoundSet = async (id) => {
  */
 export const getActiveSoundSet = async () => {
   const sets = await getAllSoundSets();
+  const storedId = localStorage.getItem('activeSoundSetId');
+  if (storedId) {
+    const found = sets.find(set => set.id === storedId);
+    if (found) return found;
+  }
   return sets.find((set) => set.is_active) || null;
 };
