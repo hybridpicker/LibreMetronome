@@ -1,4 +1,3 @@
-// This file contains the version number from package.json
-// Used to avoid direct fetching of package.json which can cause parsing issues
-const version = '0.4.6';
+import packageJson from '../package.json';
+const version = packageJson.version;
 export default version;
