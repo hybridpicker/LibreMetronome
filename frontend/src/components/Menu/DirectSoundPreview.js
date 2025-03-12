@@ -77,12 +77,19 @@ const DirectSoundPreview = ({ volume = 1.0 }) => {
   
   // Function to load sound buffers
   const loadSoundBuffers = async (context, buffers, paths) => {
-    const baseUrl = 'http://localhost:8000'; // Base URL for sounds
+    const baseUrl = process.env.NODE_ENV === 'production' ? window.location.origin : 'http://localhost:8000';
     
     for (const [type, path] of Object.entries(paths)) {
+      if (!path) {
+        console.warn(`No path provided for ${type}, skipping loader.`);
+        continue;
+      }
       try {
-        console.log(`Loading ${type} sound from ${baseUrl}${path}`);
-        const response = await fetch(`${baseUrl}${path}`);
+        const fullUrl = (path.startsWith('http://') || path.startsWith('https://'))
+          ? path
+          : `${baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
+        console.log(`Loading ${type} sound from ${fullUrl}`);
+        const response = await fetch(fullUrl, { credentials: 'include', mode: 'cors' });
         if (!response.ok) {
           throw new Error(`HTTP error: ${response.status}`);
         }
@@ -188,19 +195,47 @@ const DirectSoundPreview = ({ volume = 1.0 }) => {
       setIsPlaying(true);
       console.log('⏺️ Playing pattern preview');
       
-      // Make sure we have a context
+      // Try to fetch latest active sound set for refreshing buffers
+      let soundSet = null;
+      try {
+        soundSet = await getActiveSoundSet();
+      } catch (fetchError) {
+        console.error('Error refreshing active sound set:', fetchError);
+      }
+      if (soundSet) {
+        setSoundPaths({
+          first: soundSet.first_beat_sound_url,
+          accent: soundSet.accent_sound_url,
+          normal: soundSet.normal_beat_sound_url,
+        });
+        if (!audioContextRef.current) {
+          audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        await loadSoundBuffers(
+          audioContextRef.current,
+          audioBuffersRef.current,
+          {
+            first: soundSet.first_beat_sound_url,
+            accent: soundSet.accent_sound_url,
+            normal: soundSet.normal_beat_sound_url,
+          }
+        );
+      } else {
+        console.warn('Failed to refresh active sound set, using cached buffers.');
+      }
+      
+      // Ensure AudioContext exists and resume if needed
       if (!audioContextRef.current) {
         audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
       }
       
-      // Resume if suspended
       if (audioContextRef.current.state === 'suspended') {
         await audioContextRef.current.resume();
       }
       
       // Check if we have all needed buffers
-      if (!audioBuffersRef.current.first || 
-          !audioBuffersRef.current.normal || 
+      if (!audioBuffersRef.current.first ||
+          !audioBuffersRef.current.normal ||
           !audioBuffersRef.current.accent) {
         console.error('Missing buffers for pattern preview');
         setIsPlaying(false);
@@ -270,13 +305,6 @@ const DirectSoundPreview = ({ volume = 1.0 }) => {
         </button>
       </div>
       
-      <button 
-        className={`preview-pattern-button ${isPlaying && !selectedSound ? 'playing' : ''}`}
-        onClick={playPattern}
-        disabled={isPlaying || isLoading}
-      >
-        Play Pattern Example
-      </button>
       
       {isLoading && <div className="loading-indicator">Loading sounds...</div>}
     </div>

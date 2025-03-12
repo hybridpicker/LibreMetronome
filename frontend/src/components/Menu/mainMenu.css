@@ -325,7 +325,7 @@
 }
 
 .sound-preview-buttons {
-  display: flex;
+  display: inline-flex;
   gap: 10px;
   margin-bottom: 15px;
   flex-wrap: wrap;
@@ -926,6 +926,7 @@
     border-radius: 4px;
     font-size: 14px;
     max-width: 200px;
+    margin: auto;
   }
   
   .settings-value {

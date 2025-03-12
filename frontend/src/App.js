@@ -368,9 +368,6 @@ function App() {
       )}
 
       <Footer />
-
-      {/* Button to open Settings */}
-      <button onClick={() => setSettingsVisible(true)}>Open Settings</button>
     </div>
   );
 }

@@ -391,14 +391,6 @@ const SettingsContent = ({
               Normal
             </button>
           </div>
-          
-          <button 
-            className="preview-pattern-button" 
-            onClick={playPatternPreview}
-            disabled={isPreviewPlaying}
-          >
-            Play Pattern Example
-          </button>
         </div>
       </div>
       
