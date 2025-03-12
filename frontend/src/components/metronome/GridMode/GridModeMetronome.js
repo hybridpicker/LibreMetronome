@@ -7,6 +7,8 @@ import './GridAnimation.css';
 import withTrainingContainer from '../../Training/withTrainingContainer';
 import AccelerateButton from '../Controls/AccelerateButton';
 import { manualTempoAcceleration } from '../../../hooks/useMetronomeLogic/trainingLogic';
+import { getActiveSoundSet } from '../../../services/soundSetService';
+import { loadClickBuffers } from '../../../hooks/useMetronomeLogic/audioBuffers';
 
 const GridModeMetronome = (props) => {
   // Initialize gridConfig based on the current subdivisions (1 to 9)
@@ -50,6 +52,30 @@ const GridModeMetronome = (props) => {
     measuresUntilSpeedUp: props.measuresUntilSpeedUp,
     beatMultiplier: props.beatMultiplier
   });
+
+  // Add a useEffect for reloading sounds
+  useEffect(() => {
+    if (!logic || !logic.audioCtx || !props.soundSetReloadTrigger) return;
+    
+    console.log("GridModeMetronome: Reload trigger changed:", props.soundSetReloadTrigger);
+    
+    // Use the reloadSounds function if available
+    if (logic.reloadSounds) {
+      logic.reloadSounds()
+        .then(success => {
+          if (success) {
+            console.log("GridModeMetronome: Audio buffers reloaded successfully");
+          } else {
+            console.warn("GridModeMetronome: Failed to reload audio buffers");
+          }
+        })
+        .catch(err => {
+          console.error("GridModeMetronome: Error during sound reload:", err);
+        });
+    } else {
+      console.warn("GridModeMetronome: reloadSounds function not available in logic object");
+    }
+  }, [props.soundSetReloadTrigger, logic]);
 
   // Modified column click handler to cycle through patterns:
   // 0 → mute, 1 → normal beat, 2 → accent, 3 → first beat

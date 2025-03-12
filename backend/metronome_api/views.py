@@ -1,6 +1,8 @@
 from django.views.generic import TemplateView
 from django.views.decorators.cache import never_cache
 from django.http import Http404
+from django.views.decorators.http import require_POST
+
 
 # Serve React App
 class ReactAppView(TemplateView):
@@ -93,6 +95,20 @@ def sound_set_to_dict(sound_set):
         'created_at': sound_set.created_at.isoformat() if sound_set.created_at else None,
         'updated_at': sound_set.updated_at.isoformat() if sound_set.updated_at else None,
     }
+
+@require_POST
+def set_active_sound_set_view(request, id):
+    try:
+        sound_set = MetronomeSoundSet.objects.get(id=id)
+        MetronomeSoundSet.objects.all().update(is_active=False)
+        sound_set.is_active = True
+        sound_set.save()
+        return JsonResponse(sound_set_to_dict(sound_set))
+    except MetronomeSoundSet.DoesNotExist:
+        return JsonResponse({'error': f'Sound set with ID {id} not found'}, status=404)
+    except Exception as e:
+        print(f"Error setting active sound set: {e}")
+        return JsonResponse({'error': str(e)}, status=500)
 
 def active_sound_set(request):
     """Get the active sound set."""
