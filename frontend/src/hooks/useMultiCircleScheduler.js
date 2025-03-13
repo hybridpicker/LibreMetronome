@@ -81,7 +81,6 @@ export default function useMultiCircleScheduler({
       try {
         // Get the active sound set from the API
         const soundSet = await getActiveSoundSet();
-        console.log('MultiCircle: Loaded sound set from API:', soundSet);
         
         // Load the sound buffers with the sound set
         loadClickBuffers({
@@ -92,7 +91,6 @@ export default function useMultiCircleScheduler({
           soundSet
         });
       } catch (error) {
-        console.error('MultiCircle: Failed to load sound set from API:', error);
         // Fallback to default sounds if the API call fails
         loadClickBuffers({
           audioCtx,
@@ -117,7 +115,6 @@ export default function useMultiCircleScheduler({
   //    for ALL circles in parallel.
   // ─────────────────────────────────────────────────────────
   const scheduleMeasure = useCallback((measureStartTime, debug = false) => {
-    console.log(`[MultiCircleScheduler] Scheduling measure starting at ${measureStartTime.toFixed(3)}`);
 
     const audioCtx = audioCtxRef.current;
     if (!audioCtx) return;
@@ -139,9 +136,6 @@ export default function useMultiCircleScheduler({
       // For quarter notes (beatMultiplier=1), use quarter note duration
       // For eighth notes (beatMultiplier=2), use eighth note duration (half as long)
       const noteDuration = quarterNoteDuration / beatMultiplier;
-      
-      // Log for debugging
-      console.log(`[MultiCircleScheduler] circle=${circleIndex}, subdivisions=${subdivisions}, beatMode=${beatMode}, quarterNote=${quarterNoteDuration.toFixed(3)}s, noteDuration=${noteDuration.toFixed(3)}s`);
       
       // Schedule exactly the number of subdivisions specified by the user
       for (let subIndex = 0; subIndex < exactSubdivisions; subIndex++) {
@@ -247,7 +241,6 @@ export default function useMultiCircleScheduler({
   const start = useCallback(async () => {
     const audioCtx = audioCtxRef.current;
     if (!audioCtx) {
-      console.error('No AudioContext available');
       return;
     }
 
@@ -255,25 +248,19 @@ export default function useMultiCircleScheduler({
     if (audioCtx.state === 'suspended') {
       try {
         await audioCtx.resume();
-        console.log('AudioContext resumed successfully');
       } catch (err) {
-        console.error('Failed to resume AudioContext:', err);
-        return;
       }
     }
 
     // Check if we have our sound buffers
     if (!normalBufferRef.current || !accentBufferRef.current || !firstBufferRef.current) {
-      console.error('Sound buffers not loaded');
       return;
     }
 
     if (isRunningRef.current) {
-      console.log('Scheduler already running');
       return;
     }
 
-    console.log('Starting scheduler...');
     isRunningRef.current = true;
     measureStartTimeRef.current = audioCtx.currentTime;
 
@@ -315,13 +302,11 @@ export default function useMultiCircleScheduler({
   }, [scheduleMeasure, handleMeasureBoundary, circleSettings]);
 
   const stop = useCallback(() => {
-    console.log('Stopping scheduler...');
-    isRunningRef.current = false;
     if (lookaheadTimerRef.current) {
       clearTimeout(lookaheadTimerRef.current);
       lookaheadTimerRef.current = null;
     }
-    measureStartTimeRef.current = null;
+    isRunningRef.current = false;
   }, []);
 
   // ─────────────────────────────────────────────────────────
@@ -332,11 +317,11 @@ export default function useMultiCircleScheduler({
     if (isPaused) {
       stop();
       // Optionally pause the AudioContext:
-      audioCtxRef.current.suspend().catch((err) => console.error(err));
+      audioCtxRef.current.suspend().catch((err) => {});
     } else {
       audioCtxRef.current.resume().then(() => {
         start();
-      }).catch((err) => console.error(err));
+      }).catch((err) => {});
     }
   }, [isPaused, start, stop]);
 

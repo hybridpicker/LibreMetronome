@@ -57,23 +57,21 @@ const GridModeMetronome = (props) => {
   useEffect(() => {
     if (!logic || !logic.audioCtx || !props.soundSetReloadTrigger) return;
     
-    console.log("GridModeMetronome: Reload trigger changed:", props.soundSetReloadTrigger);
-    
     // Use the reloadSounds function if available
     if (logic.reloadSounds) {
       logic.reloadSounds()
         .then(success => {
           if (success) {
-            console.log("GridModeMetronome: Audio buffers reloaded successfully");
+            
           } else {
-            console.warn("GridModeMetronome: Failed to reload audio buffers");
+            
           }
         })
         .catch(err => {
-          console.error("GridModeMetronome: Error during sound reload:", err);
+          
         });
     } else {
-      console.warn("GridModeMetronome: reloadSounds function not available in logic object");
+      
     }
   }, [props.soundSetReloadTrigger, logic]);
 
@@ -160,7 +158,7 @@ const GridModeMetronome = (props) => {
     if (props.isPaused) {
       // Initialize audio context if needed
       if (!logic.audioCtx) {
-        console.log('Grid Mode: No AudioContext, initializing...');
+        
         // The startScheduler method will handle initialization
         props.setIsPaused(false);
         return;
@@ -168,21 +166,21 @@ const GridModeMetronome = (props) => {
       
       // If we have audio but it's suspended, resume it
       if (logic.audioCtx.state === 'suspended') {
-        console.log('Grid Mode: Resuming suspended AudioContext...');
+        
         logic.audioCtx.resume().then(() => {
-          console.log('Grid Mode: AudioContext resumed successfully');
+          
           props.setIsPaused(false);
           logic.startScheduler();
         }).catch((err) => {
-          console.error('Grid Mode: Failed to resume AudioContext:', err);
+          
         });
       } else {
-        console.log('Grid Mode: Starting playback with active AudioContext');
+        
         props.setIsPaused(false);
         logic.startScheduler();
       }
     } else {
-      console.log('Grid Mode: Stopping playback');
+      
       props.setIsPaused(true);
       logic.stopScheduler();
     }
