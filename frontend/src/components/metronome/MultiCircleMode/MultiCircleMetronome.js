@@ -1,4 +1,4 @@
-// src/components/metronome/MultiCircleMode/MultiCircleMetronome.js - Fixed Version
+// src/components/metronome/MultiCircleMode/MultiCircleMetronome.js - with direct hotfix
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import useMultiCircleMetronomeLogic from "./hooks/useMultiCircleMetronomeLogic";
 import useKeyboardShortcuts from "../../../hooks/useKeyboardShortcuts";
@@ -8,7 +8,7 @@ import playIcon from "../../../assets/svg/play.svg";
 import pauseIcon from "../../../assets/svg/pause.svg";
 import "./MultiCircleMetronome.css";
 import '../Controls/slider-styles.css';
-import withMultiCircleTrainingContainer from '../../Training/withMultiCircleTrainingContainer';
+import withTrainingContainer from '../../Training/withTrainingContainer'; // Use the standard training container
 import { getActiveSoundSet } from "../../../services/soundSetService";
 import { loadClickBuffers } from "../../../hooks/useMetronomeLogic/audioBuffers";
 
@@ -113,7 +113,11 @@ function MultiCircleMetronome(props) {
     muteProbability = 0.3,
     tempoIncreasePercent = 5,
     measuresUntilSpeedUp = 2,
-    soundSetReloadTrigger = 0
+    soundSetReloadTrigger = 0,
+    // Get training-related refs from props
+    measureCountRef,
+    muteMeasureCountRef,
+    isSilencePhaseRef
   } = props;
 
   // Initialize with default settings for two circles
@@ -136,6 +140,33 @@ function MultiCircleMetronome(props) {
   // Track which circle is currently playing (will advance sequentially)
   const [playingCircle, setPlayingCircle] = useState(0);
   
+  // HOTFIX: Add local measure counter for training
+  const localMeasureCountRef = useRef(0);
+  const localMuteMeasureCountRef = useRef(0);
+  const localIsSilencePhaseRef = useRef(false);
+  
+  // Setup initial values if refs are passed
+  useEffect(() => {
+    if (measureCountRef) localMeasureCountRef.current = measureCountRef.current;
+    if (muteMeasureCountRef) localMuteMeasureCountRef.current = muteMeasureCountRef.current;
+    if (isSilencePhaseRef) localIsSilencePhaseRef.current = isSilencePhaseRef.current;
+    
+    // Setup interval to sync values
+    const syncInterval = setInterval(() => {
+      if (measureCountRef) measureCountRef.current = localMeasureCountRef.current;
+      if (muteMeasureCountRef) muteMeasureCountRef.current = localMuteMeasureCountRef.current;
+      if (isSilencePhaseRef) isSilencePhaseRef.current = localIsSilencePhaseRef.current;
+      
+      // Update global reference
+      window.isSilencePhaseRef = isSilencePhaseRef || localIsSilencePhaseRef;
+      
+      // Dispatch event to force training UI update
+      window.dispatchEvent(new CustomEvent('training-measure-update'));
+    }, 200);
+    
+    return () => clearInterval(syncInterval);
+  }, [measureCountRef, muteMeasureCountRef, isSilencePhaseRef]);
+  
   // Get current active settings
   const currentSettings = {
     ...circleSettings[activeCircle] || { subdivisions: 4, accents: [3, 1, 1, 1], beatMode: "quarter" },
@@ -148,12 +179,19 @@ function MultiCircleMetronome(props) {
       circleSettings,
       activeCircle,
       playingCircle,
-      isPaused
+      isPaused,
+      speedMode,
+      macroMode
     });
   }, []);
   
   // State tracking references
   const isProcessingPlayPauseRef = useRef(false);
+  const lastCircleChangeTimeRef = useRef(0);
+  
+  // Track last beat for measure counting
+  const lastBeatTimeRef = useRef(0);
+  const measureStartTimeRef = useRef(0);
   
   // Container size calculation
   const getContainerSize = () => {
@@ -207,6 +245,9 @@ function MultiCircleMetronome(props) {
     if (logic && logic.isSilencePhaseRef) {
       window.isSilencePhaseRef = logic.isSilencePhaseRef;
       
+      // Also update our local refs
+      localIsSilencePhaseRef.current = logic.isSilencePhaseRef.current;
+      
       return () => {
         // Cleanup global refs when component unmounts
         if (window.isSilencePhaseRef === logic.isSilencePhaseRef) {
@@ -250,6 +291,160 @@ function MultiCircleMetronome(props) {
     });
   }, [activeCircle]);
 
+  // HOTFIX: Directly handle measure count updates for training mode
+  useEffect(() => {
+    if (!logic || isPaused) return;
+    
+    // Listen for "measure-start" events from beat visualization
+    const handleMeasureStart = () => {
+      if (isPaused) return;
+      
+      // Increment the measure counter
+      localMeasureCountRef.current += 1;
+      
+      console.log(`[MultiCircle] [Training] Measure count: ${localMeasureCountRef.current}/${measuresUntilSpeedUp}, speedMode=${speedMode}`);
+      
+      // Macro Timing Mode - Handle silence phase
+      if (macroMode === 1) {
+        if (!localIsSilencePhaseRef.current) {
+          // Check if we should enter silence phase
+          if (localMeasureCountRef.current >= measuresUntilMute) {
+            console.log(`[MultiCircle] [Training] 🔇 STARTING SILENCE PHASE 🔇`);
+            localIsSilencePhaseRef.current = true;
+            localMuteMeasureCountRef.current = 0;
+            
+            // Make sure the global silence reference is updated
+            window.isSilencePhaseRef = localIsSilencePhaseRef;
+            
+            // Update the original refs if provided
+            if (isSilencePhaseRef) isSilencePhaseRef.current = true;
+            if (muteMeasureCountRef) muteMeasureCountRef.current = 0;
+          }
+        } else {
+          // Already in silence phase, increment counter
+          localMuteMeasureCountRef.current += 1;
+          
+          console.log(`[MultiCircle] [Training] Silence phase: ${localMuteMeasureCountRef.current}/${muteDurationMeasures}`);
+          
+          // Check if we should exit silence phase
+          if (localMuteMeasureCountRef.current >= muteDurationMeasures) {
+            console.log(`[MultiCircle] [Training] 🔊 ENDING SILENCE PHASE 🔊`);
+            localIsSilencePhaseRef.current = false;
+            localMuteMeasureCountRef.current = 0;
+            localMeasureCountRef.current = 0; // Reset measure count after silence ends
+            
+            // Update refs and global reference
+            window.isSilencePhaseRef = localIsSilencePhaseRef;
+            if (isSilencePhaseRef) isSilencePhaseRef.current = false;
+            if (muteMeasureCountRef) muteMeasureCountRef.current = 0;
+            if (measureCountRef) measureCountRef.current = 0;
+          }
+        }
+      }
+      
+      // Speed Training Mode - Handle auto tempo increase
+      if (speedMode === 1 && !localIsSilencePhaseRef.current) {
+        if (localMeasureCountRef.current >= measuresUntilSpeedUp) {
+          // Calculate new tempo with percentage increase
+          const factor = 1 + tempoIncreasePercent / 100;
+          const newTempo = Math.min(Math.round(tempo * factor), 240);
+          
+          // Only increase if it would change by at least 1 BPM
+          if (newTempo > tempo) {
+            console.log(`[MultiCircle] ⏩ AUTO INCREASING TEMPO from ${tempo} to ${newTempo} BPM (${tempoIncreasePercent}%)`);
+            
+            // Set new tempo
+            setTempo(newTempo);
+            
+            // Reset measure counter after tempo increase
+            localMeasureCountRef.current = 0;
+            if (measureCountRef) measureCountRef.current = 0;
+          }
+        }
+      }
+      
+      // Dispatch event to update UI
+      window.dispatchEvent(new CustomEvent('training-measure-update'));
+    };
+    
+    // Custom event listener for the first beat of each circle
+    const handleCircleStart = (e) => {
+      // This is a circle change event, check if it's time to count a new measure
+      const now = Date.now();
+      
+      // We only want to trigger measure-start on the first beat of each circle
+      // and make sure we don't count measures too rapidly
+      if (now - lastCircleChangeTimeRef.current > 500) {
+        lastCircleChangeTimeRef.current = now;
+        
+        // Only on the first circle (index 0) do we count a measure
+        // This ensures we count measures based on complete cycles through all circles
+        if (e.detail && e.detail.circleIndex === 0) {
+          handleMeasureStart();
+        }
+      }
+    };
+    
+    // Set up a tick timer to update measure counts based on logic.currentSubdivision changes
+    const tickTimer = setInterval(() => {
+      if (logic.currentSubdivision === 0 && 
+          playingCircle === 0 &&
+          !isPaused) {
+        // First subdivision of circle 0 - count as measure start  
+        const now = Date.now();
+        if (now - lastCircleChangeTimeRef.current > 500) {
+          lastCircleChangeTimeRef.current = now;
+          handleMeasureStart();
+        }
+      }
+    }, 50);
+    
+    window.addEventListener('circle-changed', handleCircleStart);
+    
+    return () => {
+      window.removeEventListener('circle-changed', handleCircleStart);
+      clearInterval(tickTimer);
+    };
+  }, [
+    logic, 
+    isPaused, 
+    macroMode, 
+    speedMode,
+    measuresUntilMute,
+    muteDurationMeasures,
+    measuresUntilSpeedUp,
+    tempoIncreasePercent,
+    tempo,
+    setTempo,
+    measureCountRef,
+    muteMeasureCountRef,
+    isSilencePhaseRef,
+    playingCircle
+  ]);
+
+  // Reset training references when starting/stopping
+  useEffect(() => {
+    if (isPaused) {
+      // Do nothing when paused
+    } else {
+      // Reset counters when starting
+      localMeasureCountRef.current = 0;
+      localMuteMeasureCountRef.current = 0;
+      localIsSilencePhaseRef.current = false;
+      
+      // Update original refs if available
+      if (measureCountRef) measureCountRef.current = 0;
+      if (muteMeasureCountRef) muteMeasureCountRef.current = 0;
+      if (isSilencePhaseRef) isSilencePhaseRef.current = false;
+      
+      // Update global reference
+      window.isSilencePhaseRef = localIsSilencePhaseRef;
+      
+      // Dispatch event to update UI
+      window.dispatchEvent(new CustomEvent('training-measure-update'));
+    }
+  }, [isPaused, measureCountRef, muteMeasureCountRef, isSilencePhaseRef]);
+
   // Handle Play/Pause with proper state management
   const handlePlayPause = useCallback(() => {
     if (isProcessingPlayPauseRef.current) {
@@ -271,6 +466,19 @@ function MultiCircleMetronome(props) {
       
       // Reset state for clean start
       setPlayingCircle(0);
+      
+      // Reset training counters
+      localMeasureCountRef.current = 0;
+      localMuteMeasureCountRef.current = 0;
+      localIsSilencePhaseRef.current = false;
+      
+      // Update original refs if available
+      if (measureCountRef) measureCountRef.current = 0;
+      if (muteMeasureCountRef) muteMeasureCountRef.current = 0;
+      if (isSilencePhaseRef) isSilencePhaseRef.current = false;
+      
+      // Update global reference
+      window.isSilencePhaseRef = localIsSilencePhaseRef;
       
       if (logic && logic.audioCtx) {
         if (logic.audioCtx.state === "suspended") {
@@ -316,7 +524,7 @@ function MultiCircleMetronome(props) {
       setPlayingCircle(0);
       isProcessingPlayPauseRef.current = false;
     }
-  }, [isPaused, setIsPaused, logic, setPlayingCircle]);
+  }, [isPaused, setIsPaused, logic, setPlayingCircle, measureCountRef, muteMeasureCountRef, isSilencePhaseRef]);
 
   // Handle manual tempo acceleration
   const handleAccelerate = useCallback(() => {
@@ -326,8 +534,15 @@ function MultiCircleMetronome(props) {
         tempoRef: { current: tempo },
         setTempo
       });
+      
+      // Reset measure counter after manual increase
+      localMeasureCountRef.current = 0;
+      if (measureCountRef) measureCountRef.current = 0;
+      
+      // Dispatch event to update UI
+      window.dispatchEvent(new CustomEvent('training-measure-update'));
     }
-  }, [props.isPaused, tempoIncreasePercent, tempo, setTempo]);
+  }, [props.isPaused, tempoIncreasePercent, tempo, setTempo, measureCountRef]);
 
   // Register callbacks with parent if provided
   useEffect(() => {
@@ -460,6 +675,17 @@ function MultiCircleMetronome(props) {
     });
   }, [activeCircle, removeCircle]);
 
+  // Dispatch an event when the playing circle changes
+  useEffect(() => {
+    // Dispatch an event for the circle change
+    window.dispatchEvent(new CustomEvent('circle-changed', {
+      detail: {
+        circleIndex: playingCircle,
+        isFirst: playingCircle === 0
+      }
+    }));
+  }, [playingCircle]);
+
   return (
     <div style={{ textAlign: "center" }}>
       {/* Accelerate button for Training Mode */}
@@ -495,7 +721,7 @@ function MultiCircleMetronome(props) {
             setActiveCircle={setActiveCircle}
             circleSettings={circleSettings}
             macroMode={macroMode}
-            isSilencePhaseRef={logic.isSilencePhaseRef}
+            isSilencePhaseRef={localIsSilencePhaseRef}
             isMobile={isMobile}
           />
         ))}
@@ -608,4 +834,5 @@ function MultiCircleMetronome(props) {
   );
 }
 
-export default withMultiCircleTrainingContainer(MultiCircleMetronome);
+// Use the regular withTrainingContainer so everything still works with the UI
+export default withTrainingContainer(MultiCircleMetronome);
