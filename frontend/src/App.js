@@ -99,6 +99,28 @@ function App() {
     Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1))
   );
 
+  // Make tempo setter available globally for tap tempo
+  window.setMetronomeTempo = setTempo;
+
+  // Add event listener for tap tempo events
+  useEffect(() => {
+    // Event handler for the custom tap tempo event
+    const handleTapTempoEvent = (event) => {
+      if (event.detail && typeof event.detail.tempo === 'number') {
+        const newTempo = event.detail.tempo;
+        setTempo(newTempo);
+      }
+    };
+
+    // Add the event listener
+    window.addEventListener('metronome-set-tempo', handleTapTempoEvent);
+    
+    // Clean up the event listener when component unmounts
+    return () => {
+      window.removeEventListener('metronome-set-tempo', handleTapTempoEvent);
+    };
+  }, []); // Empty dependency array means this runs once on mount
+
   // Reinitialize accents whenever subdivisions change.
   useEffect(() => {
     setAccents(Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1)));
@@ -151,6 +173,9 @@ function App() {
   const tapTempoRef = useRef(null);
   const registerTogglePlay = (fn) => { togglePlayRef.current = fn; };
   const registerTapTempo = (fn) => { tapTempoRef.current = fn; };
+
+  // Make tap tempo ref available globally for emergency fallback
+  window.tapTempoRef = tapTempoRef;
 
   useKeyboardShortcuts({
     onTogglePlayPause: () => { if (togglePlayRef.current) togglePlayRef.current(); },
