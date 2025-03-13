@@ -1,4 +1,4 @@
-// src/components/metronome/MultiCircleMode/MultiCircleMetronome.js - with direct hotfix
+// src/components/metronome/MultiCircleMode/MultiCircleMetronome.js - with all fixes
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import useMultiCircleMetronomeLogic from "./hooks/useMultiCircleMetronomeLogic";
 import useKeyboardShortcuts from "../../../hooks/useKeyboardShortcuts";
@@ -239,6 +239,54 @@ function MultiCircleMetronome(props) {
     playingCircle,
     onCircleChange: setPlayingCircle
   });
+
+  // Listen for beat-mode-change events
+  useEffect(() => {
+    const handleBeatModeChange = (event) => {
+      const { beatMode, beatMultiplier } = event.detail;
+      
+      console.log(`[MultiCircleMetronome] Beat mode change event received: ${beatMode} (multiplier: ${beatMultiplier})`);
+      
+      // Update the active circle's beat mode
+      setCircleSettings(prev => {
+        const updated = [...prev];
+        
+        // Only update if the mode is actually changing
+        if (updated[activeCircle]?.beatMode !== beatMode) {
+          updated[activeCircle] = { ...updated[activeCircle], beatMode };
+        }
+        
+        return updated;
+      });
+      
+      // If the active circle is currently playing, update the logic
+      if (activeCircle === playingCircle && logic && logic.updateBeatMultiplier) {
+        console.log(`[MultiCircleMetronome] Updating beat multiplier to: ${beatMultiplier}`);
+        
+        // First stop the current scheduler if it's running
+        if (!isPaused && logic.stopScheduler) {
+          logic.stopScheduler();
+        }
+        
+        // Update beat multiplier in the logic
+        logic.updateBeatMultiplier(beatMultiplier);
+        
+        // If playing, immediately restart the scheduler with new timing
+        if (!isPaused && logic.startScheduler) {
+          // Short timeout to ensure state updates have propagated
+          setTimeout(() => {
+            logic.startScheduler();
+          }, 20);
+        }
+      }
+    };
+    
+    window.addEventListener('beat-mode-change', handleBeatModeChange);
+    
+    return () => {
+      window.removeEventListener('beat-mode-change', handleBeatModeChange);
+    };
+  }, [activeCircle, playingCircle, logic, isPaused]);
 
   // Make silence phase ref globally available to metronome logic
   useEffect(() => {
@@ -575,31 +623,57 @@ function MultiCircleMetronome(props) {
     onSetSubdivisions: handleSetSubdivisions
   });
 
-  // Toggle functionality for the note selector
+  // Toggle functionality for the note selector - IMPROVED VERSION
   const handleNoteSelection = useCallback((mode) => {
+    // Don't update if the mode isn't changing
+    if (circleSettings[activeCircle]?.beatMode === mode) {
+      console.log(`[MultiCircleMetronome] Note selection unchanged: ${mode}`);
+      return;
+    }
+    
+    console.log(`[MultiCircleMetronome] Note selection changed to: ${mode}`);
+    
+    // Update the active circle's beat mode
     setCircleSettings(prev => {
       const updated = [...prev];
-      
-      // Only update if the mode is actually changing
-      if (updated[activeCircle]?.beatMode === mode) {
-        return prev;
-      }
-      
       updated[activeCircle] = { ...updated[activeCircle], beatMode: mode };
-      
-      // Dispatch a custom event to notify of beat mode change
-      const multiplier = mode === "quarter" ? 1 : 2;
-      const beatModeChangeEvent = new CustomEvent('beat-mode-change', {
-        detail: { 
-          beatMode: mode,
-          beatMultiplier: multiplier
-        }
-      });
-      window.dispatchEvent(beatModeChangeEvent);
-      
       return updated;
     });
-  }, [activeCircle]);
+    
+    // Calculate multiplier for the event
+    const multiplier = mode === "quarter" ? 1 : 2;
+    
+    // Dispatch a custom event to notify of beat mode change
+    const beatModeChangeEvent = new CustomEvent('beat-mode-change', {
+      detail: { 
+        beatMode: mode,
+        beatMultiplier: multiplier
+      }
+    });
+    window.dispatchEvent(beatModeChangeEvent);
+    
+    // If the active circle is currently playing, stop and restart the scheduler
+    if (activeCircle === playingCircle && logic && !isPaused) {
+      console.log(`[MultiCircleMetronome] Directly restarting scheduler for immediate beat mode change`);
+      
+      // Stop the scheduler
+      if (logic.stopScheduler) {
+        logic.stopScheduler();
+      }
+      
+      // Update beat multiplier
+      if (logic.updateBeatMultiplier) {
+        logic.updateBeatMultiplier(multiplier);
+      }
+      
+      // Restart the scheduler after a short delay to ensure settings are updated
+      setTimeout(() => {
+        if (logic.startScheduler) {
+          logic.startScheduler();
+        }
+      }, 20);
+    }
+  }, [activeCircle, playingCircle, logic, isPaused, circleSettings]);
 
   // ADD CIRCLE FUNCTION
   const addCircle = useCallback(() => {
