@@ -1,4 +1,4 @@
-// src/components/metronome/MultiCircleMode/CircleRenderer.js
+// src/components/metronome/MultiCircleMode/CircleRenderer.js - With musical symbols
 import React from 'react';
 import firstBeat from "../../../assets/svg/firstBeat.svg";
 import firstBeatActive from "../../../assets/svg/firstBeatActive.svg";
@@ -40,8 +40,8 @@ const CircleRenderer = ({
   }
   
   const iconSize = 24;
-  const beats = Array.from({ length: settings.subdivisions }, (_, i) => {
-    const angle = (2 * Math.PI * i) / settings.subdivisions - Math.PI / 2;
+  const beats = Array.from({ length: settings.subdivisions || 4 }, (_, i) => {
+    const angle = (2 * Math.PI * i) / (settings.subdivisions || 4) - Math.PI / 2;
     const xPos = radius * Math.cos(angle);
     const yPos = radius * Math.sin(angle);
     
@@ -51,22 +51,16 @@ const CircleRenderer = ({
                      !isPaused &&
                      audioCtxRunning;
     
-    // Fix: Ensure we correctly handle state 0 (muted)
-    // The original code was using || 1 which would never allow a 0 value
-    const beatState = settings.accents && i < settings.accents.length 
-      ? settings.accents[i] 
-      : 1;
-    
-    console.log(`Circle ${idx}, Beat ${i}: beatState=${beatState}, accents array:`, settings.accents);
+    // Fix: Safely access accents array with fallbacks
+    const accents = settings.accents || [];
+    const beatState = i < accents.length ? accents[i] : (i === 0 ? 3 : 1);
     
     // For muted beats (state 0), render a placeholder that can be clicked
     if (beatState === 0) {
-      console.log(`Rendering muted beat (state 0) for Circle ${idx}, Beat ${i}`);
       return (
         <div
           key={i}
           onClick={() => { 
-            console.log("Muted beat clicked, isActiveUI:", isActiveUI);
             if (isActiveUI) updateAccent(i); 
           }}
           style={{
@@ -166,25 +160,28 @@ const CircleRenderer = ({
       </div>
     );
     
-    // Add a subtle indicator for the beat mode
-    // eslint-disable-next-line no-unused-vars
+    // Add a musical note symbol indicator for the beat mode
     const beatModeIndicator = (
       <div
         key="beat-mode-indicator"
         style={{
           position: "absolute",
-          bottom: "-10px",
+          bottom: "-26px",
           left: "50%",
           transform: "translateX(-50%)",
-          fontSize: "12px",
+          fontSize: "18px", // Larger font for the musical symbol
           fontWeight: "bold",
+          fontFamily: "Arial, 'Times New Roman', serif", // Better font for musical symbols
           color: isPlaying ? "#FFD700" : "#00A0A0",
-          backgroundColor: "rgba(0, 0, 0, 0.7)",
-          padding: "2px 8px",
+          backgroundColor: "rgba(255, 255, 255, 0.9)",
+          padding: "2px 12px",
           borderRadius: "10px",
-          zIndex: 5
+          zIndex: 5,
+          border: "1px solid #eee",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
         }}
       >
+        {/* Unicode musical symbol: Quarter note (♩) or Eighth note (♪) */}
         {settings.beatMode === "quarter" ? "♩" : "♪"}
       </div>
     );
@@ -206,6 +203,7 @@ const CircleRenderer = ({
         }}
       >
         {removeButton}
+        {beatModeIndicator}
         {beats}
       </div>
     );
@@ -227,6 +225,28 @@ const CircleRenderer = ({
         overflow: "visible"
       }}
     >
+      {/* Add musical note symbol for single circle as well */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: "-26px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          fontSize: "18px", // Larger font for the musical symbol
+          fontWeight: "bold",
+          fontFamily: "Arial, 'Times New Roman', serif", // Better font for musical symbols
+          color: isPlaying ? "#FFD700" : "#00A0A0",
+          backgroundColor: "rgba(255, 255, 255, 0.9)",
+          padding: "2px 12px",
+          borderRadius: "10px",
+          zIndex: 5,
+          border: "1px solid #eee",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
+        }}
+      >
+        {/* Unicode musical symbol: Quarter note (♩) or Eighth note (♪) */}
+        {settings.beatMode === "quarter" ? "♩" : "♪"}
+      </div>
       {beats}
     </div>
   );
