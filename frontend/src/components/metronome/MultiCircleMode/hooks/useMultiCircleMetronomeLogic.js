@@ -1,4 +1,4 @@
-// src/components/metronome/MultiCircleMode/hooks/useMultiCircleMetronomeLogic.js
+// src/components/metronome/MultiCircleMode/hooks/useMultiCircleMetronomeLogic.js - with all fixes
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { initAudioContext, loadClickBuffers } from '../../../../hooks/useMetronomeLogic/audioBuffers';
 import { useMetronomeRefs } from '../../../../hooks/useMetronomeLogic/references';
@@ -623,7 +623,7 @@ export default function useMultiCircleMetronomeLogic({
     return transitionPrepared ? nextCircle : currentCircle;
   }, [circleSettings, prepareCircleTransition]);
 
-  // Fixed: doSchedulerLoop function that properly checks for valid audio context
+  // Fixed: doSchedulerLoop function that properly checks for valid audio context and handles beat mode changes
   const doSchedulerLoop = useCallback(() => {
     // Debug output to help track scheduler issues
     if (!schedulerRunningRef.current) {
@@ -640,6 +640,11 @@ export default function useMultiCircleMetronomeLogic({
         });
       }
       return;
+    }
+    
+    // Recalculate subdivision interval on each loop to ensure it respects current beat mode
+    if (currentSubRef.current !== undefined) {
+      currentSubIntervalRef.current = getCurrentSubIntervalSec(currentSubRef.current);
     }
     
     runScheduler({
@@ -668,6 +673,7 @@ export default function useMultiCircleMetronomeLogic({
     scheduleSubFn,
     nodeRefs,
     schedulerRunningRef,
+    currentSubIntervalRef
   ]);
 
   // Fixed: Improved startScheduler function with proper initialization and error handling
@@ -833,10 +839,49 @@ export default function useMultiCircleMetronomeLogic({
   // Function to update the beatMultiplier based on the current playing circle's beatMode
   const updateBeatMultiplier = useCallback((newMultiplier) => {
     console.log(`[MultiCircleLogic] Updating beat multiplier to: ${newMultiplier}`);
-    // This function can be called from outside to update the beat multiplier
-    // The actual application happens in the getCurrentSubIntervalSec function
-    // which already uses getBeatMultiplier()
-  }, []);
+    
+    // Update the current playing circle's beat mode
+    const currentCircleIndex = playingCircleRef.current;
+    const newBeatMode = newMultiplier === 2 ? "eighth" : "quarter";
+    
+    // Update the playing settings ref with the new beat mode
+    if (circleSettings[currentCircleIndex]) {
+      circleSettings[currentCircleIndex].beatMode = newBeatMode;
+    }
+    
+    // Immediately update the current subdivision interval to respect the new beat multiplier
+    if (currentSubIntervalRef.current && currentSubRef.current !== undefined) {
+      // Calculate the new subdivision interval based on the new multiplier
+      const newInterval = getCurrentSubIntervalSec(currentSubRef.current);
+      currentSubIntervalRef.current = newInterval;
+      
+      console.log(`[MultiCircleLogic] Updated currentSubIntervalRef with new timing: ${newInterval}s`);
+    }
+    
+    // Log the change for debugging
+    console.log(`[MultiCircleLogic] Updated beat mode to: ${newBeatMode} for circle ${currentCircleIndex}`);
+    
+    // Return the new beat mode for any chaining operations
+    return newBeatMode;
+  }, [playingCircleRef, circleSettings, getCurrentSubIntervalSec, currentSubRef, currentSubIntervalRef]);
+
+  // Listen for beat-mode-change events directly in the hook
+  useEffect(() => {
+    const handleBeatModeChange = (event) => {
+      const { beatMode, beatMultiplier } = event.detail;
+      
+      console.log(`[MultiCircleLogic] Beat mode change event received: ${beatMode} (multiplier: ${beatMultiplier})`);
+      
+      // Update the beat multiplier
+      updateBeatMultiplier(beatMultiplier);
+    };
+    
+    window.addEventListener('beat-mode-change', handleBeatModeChange);
+    
+    return () => {
+      window.removeEventListener('beat-mode-change', handleBeatModeChange);
+    };
+  }, [updateBeatMultiplier]);
 
   // Auto-start/stop based on isPaused
   useEffect(() => {
