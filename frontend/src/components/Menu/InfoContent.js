@@ -1,5 +1,8 @@
 // src/components/Menu/InfoContent.js
 import React, { useState, useEffect } from 'react';
+import packageJson from '../../../package.json';
+
+const version = packageJson.version;
 
 const InfoContent = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
@@ -97,7 +100,7 @@ const InfoContent = () => {
           It offers multiple visualization modes, customizable accent patterns, and training features.
         </p>
         <p className="version-info">
-          Version 0.4.6 | GPL v3 License
+           Version {version} | GPL v3 License
         </p>
       </div>
     </div>
