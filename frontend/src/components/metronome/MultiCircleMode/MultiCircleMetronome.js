@@ -8,7 +8,7 @@ import playIcon from "../../../assets/svg/play.svg";
 import pauseIcon from "../../../assets/svg/pause.svg";
 import "./MultiCircleMetronome.css";
 import '../Controls/slider-styles.css';
-import withTrainingContainer from "../../Training/withTrainingContainer";
+import withMultiCircleTrainingContainer from '../../Training/withMultiCircleTrainingContainer';
 import { getActiveSoundSet } from "../../../services/soundSetService";
 import { loadClickBuffers } from "../../../hooks/useMetronomeLogic/audioBuffers";
 
@@ -608,4 +608,4 @@ function MultiCircleMetronome(props) {
   );
 }
 
-export default withTrainingContainer(MultiCircleMetronome);
+export default withMultiCircleTrainingContainer(MultiCircleMetronome);

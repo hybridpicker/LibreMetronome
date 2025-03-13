@@ -85,6 +85,7 @@ export default function useMultiCircleMetronomeLogic({
   const measureCountRef = useRef(0);
   const muteMeasureCountRef = useRef(0);
   const isSilencePhaseRef = useRef(false);
+  const lastTempoIncreaseTimeRef = useRef(0);
 
   const [currentSubdivision, setCurrentSubdivision] = useState(0);
 
@@ -438,6 +439,75 @@ export default function useMultiCircleMetronomeLogic({
         console.log(`[MultiCircleLogic] 🏁 Transition state fully reset`);
       }
       
+      // FIXED: Handle training mode measure boundaries properly
+      if (!isPaused) {
+        // Increment the measure counter
+        measureCountRef.current++;
+        
+        console.log(`[MultiCircleLogic] [Training] Measure count: ${measureCountRef.current}/${measuresUntilSpeedUp}, speedMode=${speedMode}`);
+        
+        // Dispatch event for UI updates to ensure TrainingActiveContainer sees the updated count
+        window.dispatchEvent(new CustomEvent('training-measure-update'));
+        
+        // Macro Timing Mode - Handle silence phase
+        if (macroMode === 1) {
+          if (!isSilencePhaseRef.current) {
+            // Check if we should enter silence phase
+            if (measureCountRef.current >= measuresUntilMute) {
+              console.log(`[MultiCircleLogic] [Training] 🔇 STARTING SILENCE PHASE 🔇`);
+              isSilencePhaseRef.current = true;
+              muteMeasureCountRef.current = 0;
+              
+              // Make sure the global silence reference is updated
+              window.isSilencePhaseRef = isSilencePhaseRef;
+              
+              // Notify UI
+              window.dispatchEvent(new CustomEvent('training-measure-update'));
+            }
+          } else {
+            // Already in silence phase, increment counter
+            muteMeasureCountRef.current++;
+            
+            console.log(`[MultiCircleLogic] [Training] Silence phase: ${muteMeasureCountRef.current}/${muteDurationMeasures}`);
+            
+            // Check if we should exit silence phase
+            if (muteMeasureCountRef.current >= muteDurationMeasures) {
+              console.log(`[MultiCircleLogic] [Training] 🔊 ENDING SILENCE PHASE 🔊`);
+              isSilencePhaseRef.current = false;
+              window.isSilencePhaseRef = isSilencePhaseRef;
+              muteMeasureCountRef.current = 0;
+              measureCountRef.current = 0; // Reset measure count after silence ends
+              
+              // Notify UI
+              window.dispatchEvent(new CustomEvent('training-measure-update'));
+            }
+          }
+        }
+        
+        // Speed Training Mode - Handle auto tempo increase
+        if (speedMode === 1 && !isSilencePhaseRef.current) {
+          if (measureCountRef.current >= measuresUntilSpeedUp) {
+            // Calculate new tempo with percentage increase
+            const factor = 1 + tempoIncreasePercent / 100;
+            const newTempo = Math.min(Math.round(tempoRef.current * factor), 240);
+            
+            // Only increase if it would change by at least 1 BPM
+            if (newTempo > tempoRef.current) {
+              console.log(`[MultiCircleLogic] ⏩ AUTO INCREASING TEMPO from ${tempoRef.current} to ${newTempo} BPM (${tempoIncreasePercent}%)`);
+              
+              // Set new tempo
+              setTempo(newTempo);
+              
+              // Reset measure counter after tempo increase
+              measureCountRef.current = 0;
+              
+              // Notify UI
+              window.dispatchEvent(new CustomEvent('training-measure-update'));
+            }
+          }
+        }
+      }
+      
       // Trigger auto-transition to the next circle
       if (circleSettings.length > 1) {
         const nextCircle = (currentCircleIndex + 1) % circleSettings.length;
@@ -523,7 +593,17 @@ export default function useMultiCircleMetronomeLogic({
     accentBufferRef,
     firstBufferRef,
     playedBeatTimesRef,
-    updateActualBpm
+    updateActualBpm,
+    isPaused,
+    speedMode,
+    measuresUntilMute,
+    muteDurationMeasures,
+    measuresUntilSpeedUp,
+    tempoIncreasePercent,
+    tempoRef,
+    setTempo,
+    measureCountRef,
+    muteMeasureCountRef
   ]);
 
   // Detect when we need to switch circles - called from the component
@@ -568,20 +648,12 @@ export default function useMultiCircleMetronomeLogic({
       currentSubRef,
       currentSubdivisionSetter: setCurrentSubdivision,
       getCurrentSubIntervalSec,
-      handleMeasureBoundary: () => handleMeasureBoundary({
-        measureCountRef,
-        muteMeasureCountRef,
-        isSilencePhaseRef,
-        macroMode,
-        speedMode,
-        measuresUntilMute,
-        muteDurationMeasures,
-        muteProbability,
-        measuresUntilSpeedUp,
-        tempoIncreasePercent,
-        tempoRef,
-        setTempo
-      }),
+      // Fix: Using our own implementation of handleMeasureBoundary for Multi Circle Mode
+      handleMeasureBoundary: () => {
+        // Measure boundary handling is now done directly in scheduleSubFn
+        // when subIndex === 0, which is the start of a new measure
+        return true; // Always continue scheduler
+      },
       scheduleSubFn,
       subdivisionsRef,
       multiCircleMode: true,
@@ -594,20 +666,8 @@ export default function useMultiCircleMetronomeLogic({
     currentSubRef,
     getCurrentSubIntervalSec,
     scheduleSubFn,
-    macroMode,
-    speedMode,
-    measuresUntilMute,
-    muteDurationMeasures,
-    muteProbability,
-    measuresUntilSpeedUp,
-    tempoIncreasePercent,
-    setTempo,
-    measureCountRef,
-    muteMeasureCountRef,
-    isSilencePhaseRef,
     nodeRefs,
     schedulerRunningRef,
-    tempoRef
   ]);
 
   // Fixed: Improved startScheduler function with proper initialization and error handling
@@ -715,6 +775,18 @@ export default function useMultiCircleMetronomeLogic({
           alreadySwitched: false
         };
         
+        // FIXED: Reset training-related counters when starting scheduler
+        measureCountRef.current = 0;
+        muteMeasureCountRef.current = 0;
+        isSilencePhaseRef.current = false;
+        lastTempoIncreaseTimeRef.current = Date.now();
+        
+        // Make sure the global isSilencePhaseRef is updated
+        window.isSilencePhaseRef = isSilencePhaseRef;
+        
+        // Force a training measure update to refresh the UI 
+        window.dispatchEvent(new CustomEvent('training-measure-update'));
+        
         // Start scheduling loop with a short delay to ensure AudioContext is ready
         setTimeout(() => {
           lookaheadRef.current = setInterval(doSchedulerLoop, 20);
@@ -740,7 +812,11 @@ export default function useMultiCircleMetronomeLogic({
     currentSubIntervalRef, 
     playedBeatTimesRef, 
     lookaheadRef,
-    circleSettings
+    circleSettings,
+    playingCircleRef,
+    isSilencePhaseRef,
+    measureCountRef,
+    muteMeasureCountRef
   ]);
 
   // Tap Tempo handler
@@ -753,6 +829,14 @@ export default function useMultiCircleMetronomeLogic({
   const isTransitioning = useCallback(() => {
     return circleTransitionRef.current.isTransitioning;
   }, [circleTransitionRef]);
+
+  // Function to update the beatMultiplier based on the current playing circle's beatMode
+  const updateBeatMultiplier = useCallback((newMultiplier) => {
+    console.log(`[MultiCircleLogic] Updating beat multiplier to: ${newMultiplier}`);
+    // This function can be called from outside to update the beat multiplier
+    // The actual application happens in the getCurrentSubIntervalSec function
+    // which already uses getBeatMultiplier()
+  }, []);
 
   // Auto-start/stop based on isPaused
   useEffect(() => {
@@ -815,6 +899,8 @@ export default function useMultiCircleMetronomeLogic({
     switchToNextCircle,
     isTransitioning,
     lastBeatTimeRef,
+    // Add the new updateBeatMultiplier function
+    updateBeatMultiplier,
     // Add references to audio buffers for reloading
     reloadSounds: async function() {
       console.log("[MultiCircleLogic] Reloading sounds manually");
