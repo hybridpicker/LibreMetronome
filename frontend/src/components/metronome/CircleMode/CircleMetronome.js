@@ -111,7 +111,6 @@ export function AdvancedMetronomeWithCircle({
     if (isPaused) {
       // Initialize audio context if needed
       if (!logic.audioCtx) {
-        console.log('Circle Mode: No AudioContext, initializing...');
         // The startScheduler method will handle initialization
         setIsPaused(false);
         return;
@@ -119,21 +118,16 @@ export function AdvancedMetronomeWithCircle({
       
       // If we have audio but it's suspended, resume it
       if (logic.audioCtx.state === 'suspended') {
-        console.log('Circle Mode: Resuming suspended AudioContext...');
         logic.audioCtx.resume().then(() => {
-          console.log('Circle Mode: AudioContext resumed successfully');
           setIsPaused(false);
           logic.startScheduler();
         }).catch(err => {
-          console.error('Circle Mode: Failed to resume AudioContext:', err);
         });
       } else {
-        console.log('Circle Mode: Starting playback with active AudioContext');
         setIsPaused(false);
         logic.startScheduler();
       }
     } else {
-      console.log('Circle Mode: Stopping playback');
       setIsPaused(true);
       logic.stopScheduler();
     }

@@ -3,15 +3,12 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { initAudioContext, loadClickBuffers } from '../../../../hooks/useMetronomeLogic/audioBuffers';
 import { useMetronomeRefs } from '../../../../hooks/useMetronomeLogic/references';
 import { createTapTempoLogic } from '../../../../hooks/useMetronomeLogic/tapTempo';
+import { 
+  runScheduler, 
+  scheduleSubdivision 
+} from '../../../../hooks/useMetronomeLogic/scheduler';
 import { handleMeasureBoundary, shouldMuteThisBeat } from '../../../../hooks/useMetronomeLogic/trainingLogic';
-import { runScheduler, scheduleSubdivision } from '../../../../hooks/useMetronomeLogic/scheduler';
 import { getActiveSoundSet } from '../../../../services/soundSetService';
-// CONSTANTS:
-// Audio context lookahead time in seconds
-// Not using these currently but keeping for reference as they may be needed again
-// const TEMPO_MIN = 30;
-// const TEMPO_MAX = 300;
-// const SCHEDULE_AHEAD_TIME = 0.1; 
 
 /**
  * A specialized version of useMetronomeLogic for Multi Circle Mode
@@ -63,50 +60,64 @@ export default function useMultiCircleMetronomeLogic({
     measureStartTime: 0
   });
   
-  // Same refs as regular metronome logic
+  // Get the basic refs from useMetronomeRefs
   const {
     audioCtxRef,
     normalBufferRef,
     accentBufferRef,
     firstBufferRef,
-    nextNoteTimeRef,
     currentSubRef,
-    currentSubStartRef,
-    currentSubIntervalRef,
+    nextNoteTimeRef,
+    lookaheadRef,
+    nodeRefs,
     playedBeatTimesRef,
     schedulerRunningRef,
-    lookaheadRef,
+    currentSubStartRef,
+    currentSubIntervalRef,
     actualBpm, setActualBpm
   } = useMetronomeRefs();
 
-  const [currentSubdivision, setCurrentSubdivision] = useState(0);
-
-  // Training mode refs
+  // Create our own refs for values not provided by useMetronomeRefs
+  const tempoRef = useRef(tempo);
+  const swingRef = useRef(swing);
+  const volumeRef = useRef(volume);
+  const accentsRef = useRef(accents);
+  
+  // For training mode refs
   const measureCountRef = useRef(0);
   const muteMeasureCountRef = useRef(0);
   const isSilencePhaseRef = useRef(false);
+
+  const [currentSubdivision, setCurrentSubdivision] = useState(0);
+
+  // Additional specialized refs for multi-circle
+  const subdivisionsRef = useRef(subdivisions);
+  const lastBeatTimeRef = useRef(0);
+
+  // Training mode refs
   // Controls lastly when a circle switched
   // Commenting out unused ref but keeping for potential future use
   // const lastCircleSwitchTimeRef = useRef(0);
   
-  // Add a ref to track the last beat time for stability
-  const lastBeatTimeRef = useRef(0);
-
   // Keep local copies of changing values in refs
-  const tempoRef = useRef(tempo);
-  const swingRef = useRef(swing);
-  const volumeRef = useRef(volume);
-  const subdivisionsRef = useRef(subdivisions);
-  const accentsRef = useRef(accents);
   const playingCircleRef = useRef(playingCircle);
 
   useEffect(() => { tempoRef.current = tempo; }, [tempo]);
   useEffect(() => { swingRef.current = swing; }, [swing]);
   useEffect(() => { volumeRef.current = volume; }, [volume]);
+  useEffect(() => { playingCircleRef.current = playingCircle; }, [playingCircle]);
+  useEffect(() => { subdivisionsRef.current = subdivisions; }, [subdivisions]);
+
   useEffect(() => { 
+    // Update accents array for different beat counts
+    accentsRef.current = accents; 
+  }, [accents]);
+
+  useEffect(() => { 
+    playingCircleRef.current = playingCircle;
+    
     // Update subdivisions based on the currently playing circle's settings
-    const currentCircleIndex = playingCircleRef.current;
-    const currentCircleData = circleSettings[currentCircleIndex];
+    const currentCircleData = circleSettings[playingCircle];
     if (currentCircleData) {
       // Use the exact subdivision value from the current circle
       // Do NOT apply any beat mode multiplier here - that's handled in the scheduler
@@ -115,11 +126,16 @@ export default function useMultiCircleMetronomeLogic({
       console.log(`[MultiCircleLogic] Updating subdivisions: exact=${exactSubdivisions}`);
       subdivisionsRef.current = exactSubdivisions;
     } else {
-      subdivisionsRef.current = subdivisions;
+      subdivisionsRef.current = 4; // Default to 4
     }
-  }, [subdivisions, circleSettings, playingCircle, playingCircleRef]);
-  
-  useEffect(() => { accentsRef.current = accents; }, [accents]);
+    
+    // Update accents array for the new circle
+    if (circleSettings[playingCircle] && circleSettings[playingCircle].subdivisions) {
+      accentsRef.current = new Array(circleSettings[playingCircle].subdivisions).fill(1);
+      accentsRef.current[0] = 3; // First beat is always '3' (first beat sound)
+    }
+  }, [playingCircle, circleSettings, playingCircleRef, subdivisionsRef]);
+
   useEffect(() => { 
     playingCircleRef.current = playingCircle;
     
@@ -198,7 +214,91 @@ export default function useMultiCircleMetronomeLogic({
     return () => {
       stopScheduler();
     };
-  }, []);
+  }, [audioCtxRef, normalBufferRef, accentBufferRef, firstBufferRef]);
+
+  // Define the stopScheduler function first, before any references to it
+  const stopScheduler = useCallback(() => {
+    // Clear the scheduling interval first
+    if (lookaheadRef.current) {
+      clearInterval(lookaheadRef.current);
+      lookaheadRef.current = null;
+    }
+    
+    // Reset running state immediately to prevent more scheduling
+    schedulerRunningRef.current = false;
+    
+    // Stop and disconnect all active audio nodes
+    if (nodeRefs.current && nodeRefs.current.length > 0) {
+      const nodesToCleanup = [...nodeRefs.current];
+      nodeRefs.current = []; // Clear references immediately
+      
+      nodesToCleanup.forEach(node => {
+        try {
+          if (node.stop) node.stop(0);
+          if (node.disconnect) node.disconnect();
+        } catch (e) {
+          // Silently ignore errors when cleaning up nodes
+        }
+      });
+    }
+    
+    // Reset timing references
+    nextNoteTimeRef.current = 0;
+    currentSubRef.current = 0;
+    playedBeatTimesRef.current = [];
+    
+    // Update visual state
+    setCurrentSubdivision(0);
+  }, [lookaheadRef, nextNoteTimeRef, currentSubRef, playedBeatTimesRef, nodeRefs, schedulerRunningRef]);
+
+  // Update effect to clean up resources
+  useEffect(() => {
+    // Load click sound samples when component mounts
+    async function loadSounds() {
+      try {
+        // Check if we need to initialize audio context
+        if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
+          audioCtxRef.current = initAudioContext();
+          console.log('[MultiCircleLogic] Created new AudioContext');
+        }
+        
+        // Load sound buffers
+        const soundSet = await getActiveSoundSet();
+        await loadClickBuffers({
+          audioCtx: audioCtxRef.current,
+          normalBufferRef,
+          accentBufferRef,
+          firstBufferRef,
+          soundSet
+        });
+        console.log('[MultiCircleLogic] Sound buffers loaded');
+      } catch (error) {
+        console.log('[MultiCircleLogic] Error loading sounds, using defaults');
+        if (audioCtxRef.current) {
+          await loadClickBuffers({
+            audioCtx: audioCtxRef.current,
+            normalBufferRef,
+            accentBufferRef,
+            firstBufferRef
+          });
+        }
+      }
+    }
+    
+    loadSounds();
+    
+    // Clean up function
+    return () => {
+      stopScheduler();
+      if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
+        try {
+          audioCtxRef.current.close();
+        } catch (e) {
+          console.log("[MultiCircleLogic] Error closing AudioContext", e);
+        }
+      }
+    };
+  }, [audioCtxRef, normalBufferRef, accentBufferRef, firstBufferRef, stopScheduler]);
 
   // Calculate the interval between beats, using dynamic beatMultiplier from beatMode
   const getCurrentSubIntervalSec = useCallback((subIndex) => {
@@ -236,24 +336,7 @@ export default function useMultiCircleMetronomeLogic({
         : subDivisionDuration * (1 - sFactor);
     }
     return subDivisionDuration;
-  }, [getBeatMultiplier]); // Only depend on getBeatMultiplier function
-
-  function updateActualBpm() {
-    const arr = playedBeatTimesRef.current;
-    const MAX_BEATS = 16;
-    if (arr.length > MAX_BEATS) {
-      arr.shift();
-    }
-    if (arr.length < 2) return;
-    
-    let totalDiff = 0;
-    for (let i = 1; i < arr.length; i++) {
-      totalDiff += arr[i] - arr[i - 1];
-    }
-    const avgDiff = totalDiff / (arr.length - 1);
-    const newBpm = 60000 / avgDiff;
-    setActualBpm(newBpm);
-  }
+  }, [getBeatMultiplier, tempoRef, swingRef, subdivisionsRef]);
 
   // Prepare circle transition - called when we detect we need to switch circles
   const prepareCircleTransition = useCallback((fromCircle, toCircle) => {
@@ -296,7 +379,25 @@ export default function useMultiCircleMetronomeLogic({
     }, 500);
     
     return true;
-  }, [circleSettings]);
+  }, [circleSettings, audioCtxRef, circleTransitionRef]);
+
+  // Add back the updateActualBpm function
+  const updateActualBpm = useCallback(() => {
+    const arr = playedBeatTimesRef.current;
+    const MAX_BEATS = 16;
+    if (arr.length > MAX_BEATS) {
+      arr.shift();
+    }
+    if (arr.length < 2) return;
+    
+    let totalDiff = 0;
+    for (let i = 1; i < arr.length; i++) {
+      totalDiff += arr[i] - arr[i - 1];
+    }
+    const avgDiff = totalDiff / (arr.length - 1);
+    const newBpm = 60000 / avgDiff;
+    setActualBpm(newBpm);
+  }, [playedBeatTimesRef, setActualBpm]);
 
   // Schedule subdivision function that handles transitions smoothly
   const scheduleSubFn = useCallback((subIndex, when) => {
@@ -424,7 +525,21 @@ export default function useMultiCircleMetronomeLogic({
     volumeRef, 
     onAnySubTrigger,
     circleSettings,
-    onCircleChange
+    onCircleChange,
+    playingCircleRef,
+    subdivisionsRef,
+    circleTransitionRef,
+    beatTimingRef,
+    lastBeatTimeRef,
+    accentsRef,
+    isSilencePhaseRef,
+    prepareCircleTransition,
+    audioCtxRef,
+    normalBufferRef,
+    accentBufferRef,
+    firstBufferRef,
+    playedBeatTimesRef,
+    updateActualBpm
   ]);
 
   // Detect when we need to switch circles - called from the component
@@ -444,7 +559,7 @@ export default function useMultiCircleMetronomeLogic({
     return transitionPrepared ? nextCircle : currentCircle;
   }, [circleSettings, prepareCircleTransition]);
 
-  // Main scheduler loop
+  // Now define the doSchedulerLoop function
   const doSchedulerLoop = useCallback(() => {
     runScheduler({
       audioCtxRef,
@@ -452,33 +567,30 @@ export default function useMultiCircleMetronomeLogic({
       currentSubRef,
       currentSubdivisionSetter: setCurrentSubdivision,
       getCurrentSubIntervalSec,
-      handleMeasureBoundary: () => {
-        // Handle measure boundary (training logic)
-        const measureResult = handleMeasureBoundary({
-          measureCountRef,
-          muteMeasureCountRef,
-          isSilencePhaseRef,
-          macroMode,
-          speedMode,
-          measuresUntilMute,
-          muteDurationMeasures,
-          muteProbability,
-          measuresUntilSpeedUp,
-          tempoIncreasePercent,
-          tempoRef,
-          setTempo
-        });
-        
-        // Log measure boundary event
-        if (measureResult) {
-          console.log(`[MultiCircleLogic] 📏 Measure boundary: count=${measureCountRef.current}, silencePhase=${isSilencePhaseRef.current}, tempo=${tempoRef.current}`);
-        }
-      },
+      handleMeasureBoundary: () => handleMeasureBoundary({
+        measureCountRef,
+        muteMeasureCountRef,
+        isSilencePhaseRef,
+        macroMode,
+        speedMode,
+        measuresUntilMute,
+        muteDurationMeasures,
+        muteProbability,
+        measuresUntilSpeedUp,
+        tempoIncreasePercent,
+        tempoRef,
+        setTempo
+      }),
       scheduleSubFn,
       subdivisionsRef,
-      multiCircleMode: true
+      multiCircleMode: true,
+      nodeRefs,
+      schedulerRunningRef
     });
   }, [
+    audioCtxRef,
+    nextNoteTimeRef,
+    currentSubRef,
     getCurrentSubIntervalSec,
     scheduleSubFn,
     macroMode,
@@ -488,66 +600,104 @@ export default function useMultiCircleMetronomeLogic({
     muteProbability,
     measuresUntilSpeedUp,
     tempoIncreasePercent,
-    setTempo
+    setTempo,
+    measureCountRef,
+    muteMeasureCountRef,
+    isSilencePhaseRef,
+    nodeRefs,
+    schedulerRunningRef,
+    tempoRef
   ]);
 
-  const stopScheduler = useCallback(() => {
-    if (lookaheadRef.current) {
-      clearInterval(lookaheadRef.current);
-      lookaheadRef.current = null;
-    }
-    schedulerRunningRef.current = false;
-    console.log("[MultiCircleLogic] Scheduler stopped");
-  }, []);
-
-  // Start scheduler with optional start time
   const startScheduler = useCallback(() => {
-    if (schedulerRunningRef.current) {
-      console.log("[MultiCircleLogic] Scheduler already running, stopping first");
-      stopScheduler();
-    }
+    if (schedulerRunningRef.current) return;
 
-    // Initialize timing variables
-    const audioCtx = audioCtxRef.current;
-    if (!audioCtx) {
-      console.error("No AudioContext available");
-      return;
-    }
-
-    // Reset counters
-    nextNoteTimeRef.current = audioCtx.currentTime;
-    currentSubRef.current = 0;
-    currentSubStartRef.current = 0;
-    currentSubIntervalRef.current = getCurrentSubIntervalSec(0);
-    playedBeatTimesRef.current = [];
-    schedulerRunningRef.current = true;
-
-    // Log the current settings for debugging
-    console.log(`[MultiCircleLogic] 🎵 Starting scheduler with beatMode=${circleSettings[playingCircleRef.current]?.beatMode}, multiplier=${getBeatMultiplier()}, tempo=${tempoRef.current}`);
-
-    // Start the scheduling loop
-    lookaheadRef.current = setInterval(doSchedulerLoop, 20);
-  }, [getCurrentSubIntervalSec, doSchedulerLoop, circleSettings, getBeatMultiplier]);
-
-  // Auto-start/stop based on isPaused
-  useEffect(() => {
-    if (!isPaused) {
-      if (!schedulerRunningRef.current) {
-        startScheduler();
+    // Make sure we're starting clean
+    stopScheduler();
+    
+    (async function() {
+      try {
+        // Create new audio context if it doesn't exist or is closed
+        if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
+          const newCtx = initAudioContext();
+          if (!newCtx) {
+            console.error('Failed to create audio context');
+            return;
+          }
+          audioCtxRef.current = newCtx;
+          
+          // Load sound buffers
+          try {
+            const soundSet = await getActiveSoundSet();
+            await loadClickBuffers({
+              audioCtx: audioCtxRef.current,
+              normalBufferRef,
+              accentBufferRef,
+              firstBufferRef,
+              soundSet
+            });
+          } catch (error) {
+            console.log('Loading default sound set');
+            await loadClickBuffers({
+              audioCtx: audioCtxRef.current,
+              normalBufferRef,
+              accentBufferRef,
+              firstBufferRef
+            });
+          }
+        } 
+        // Resume if suspended
+        else if (audioCtxRef.current.state === 'suspended') {
+          await audioCtxRef.current.resume();
+        }
+        
+        // Check if we have all needed components ready
+        if (
+          !audioCtxRef.current || 
+          audioCtxRef.current.state !== 'running' ||
+          !normalBufferRef.current || 
+          !accentBufferRef.current || 
+          !firstBufferRef.current
+        ) {
+          console.error('Audio context or buffers not ready');
+          return;
+        }
+        
+        // All checks passed, start scheduler
+        schedulerRunningRef.current = true;
+        const now = audioCtxRef.current.currentTime;
+        
+        // Reset scheduling state
+        currentSubRef.current = 0;
+        setCurrentSubdivision(0);
+        nextNoteTimeRef.current = now;
+        currentSubStartRef.current = now;
+        currentSubIntervalRef.current = getCurrentSubIntervalSec(0);
+        playedBeatTimesRef.current = [];
+        
+        // Start scheduling loop
+        lookaheadRef.current = setInterval(doSchedulerLoop, 20);
+        console.log('MultiCircle metronome started successfully');
+      } catch (err) {
+        console.error('Error starting metronome:', err);
       }
-    } else {
-      stopScheduler();
-    }
-  }, [isPaused]);
-
-  // Restart scheduler when circleSettings change and we're not paused
-  useEffect(() => {
-    if (!isPaused && schedulerRunningRef.current) {
-      console.log("[MultiCircleLogic] Restarting scheduler due to circleSettings change");
-      stopScheduler();
-      startScheduler();
-    }
-  }, [circleSettings, isPaused, startScheduler, stopScheduler]);
+    })();
+  }, [
+    audioCtxRef, 
+    stopScheduler, 
+    doSchedulerLoop, 
+    normalBufferRef, 
+    accentBufferRef, 
+    firstBufferRef, 
+    schedulerRunningRef, 
+    nextNoteTimeRef, 
+    currentSubRef, 
+    getCurrentSubIntervalSec, 
+    currentSubStartRef, 
+    currentSubIntervalRef, 
+    playedBeatTimesRef, 
+    lookaheadRef
+  ]);
 
   // Tap Tempo handler
   const handleTapTempo = useCallback(
@@ -558,7 +708,46 @@ export default function useMultiCircleMetronomeLogic({
   // Function to check if we're currently in a transition
   const isTransitioning = useCallback(() => {
     return circleTransitionRef.current.isTransitioning;
-  }, []);
+  }, [circleTransitionRef]);
+
+  // Auto-start/stop based on isPaused
+  useEffect(() => {
+    if (isPaused) {
+      stopScheduler();
+      
+      // Suspend audio context if it exists
+      if (audioCtxRef.current && audioCtxRef.current.state === 'running') {
+        audioCtxRef.current.suspend().catch(err => {
+          console.error('Error suspending audio context:', err);
+        });
+      }
+    } else {
+      startScheduler();
+    }
+    
+    return () => {
+      // Clean up on component unmount
+      if (!isPaused) {
+        stopScheduler();
+      }
+      
+      // Close audio context on unmount to prevent memory leaks
+      if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
+        audioCtxRef.current.close().catch(err => {
+          console.error('Error closing audio context:', err);
+        });
+      }
+    };
+  }, [isPaused, startScheduler, stopScheduler, audioCtxRef]);
+
+  // Restart scheduler when circleSettings change and we're not paused
+  useEffect(() => {
+    if (!isPaused && schedulerRunningRef.current) {
+      console.log("[MultiCircleLogic] Restarting scheduler due to circleSettings change");
+      stopScheduler();
+      startScheduler();
+    }
+  }, [circleSettings, isPaused, startScheduler, stopScheduler, schedulerRunningRef]);
 
   // Return the enhanced logic object
   return {

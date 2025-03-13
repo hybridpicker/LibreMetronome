@@ -87,6 +87,7 @@ export default function useMetronomeLogic({
   const subdivisionsRef = useRef(subdivisions);
   const accentsRef = useRef(accents);
   const beatConfigRef = useRef(beatConfig);
+  const beatMultiplierRef = useRef(beatMultiplier);
 
   useEffect(() => { tempoRef.current = tempo; }, [tempo]);
   useEffect(() => { swingRef.current = swing; }, [swing]);
@@ -94,47 +95,21 @@ export default function useMetronomeLogic({
   useEffect(() => { subdivisionsRef.current = subdivisions; }, [subdivisions]);
   useEffect(() => { accentsRef.current = accents; }, [accents]);
   useEffect(() => { beatConfigRef.current = beatConfig; }, [beatConfig]);
-
-  // 3) Audio initialization is deferred until user interaction.
-  const initializeAudio = async () => {
-    if (!audioCtxRef.current) {
-      const audioCtx = initAudioContext();
-      audioCtxRef.current = audioCtx;
-      try {
-        const soundSet = await getActiveSoundSet();
-        console.log('Loaded sound set from API:', soundSet);
-        await loadClickBuffers({
-          audioCtx,
-          normalBufferRef,
-          accentBufferRef,
-          firstBufferRef,
-          soundSet
-        });
-      } catch (error) {
-        console.error('Failed to load sound set from API:', error);
-        await loadClickBuffers({
-          audioCtx,
-          normalBufferRef,
-          accentBufferRef,
-          firstBufferRef
-        });
-      }
-    } else if (audioCtxRef.current.state === 'suspended') {
-      try {
-        await audioCtxRef.current.resume();
-        console.log('AudioContext resumed successfully');
-      } catch (err) {
-        console.error('Failed to resume AudioContext:', err);
-      }
-    }
-    return audioCtxRef.current;
-  };
-
+  
+  // Keep a reference to the doSchedulerLoop function to avoid circular dependencies
+  const doSchedulerLoopRef = useRef(null);
+  
   // 4) The scheduling logic
   const getCurrentSubIntervalSec = useCallback((subIndex) => {
     const localTempo = tempoRef.current;
     if (!localTempo) return 0.5;
-    const secPerHit = 60 / (localTempo * beatMultiplier);
+    
+    // Important: get the latest beatMultiplier value to ensure it's current
+    const currentMultiplier = beatMultiplierRef.current;
+    
+    // Calculate base interval (seconds per hit) using the current beat multiplier
+    const secPerBeat = 60 / localTempo;
+    const secPerHit = secPerBeat / currentMultiplier;
 
     // If we have >=2 subs + a swing factor:
     const totalSubs = subdivisionsRef.current;
@@ -146,81 +121,82 @@ export default function useMetronomeLogic({
         : secPerHit * (1 - sFactor);
     }
     return secPerHit;
-  }, [beatMultiplier]);
-
+  }, []);
+  
   // Move updateActualBpm into a useCallback to prevent it from changing on every render
   const updateActualBpm = useCallback(() => {
-    // average the last few intervals in playedBeatTimesRef
-    const arr = playedBeatTimesRef.current;
-    const MAX_BEATS = 16;
-    if (arr.length > MAX_BEATS) {
-      arr.shift();
-    }
-    if (arr.length < 2) return;
+    const times = playedBeatTimesRef.current;
+    // Need at least 2 times to calculate BPM
+    if (times.length < 2) return;
     
+    // Calculate average time between beats
+    const recentTimes = times.slice(-4); // Last 4 beats
     let totalDiff = 0;
-    for (let i = 1; i < arr.length; i++) {
-      totalDiff += arr[i] - arr[i - 1];
+    let numDiffs = 0;
+    
+    for (let i = 1; i < recentTimes.length; i++) {
+      totalDiff += recentTimes[i] - recentTimes[i-1];
+      numDiffs++;
     }
-    const avgDiff = totalDiff / (arr.length - 1);
-    const newBpm = 60000 / avgDiff;
+    
+    if (numDiffs === 0) return;
+    const avgTimeBetweenBeats = totalDiff / numDiffs;
+    const beatsPerSec = 1 / avgTimeBetweenBeats;
+    const beatsPerMin = beatsPerSec * 60;
+    
+    // Round to nearest integer BPM
+    const newBpm = Math.round(beatsPerMin);
     setActualBpm(newBpm);
   }, [playedBeatTimesRef, setActualBpm]);
-
-  // Wrap our scheduleSubdivision in a single function we can pass to runScheduler
-  const scheduleSubFn = useCallback((subIndex, when, nodeRefs) => {
-    // Should we mute?
-    const muteThisBeat = shouldMuteThisBeat({
-      macroMode,
-      muteProbability,
-      isSilencePhaseRef
-    });
-
-    scheduleSubdivision({
-      subIndex,
-      when,
-      audioCtx: audioCtxRef.current,
-      analogMode,
-      gridMode,
-      multiCircleMode,
-      volumeRef,
-      onAnySubTrigger,
-      normalBufferRef,
-      accentBufferRef,
-      firstBufferRef,
-      beatConfigRef,
-      accentsRef,
-      shouldMute: muteThisBeat,
-      playedBeatTimesRef,
-      updateActualBpm,
-      nodeRefs
-    });
+  
+  // Handle tempo adjustments for training mode
+  const handleTrainingModeTempoAdjustments = useCallback(() => {
+    let adjustedTempo = tempoRef.current;
+    
+    // Only adjust if speedMode is on & we've reached the measure target
+    if (
+      speedMode === 1 && 
+      measureCountRef.current > 0 && 
+      measureCountRef.current % measuresUntilSpeedUp === 0
+    ) {
+      // Calculate the new tempo with percentage increase
+      const newTempo = adjustedTempo * (1 + tempoIncreasePercent / 100);
+      
+      // Clamp to max tempo
+      adjustedTempo = Math.min(newTempo, TEMPO_MAX);
+      
+      // Update the external tempo state
+      if (setTempo && adjustedTempo !== tempoRef.current) {
+        setTempo(adjustedTempo);
+      }
+    }
+    
+    return adjustedTempo;
   }, [
-    macroMode, 
-    muteProbability, 
-    isSilencePhaseRef, 
-    analogMode, 
-    gridMode, 
-    multiCircleMode, 
-    volumeRef, 
-    onAnySubTrigger, 
-    normalBufferRef, 
-    accentBufferRef, 
-    firstBufferRef, 
-    beatConfigRef, 
-    accentsRef, 
-    updateActualBpm, 
-    playedBeatTimesRef,
-    audioCtxRef
+    speedMode, 
+    measureCountRef, 
+    measuresUntilSpeedUp, 
+    tempoIncreasePercent, 
+    tempoRef, 
+    setTempo
   ]);
-
+  
+  // The main scheduler loop that schedules notes and runs on each clock tick
   const doSchedulerLoop = useCallback(() => {
+    // Only run if we have a valid audio context
+    if (!audioCtxRef.current) return;
+    
+    // 1. Adjustments for speed training mode - use the result properly
+    const adjustedTempo = handleTrainingModeTempoAdjustments();
+    
+    // 2. Run the scheduler with all deps
     runScheduler({
       audioCtxRef,
       nextNoteTimeRef,
       currentSubRef,
       currentSubdivisionSetter: setCurrentSubdivision,
       getCurrentSubIntervalSec,
+      tempo: adjustedTempo, // Pass the adjusted tempo to use it properly
       handleMeasureBoundary: () => handleMeasureBoundary({
         measureCountRef,
         muteMeasureCountRef,
@@ -235,17 +211,43 @@ export default function useMetronomeLogic({
         tempoRef,
         setTempo
       }),
-      scheduleSubFn,
+      scheduleSubFn: (subIndex, when, nodeRefs) => scheduleSubdivision({
+        subIndex,
+        when,
+        audioCtx: audioCtxRef.current,
+        analogMode,
+        gridMode,
+        multiCircleMode,
+        volumeRef,
+        onAnySubTrigger,
+        normalBufferRef,
+        accentBufferRef,
+        firstBufferRef,
+        beatConfigRef,
+        accentsRef,
+        shouldMute: shouldMuteThisBeat({
+          macroMode,
+          muteProbability,
+          isSilencePhaseRef
+        }),
+        playedBeatTimesRef,
+        updateActualBpm,
+        nodeRefs
+      }),
       subdivisionsRef,
       multiCircleMode,
-      nodeRefs
+      nodeRefs,
+      schedulerRunningRef
     });
   }, [
     audioCtxRef,
     nextNoteTimeRef,
     currentSubRef,
     getCurrentSubIntervalSec,
-    scheduleSubFn,
+    handleTrainingModeTempoAdjustments,
+    measureCountRef,
+    muteMeasureCountRef,
+    isSilencePhaseRef,
     macroMode,
     speedMode,
     measuresUntilMute,
@@ -253,190 +255,110 @@ export default function useMetronomeLogic({
     muteProbability,
     measuresUntilSpeedUp,
     tempoIncreasePercent,
+    tempoRef,
     setTempo,
+    analogMode,
+    gridMode,
     multiCircleMode,
-    nodeRefs
+    volumeRef,
+    onAnySubTrigger,
+    normalBufferRef,
+    accentBufferRef,
+    firstBufferRef,
+    beatConfigRef,
+    accentsRef,
+    playedBeatTimesRef,
+    updateActualBpm,
+    subdivisionsRef,
+    nodeRefs,
+    schedulerRunningRef
   ]);
 
-  // 5) start/stop the scheduler
-  function startScheduler() {
-    if (schedulerRunningRef.current) return;
-    stopScheduler();
+  // Store the doSchedulerLoop function in a ref to avoid recreating it
+  useEffect(() => {
+    doSchedulerLoopRef.current = doSchedulerLoop;
+  }, [doSchedulerLoop]);
 
-    // Initialize audio if needed
-    if (!audioCtxRef.current) {
-      console.log('AudioContext not initialized, initializing now...');
-      initializeAudio().then(audioCtx => {
-        if (audioCtx) {
-          console.log('AudioContext initialized, starting scheduler...');
-          startSchedulerWithAudio(audioCtx);
-        } else {
-          console.error('Failed to initialize AudioContext');
-        }
-      }).catch(err => {
-        console.error('Error initializing audio:', err);
-      });
-      return;
-    }
-
-    // Audio exists but might be suspended
-    if (audioCtxRef.current.state === 'suspended') {
-      console.log('AudioContext suspended, resuming...');
-      audioCtxRef.current.resume().then(() => {
-        console.log('AudioContext resumed, starting scheduler...');
-        startSchedulerWithAudio(audioCtxRef.current);
-      }).catch(err => {
-        console.error('Error resuming AudioContext:', err);
-      });
-      return;
-    }
-
-    // Audio is ready, start scheduler
-    startSchedulerWithAudio(audioCtxRef.current);
-  }
-
-  function startSchedulerWithAudio(audioCtx) {
-    if (!audioCtx) {
-      console.error('Cannot start scheduler without AudioContext');
-      return;
-    }
+  // Update beatMultiplier ref and recalculate interval if needed
+  useEffect(() => { 
+    // Make sure to immediately update the beatMultiplier reference
+    beatMultiplierRef.current = beatMultiplier; 
     
-    // Make sure we have our sound buffers
-    if (!normalBufferRef.current || !accentBufferRef.current || !firstBufferRef.current) {
-      console.error('Sound buffers not loaded, cannot start scheduler');
-      return;
+    // If we're already running, force an update to the current interval
+    if (schedulerRunningRef.current && audioCtxRef.current) {
+      // Update the current subdivision interval
+      currentSubIntervalRef.current = getCurrentSubIntervalSec(currentSubRef.current);
+      
+      // If the scheduler is running, restart it to apply the new interval
+      if (!isPaused && lookaheadRef.current) {
+        // Clear existing interval
+        clearInterval(lookaheadRef.current);
+        
+        // Restart with a new interval to ensure timing is updated
+        lookaheadRef.current = setInterval(
+          () => doSchedulerLoopRef.current && doSchedulerLoopRef.current(),
+          20
+        );
+      }
     }
+  }, [
+    beatMultiplier, 
+    getCurrentSubIntervalSec, 
+    isPaused,
+    audioCtxRef,
+    currentSubIntervalRef,
+    currentSubRef,
+    lookaheadRef,
+    schedulerRunningRef
+  ]);
 
-    console.log('Starting scheduler with audio:', audioCtx.state);
-    schedulerRunningRef.current = true;
-    currentSubRef.current = 0;
-    setCurrentSubdivision(0);
-
-    const now = audioCtx.currentTime;
-    nextNoteTimeRef.current = now;
-    currentSubStartRef.current = now;
-    currentSubIntervalRef.current = getCurrentSubIntervalSec(0);
-    playedBeatTimesRef.current = [];
-
-    // Start the scheduling loop
-    lookaheadRef.current = setInterval(doSchedulerLoop, 20);
-  }
-
-  function stopScheduler() {
-    console.log('[Scheduler] Stopping scheduler');
-    
-    // 1. Clear the scheduling lookahead interval
+  // Define stopScheduler first to avoid circular dependency
+  const stopScheduler = useCallback(function() {
+    // Clear interval & mark as not running
     if (lookaheadRef.current) {
       clearInterval(lookaheadRef.current);
       lookaheadRef.current = null;
     }
-    
-    // 2. Reset running state
     schedulerRunningRef.current = false;
     
-    // 3. Stop all active audio nodes
-    if (nodeRefs.current && nodeRefs.current.length > 0) {
-      console.log(`[Scheduler] Stopping ${nodeRefs.current.length} active audio nodes`);
+    // Clean up any active audio nodes
+    for (const node of nodeRefs.current) {
       try {
-        // Loop through all tracked audio nodes and stop them
-        nodeRefs.current.forEach(node => {
-          if (node && typeof node.stop === 'function') {
-            try {
-              node.stop(0);
-            } catch (e) {
-              // Ignore errors when stopping nodes that might already be done
-            }
+        if (node.stop) {
+          node.stop();
+        } else if (node.disconnect) {
+          node.disconnect();
+        }
+      } catch (e) {
+        // Ignore errors during cleanup
+      }
+    }
+    nodeRefs.current = [];
+  }, [lookaheadRef, nodeRefs, schedulerRunningRef]);
+
+  // Then define startScheduler with stopScheduler in its dependencies
+  const startScheduler = useCallback(function() {
+    // If already running, don't restart
+    if (schedulerRunningRef.current) return;
+    
+    // Make sure the scheduler is fully stopped
+    stopScheduler();
+    
+    // Simplified approach to audio context initialization
+    (async function() {
+      try {
+        // Create new audio context if it doesn't exist or is closed
+        if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
+          const newCtx = initAudioContext();
+          if (!newCtx) {
+            console.error('Failed to create audio context');
+            return;
           }
-        });
-        // Clear the nodeRefs array
-        nodeRefs.current = [];
-      } catch (err) {
-        console.error('[Scheduler] Error stopping audio nodes:', err);
-      }
-    }
-    
-    // 4. Reset timing references
-    nextNoteTimeRef.current = 0;
-    currentSubRef.current = 0;
-    playedBeatTimesRef.current = [];
-    
-    // 5. Update visual state
-    setCurrentSubdivision(0);
-  }
-
-  // 6) Toggling play/pause from external
-  useEffect(() => {
-    if (!isPaused) {
-      if (!schedulerRunningRef.current) {
-        startScheduler();
-      }
-    } else {
-      stopScheduler();
-    }
-  }, [isPaused]);
-
-  // 7) Tap Tempo
-  const handleTapTempo = useCallback(
-    createTapTempoLogic(setTempo),
-    [setTempo]
-  );
-
-  // Add a new reloadSounds function that can be called to reload sound buffers
-  const reloadSounds = useCallback(async () => {
-    if (!audioCtxRef.current) {
-      console.error("No audio context available for reloading sounds");
-      return false;
-    }
-
-    try {
-      // Get the active sound set
-      const soundSet = await getActiveSoundSet();
-      console.log('Reloading sounds with sound set:', soundSet);
-      
-      // Load the buffers
-      await loadClickBuffers({
-        audioCtx: audioCtxRef.current,
-        normalBufferRef,
-        accentBufferRef,
-        firstBufferRef,
-        soundSet
-      });
-      
-      console.log('Audio buffers reloaded successfully');
-      return true;
-    } catch (error) {
-      console.error('Failed to reload sound buffers:', error);
-      return false;
-    }
-  }, [audioCtxRef, normalBufferRef, accentBufferRef, firstBufferRef]);
-
-  // Forces a reload of sound buffers when the active sound set changes
-  const [soundSetUpdateTrigger, setSoundSetUpdateTrigger] = useState(0);
-  
-  useEffect(() => {
-    // Listen for sound set changes from the settings menu
-    const handleSoundSetChange = (event) => {
-      console.log('Sound set changed event detected:', event.detail);
-      setSoundSetUpdateTrigger(prev => prev + 1);
-    };
-    
-    window.addEventListener('soundSetChanged', handleSoundSetChange);
-    
-    return () => {
-      window.removeEventListener('soundSetChanged', handleSoundSetChange);
-    };
-  }, []);
-  
-  // Reload sound buffers when triggered
-  useEffect(() => {
-    if (soundSetUpdateTrigger > 0 && audioCtxRef.current) {
-      (async () => {
-        try {
-          console.log('Reloading sound buffers due to sound set change');
-          const soundSet = await getActiveSoundSet();
+          audioCtxRef.current = newCtx;
           
-          if (soundSet) {
-            console.log('Loading new sound set:', soundSet.name);
+          // Load sound buffers
+          try {
+            const soundSet = await getActiveSoundSet();
             await loadClickBuffers({
               audioCtx: audioCtxRef.current,
               normalBufferRef,
@@ -444,13 +366,122 @@ export default function useMetronomeLogic({
               firstBufferRef,
               soundSet
             });
+          } catch (error) {
+            console.log('Loading default sound set');
+            await loadClickBuffers({
+              audioCtx: audioCtxRef.current,
+              normalBufferRef,
+              accentBufferRef,
+              firstBufferRef
+            });
           }
-        } catch (error) {
-          console.error('Failed to reload sound buffers:', error);
+        } 
+        // Resume if suspended
+        else if (audioCtxRef.current.state === 'suspended') {
+          await audioCtxRef.current.resume();
         }
-      })();
+        
+        // Check if we have all needed components ready
+        if (
+          !audioCtxRef.current || 
+          audioCtxRef.current.state !== 'running' ||
+          !normalBufferRef.current || 
+          !accentBufferRef.current || 
+          !firstBufferRef.current
+        ) {
+          console.error('Audio context or buffers not ready');
+          return;
+        }
+        
+        // All checks passed, start scheduler
+        schedulerRunningRef.current = true;
+        const now = audioCtxRef.current.currentTime;
+        
+        // Reset scheduling state
+        currentSubRef.current = 0;
+        setCurrentSubdivision(0);
+        nextNoteTimeRef.current = now;
+        currentSubStartRef.current = now;
+        currentSubIntervalRef.current = getCurrentSubIntervalSec(0);
+        playedBeatTimesRef.current = [];
+        
+        // Start scheduling loop with doSchedulerLoopRef to ensure we use the latest version
+        lookaheadRef.current = setInterval(
+          () => doSchedulerLoopRef.current && doSchedulerLoopRef.current(),
+          20
+        );
+      } catch (err) {
+        console.error('Error starting metronome:', err);
+      }
+    })();
+  }, [
+    audioCtxRef,
+    currentSubIntervalRef,
+    currentSubRef,
+    currentSubStartRef,
+    doSchedulerLoopRef,
+    firstBufferRef,
+    getCurrentSubIntervalSec,
+    lookaheadRef,
+    nextNoteTimeRef,
+    normalBufferRef,
+    accentBufferRef,
+    playedBeatTimesRef,
+    schedulerRunningRef,
+    stopScheduler // Add this dependency
+  ]);
+
+  // 7) Create tap tempo logic
+  const { handleTapTempo } = createTapTempoLogic({
+    setTempo: (newTempo) => {
+      // Clamp tempo to min/max
+      const clampedTempo = Math.min(Math.max(newTempo, TEMPO_MIN), TEMPO_MAX);
+      if (setTempo) {
+        setTempo(clampedTempo);
+      }
     }
-  }, [soundSetUpdateTrigger]);
+  });
+  
+  // 8) Handle reloading sounds (added in your previous code)
+  const reloadSounds = useCallback(async function() {
+    try {
+      if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
+        audioCtxRef.current = initAudioContext();
+      }
+      
+      const soundSet = await getActiveSoundSet();
+      await loadClickBuffers({
+        audioCtx: audioCtxRef.current,
+        normalBufferRef,
+        accentBufferRef,
+        firstBufferRef,
+        soundSet
+      });
+      return true;
+    } catch (error) {
+      console.error('Error reloading sounds:', error);
+      return false;
+    }
+  }, [audioCtxRef, normalBufferRef, accentBufferRef, firstBufferRef]);
+
+  // 9) Effects to start/stop scheduler based on isPaused state
+  useEffect(() => {
+    if (isPaused) {
+      stopScheduler();
+    } else {
+      startScheduler();
+    }
+  }, [isPaused, startScheduler, stopScheduler]);
+  
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      stopScheduler();
+      if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
+        audioCtxRef.current.close().catch(console.error);
+      }
+    };
+  }, [audioCtxRef, stopScheduler]);
 
   // Return the entire logic object
   return {
@@ -465,6 +496,17 @@ export default function useMetronomeLogic({
     measureCountRef,
     muteMeasureCountRef,
     isSilencePhaseRef,
-    reloadSounds // Add this new function
+    reloadSounds,
+    // Add a function to directly update the beatMultiplier reference
+    updateBeatMultiplier: (newMultiplier) => {
+      beatMultiplierRef.current = newMultiplier;
+      
+      // If we're actively playing, also update the current subdivision interval
+      if (schedulerRunningRef.current && audioCtxRef.current) {
+        currentSubIntervalRef.current = getCurrentSubIntervalSec(currentSubRef.current);
+      }
+      
+      return newMultiplier;
+    }
   };
 }
