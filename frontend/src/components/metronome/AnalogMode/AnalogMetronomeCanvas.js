@@ -55,7 +55,7 @@ export default function AnalogMetronomeCanvas({
     };
 
     const animate = () => {
-      ctx.fillStyle = "#f5f5f5";
+      ctx.fillStyle = "#f9f9f9";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       if (!isPaused && startTimeRef.current === null) {
