@@ -1,4 +1,4 @@
-// src/components/metronome/MultiCircleMode/MultiCircleMetronome.js
+// src/components/metronome/MultiCircleMode/MultiCircleMetronome.js - Fixed Version
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import useMultiCircleMetronomeLogic from "./hooks/useMultiCircleMetronomeLogic";
 import useKeyboardShortcuts from "../../../hooks/useKeyboardShortcuts";
@@ -31,7 +31,6 @@ const PlayButton = ({ handlePlayPause, isPaused }) => (
       className="play-pause-button"
       type="button"
       onClick={handlePlayPause}
-      onKeyDown={e => { e.stopPropagation(); e.preventDefault(); }}
       aria-label="Toggle Play/Pause"
       style={{ 
         background: "transparent", 
@@ -114,14 +113,19 @@ function MultiCircleMetronome(props) {
     muteProbability = 0.3,
     tempoIncreasePercent = 5,
     measuresUntilSpeedUp = 2,
-    soundSetReloadTrigger = 0 // Add this new prop with default 0
+    soundSetReloadTrigger = 0
   } = props;
 
-  // State for circle settings
+  // Initialize with default settings for two circles
   const [circleSettings, setCircleSettings] = useState([
     {
       subdivisions: 4,
       accents: [3, 1, 1, 1],
+      beatMode: "quarter"
+    },
+    {
+      subdivisions: 3,
+      accents: [3, 1, 1],
       beatMode: "quarter"
     }
   ]);
@@ -137,6 +141,16 @@ function MultiCircleMetronome(props) {
     ...circleSettings[activeCircle] || { subdivisions: 4, accents: [3, 1, 1, 1], beatMode: "quarter" },
     activeCircle
   };
+  
+  // Debugging for initialization
+  useEffect(() => {
+    console.log("MultiCircleMetronome initialized with settings:", {
+      circleSettings,
+      activeCircle,
+      playingCircle,
+      isPaused
+    });
+  }, []);
   
   // State tracking references
   const isProcessingPlayPauseRef = useRef(false);
@@ -186,66 +200,39 @@ function MultiCircleMetronome(props) {
     circleSettings,
     playingCircle,
     onCircleChange: setPlayingCircle
-  }, [
-    tempo, 
-    setTempo, 
-    circleSettings, 
-    playingCircle, 
-    isPaused, 
-    setIsPaused, 
-    swing, 
-    volume, 
-    macroMode, 
-    speedMode, 
-    measuresUntilMute, 
-    muteDurationMeasures, 
-    muteProbability, 
-    tempoIncreasePercent, 
-    measuresUntilSpeedUp
-  ]);
+  });
 
   // Make silence phase ref globally available to metronome logic
   useEffect(() => {
-    window.isSilencePhaseRef = logic.isSilencePhaseRef;
-    
-    return () => {
-      // Cleanup global refs when component unmounts
-      delete window.isSilencePhaseRef;
-    };
-  }, [logic.isSilencePhaseRef]);
+    if (logic && logic.isSilencePhaseRef) {
+      window.isSilencePhaseRef = logic.isSilencePhaseRef;
+      
+      return () => {
+        // Cleanup global refs when component unmounts
+        if (window.isSilencePhaseRef === logic.isSilencePhaseRef) {
+          delete window.isSilencePhaseRef;
+        }
+      };
+    }
+  }, [logic]);
 
   // Add a new effect to handle audio buffer reloading when soundSetReloadTrigger changes
   useEffect(() => {
-    if (!logic || !logic.audioCtx || !soundSetReloadTrigger) return;
+    if (!logic || !logic.reloadSounds || !soundSetReloadTrigger) return;
     
-    // Fetch the active sound set and reload buffers
-    getActiveSoundSet()
-      .then((soundSet) => {
-        if (soundSet && logic.normalBufferRef && logic.accentBufferRef && logic.firstBufferRef) {
-          loadClickBuffers({
-            audioCtx: logic.audioCtx,
-            normalBufferRef: logic.normalBufferRef,
-            accentBufferRef: logic.accentBufferRef,
-            firstBufferRef: logic.firstBufferRef,
-            soundSet: soundSet
-          })
-            .then(() => {
-              // Successfully reloaded audio buffers
-            })
-            .catch((err) => {
-              // Error handling without console.error
-            });
+    console.log("Reloading sound buffers due to soundSetReloadTrigger change");
+    logic.reloadSounds()
+      .then(success => {
+        if (success) {
+          console.log("Successfully reloaded sound buffers");
+        } else {
+          console.warn("Failed to reload sound buffers");
         }
       })
-      .catch((err) => {
-        // Error handling without console.error
+      .catch(err => {
+        console.error("Error reloading sound buffers:", err);
       });
   }, [soundSetReloadTrigger, logic]);
-
-  // This function will be implemented in future updates for advanced subdivision handling
-  const handleSubdivisionChange = useCallback((newSubdivision) => {
-    // Reserved for future implementation of advanced subdivision change handling
-  }, []); // Empty dependency array since it's not actively used
 
   // Handle setting subdivisions (used by keyboard shortcuts)
   const handleSetSubdivisions = useCallback((subdivisionValue) => {
@@ -255,7 +242,9 @@ function MultiCircleMetronome(props) {
       const updated = [...prev];
       updated[activeCircle] = {
         ...updated[activeCircle],
-        subdivisions: subdivisionValue
+        subdivisions: subdivisionValue,
+        // Create new accents array with first beat as 3 (emphasized)
+        accents: Array.from({ length: subdivisionValue }, (_, i) => (i === 0 ? 3 : 1))
       };
       return updated;
     });
@@ -264,27 +253,81 @@ function MultiCircleMetronome(props) {
   // Handle Play/Pause with proper state management
   const handlePlayPause = useCallback(() => {
     if (isProcessingPlayPauseRef.current) {
+      console.log("Ignoring play/pause - already processing");
       return;
     }
 
+    console.log("Play/Pause button clicked, current state:", isPaused ? "paused" : "playing");
     isProcessingPlayPauseRef.current = true;
-    setIsPaused(prev => !prev);
-
-    // Reset the processing flag after a short delay
+    
+    // Set a safety timeout to reset the flag
     setTimeout(() => {
       isProcessingPlayPauseRef.current = false;
-    }, 200);
-  }, [setIsPaused]); // Include setIsPaused in dependencies
+    }, 500);
+
+    if (isPaused) {
+      // Starting playback
+      console.log("Starting playback, resetting to circle 0");
+      
+      // Reset state for clean start
+      setPlayingCircle(0);
+      
+      if (logic && logic.audioCtx) {
+        if (logic.audioCtx.state === "suspended") {
+          logic.audioCtx.resume()
+            .then(() => {
+              console.log("AudioContext resumed");
+              setIsPaused(false);
+              
+              // Use a small delay to ensure context is fully ready
+              setTimeout(() => {
+                if (logic.startScheduler) {
+                  logic.startScheduler();
+                }
+                isProcessingPlayPauseRef.current = false;
+              }, 50);
+            })
+            .catch(err => {
+              console.error("Failed to resume AudioContext:", err);
+              isProcessingPlayPauseRef.current = false;
+            });
+        } else {
+          setIsPaused(false);
+          // Use small delay for stability
+          setTimeout(() => {
+            if (logic.startScheduler) {
+              logic.startScheduler();
+            }
+            isProcessingPlayPauseRef.current = false;
+          }, 20);
+        }
+      } else {
+        // No audio context yet, setIsPaused will trigger creation
+        setIsPaused(false);
+        isProcessingPlayPauseRef.current = false;
+      }
+    } else {
+      // Stopping playback
+      setIsPaused(true);
+      if (logic && logic.stopScheduler) {
+        logic.stopScheduler();
+      }
+      // Reset to first circle on pause
+      setPlayingCircle(0);
+      isProcessingPlayPauseRef.current = false;
+    }
+  }, [isPaused, setIsPaused, logic, setPlayingCircle]);
 
   // Handle manual tempo acceleration
   const handleAccelerate = useCallback(() => {
-    if (tempoIncreasePercent > 0) {
-      setTempo(prevTempo => {
-        const newTempo = Math.min(240, prevTempo * (1 + tempoIncreasePercent / 100));
-        return Math.round(newTempo);
+    if (!props.isPaused && tempoIncreasePercent > 0) {
+      manualTempoAcceleration({
+        tempoIncreasePercent,
+        tempoRef: { current: tempo },
+        setTempo
       });
     }
-  }, [tempoIncreasePercent, setTempo]); // Include setTempo in dependencies
+  }, [props.isPaused, tempoIncreasePercent, tempo, setTempo]);
 
   // Register callbacks with parent if provided
   useEffect(() => {
@@ -328,9 +371,20 @@ function MultiCircleMetronome(props) {
       }
       
       updated[activeCircle] = { ...updated[activeCircle], beatMode: mode };
+      
+      // Dispatch a custom event to notify of beat mode change
+      const multiplier = mode === "quarter" ? 1 : 2;
+      const beatModeChangeEvent = new CustomEvent('beat-mode-change', {
+        detail: { 
+          beatMode: mode,
+          beatMultiplier: multiplier
+        }
+      });
+      window.dispatchEvent(beatModeChangeEvent);
+      
       return updated;
     });
-  }, [activeCircle, setCircleSettings]);
+  }, [activeCircle]);
 
   // ADD CIRCLE FUNCTION
   const addCircle = useCallback(() => {
@@ -338,12 +392,17 @@ function MultiCircleMetronome(props) {
       if (!prev || prev.length >= MAX_CIRCLES) {
         return prev;
       }
+      
+      // Create a new circle with some variety compared to the last one
+      const lastCircle = prev[prev.length - 1];
+      const newSubdivisions = lastCircle.subdivisions === 4 ? 3 : 4;
+      
       return [
         ...prev,
         {
-          subdivisions: 4,
-          accents: Array.from({ length: 4 }, (_, i) => (i === 0 ? 3 : 1)),
-          beatMode: "quarter"
+          subdivisions: newSubdivisions,
+          accents: Array.from({ length: newSubdivisions }, (_, i) => (i === 0 ? 3 : 1)),
+          beatMode: lastCircle.beatMode === "quarter" ? "eighth" : "quarter"
         }
       ];
     });
@@ -389,9 +448,6 @@ function MultiCircleMetronome(props) {
       if (!circle.accents || beatIndex >= circle.accents.length) return prev;
       
       const acc = [...circle.accents];
-      const oldState = acc[beatIndex];
-      
-      // Ensure we properly cycle through all states including 0
       acc[beatIndex] = (acc[beatIndex] + 1) % 4; // cycle 0→1→2→3→0
       
       // Force a deep copy to ensure React detects the change
@@ -429,7 +485,7 @@ function MultiCircleMetronome(props) {
             idx={idx}
             isActiveUI={idx === activeCircle}
             isPlaying={idx === playingCircle && !isPaused}
-            currentSubdivision={logic?.currentSubdivision}
+            currentSubdivision={logic?.currentSubdivision || 0}
             isPaused={isPaused}
             audioCtxRunning={logic?.audioCtx && logic.audioCtx.state === "running"}
             isTransitioning={logic.isTransitioning && logic.isTransitioning()}
@@ -523,11 +579,10 @@ function MultiCircleMetronome(props) {
         </div>
       </div>
       
-      
       {/* Tap tempo button for mobile */}
-      {isMobile && (
+      {isMobile && logic?.tapTempo && (
         <button
-          onClick={logic?.tapTempo}
+          onClick={logic.tapTempo}
           style={{ 
             background: "transparent", 
             border: "none", 
