@@ -1,4 +1,4 @@
-// src/components/metronome/MultiCircleMode/CircleRenderer.js - With musical symbols
+// src/components/metronome/MultiCircleMode/CircleRenderer.js - With repositioned symbols
 import React from 'react';
 import firstBeat from "../../../assets/svg/firstBeat.svg";
 import firstBeatActive from "../../../assets/svg/firstBeatActive.svg";
@@ -160,22 +160,22 @@ const CircleRenderer = ({
       </div>
     );
     
-    // Add a musical note symbol indicator for the beat mode
+    // Add a musical note symbol indicator for the beat mode - REPOSITIONED LOWER
     const beatModeIndicator = (
       <div
         key="beat-mode-indicator"
         style={{
           position: "absolute",
-          bottom: "-26px",
+          bottom: "-38px", // Moved lower from -26px to -38px
           left: "50%",
           transform: "translateX(-50%)",
-          fontSize: "18px", // Larger font for the musical symbol
+          fontSize: "20px", // Larger font for the musical symbol
           fontWeight: "bold",
           fontFamily: "Arial, 'Times New Roman', serif", // Better font for musical symbols
           color: isPlaying ? "#FFD700" : "#00A0A0",
           backgroundColor: "rgba(255, 255, 255, 0.9)",
-          padding: "2px 12px",
-          borderRadius: "10px",
+          padding: "2px 14px", // Slightly wider padding
+          borderRadius: "12px", // Slightly more rounded
           zIndex: 5,
           border: "1px solid #eee",
           boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
@@ -196,7 +196,7 @@ const CircleRenderer = ({
           borderRadius: "50%",
           border: "2px solid transparent",
           boxShadow: activeBoxShadow,
-          margin: isMobile ? "15px 0" : "15px",
+          margin: isMobile ? "15px 0 38px 0" : "15px 15px 38px 15px", // Added bottom margin to make space for the indicator
           transition: "box-shadow 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)",
           cursor: "pointer",
           overflow: "visible"
@@ -219,26 +219,26 @@ const CircleRenderer = ({
         borderRadius: "50%",
         border: "2px solid transparent",
         boxShadow: activeBoxShadow,
-        margin: isMobile ? "15px 0" : "15px",
+        margin: isMobile ? "15px 0 38px 0" : "15px 15px 38px 15px", // Added bottom margin to make space for the indicator
         transition: "box-shadow 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)",
         cursor: "pointer",
         overflow: "visible"
       }}
     >
-      {/* Add musical note symbol for single circle as well */}
+      {/* Add musical note symbol for single circle as well - REPOSITIONED LOWER */}
       <div
         style={{
           position: "absolute",
-          bottom: "-26px",
+          bottom: "-38px", // Moved lower from -26px to -38px
           left: "50%",
           transform: "translateX(-50%)",
-          fontSize: "18px", // Larger font for the musical symbol
+          fontSize: "20px", // Larger font for the musical symbol
           fontWeight: "bold",
           fontFamily: "Arial, 'Times New Roman', serif", // Better font for musical symbols
           color: isPlaying ? "#FFD700" : "#00A0A0",
           backgroundColor: "rgba(255, 255, 255, 0.9)",
-          padding: "2px 12px",
-          borderRadius: "10px",
+          padding: "2px 14px", // Slightly wider padding
+          borderRadius: "12px", // Slightly more rounded
           zIndex: 5,
           border: "1px solid #eee",
           boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
