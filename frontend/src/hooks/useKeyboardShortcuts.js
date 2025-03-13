@@ -19,6 +19,9 @@ const useKeyboardShortcuts = ({
   const togglePlayRef = useRef(onTogglePlayPause);
   const tapTempoRef = useRef(onTapTempo);
 
+  // Store tap times in this hook's own closure
+  const tapTimesRef = useRef([]);
+  
   useEffect(() => {
     togglePlayRef.current = onTogglePlayPause;
   }, [onTogglePlayPause]);
@@ -28,25 +31,22 @@ const useKeyboardShortcuts = ({
   }, [onTapTempo]);
 
   const lastSpaceKeyTimeRef = useRef(0);
+  const lastTapKeyTimeRef = useRef(0);
 
   useEffect(() => {
     const handleKeyDown = (event) => {
-      // Prevent keyboard shortcuts when typing in inputs or editable elements
-      // BUT allow space if the user is focused on a button
+      // Skip shortcuts in input elements
       if (
         event.target.tagName === 'INPUT' ||
         event.target.tagName === 'TEXTAREA' ||
         event.target.isContentEditable
-        // Notice we remove the check for event.target.tagName === 'BUTTON'
       ) {
         return;
       }
 
-      // SPACE key → toggle play/pause
+      // SPACE key for play/pause
       if (event.code === 'Space') {
-        // Prevent default so page doesn't scroll
         event.preventDefault();
-        // Prevent rapid repeated calls
         const now = Date.now();
         if (now - lastSpaceKeyTimeRef.current < 300) {
           return;
@@ -57,14 +57,48 @@ const useKeyboardShortcuts = ({
         }
       }
 
-      // Handle other shortcuts based on key code
+      // Handle other shortcuts
       switch (event.code) {
         case 'KeyT':
-          // Only use T for tap tempo, not for training menu
-          if (tapTempoRef.current) tapTempoRef.current();
+          // Rate limit for key repeats
+          const now = Date.now();
+          if (now - lastTapKeyTimeRef.current < 100) {
+            return;
+          }
+          lastTapKeyTimeRef.current = now;
+          event.preventDefault();
+          
+          // Record the tap time
+          const tapTime = performance.now();
+          tapTimesRef.current.push(tapTime);
+          
+          // Keep only the last 5 taps
+          if (tapTimesRef.current.length > 5) {
+            tapTimesRef.current.shift();
+          }
+          
+          // Calculate tempo with at least 2 taps
+          if (tapTimesRef.current.length >= 2) {
+            // Calculate average interval
+            let sum = 0;
+            for (let i = 1; i < tapTimesRef.current.length; i++) {
+              sum += tapTimesRef.current[i] - tapTimesRef.current[i - 1];
+            }
+            const avgMs = sum / (tapTimesRef.current.length - 1);
+            
+            // Convert to BPM and clamp
+            const newTempo = Math.round(60000 / avgMs);
+            const clampedTempo = Math.max(15, Math.min(240, newTempo));
+            
+            // Dispatch a custom event that App.js can listen for
+            const tempoEvent = new CustomEvent('metronome-set-tempo', {
+              detail: { tempo: clampedTempo }
+            });
+            window.dispatchEvent(tempoEvent);
+          }
           break;
+          
         case 'KeyR':
-          // Use R for training menu (new key combination)
           if (onToggleTrainingOverlay) onToggleTrainingOverlay();
           break;
         case 'Digit1':
