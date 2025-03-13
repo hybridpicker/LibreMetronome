@@ -6,24 +6,21 @@ export let globalAudioCtx = null;
  * (only create a new one if none exists or the previous is closed)
  */
 export function initAudioContext() {
-  if (!globalAudioCtx || globalAudioCtx.state === 'closed') {
-    try {
-      globalAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      console.log('AudioContext initialized:', globalAudioCtx.state);
-    } catch (err) {
-      console.error("Error creating AudioContext:", err);
-      globalAudioCtx = null;
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) {
+      console.error('Web Audio API is not supported in this browser');
+      return null;
     }
+    
+    // Create and return a new audio context
+    const context = new AudioContext();
+    console.log('New AudioContext created, state:', context.state);
+    return context;
+  } catch (err) {
+    console.error('Error creating AudioContext:', err);
+    return null;
   }
-  
-  // Always try to resume the context when initializing
-  if (globalAudioCtx && globalAudioCtx.state === 'suspended') {
-    globalAudioCtx.resume().catch(err => {
-      console.error('Failed to resume AudioContext:', err);
-    });
-  }
-  
-  return globalAudioCtx;
 }
 
 /**
@@ -36,10 +33,10 @@ function loadSound(url, audioCtx) {
     if (url.startsWith('http://localhost:3000')) {
       // Replace frontend domain with backend domain
       fetchUrl = url.replace('http://localhost:3000', 'http://localhost:8000');
-      console.log(`Redirecting sound request to backend: ${fetchUrl}`);
+      
     } else if (!(url.startsWith('http://') || url.startsWith('https://'))) {
       fetchUrl = `http://localhost:8000${url}`;
-      console.log(`Redirecting sound request to backend: ${fetchUrl}`);
+      
     } else {
       fetchUrl = url;
     }
@@ -67,17 +64,17 @@ function loadSound(url, audioCtx) {
     .then(buffer => {
       // Check if buffer is empty or too small to be valid audio
       if (!buffer || buffer.byteLength < 100) {
-        console.error(`Retrieved buffer for ${url} is invalid (size: ${buffer ? buffer.byteLength : 0} bytes)`);
+        
         throw new Error('Invalid audio buffer (too small)');
       }
       
       return audioCtx.decodeAudioData(buffer);
     })
     .catch(err => {
-      console.error(`Failed loading sound ${url}:`, err);
+      
       // Fall back to default sounds if loading fails
       if (url.includes('/metronome_sounds/')) {
-        console.log(`Attempting to use default sound as fallback for ${url}`);
+        
         let fallbackPath;
         if (url.includes('first_')) {
           fallbackPath = '/assets/audio/click_new_first.mp3';
@@ -104,7 +101,7 @@ export async function loadClickBuffers({
   soundSet = null
 }) {
   if (!audioCtx) {
-    console.error('No AudioContext provided to loadClickBuffers');
+    
     return;
   }
   
@@ -119,10 +116,10 @@ export async function loadClickBuffers({
     accentPath = soundSet.accent_sound_url || accentPath;
     firstPath = soundSet.first_beat_sound_url || firstPath;
     
-    console.log('Using custom sound set:', soundSet.name);
-    console.log('Loading sound files:', { normalPath, accentPath, firstPath });
+    
+    
   } else {
-    console.log('Using default sounds');
+    
   }
 
   try {
@@ -140,12 +137,12 @@ export async function loadClickBuffers({
     accentBufferRef.current = accent;
     firstBufferRef.current = first;
     
-    console.log('Successfully loaded all sound buffers');
+    
   } catch (error) {
-    console.error('Error loading sound buffers:', error);
+    
     // Try loading default sounds as fallback
     if (soundSet) {
-      console.log('Attempting to load default sounds as fallback');
+      
       return loadClickBuffers({
         audioCtx,
         normalBufferRef,

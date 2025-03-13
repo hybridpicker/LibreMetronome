@@ -30,10 +30,31 @@ const noteIcons = {
  * @returns {JSX.Element} - Rendered component
  */
 const NoteSelector = ({ beatMode, onSelect }) => {
+  const handleNoteSelection = (mode) => {
+    // Call the provided onSelect callback
+    onSelect(mode);
+    
+    // Calculate the correct beat multiplier based on selected mode
+    // For quarter notes: multiplier = 1 (base timing)
+    // For eighth notes: multiplier = 2 (twice as fast)
+    const multiplier = mode === "quarter" ? 1 : 2;
+    
+    // Dispatch a custom event to notify that beat mode has changed
+    // This allows other components to react to this change during playback
+    const beatModeChangeEvent = new CustomEvent('beat-mode-change', {
+      detail: { 
+        beatMode: mode,
+        beatMultiplier: multiplier
+      }
+    });
+    
+    window.dispatchEvent(beatModeChangeEvent);
+  };
+
   return (
     <div className="note-selector-container">
       <button
-        onClick={() => onSelect("quarter")}
+        onClick={() => handleNoteSelection("quarter")}
         className="note-selector-button"
         aria-label="Quarter Notes"
         title="Quarter Notes"
@@ -45,7 +66,7 @@ const NoteSelector = ({ beatMode, onSelect }) => {
         />
       </button>
       <button
-        onClick={() => onSelect("eighth")}
+        onClick={() => handleNoteSelection("eighth")}
         className="note-selector-button"
         aria-label="Eighth Notes"
         title="Eighth Notes"

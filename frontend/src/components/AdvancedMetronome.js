@@ -72,6 +72,16 @@ export function AdvancedMetronomeWithCircle({
   // New prop: trigger to reload sound set
   soundSetReloadTrigger
 }) {
+  // Local state to track the current beat multiplier
+  const [currentBeatMultiplier, setCurrentBeatMultiplier] = useState(beatMultiplier);
+  // Reference to store the logic instance
+  const logicRef = useRef(null);
+
+  // Update local state when prop changes
+  useEffect(() => {
+    setCurrentBeatMultiplier(beatMultiplier);
+  }, [beatMultiplier]);
+
   // --------------------------
   //  Local Accents (fallback)
   // --------------------------
@@ -124,7 +134,7 @@ export function AdvancedMetronomeWithCircle({
         });
       }, 200);
     },
-    [subdivisions]
+    []
   );
 
   // --------------------------
@@ -151,9 +161,49 @@ export function AdvancedMetronomeWithCircle({
     muteProbability,
     tempoIncreasePercent,
     measuresUntilSpeedUp,
-    beatMultiplier,
+    beatMultiplier: currentBeatMultiplier,
     onAnySubTrigger: handleSubTriggered
   });
+
+  // Store logic in ref so we can access it from other effects
+  useEffect(() => {
+    logicRef.current = logic;
+  }, [logic]);
+
+  // Listen for beat-mode-change events
+  useEffect(() => {
+    const handleBeatModeChange = (event) => {
+      const { beatMultiplier: newBeatMultiplier } = event.detail;
+      
+      // Update the local beat multiplier state
+      setCurrentBeatMultiplier(newBeatMultiplier);
+      
+      // Access logic through the ref to avoid circular dependencies
+      const currentLogic = logicRef.current;
+      
+      // If we have a logic instance, directly update the beatMultiplier reference
+      if (currentLogic && currentLogic.updateBeatMultiplier) {
+        // Use the new updateBeatMultiplier method
+        currentLogic.updateBeatMultiplier(newBeatMultiplier);
+        
+        // If playing, restart the scheduler to ensure immediate changes
+        if (!isPaused) {
+          // Short timeout to ensure state updates have propagated
+          setTimeout(() => {
+            if (currentLogic.startScheduler) {
+              currentLogic.startScheduler();
+            }
+          }, 5);
+        }
+      }
+    };
+    
+    window.addEventListener('beat-mode-change', handleBeatModeChange);
+    
+    return () => {
+      window.removeEventListener('beat-mode-change', handleBeatModeChange);
+    };
+  }, [isPaused]);
 
   // --------------------------
   //  Keyboard Shortcuts
@@ -176,8 +226,6 @@ export function AdvancedMetronomeWithCircle({
     if (isPaused) {
       // Initialize audio context if needed
       if (!logic.audioCtx) {
-        console.log('Advanced Metronome: No AudioContext, initializing...');
-        // The startScheduler method will handle initialization
         setIsPaused(false);
         logic.startScheduler();
         return;
@@ -185,21 +233,16 @@ export function AdvancedMetronomeWithCircle({
       
       // If we have audio but it's suspended, resume it
       if (logic.audioCtx.state === 'suspended') {
-        console.log('Advanced Metronome: Resuming suspended AudioContext...');
         logic.audioCtx.resume().then(() => {
-          console.log('Advanced Metronome: AudioContext resumed successfully');
           setIsPaused(false);
           logic.startScheduler();
         }).catch(err => {
-          console.error('Advanced Metronome: Failed to resume AudioContext:', err);
         });
       } else {
-        console.log('Advanced Metronome: Starting playback with active AudioContext');
         setIsPaused(false);
         logic.startScheduler();
       }
     } else {
-      console.log('Advanced Metronome: Stopping playback');
       setIsPaused(true);
       logic.stopScheduler();
     }
@@ -283,13 +326,9 @@ export function AdvancedMetronomeWithCircle({
   // Store audio buffers in global debug helper
   useEffect(() => {
     if (logic && logic.audioCtx && logic.audioBuffers) {
-      console.log('!!!!! [Metronome] STORING AUDIO BUFFERS AND CONTEXT IN GLOBAL DEBUG HELPER !!!!!');
       if (window.metronomeDebug) {
         window.metronomeDebug.audioBuffers = logic.audioBuffers;
         window.metronomeDebug.audioContext = logic.audioCtx;
-        console.log('!!!!! [Metronome] GLOBAL DEBUG HELPER IS READY FOR TESTING !!!!!');
-      } else {
-        console.warn('!!!!! [Metronome] GLOBAL DEBUG HELPER NOT FOUND !!!!!');
       }
     }
   }, [logic.audioBuffers, logic.audioCtx]);
@@ -297,23 +336,12 @@ export function AdvancedMetronomeWithCircle({
   useEffect(() => {
     // This effect will run every time soundSetReloadTrigger changes.
     if (logic && logic.audioCtx && soundSetReloadTrigger > 0) {
-      console.log("Reload trigger changed:", soundSetReloadTrigger);
-
-      // Use the reloadSounds function from logic instead of accessing buffer refs directly
       if (logic.reloadSounds) {
         logic.reloadSounds()
           .then(success => {
-            if (success) {
-              console.log("Audio buffers reloaded successfully with active sound set");
-            } else {
-              console.warn("Failed to reload audio buffers");
-            }
           })
           .catch(err => {
-            console.error("Error during sound reload:", err);
           });
-      } else {
-        console.warn("reloadSounds function not available in logic object");
       }
     }
   }, [soundSetReloadTrigger, logic]); // Only depend on the trigger and logic
@@ -323,23 +351,17 @@ export function AdvancedMetronomeWithCircle({
   // --------------------------
   useEffect(() => {
     // Make sure we're listening to events
-    console.log('!!!!! [Metronome] SETTING UP SOUND PREVIEW EVENT LISTENERS !!!!!');
     
     // Handle preview sound events from Settings
     const handlePreviewSound = (event) => {
       const { type, volume } = event.detail;
       
-      console.log(`!!!!! [Metronome] RECEIVED PREVIEW SOUND EVENT: ${type} (volume: ${volume}) !!!!!`);
-      
       // Only proceed if we have valid audioContext and buffers
       if (!logic.audioCtx) {
-        console.warn('!!!!! [Metronome] NO AUDIO CONTEXT AVAILABLE !!!!!');
         return;
       }
       
       if (!logic.audioBuffers) {
-        console.warn('!!!!! [Metronome] NO AUDIO BUFFERS AVAILABLE !!!!!');
-        console.log('!!!!! [Metronome] Logic object:', logic);
         return;
       }
       
@@ -356,7 +378,6 @@ export function AdvancedMetronomeWithCircle({
           bufferKey = 'normal';
           break;
         default:
-          console.warn(`!!!!! [Metronome] INVALID SOUND TYPE: ${type} !!!!!`);
           return; // Exit if invalid type
       }
       
@@ -364,11 +385,9 @@ export function AdvancedMetronomeWithCircle({
       if (logic.audioBuffers[bufferKey]) {
         // Resume context if suspended
         if (logic.audioCtx.state === 'suspended') {
-          console.log('!!!!! [Metronome] RESUMING SUSPENDED AUDIO CONTEXT !!!!!');
           logic.audioCtx.resume();
         }
         
-        console.log(`!!!!! [Metronome] CREATING AUDIO SOURCE FOR ${bufferKey} !!!!!`);
         const source = logic.audioCtx.createBufferSource();
         source.buffer = logic.audioBuffers[bufferKey];
         
@@ -378,11 +397,7 @@ export function AdvancedMetronomeWithCircle({
         source.connect(gainNode);
         gainNode.connect(logic.audioCtx.destination);
         
-        console.log(`!!!!! [Metronome] PLAYING ${type} SOUND WITH BUFFER:`, logic.audioBuffers[bufferKey]);
         source.start(0);
-      } else {
-        console.warn(`!!!!! [Metronome] BUFFER NOT FOUND FOR SOUND TYPE: ${bufferKey} !!!!!`);
-        console.log('!!!!! [Metronome] Available buffers:', logic.audioBuffers);
       }
     };
     
@@ -390,41 +405,30 @@ export function AdvancedMetronomeWithCircle({
     const handlePreviewPattern = (event) => {
       const { volume } = event.detail;
       
-      console.log(`!!!!! [Metronome] RECEIVED PATTERN PREVIEW EVENT (volume: ${volume}) !!!!!`);
-      
       // Only proceed if we have valid audioContext and buffers
       if (!logic.audioCtx) {
-        console.warn('!!!!! [Metronome] NO AUDIO CONTEXT AVAILABLE !!!!!');
         return;
       }
       
       if (!logic.audioBuffers) {
-        console.warn('!!!!! [Metronome] NO AUDIO BUFFERS AVAILABLE !!!!!');
-        console.log('!!!!! [Metronome] Logic object:', logic);
         return;
       }
       
       // Check if we have all required buffers
       if (!logic.audioBuffers.first || !logic.audioBuffers.normal || !logic.audioBuffers.accent) {
-        console.warn('!!!!! [Metronome] MISSING BUFFERS FOR PATTERN PREVIEW !!!!!');
-        console.log('!!!!! [Metronome] Available buffers:', logic.audioBuffers);
         return;
       }
       
       // Resume context if suspended
       if (logic.audioCtx.state === 'suspended') {
-        console.log('!!!!! [Metronome] RESUMING SUSPENDED AUDIO CONTEXT !!!!!');
         logic.audioCtx.resume();
       }
-      
-      console.log("!!!!! [Metronome] STARTING PATTERN PREVIEW SEQUENCE !!!!!!");
       
       const beatDuration = 60 / 120; // Fixed 120 BPM for preview
       const types = ['first', 'normal', 'normal', 'accent'];
       
       types.forEach((type, index) => {
         setTimeout(() => {
-          console.log(`!!!!! [Metronome] PLAYING ${type} SOUND (pattern beat ${index+1}) !!!!!`);
           const source = logic.audioCtx.createBufferSource();
           source.buffer = logic.audioBuffers[type];
           
@@ -445,7 +449,6 @@ export function AdvancedMetronomeWithCircle({
     
     // Clean up
     return () => {
-      console.log('!!!!! [Metronome] REMOVING SOUND PREVIEW EVENT LISTENERS !!!!!');
       window.removeEventListener('metronome-preview-sound', handlePreviewSound);
       window.removeEventListener('metronome-preview-pattern', handlePreviewPattern);
     };
@@ -473,6 +476,7 @@ export function AdvancedMetronomeWithCircle({
             tempo={tempo}
             audioCtxCurrentTime={() => logic.audioCtx?.currentTime || 0}
             currentSubIndex={logic.currentSubdivision}
+            beatMultiplier={currentBeatMultiplier}
           />
         ) : (
           <>

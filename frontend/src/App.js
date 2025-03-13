@@ -23,16 +23,16 @@ window.metronomeDebug = {
   
   // Test function to play sounds directly
   playSound: function(type, volume = 0.5) {
-    console.log(`!!!!! [GLOBAL] ATTEMPTING TO PLAY ${type} SOUND DIRECTLY !!!!!`);
+    
     
     if (!this.audioContext) {
-      console.error('!!!!! [GLOBAL] NO AUDIO CONTEXT AVAILABLE !!!!!');
+      
       return false;
     }
     
     if (!this.audioBuffers || !this.audioBuffers[type]) {
-      console.error(`!!!!! [GLOBAL] NO AUDIO BUFFER FOR ${type} AVAILABLE !!!!!`);
-      console.log('Available buffers:', this.audioBuffers);
+      
+      
       return false;
     }
     
@@ -55,17 +55,17 @@ window.metronomeDebug = {
       gainNode.connect(this.audioContext.destination);
       source.start(0);
       
-      console.log(`!!!!! [GLOBAL] SUCCESSFULLY PLAYED ${type} SOUND !!!!!`);
+      
       return true;
     } catch (error) {
-      console.error('!!!!! [GLOBAL] ERROR PLAYING SOUND:', error);
+      
       return false;
     }
   },
   
   // Log all registered event listeners
   checkEventListeners: function() {
-    console.log('!!!!! [GLOBAL] CHECKING EVENT LISTENERS !!!!!');
+    
     
     // Create test events
     const soundEvent = new CustomEvent('metronome-preview-sound', { 
@@ -77,10 +77,10 @@ window.metronomeDebug = {
     });
     
     // Dispatch test events to check if listeners are working
-    console.log('!!!!! [GLOBAL] DISPATCHING TEST SOUND EVENT !!!!!');
+    
     window.dispatchEvent(soundEvent);
     
-    console.log('!!!!! [GLOBAL] DISPATCHING TEST PATTERN EVENT !!!!!');
+    
     window.dispatchEvent(patternEvent);
     
     return 'Check console for events';
@@ -103,6 +103,24 @@ function App() {
   useEffect(() => {
     setAccents(Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1)));
   }, [subdivisions]);
+
+  // Maintain playback state when switching modes
+  const [prevMode, setPrevMode] = useState(mode);
+  useEffect(() => {
+    if (prevMode !== mode && !isPaused) {
+      // Short timeout to ensure the new component has mounted and initialized
+      const timer = setTimeout(() => {
+        // If metronome was playing before mode switch, ensure it continues playing
+        if (togglePlayRef.current) {
+          // Force a restart by toggling twice if already playing
+          setIsPaused(true);
+          setTimeout(() => setIsPaused(false), 50);
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+    setPrevMode(mode);
+  }, [mode, isPaused, prevMode]);
 
   const toggleAccent = (index) => {
     setAccents(prev => {
