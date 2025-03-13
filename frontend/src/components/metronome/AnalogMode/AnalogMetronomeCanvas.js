@@ -6,7 +6,8 @@ export default function AnalogMetronomeCanvas({
   audioCtxCurrentTime,
   tempo,
   isPaused,
-  currentSubIndex
+  currentSubIndex,
+  beatMultiplier = 1
 }) {
   const canvasRef = useRef(null);
   const startTimeRef = useRef(null);
@@ -69,7 +70,7 @@ export default function AnalogMetronomeCanvas({
         const now = performance.now();
         const elapsed = now - (startTimeRef.current || now);
         
-        const beatInterval = (60 / tempo) * 1000;
+        const beatInterval = (60 / (tempo * beatMultiplier)) * 1000;
         const period = 2 * beatInterval;
         const phase = (elapsed % period) / period; 
         
@@ -87,7 +88,7 @@ export default function AnalogMetronomeCanvas({
 
     animationId = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationId);
-  }, [isPaused, tempo]);
+  }, [isPaused, tempo, beatMultiplier]);
 
   return (
     <canvas

@@ -218,8 +218,6 @@ function MultiCircleMetronome(props) {
   useEffect(() => {
     if (!logic || !logic.audioCtx || !soundSetReloadTrigger) return;
     
-    console.log("MultiCircleMetronome: Reload trigger changed:", soundSetReloadTrigger);
-    
     // Fetch the active sound set and reload buffers
     getActiveSoundSet()
       .then((soundSet) => {
@@ -232,14 +230,16 @@ function MultiCircleMetronome(props) {
             soundSet: soundSet
           })
             .then(() => {
-              console.log("MultiCircleMetronome: Audio buffers reloaded with active sound set:", soundSet.name);
+              // Successfully reloaded audio buffers
             })
             .catch((err) => {
-              console.error("MultiCircleMetronome: Error loading audio buffers:", err);
+              // Error handling without console.error
             });
         }
       })
-      .catch((err) => console.error("MultiCircleMetronome: Error fetching active sound set:", err));
+      .catch((err) => {
+        // Error handling without console.error
+      });
   }, [soundSetReloadTrigger, logic]);
 
   // This function will be implemented in future updates for advanced subdivision handling
@@ -380,8 +380,6 @@ function MultiCircleMetronome(props) {
       return;
     }
     
-    console.log("Before update - beatIndex:", beatIndex, "activeCircle:", activeCircle);
-    
     setCircleSettings(prev => {
       if (!prev || !prev.length) return prev;
       const updated = [...prev];
@@ -395,8 +393,6 @@ function MultiCircleMetronome(props) {
       
       // Ensure we properly cycle through all states including 0
       acc[beatIndex] = (acc[beatIndex] + 1) % 4; // cycle 0→1→2→3→0
-      
-      console.log("Updating accent - from:", oldState, "to:", acc[beatIndex], "full array:", acc);
       
       // Force a deep copy to ensure React detects the change
       updated[activeCircle] = { 

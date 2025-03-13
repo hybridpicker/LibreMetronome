@@ -32,11 +32,6 @@ function schedulePlay({
     nodeRefs.current.push(source);
   }
   
-  // Log when the sound actually plays
-  if (debugInfo.multiCircleMode) {
-    console.log(`[MultiCirclePlayback] 🔊 Playing sound at ${when.toFixed(3)}, circle: ${debugInfo.currentCircle || 'unknown'}, volume: ${volumeRef.current.toFixed(2)}, type: ${debugInfo.soundType || 'normal'}`);
-  }
-
   // Clean up to prevent memory leaks
   source.onended = () => {
     source.disconnect();
@@ -90,9 +85,7 @@ export function scheduleSubdivision({
 
   // If we are muting, skip playback
   if (shouldMute) {
-    if (multiCircleMode) {
-      console.log(`[MultiCirclePlayback] 🔇 Beat ${subIndex} MUTED (training mode)`);
-    }
+    
     return;
   } else {
     // record the time for actual BPM measurement
@@ -129,11 +122,6 @@ export function scheduleSubdivision({
     // accentVal = 0 => no sound
   }
 
-  // Log for MultiCircle mode
-  if (multiCircleMode) {
-    console.log(`[MultiCirclePlayback] 🎯 Beat ${subIndex} scheduled, sound: ${soundType}, circle: ${debugInfo.currentCircle || 'unknown'}`);
-  }
-
   // If we got a buffer, schedule it:
   if (buffer) {
     schedulePlay({
@@ -164,20 +152,23 @@ export function runScheduler({
   scheduleSubFn,
   subdivisionsRef,
   multiCircleMode,
-  nodeRefs // Add nodeRefs parameter to track audio nodes
+  nodeRefs, // Add nodeRefs parameter to track audio nodes
+  schedulerRunningRef // Add a reference to check if scheduler is running
 }) {
+  // If scheduler is no longer running, don't schedule anything
+  if (!schedulerRunningRef || !schedulerRunningRef.current) {
+    return;
+  }
+
   const now = audioCtxRef.current?.currentTime || 0;
   const lookaheadTime = multiCircleMode ? SCHEDULE_AHEAD_TIME * 1.2 : SCHEDULE_AHEAD_TIME;
 
-  // For multicircle mode, log the scheduling pass
-  if (multiCircleMode) {
-    const nextScheduleTime = nextNoteTimeRef.current;
-    if (nextScheduleTime && nextScheduleTime < now + lookaheadTime) {
-      console.log(`[MultiCircleScheduler] 🔄 Scheduling loop, current time: ${now.toFixed(3)}, next note: ${nextScheduleTime.toFixed(3)}`);
-    }
-  }
-
   while (nextNoteTimeRef.current < now + lookaheadTime) {
+    // Double-check scheduler is still running before scheduling
+    if (!schedulerRunningRef.current) {
+      break;
+    }
+    
     const subIndex = currentSubRef.current;
     scheduleSubFn(subIndex, nextNoteTimeRef.current, nodeRefs);
 
