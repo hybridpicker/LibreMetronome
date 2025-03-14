@@ -1,4 +1,34 @@
 // src/hooks/useMetronomeLogic/trainingLogic.js
+import { TEMPO_MIN, TEMPO_MAX } from './constants';
+
+/**
+ * Manually accelerate tempo using the same logic as auto tempo increase
+ */
+export function manualTempoAcceleration({
+  tempoIncreasePercent,
+  tempoRef,
+  setTempo
+}) {
+  // Validate inputs
+  if (!tempoRef || typeof tempoRef.current !== 'number') {
+    throw new Error('Invalid tempoRef');
+  }
+  if (typeof setTempo !== 'function') {
+    throw new Error('setTempo must be a function');
+  }
+
+  // Calculate new tempo with percentage increase
+  const factor = 1 + tempoIncreasePercent / 100;
+  const newTempo = Math.round(tempoRef.current * factor);
+  
+  // Clamp to maximum tempo
+  const clampedTempo = Math.min(newTempo, TEMPO_MAX);
+  
+  // Set the new tempo
+  setTempo(clampedTempo);
+  
+  return clampedTempo;
+}
 
 /**
  * Called every time subIndex returns to 0 (i.e. at the start of each measure).
@@ -32,7 +62,6 @@ export function handleMeasureBoundary({
         isSilencePhaseRef.current = true;
         muteMeasureCountRef.current = 0;
         measureCountRef.current = 0;
-        
       }
     } else {
       // we are in silence → keep counting
@@ -41,7 +70,6 @@ export function handleMeasureBoundary({
         isSilencePhaseRef.current = false;
         muteMeasureCountRef.current = 0;
         measureCountRef.current = 0;
-        
       }
     }
   }
@@ -54,7 +82,6 @@ export function handleMeasureBoundary({
       const newTempo = Math.round(tempoRef.current * factor);
       setTempo(prev => Math.min(newTempo, 240));
       measureCountRef.current = 0;
-      
     }
   }
   
@@ -85,18 +112,4 @@ export function shouldMuteThisBeat({
     return Math.random() < muteProbability;
   }
   return false;
-}
-
-/**
- * Manually accelerate tempo using the same logic as auto tempo increase
- */
-export function manualTempoAcceleration({
-  tempoIncreasePercent,
-  tempoRef,
-  setTempo
-}) {
-  const factor = 1 + tempoIncreasePercent / 100;
-  const newTempo = Math.round(tempoRef.current * factor);
-  setTempo(prev => Math.min(newTempo, 240));
-  return newTempo;
 }
