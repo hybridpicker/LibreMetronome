@@ -492,8 +492,8 @@
 
   @media (max-width: 600px) {
     .menu-close-button {
-      top: 5px;
-      right: 5px;
+      top: 10px;
+      right: 10px;
       font-size: 1.6rem;
       width: 28px;
       height: 28px;
