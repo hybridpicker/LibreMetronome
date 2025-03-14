@@ -201,7 +201,7 @@ function MultiCircleMetronome(props) {
   };
   
   const [containerSize, setContainerSize] = useState(getContainerSize());
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1400);
   
   useEffect(() => {
     const handleResize = () => {
