@@ -2,6 +2,12 @@
 <svg id="Ebene_2" data-name="Ebene 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 156.02 50.2">
   <defs>
     <style>
+      @font-face {
+        font-family: 'Lato-Bold';
+        src: url('../fonts/Lato-Bold.ttf') format('truetype');
+        font-weight: bold;
+      }
+
       .cls-1 {
         fill: #00A0A0;
       }
@@ -12,7 +18,7 @@
 
       .cls-3 {
         fill: #fff;
-        font-family: Lato-Bold, Lato;
+        font-family: 'Lato-Bold', sans-serif;
         font-size: 36px;
         font-weight: 700;
       }
