@@ -213,14 +213,6 @@ describe('useKeyboardShortcuts', () => {
     expect(mockFunctions.onToggleTrainingOverlay).toHaveBeenCalledTimes(1);
   });
   
-  test('U key triggers manual tempo increase', () => {
-    render(<TestComponent {...mockFunctions} />);
-    const component = screen.getByTestId('test-component');
-    
-    fireEvent.keyDown(component, { code: 'KeyU' });
-    
-    expect(mockFunctions.onManualTempoIncrease).toHaveBeenCalledTimes(1);
-  });
   
   // Test keyboard shortcuts don't trigger in form elements
   test('Keyboard shortcuts are ignored in input elements', () => {

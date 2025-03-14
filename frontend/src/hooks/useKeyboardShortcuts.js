@@ -160,9 +160,6 @@ const useKeyboardShortcuts = ({
         case 'KeyI':
           if (onToggleInfoOverlay) onToggleInfoOverlay();
           break;
-        case 'KeyU':
-          if (onManualTempoIncrease) onManualTempoIncrease();
-          break;
         default:
           break;
       }
