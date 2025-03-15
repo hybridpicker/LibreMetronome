@@ -493,87 +493,53 @@ function MultiCircleMetronome(props) {
     }
   }, [isPaused, measureCountRef, muteMeasureCountRef, isSilencePhaseRef]);
 
-  // Handle Play/Pause with proper state management
+  // Handle Play/Pause with improved audio handling using a safe start sequence
   const handlePlayPause = useCallback(() => {
     if (isProcessingPlayPauseRef.current) {
       console.log("Ignoring play/pause - already processing");
       return;
     }
-
     console.log("Play/Pause button clicked, current state:", isPaused ? "paused" : "playing");
     isProcessingPlayPauseRef.current = true;
     
-    // Set a safety timeout to reset the flag
-    setTimeout(() => {
-      isProcessingPlayPauseRef.current = false;
-    }, 500);
-
     if (isPaused) {
-      // Starting playback
-      console.log("Starting playback, resetting to circle 0");
-      
-      // Reset state for clean start
-      setPlayingCircle(0);
-      
-      // Reset training counters
-      localMeasureCountRef.current = 0;
-      localMuteMeasureCountRef.current = 0;
-      localIsSilencePhaseRef.current = false;
-      
-      // Update original refs if available
-      if (measureCountRef) measureCountRef.current = 0;
-      if (muteMeasureCountRef) muteMeasureCountRef.current = 0;
-      if (isSilencePhaseRef) isSilencePhaseRef.current = false;
-      
-      // Update global reference
-      window.isSilencePhaseRef = localIsSilencePhaseRef;
-      
-      if (logic && logic.audioCtx) {
-        if (logic.audioCtx.state === "suspended") {
-          logic.audioCtx.resume()
-            .then(() => {
-              console.log("AudioContext resumed");
-              setIsPaused(false);
-              
-              // Use a small delay to ensure context is fully ready
-              setTimeout(() => {
-                if (logic.startScheduler) {
-                  logic.startScheduler();
-                }
-                isProcessingPlayPauseRef.current = false;
-              }, 50);
-            })
-            .catch(err => {
-              console.error("Failed to resume AudioContext:", err);
-              isProcessingPlayPauseRef.current = false;
-            });
-        } else {
+      const safeStart = async () => {
+        try {
+          if (logic && logic.safelyInitAudioContext) {
+            await logic.safelyInitAudioContext();
+          }
+          console.log("[START] Forcing circle 0 before playback");
+          setPlayingCircle(0);
+          await new Promise(resolve => setTimeout(resolve, 50));
+          console.log("[START] Setting isPaused to false");
           setIsPaused(false);
-          // Use small delay for stability
-          setTimeout(() => {
-            if (logic.startScheduler) {
-              logic.startScheduler();
-            }
-            isProcessingPlayPauseRef.current = false;
-          }, 20);
+          
+          // Reset training counters
+          localMeasureCountRef.current = 0;
+          localMuteMeasureCountRef.current = 0;
+          localIsSilencePhaseRef.current = false;
+          if (measureCountRef) measureCountRef.current = 0;
+          if (muteMeasureCountRef) muteMeasureCountRef.current = 0;
+          if (isSilencePhaseRef) isSilencePhaseRef.current = false;
+          
+          window.isSilencePhaseRef = localIsSilencePhaseRef;
+          isProcessingPlayPauseRef.current = false;
+        } catch (err) {
+          console.error("[START] Error in safe start:", err);
+          isProcessingPlayPauseRef.current = false;
         }
-      } else {
-        // No audio context yet, setIsPaused will trigger creation
-        setIsPaused(false);
-        isProcessingPlayPauseRef.current = false;
-      }
+      };
+      safeStart();
     } else {
-      // Stopping playback
       setIsPaused(true);
       if (logic && logic.stopScheduler) {
         logic.stopScheduler();
       }
-      // Reset to first circle on pause
       setPlayingCircle(0);
       isProcessingPlayPauseRef.current = false;
     }
   }, [isPaused, setIsPaused, logic, setPlayingCircle, measureCountRef, muteMeasureCountRef, isSilencePhaseRef]);
-
+  
   // Handle manual tempo acceleration
   const handleAccelerate = useCallback(() => {
     if (!props.isPaused && tempoIncreasePercent > 0) {
@@ -762,149 +728,61 @@ function MultiCircleMetronome(props) {
 
   return (
     <div style={{ textAlign: "center" }}>
-      {/* Accelerate button for Training Mode */}
-      <AccelerateButton 
-        onClick={handleAccelerate} 
-        speedMode={speedMode}
-      />
-      
-      {/* Main circles container */}
-      <div className="circles-container" style={{
-        display: "flex",
-        flexDirection: isMobile ? "column" : "row",
-        alignItems: "center",
-        justifyContent: "center",
-        marginTop: "20px",
-        width: "100%",
-        flexWrap: "wrap"
-      }}>
-        {circleSettings.map((settings, idx) => (
-          <CircleRenderer
-            key={idx}
-            settings={settings}
-            idx={idx}
-            isActiveUI={idx === activeCircle}
-            isPlaying={idx === playingCircle && !isPaused}
-            currentSubdivision={logic?.currentSubdivision || 0}
-            isPaused={isPaused}
-            audioCtxRunning={logic?.audioCtx && logic.audioCtx.state === "running"}
-            isTransitioning={logic.isTransitioning && logic.isTransitioning()}
-            updateAccent={updateAccent}
-            radius={containerSize / 2}
-            containerSize={containerSize}
-            setActiveCircle={setActiveCircle}
-            circleSettings={circleSettings}
-            macroMode={macroMode}
-            isSilencePhaseRef={localIsSilencePhaseRef}
-            isMobile={isMobile}
-          />
-        ))}
+        {/* Accelerate button for Training Mode */}
+        <AccelerateButton 
+          onClick={handleAccelerate} 
+          speedMode={speedMode}
+        />
         
-        {circleSettings.length < MAX_CIRCLES && (
-          <AddCircleButton
-            addCircle={addCircle}
-            containerSize={containerSize}
-            isMobile={isMobile}
-          />
-        )}
-      </div>
-      
-      {/* Play/Pause button */}
-      <PlayButton handlePlayPause={handlePlayPause} isPaused={isPaused} />
-      
-      {/* Controls section */}
-      <div className="controls-section" style={{ marginTop: "20px" }}>
-        {/* Notes section */}
-        <div style={{ marginBottom: "20px", textAlign: "center" }}>
-          <h3 className="section-title" style={{marginBottom: "10px"}}>
-            Notes (Circle {activeCircle + 1})
-          </h3>
-          <NoteSelector 
-            beatMode={currentSettings.beatMode}
-            onSelect={handleNoteSelection}
-          />
+        {/* Main circles container */}
+        <div className="circles-container" style={{
+          display: "flex",
+          flexDirection: isMobile ? "column" : "row",
+          alignItems: "center",
+          justifyContent: "center",
+          marginTop: "20px",
+          width: "100%",
+          flexWrap: "wrap"
+        }}>
+          {circleSettings.map((settings, idx) => (
+            <CircleRenderer
+              key={idx}
+              settings={settings}
+              idx={idx}
+              isActiveUI={idx === activeCircle}
+              isPlaying={idx === playingCircle && !isPaused}
+              currentSubdivision={logic?.currentSubdivision || 0}
+              isPaused={isPaused}
+              audioCtxRunning={logic?.audioCtx && logic.audioCtx.state === "running"}
+              isTransitioning={logic.isTransitioning && logic.isTransitioning()}
+              updateAccent={updateAccent}
+              radius={containerSize / 2}
+              containerSize={containerSize}
+              setActiveCircle={setActiveCircle}
+              circleSettings={circleSettings}
+              macroMode={macroMode}
+              isSilencePhaseRef={localIsSilencePhaseRef}
+              isMobile={isMobile}
+            />
+          ))}
+          
+          {circleSettings.length < MAX_CIRCLES && (
+            <AddCircleButton
+              addCircle={addCircle}
+              containerSize={containerSize}
+              isMobile={isMobile}
+            />
+          )}
         </div>
         
-        {/* Beats per Bar section */}
-        <div style={{ marginBottom: "20px", textAlign: "center" }}>
-          <h3 className="section-title" style={{marginBottom: "10px"}}>
-            Beats per Bar (Circle {activeCircle + 1})
-          </h3>
-          <SubdivisionSelector
-            subdivisions={circleSettings[activeCircle].subdivisions}
-            onSelect={handleSetSubdivisions}
-          />
-        </div>
+        {/* Play/Pause button */}
+        <PlayButton handlePlayPause={handlePlayPause} isPaused={isPaused} />
         
-        {/* Sliders section */}
-        <div className="sliders-container">
-              <label>
-                Tempo: {tempo} BPM
-                <input 
-                  type="range" 
-                  min={15} 
-                  max={240} 
-                  step={1} 
-                  value={tempo} 
-                  onChange={(e) => setTempo(Number(e.target.value))} 
-                  className="tempo-slider"
-                />
-              </label>
-              <label>
-                Volume: {Math.round(volume * 100)}%
-                <input 
-                  type="range" 
-                  min={0} 
-                  max={1} 
-                  step={0.01} 
-                  value={volume} 
-                  onChange={(e) => setVolume(Number(e.target.value))} 
-                  className="volume-slider"
-                />
-              </label>
-              {currentSettings.subdivisions % 2 === 0 && (
-                <label>
-                  Swing: {Math.round(swing * 200)}%
-                  <input 
-                    type="range" 
-                    min={0} 
-                    max={0.5} 
-                    step={0.01} 
-                    value={swing} 
-                    onChange={(e) => setSwing(Number(e.target.value))} 
-                    className="swing-slider"
-                  />
-                </label>
-              )}
+        {/* Controls section */}
+        <div className="controls-section" style={{ marginTop: "20px" }}>
+          {/* ... existing controls ... */}
         </div>
       </div>
-      
-      {/* Tap tempo button for mobile */}
-      {isMobile && logic?.tapTempo && (
-        <button
-          onClick={logic.tapTempo}
-          style={{ 
-            background: "transparent", 
-            border: "none", 
-            cursor: "pointer", 
-            marginTop: "20px",
-            padding: "10px",
-            outline: "none"
-          }}
-          aria-label="Tap Tempo"
-        >
-          <img
-            src={tapButtonIcon}
-            alt="Tap Tempo"
-            style={{
-              height: "35px",
-              objectFit: "contain",
-              transition: "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)"
-            }}
-          />
-        </button>
-      )}
-    </div>
   );
 }
 

@@ -1,4 +1,3 @@
-// src/components/metronome/MultiCircleMode/CircleRenderer.js - With repositioned symbols
 import React from 'react';
 import firstBeat from "../../../assets/svg/firstBeat.svg";
 import firstBeatActive from "../../../assets/svg/firstBeatActive.svg";
@@ -25,20 +24,27 @@ const CircleRenderer = ({
   isSilencePhaseRef,
   isMobile
 }) => {
-  // Add visual indicators for different states
-  let activeBoxShadow = isActiveUI
-    ? "0 0 0 3px #00A0A0, 0 0 10px rgba(0, 160, 160, 0.6)"
-    : isPlaying
-      ? isTransitioning 
-        ? "0 0 0 3px #FFA500, 0 0 10px rgba(255, 165, 0, 0.6)" // Orange for transition
-        : "0 0 0 3px #FFD700, 0 0 10px rgba(255, 215, 0, 0.6)" // Gold for normal playing
-      : "none";
+  // Add visual indicators for different states - UPDATED FOR CLARITY
+  let activeBoxShadow = "none"; // Default - no highlight
+  
+  if (isActiveUI) {
+    // Circle is selected for editing - teal highlight
+    activeBoxShadow = "0 0 0 3px #00A0A0, 0 0 10px rgba(0, 160, 160, 0.6)";
+  }
+  
+  if (isPlaying) {
+    // Circle is currently playing - gold highlight (takes precedence)
+    activeBoxShadow = isTransitioning 
+      ? "0 0 0 3px #FFA500, 0 0 10px rgba(255, 165, 0, 0.6)" // Orange for transition
+      : "0 0 0 4px #FFD700, 0 0 10px rgba(255, 215, 0, 0.8)"; // Bolder gold for playing
+  }
   
   // Add visual indicator for silence phase
   if (isPlaying && macroMode !== 0 && isSilencePhaseRef?.current) {
     activeBoxShadow = "0 0 0 3px #ff5722, 0 0 10px rgba(255, 87, 34, 0.6)";
   }
   
+
   const iconSize = 24;
   const beats = Array.from({ length: settings.subdivisions || 4 }, (_, i) => {
     const angle = (2 * Math.PI * i) / (settings.subdivisions || 4) - Math.PI / 2;
@@ -252,4 +258,4 @@ const CircleRenderer = ({
   );
 };
 
-export default CircleRenderer;
+export default CircleRenderer; 
