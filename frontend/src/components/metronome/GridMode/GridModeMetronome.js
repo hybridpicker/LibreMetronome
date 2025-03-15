@@ -441,30 +441,29 @@ const GridModeMetronome = (props) => {
         </div>
       </div>
       
-      {isMobile && (
-        <button
-          onClick={logic.tapTempo}
-          style={{ 
-            background: 'transparent', 
-            border: 'none', 
-            cursor: 'pointer', 
-            marginTop: '20px',
-            padding: '10px',
-            outline: 'none'
+      <button
+        onClick={logic.tapTempo}
+        style={{ 
+          background: 'transparent', 
+          border: 'none', 
+          cursor: 'pointer', 
+          marginTop: '20px',
+          padding: '10px',
+          outline: 'none',
+          display: isMobile ? 'inline-block' : 'none'
+        }}
+        aria-label="Tap Tempo"
+      >
+        <img
+          src={tapButtonIcon}
+          alt="Tap Tempo"
+          style={{
+            height: '35px',
+            objectFit: 'contain',
+            transition: 'all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)'
           }}
-          aria-label="Tap Tempo"
-        >
-          <img
-            src={tapButtonIcon}
-            alt="Tap Tempo"
-            style={{
-              height: '35px',
-              objectFit: 'contain',
-              transition: 'all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)'
-            }}
-          />
-        </button>
-      )}
+        />
+      </button>
     </div>
   );
 };

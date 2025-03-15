@@ -780,6 +780,32 @@ function MultiCircleMetronome(props) {
         {/* Play/Pause button */}
         <PlayButton handlePlayPause={handlePlayPause} isPaused={isPaused} />
         
+        {/* Tap Tempo button */}
+        <button
+          onClick={logic && logic.tapTempo ? logic.tapTempo : undefined}
+          style={{ 
+            background: 'transparent', 
+            border: 'none', 
+            cursor: 'pointer', 
+            marginTop: '10px',
+            padding: '10px',
+            outline: 'none',
+            display: 'block',
+            margin: '10px auto'
+          }}
+          aria-label="Tap Tempo"
+        >
+          <img
+            src={tapButtonIcon}
+            alt="Tap Tempo"
+            style={{
+              height: '35px',
+              objectFit: 'contain',
+              transition: 'all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)'
+            }}
+          />
+        </button>
+        
         {/* Controls section */}
         <MultiCircleControls
           circleSettings={circleSettings}
