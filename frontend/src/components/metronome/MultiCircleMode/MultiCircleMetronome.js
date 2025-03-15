@@ -782,7 +782,20 @@ function MultiCircleMetronome(props) {
         
         {/* Tap Tempo button */}
         <button
-          onClick={logic && logic.tapTempo ? logic.tapTempo : undefined}
+          onClick={() => {
+            console.log("[MULTI-CIRCLE MODE] Tap tempo button clicked");
+            if (logic && typeof logic.tapTempo === 'function') {
+              logic.tapTempo();
+            } else {
+              console.error("[MULTI-CIRCLE MODE] logic.tapTempo is not a function or undefined", logic);
+              // Dispatch global event for tap tempo as fallback
+              const now = performance.now();
+              console.log("[MULTI-CIRCLE MODE] Using global event fallback");
+              window.dispatchEvent(new CustomEvent('metronome-tap-tempo', {
+                detail: { timestamp: now }
+              }));
+            }
+          }}
           style={{ 
             background: 'transparent', 
             border: 'none', 

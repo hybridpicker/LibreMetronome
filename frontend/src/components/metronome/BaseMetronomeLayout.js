@@ -47,7 +47,26 @@ export default function BaseMetronomeLayout({
           </label>
         )}
       </div>
-      <button className="tap-button" onClick={logic ? logic.tapTempo : onTapTempo}>
+      <button 
+        className="tap-button" 
+        onClick={() => {
+          console.log("[BASE LAYOUT] Tap tempo button clicked");
+          if (logic && typeof logic.tapTempo === 'function') {
+            logic.tapTempo();
+          } else if (typeof onTapTempo === 'function') {
+            console.log("[BASE LAYOUT] Using onTapTempo fallback");
+            onTapTempo();
+          } else {
+            console.error("[BASE LAYOUT] No valid tap tempo function available", {logic, onTapTempo});
+            // Dispatch global event for tap tempo as fallback
+            const now = performance.now();
+            console.log("[BASE LAYOUT] Using global event fallback");
+            window.dispatchEvent(new CustomEvent('metronome-tap-tempo', {
+              detail: { timestamp: now }
+            }));
+          }
+        }}
+      >
         <img src="/assets/svg/tap-button.svg" alt="Tap Tempo" />
       </button>
     </div>

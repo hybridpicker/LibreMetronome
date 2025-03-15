@@ -581,25 +581,41 @@ export function AdvancedMetronomeWithCircle({
         speedMode={speedMode}
       />
 
-      {/* Tap Tempo for Mobile */}
-      {isMobile && (
-        <button
-          onClick={logic.tapTempo}
-          aria-label="Tap Tempo"
-          style={{
-            background: 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-            marginTop: '20px'
-          }}
-        >
-          <img
-            src={tapButtonIcon}
-            alt="Tap Tempo"
-            style={{ height: 35, objectFit: 'contain' }}
-          />
-        </button>
-      )}
+      {/* Tap Tempo button (always visible) */}
+      <button
+        onClick={() => {
+          console.log("[ADVANCED METRONOME] Tap tempo button clicked");
+          // Use logicRef instead of direct logic access
+          const currentLogic = logicRef.current;
+          if (currentLogic && typeof currentLogic.tapTempo === 'function') {
+            console.log("[ADVANCED METRONOME] Calling tapTempo from logicRef.current");
+            currentLogic.tapTempo();
+          } else {
+            console.error("[ADVANCED METRONOME] tapTempo not available in logicRef.current", currentLogic);
+            // Dispatch global event for tap tempo as fallback
+            const now = performance.now();
+            console.log("[ADVANCED METRONOME] Using global event fallback");
+            window.dispatchEvent(new CustomEvent('metronome-tap-tempo', {
+              detail: { timestamp: now }
+            }));
+          }
+        }}
+        aria-label="Tap Tempo"
+        style={{
+          background: 'transparent',
+          border: 'none',
+          cursor: 'pointer',
+          marginTop: '20px',
+          display: 'block',
+          margin: '10px auto'
+        }}
+      >
+        <img
+          src={tapButtonIcon}
+          alt="Tap Tempo"
+          style={{ height: 35, objectFit: 'contain' }}
+        />
+      </button>
 
       {/* Legend */}
       {!analogMode && (
