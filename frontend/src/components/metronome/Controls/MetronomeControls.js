@@ -71,7 +71,20 @@ const MetronomeControls = ({
           </label>
           
           {/* Swing slider LAST - only shown when conditions are met */}
-          {mode !== "analog" && subdivisions % 2 === 0 && subdivisions >= 2 && (
+          {mode === "analog" ? (
+            <label className="disabled-swing-label">
+              Swing: 0% (not available in analog mode)
+              <input
+                type="range"
+                min={0}
+                max={0.5}
+                step={0.01}
+                value={0}
+                disabled={true}
+                className="swing-slider disabled"
+              />
+            </label>
+          ) : subdivisions % 2 === 0 && subdivisions >= 2 && (
             <label>
               Swing: {Math.round(swing * 200)}%
               <input
