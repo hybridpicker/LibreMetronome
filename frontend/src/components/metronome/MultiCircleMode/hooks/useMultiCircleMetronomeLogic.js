@@ -89,6 +89,9 @@ export default function useMultiCircleMetronomeLogic({
     measureStartTime: 0
   });
   
+  // Track if we've completed a full cycle of all circles
+  const fullCycleCompletedRef = useRef(false);
+  
   // Get the basic refs from useMetronomeRefs
   const {
     audioCtxRef,
@@ -422,6 +425,13 @@ export default function useMultiCircleMetronomeLogic({
   const prepareCircleTransition = useCallback((fromCircle, toCircle) => {
     const now = audioCtxRef.current?.currentTime || 0;
     
+    // FIXED: Ensure we don't skip any circles in sequence
+    const expectedNextCircle = (fromCircle + 1) % circleSettings.length;
+    if (toCircle !== expectedNextCircle) {
+      console.log(`[FIXED SEQUENCE] Correcting requested transition: wanted ${fromCircle}->${toCircle}, forcing ${fromCircle}->${expectedNextCircle}`);
+      toCircle = expectedNextCircle;
+    }
+    
     // Prevent rapid transitions (must wait at least 500ms between transitions)
     if (circleTransitionRef.current.transitionLockout) {
       console.log(`[MultiCircleLogic] Transition blocked - lockout active`);
@@ -436,6 +446,9 @@ export default function useMultiCircleMetronomeLogic({
       console.log(`[MultiCircleLogic] Transition already in progress to circle ${toCircle} and measure completed`);
       return false;
     }
+    
+    // FIXED: Add logging about proper sequencing
+    console.log(`[SEQUENCE] Preparing sequential transition ${fromCircle} -> ${toCircle} (of ${circleSettings.length} circles)`);
     
     // Set transition state
     circleTransitionRef.current = {
@@ -492,16 +505,21 @@ export default function useMultiCircleMetronomeLogic({
     if (subIndex === 0) {
       // Block any transitions for the first few beats after starting
       minBeatsBeforeTransitionRef.current++;
-      const MIN_FIRST_CIRCLE_TIME_MS = 5000; // Minimum 5 seconds on first circle
       const elapsedTime = Date.now() - playStartTimeRef.current;
 
-      // Block transitions if either not enough beats OR not enough time has passed
-      if ((minBeatsBeforeTransitionRef.current < 16 || elapsedTime < MIN_FIRST_CIRCLE_TIME_MS) && 
+      // UPDATED FIX: Start alternating after just 1 measure when exactly 2 circles are present
+      // This ensures a pattern of 0-1-0-1 rather than 0-0-0-1-0-1
+      let minBeats = circleSettings.length === 2 ? 1 : 4;
+      const MIN_TIME_MS = 1000; // Reduced to 1 second minimum time
+      
+      // Block transitions only for the first beat when exactly 2 circles
+      if ((minBeatsBeforeTransitionRef.current < minBeats || elapsedTime < MIN_TIME_MS) && 
           playingCircleRef.current === 0) {
-        console.log(`[FIXED] Blocking transitions - beats: ${minBeatsBeforeTransitionRef.current}/16, time: ${Math.round(elapsedTime/1000)}s/${MIN_FIRST_CIRCLE_TIME_MS/1000}s`);
+        console.log(`[FIXED] Blocking transitions - beats: ${minBeatsBeforeTransitionRef.current}/${minBeats}, time: ${Math.round(elapsedTime/1000)}s/${MIN_TIME_MS/1000}s`);
         hasPlayedEnoughRef.current = false;
       } else {
         hasPlayedEnoughRef.current = true;
+        console.log(`[FIXED] Enabling transitions - beat count threshold reached (${circleSettings.length} circles total)`);
       }
       
       if (!hasPlayedEnoughRef.current) {
@@ -637,22 +655,48 @@ export default function useMultiCircleMetronomeLogic({
       }
       
       // Trigger auto-transition to the next circle
-      if (circleSettings.length > 1) {
-        const totalCircles = circleSettings.length;
-        const nextCircleIndex = totalCircles === 3 
-          ? nextCircleFor3CircleCase(currentCircleIndex)
-          : (currentCircleIndex + 1) % totalCircles;
-        console.log(`[MultiCircleLogic] 🔄 Auto-transition triggered at start of measure: ${currentCircleIndex} -> ${nextCircleIndex}`);
+      if (circleSettings.length > 1 && hasPlayedEnoughRef.current) {
+        // FIXED: Always use sequential transitions, never skip circles
+        // Force circle order: 0 -> 1 -> 0 (for 2 circles) or 0 -> 1 -> 2 -> 0 (for 3+ circles)
+        const nextCircleIndex = (currentCircleIndex + 1) % circleSettings.length;
         
-        // Prepare for transition
-        prepareCircleTransition(currentCircleIndex, nextCircleIndex);
+        // Special alternating case for exactly 2 circles
+        const isTwoCircleCase = circleSettings.length === 2;
         
-        // Update playing circle ref for the next measure
-        playingCircleRef.current = nextCircleIndex;
+        // CHECK IF WE NEED TO COMPLETE ONE FULL CYCLE
+        if (nextCircleIndex === 0 && currentCircleIndex === circleSettings.length - 1) {
+          fullCycleCompletedRef.current = true;
+          console.log(`[MULTICIRCLE] ✓ Completed full cycle of all ${circleSettings.length} circles`);
+        }
         
-        // Call the onCircleChange callback to sync the UI
-        if (onCircleChange) {
-          onCircleChange(nextCircleIndex);
+        // For 2 circles, we want to log this as an alternating pattern
+        if (isTwoCircleCase) {
+          console.log(`[MULTICIRCLE] 🔄 Alternating between circles: ${currentCircleIndex} -> ${nextCircleIndex}`);
+        } else {
+          // For 3+ circles, log as sequential transition
+          console.log(`[MultiCircleLogic] 🔄 Sequential transition: ${currentCircleIndex} -> ${nextCircleIndex} (of ${circleSettings.length} total circles)`);
+        }
+        
+        // FIXED: Better transition handling with guaranteed progression
+        const success = prepareCircleTransition(currentCircleIndex, nextCircleIndex);
+        
+        if (success) {
+          if (isTwoCircleCase) {
+            console.log(`[MULTICIRCLE] ✓ Successfully alternating to circle ${nextCircleIndex}`);
+          } else {
+            console.log(`[MULTICIRCLE] ✓ Successfully transitioning from circle ${currentCircleIndex} to ${nextCircleIndex} (total circles: ${circleSettings.length})`);
+          }
+          
+          // Update playing circle ref for the next measure
+          playingCircleRef.current = nextCircleIndex;
+          
+          // Call the onCircleChange callback to sync the UI
+          if (onCircleChange) {
+            console.log(`[MULTICIRCLE] Notifying UI of circle change to ${nextCircleIndex}`);
+            onCircleChange(nextCircleIndex);
+          }
+        } else {
+          console.log(`[MULTICIRCLE] ✕ Transition preparation failed, remaining on circle ${currentCircleIndex}`);
         }
       }
     } else if (subIndex === totalSubs - 1) {
@@ -742,18 +786,29 @@ export default function useMultiCircleMetronomeLogic({
   const switchToNextCircle = useCallback(() => {
     if (circleSettings.length <= 1) return 0;
     
-    // Calculate next circle index
+    // Calculate next circle index - ALWAYS proceed in sequential order
     const currentCircle = playingCircleRef.current;
     const nextCircle = (currentCircle + 1) % circleSettings.length;
     
-    console.log(`[MultiCircleLogic] 🔄 switchToNextCircle called: ${currentCircle} -> ${nextCircle}`);
+    console.log(`[MultiCircleLogic] 🔄 switchToNextCircle called: ${currentCircle} -> ${nextCircle} (ensuring sequential progression)`);
+    
+    // Block transitions during initial stabilization period
+    if (!hasPlayedEnoughRef.current && currentCircle === 0) {
+      console.log(`[FIXED] Blocking manual transition during initial stabilization period`);
+      return currentCircle;
+    }
     
     // Prepare for transition (will be handled by scheduler)
     const transitionPrepared = prepareCircleTransition(currentCircle, nextCircle);
     
     // Only return the next circle index if transition was successfully prepared
-    return transitionPrepared ? nextCircle : currentCircle;
-  }, [circleSettings, prepareCircleTransition]);
+    if (transitionPrepared) {
+      console.log(`[FIXED] Successfully prepared sequential transition to circle ${nextCircle}`);
+      return nextCircle;
+    } else {
+      return currentCircle;
+    }
+  }, [circleSettings, prepareCircleTransition, hasPlayedEnoughRef]);
 
   // Fixed: doSchedulerLoop function that properly checks for valid audio context and handles beat mode changes
   const doSchedulerLoop = useCallback(() => {
@@ -888,6 +943,19 @@ export default function useMultiCircleMetronomeLogic({
           return;
         }
         
+        // FIXED: Always start playback from circle 0 with proper initialization
+        console.log("[MultiCircleLogic] Starting playback from circle 0");
+        playingCircleRef.current = 0;
+        if (onCircleChange) {
+          onCircleChange(0);
+        }
+        
+        // UPDATED FIX: Special case for 2 circles - initialize to enable fast alternation
+        if (circleSettings.length === 2) {
+          console.log("[CRITICAL] Two-circle case detected, optimizing for alternating pattern");
+          minBeatsBeforeTransitionRef.current = 0; // Reset to force first transition after 1 beat
+        }
+        
         // All checks passed, start scheduler
         schedulerRunningRef.current = true;
         const now = audioCtxRef.current.currentTime;
@@ -915,6 +983,9 @@ export default function useMultiCircleMetronomeLogic({
           measureCompleted: false,
           alreadySwitched: false
         };
+        
+        // FIXED: Reset the full cycle completion flag when restarting
+        fullCycleCompletedRef.current = false;
         
         // Reset the beat counter for initial blocking
         minBeatsBeforeTransitionRef.current = 0;
