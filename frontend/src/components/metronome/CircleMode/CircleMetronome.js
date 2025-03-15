@@ -332,7 +332,7 @@ export function AdvancedMetronomeWithCircle({
         </button>
       </div>
 
-      {/* Tap Tempo on Mobile */}
+      {/* Tap Tempo button */}
       <button
         onClick={logic.tapTempo}
         aria-label="Tap Tempo"
@@ -341,7 +341,7 @@ export function AdvancedMetronomeWithCircle({
           border: 'none',
           cursor: 'pointer',
           marginTop: '20px',
-          display: isMobile ? 'inline-block' : 'none'
+          display: 'inline-block'
         }}
       >
         <img
