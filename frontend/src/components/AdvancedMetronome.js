@@ -147,8 +147,14 @@ export function AdvancedMetronomeWithCircle({
     setSubdivisions,
     isPaused,
     setIsPaused,
-    swing,
-    setSwing,
+    // Force swing to 0 in analog mode
+    swing: analogMode ? 0 : swing,
+    setSwing: (value) => {
+      // Don't allow swing changes in analog mode
+      if (!analogMode) {
+        setSwing(value);
+      }
+    },
     volume,
     setVolume,
     accents: effectiveAccents,
