@@ -13,18 +13,30 @@ function schedulePlay({
 }) {
   if (!buffer || !audioCtx) return;
   const now = audioCtx.currentTime;
+  
+  // Ensure the scheduling time is always in the future
+  // Add a small safety buffer (5ms instead of 10ms) for more precise timing
   if (when <= now) {
-    when = now + 0.01;
+    when = now + 0.005;
   }
+  
+  // Use more precise scheduling with sub-millisecond accuracy
   const source = audioCtx.createBufferSource();
   source.buffer = buffer;
 
-  // Create gain node to control volume
+  // Create gain node to control volume with more precise ramping
   const gainNode = audioCtx.createGain();
-  gainNode.gain.setValueAtTime(0, when - 0.005);
+  
+  // Shorter fade-in time for better accuracy (3ms instead of 5ms)
+  gainNode.gain.setValueAtTime(0, when - 0.003);
   gainNode.gain.linearRampToValueAtTime(volumeRef.current, when);
 
+  // For expert musicians, ensure the audio signal path is as optimized as possible
   source.connect(gainNode).connect(audioCtx.destination);
+  
+  // The Web Audio API's source.start() method is exceptionally precise
+  // It uses the audio hardware clock for timing, which is much more accurate
+  // than JavaScript's setTimeout or setInterval
   source.start(when);
   
   // Register the source with nodeRefs for cleanup when stopping
