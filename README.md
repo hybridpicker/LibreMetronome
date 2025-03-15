@@ -1,89 +1,202 @@
-![Logo](https://github.com/user-attachments/assets/ee0a4ccc-fc09-4024-a4e3-1b95b333ae59)
----
+![LibreMetronome Logo](https://github.com/user-attachments/assets/ee0a4ccc-fc09-4024-a4e3-1b95b333ae59)
+
 ![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)
 
-Libre Metronome is a modern, minimalist, and intuitive digital metronome application that merges classic musical functionality with a contemporary user interface. The application integrates analog elements (such as a circular display and an oscillating pointer) with modern technologies to provide musicians and educators with a powerful and flexible tool. The frontend is built in React, while the backend is based on Django, with a REST API for future enhancements like user management and preset functionality.
+# Libre Metronome
 
-## Demonstration
-https://github.com/user-attachments/assets/d255a73b-2f0c-4033-a95f-5425acbc932e
+A modern, open-source metronome application that merges classic musical functionality with a contemporary user interface. Libre Metronome integrates analog elements (circular display, oscillating pointer) with modern web technologies to provide musicians and educators with a powerful and flexible practice tool.
 
-## Website
-[Libre Metronome](https://libremetronome.com/)
+## Live Demo
 
-## Features
+[www.libremetronome.com](https://libremetronome.com/)
 
-- **Multiple Modes:**  
-  Users can choose between different visual representations to suit their preferences and workflow. The **Advanced Circle Mode** offers a refined circular display with dynamic elements, the **Analog Mode** mimics a classic metronome with an oscillating pointer, and the **Grid Mode** provides a structured visual approach with beat subdivisions.
+https://github.com/user-attachments/assets/34eab434-1979-484e-96d4-d504b3c203db
 
-- **Dynamic Pointer:**  
-  An animated pointer that shows the progression of beats in real-time. The pointer features a dynamic line width and a subtle glow effect to enhance the visual rhythm.
+## Key Features
 
-- **Interactive Controls:**  
-  Easily adjustable parameters such as tempo, swing, and volume. The swing and volume values are displayed as percentages (0–100%), while the tempo is displayed in BPM.
+### Multiple Visualization Modes
 
-- **Keyboard Interaction:**  
-  In addition to mouse or touch controls, the application supports keyboard shortcuts (e.g., Space to start/pause, numeric keys to adjust subdivisions, and "T" for tap tempo).
+- **Circle Mode** - Interactive circular beat visualization with customizable accents
+- **Analog Mode** - Classic metronome with realistic pendulum animation
+- **Grid Mode** - Visual grid pattern layout for complex rhythms and beat patterns
+- **Multi Circle Mode** - Advanced polyrhythm practice with multiple independent circles
 
-- **Web Audio Integration:**  
-  Uses the Web Audio API to ensure precise beat timing, with customizable accents and volume levels per beat.
+### Beat Customization
 
-- **REST API Backend:**  
-  The Django-based backend includes a REST API for managing metronome settings, presets, and future user authentication.
+- **Adjustable Time Signatures** - Support for 1 to 9 beats per measure
+- **Flexible Accent Patterns** - Customize emphasis on any beat with four different states:
+  - First Beat (strong accent)
+  - Accent (medium emphasis)
+  - Normal Beat (regular click)
+  - Muted (no sound)
+- **Quarter/Eighth Note Toggle** - Switch between quarter and eighth note subdivisions
 
-## Technologies
+### Training Features
 
-- **Frontend:**  
-  - React, JavaScript, HTML, CSS  
-    (Modern frontend technologies for a responsive and user-friendly interface.)
+- **Macro-Timing Practice**
+  - Fixed Silence Intervals - Play for set number of measures, then mute for specified duration
+  - Random Silence - Randomly muted beats based on probability setting
+- **Speed Training**
+  - Auto Increase - Automatically increase tempo after specified number of measures
+  - Manual Increase - Control tempo increases with an "Accelerate" button
 
-- **Backend:**  
-  - Django, Django REST Framework, Python  
-    (A robust and scalable backend architecture, with RESTful endpoints for future enhancements.)
+### User Experience
 
-## Installation & Local Development
+- **Dynamic Visualization** - Animated pointer shows beat progression with synchronized visual feedback
+- **Keyboard Shortcuts** - Spacebar for play/pause, number keys for subdivisions, 'T' for tap tempo
+- **Tap Tempo** - Set tempo by tapping at desired speed
+- **Swing Control** - Add rhythmic swing feel from 0-50%
+- **Volume Control** - Adjustable volume for all sound types
+
+### Sound Customization
+
+- **Multiple Sound Sets** - Choose between different metronome sound profiles
+- **Custom Sound API** - Backend support for user-defined sound sets
+- **Customizable Accents** - Different sounds for first beat, accented beats, and normal beats
+
+## Technical Stack
+
+### Frontend
+- React 
+- JavaScript/ES6+
+- HTML5/CSS3
+- Web Audio API
+
+### Backend
+- Django
+- Django REST Framework
+- Python
+- SQLite database
+
+## Installation & Setup
 
 ### Prerequisites
 
-- Node.js (and npm)
-- Python 3 (with pip and venv)
+- Node.js (v14+) and npm
+- Python 3.8+ with pip and venv
+- Git
 
 ### Local Development
 
-1. **Clone the Repository:**
-   ```bash
-   git clone https://github.com/hybridpicker/LibreMetronome.git
-   cd LibreMetronome
-   ```
+#### Clone the Repository
 
-2. **Install and Start the Frontend:**
-   ```bash
-   cd frontend
-   npm install
-   npm start
-   ```
-   The frontend will be accessible at http://localhost:3000.
+```bash
+git clone https://github.com/hybridpicker/LibreMetronome.git
+cd LibreMetronome
+```
 
-3. **Install and Start the Backend:**
-   ```bash
-   cd backend
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-   python manage.py migrate
-   python manage.py runserver
-   ```
-   The backend will run at http://localhost:8000.
+#### Frontend Setup
+
+```bash
+# Navigate to frontend directory
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start development server
+npm start
+```
+
+The frontend will be accessible at http://localhost:3000
+
+#### Backend Setup
+
+```bash
+# Navigate to backend directory from project root
+cd backend
+
+# Create and activate virtual environment
+python -m venv venv
+
+# On Windows
+venv\Scripts\activate
+
+# On macOS/Linux
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run migrations
+python manage.py migrate
+
+# Load default sound sets
+python manage.py check_sounds
+
+# Start the Django development server
+python manage.py runserver
+```
+
+The backend will run at http://localhost:8000
+
+#### API Endpoints
+
+| Endpoint | Description |
+|----------|-------------|
+| `/api/active-sound-set/` | Get currently active sound set |
+| `/api/sound-sets/` | List all available sound sets |
+| `/api/sound-sets/<id>/` | Get specific sound set details |
+| `/api/sound-sets/<id>/set-active/` | Set sound set as active |
+
+## Keyboard Shortcuts
+
+| Key | Action |
+|-----|--------|
+| Space | Start/Pause |
+| T | Tap tempo |
+| 1-9 | Set beats per measure |
+| ← / → | Decrease/increase tempo by 5 BPM |
+| A | Switch to Analog Mode |
+| C | Switch to Circle Mode |
+| G | Switch to Grid Mode |
+| M | Switch to Multi Circle Mode |
+| I | Toggle Info Overlay |
+| R | Toggle Training Mode Settings |
+| S | Toggle Settings Panel |
+| Esc | Close any open overlay |
+| U | Manual tempo increase (when in Manual Speed Training mode) |
+
+## Design Philosophy
+
+Libre Metronome bridges traditional musical pedagogy with modern technology, combining classic metronome functionality with interactive visualizations and advanced training features. The application is designed to be:
+
+- **Intuitive** - Clear visual feedback and simple controls
+- **Flexible** - Adaptable to different musical styles and practice needs
+- **Educational** - Training modes to develop internal rhythm and technique
+- **Open** - Free and open-source with customization options
 
 ## Contributing
 
-Contributions to the development of Libre Metronome are welcome. Please open a pull request or create an issue with your suggestions, improvements, or bug reports. Ensure that new features are accompanied by appropriate tests.
+Contributions to Libre Metronome are welcome! Please feel free to:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Areas for Contribution
+
+- Additional visualization modes
+- New training features
+- UI/UX improvements
+- Performance optimizations
+- Documentation and tutorials
+- Translations
+
+## Roadmap
+
+- User accounts for saving metronome presets
+- Mobile app versions
+- Advanced polyrhythm training features
+- Integration with recording capabilities
+- MIDI/hardware metronome sync options
 
 ## License
-This project is licensed under the **GNU General Public License v3.0**.  
-You can find the full license text in the `LICENSE` file or at  
-[https://www.gnu.org/licenses/gpl-3.0.html](https://www.gnu.org/licenses/gpl-3.0.html).
 
-## Acknowledgements
+This project is licensed under the GNU General Public License v3.0. See the [LICENSE](LICENSE) file for details or visit [https://www.gnu.org/licenses/gpl-3.0.html](https://www.gnu.org/licenses/gpl-3.0.html).
 
-Libre Metronome bridges traditional musical pedagogy with modern technology, providing a solid foundation for further artistic and educational initiatives.
+---
 
+© 2025 Libre Metronome | GPL v3 License
