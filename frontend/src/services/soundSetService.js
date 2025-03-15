@@ -1,6 +1,6 @@
-import { getCookie } from './cookieUtils';
+import { getCookie, setCookie } from './cookieUtils';
 
-// Verwende in Produktion zunächst REACT_APP_BACKEND_URL (falls gesetzt) oder window.location.origin
+// Use REACT_APP_BACKEND_URL (if set) or window.location.origin in production
 const API_BASE_URL =
   process.env.NODE_ENV === 'production'
     ? (process.env.REACT_APP_BACKEND_URL || window.location.origin)
@@ -16,64 +16,152 @@ const getApiUrl = (endpoint) => {
   return `${API_BASE_URL}/api${formattedEndpoint}`;
 };
 
+// Default sound sets to use when API is not available
+const defaultSoundSets = [
+  {
+    id: 'default-woodblock',
+    name: 'Wood Block',
+    is_active: true,
+    first_beat_sound_url: '/metronome_sounds/wood_first_sound.mp3',
+    accent_sound_url: '/metronome_sounds/wood_accent_sound.mp3',
+    normal_beat_sound_url: '/metronome_sounds/wood_normal_sound.mp3'
+  },
+  {
+    id: 'default-drums',
+    name: 'Drums',
+    is_active: false,
+    first_beat_sound_url: '/metronome_sounds/drum_first_sound.mp3',
+    accent_sound_url: '/metronome_sounds/drum_accent_sound.mp3',
+    normal_beat_sound_url: '/metronome_sounds/drum_normal_sound.mp3'
+  }
+];
+
 /**
- * Fetches all sound sets from the API.
+ * Fetches all sound sets from the API with fallback.
  * @returns {Promise<Array>} - An array of sound set objects.
  */
 export const getAllSoundSets = async () => {
   const url = getApiUrl('/sound-sets/');
   try {
-    const response = await fetch(url, { credentials: 'include' });
+    const response = await fetch(url, { 
+      credentials: 'include',
+      // Add these headers to help with CORS
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    });
+    
     if (!response.ok) {
       throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
     }
+    
     return await response.json();
   } catch (error) {
     console.error("Error fetching all sound sets from", url, ":", error);
-    throw error;
+    console.log("Using default sound sets");
+    
+    // Return default sound sets when API access fails
+    return defaultSoundSets;
   }
 };
 
 /**
  * Sets a specific sound set as active.
- * This function sends a POST request with the CSRF token included.
- * @param {number} id - The ID of the sound set to activate.
+ * This function saves the ID to cookie and localStorage for persistence.
+ * It tries to call the API but will still save preferences locally even if API fails.
+ * 
+ * @param {string} id - The ID of the sound set to activate.
  * @returns {Promise<Object>} - The updated sound set object.
  */
 export const setActiveSoundSet = async (id) => {
+  // Always store the choice locally
+  localStorage.setItem('activeSoundSetId', id.toString());
+  setCookie('activeSoundSetId', id.toString(), 365); // Keep for 1 year
+  
+  // Try to update server state if possible
   const url = getApiUrl(`/sound-sets/${id}/set-active/`);
   const csrfToken = getCookie('csrftoken');
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRFToken': csrfToken,
-    },
-    credentials: 'include',
-    body: JSON.stringify({ is_active: true }),
-  });
-  if (!response.ok) {
-    throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
+  
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken,
+        'Accept': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify({ is_active: true }),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error("Error updating server, but preference saved locally:", error);
+    
+    // Return a mock success response
+    return { 
+      id, 
+      is_active: true,
+      status: 'Local preference saved'
+    };
   }
-  return await response.json();
 };
 
 /**
- * Retrieves the currently active sound set.
- * This function fetches all sound sets and returns the one marked as active.
- * @returns {Promise<Object|null>} - The active sound set or null if none is active.
+ * Retrieves the currently active sound set with fallbacks.
+ * Checks cookies first, then localStorage, then server state.
+ * Works even when API is unavailable.
+ * 
+ * @returns {Promise<Object>} - The active sound set
  */
 export const getActiveSoundSet = async () => {
   try {
+    // Get all available sound sets (might return defaults if API fails)
     const sets = await getAllSoundSets();
+    
+    // Check cookie first
+    const cookieId = getCookie('activeSoundSetId');
+    if (cookieId) {
+      const foundByCookie = sets.find(set => set.id.toString() === cookieId);
+      if (foundByCookie) {
+        console.log("Using sound set from cookie:", foundByCookie.name);
+        return foundByCookie;
+      }
+    }
+    
+    // Then check localStorage
     const storedId = localStorage.getItem('activeSoundSetId');
     if (storedId) {
-      const found = sets.find(set => set.id === storedId);
-      if (found) return found;
+      const foundByStorage = sets.find(set => set.id.toString() === storedId);
+      if (foundByStorage) {
+        // Sync cookie with localStorage
+        setCookie('activeSoundSetId', storedId, 365);
+        console.log("Using sound set from localStorage:", foundByStorage.name);
+        return foundByStorage;
+      }
     }
-    return sets.find((set) => set.is_active) || null;
+    
+    // Fall back to server's active flag
+    const activeSet = sets.find((set) => set.is_active);
+    if (activeSet) {
+      // Update both storage mechanisms with server value
+      localStorage.setItem('activeSoundSetId', activeSet.id.toString());
+      setCookie('activeSoundSetId', activeSet.id.toString(), 365);
+      console.log("Using sound set from server:", activeSet.name);
+      return activeSet;
+    }
+    
+    // Last resort: use first available set
+    console.log("No active sound set found, using first available set:", sets[0].name);
+    return sets[0];
   } catch (error) {
-    console.error("Error fetching active sound set:", error);
-    return null;
+    console.error("Critical error fetching active sound set:", error);
+    // Last resort fallback to first default
+    return defaultSoundSets[0];
   }
 };
