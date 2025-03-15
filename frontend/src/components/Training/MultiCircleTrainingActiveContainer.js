@@ -1,6 +1,7 @@
 // src/components/Training/MultiCircleTrainingActiveContainer.js
 import React, { useState, useEffect } from 'react';
 import './TrainingActiveContainer.css'; // Reuse the same CSS
+import useWindowDimensions from '../../hooks/useWindowDimensions';
 
 /**
  * A specialized version of TrainingActiveContainer for Multi Circle Mode
@@ -24,6 +25,53 @@ const MultiCircleTrainingActiveContainer = ({
   const [muteMeasureCount, setMuteMeasureCount] = useState(0);
   const [isSilencePhase, setIsSilencePhase] = useState(false);
   const [forceUpdate, setForceUpdate] = useState(0);
+  const [tipIndex, setTipIndex] = useState(0);
+  
+  // Check if device is mobile
+  const { width } = useWindowDimensions();
+  const isMobile = width <= 768;
+  
+  // Training tips array - customized for multi-circle mode
+  const silentPhaseTips = [
+    "Focus on maintaining your internal tempo during silence",
+    "Try counting out loud to stay on beat during the silent phase",
+    "Imagine hearing the metronome in your head while it's silent",
+    "Keep your movements consistent during both silent and playing phases",
+    "In multi-circle mode, visualize the pattern continuing through silence"
+  ];
+  
+  const speedTrainingTips = [
+    "Maintain good technique as the tempo increases",
+    "Keep your movements relaxed and efficient at higher speeds",
+    "Focus on precision rather than just speed",
+    "Start slow and build gradually for the best results",
+    "Multi-circle patterns become more challenging at higher tempos - stay focused"
+  ];
+  
+  const generalTips = [
+    "Use training mode regularly to improve your timing skills",
+    "Practice switching between different polyrhythmic patterns",
+    "Multi-circle training helps develop advanced coordination skills",
+    "Short, focused practice with training modes is more effective than long sessions",
+    "Try different tempo relationships between circles for added challenge"
+  ];
+  
+  // Rotate tips every 6 seconds
+  useEffect(() => {
+    if (macroMode === 0 && speedMode === 0) return;
+    
+    const tipInterval = setInterval(() => {
+      setTipIndex(prev => {
+        const tipArray = macroMode !== 0 && isSilencePhase ? 
+          silentPhaseTips : speedMode !== 0 ? 
+          speedTrainingTips : generalTips;
+          
+        return (prev + 1) % tipArray.length;
+      });
+    }, 6000);
+    
+    return () => clearInterval(tipInterval);
+  }, [macroMode, speedMode, isSilencePhase]);
   
   // Listen for training measure updates to force re-renders
   useEffect(() => {
@@ -80,19 +128,46 @@ const MultiCircleTrainingActiveContainer = ({
   const remainingMeasures = speedMode === 1 ? 
     measuresUntilSpeedUp - currentMeasure : 0;
   
-  // Format measure text
+  // Format measure text with improved information
   const formatMeasureText = (current, total) => {
     if (current === 0 && total === 0) return "Ready to start";
     if (current === 0) return `Starting ${total}-measure cycle`;
-    if (current === 1) return `Measure ${current} of ${total}`;
-    return `Measure ${current} of ${total}`;
+    
+    const percentage = Math.round((current / total) * 100);
+    return `Measure ${current} of ${total} (${percentage}% complete)`;
   };
   
-  // Format countdown text
+  // Format countdown text with improved information
   const formatCountdownText = (remaining) => {
     if (remaining === 0) return "Increasing tempo now";
-    if (remaining === 1) return "1 measure left";
-    return `${remaining} measures left`;
+    if (remaining === 1) return "Tempo increases in 1 measure";
+    return `Tempo increases in ${remaining} measures`;
+  };
+  
+  // Get the current tip based on context
+  const getCurrentTip = () => {
+    if (macroMode !== 0 && isSilencePhase) {
+      return silentPhaseTips[tipIndex % silentPhaseTips.length];
+    } else if (speedMode !== 0) {
+      return speedTrainingTips[tipIndex % speedTrainingTips.length];
+    } else {
+      return generalTips[tipIndex % generalTips.length];
+    }
+  };
+  
+  // Create beat indicators for visual rhythm pattern
+  const renderBeatIndicators = (count, total) => {
+    const indicators = [];
+    for (let i = 0; i < total; i++) {
+      indicators.push(
+        <span 
+          key={i} 
+          className={`beat-indicator ${i < count ? 'active' : ''}`}
+          aria-label={`Beat ${i+1} ${i < count ? 'completed' : 'upcoming'}`}
+        />
+      );
+    }
+    return <div className="beat-indicators">{indicators}</div>;
   };
   
   return (
@@ -119,8 +194,11 @@ const MultiCircleTrainingActiveContainer = ({
                 <span className="status-label">Silent Phase</span>
                 <div className="progress-container">
                   <div 
-                    className="progress-bar" 
+                    className="progress-bar animated" 
                     style={{width: `${muteProgress}%`}}
+                    aria-valuenow={muteProgress}
+                    aria-valuemin="0"
+                    aria-valuemax="100"
                   ></div>
                 </div>
                 <span className="counter-text">
@@ -128,6 +206,7 @@ const MultiCircleTrainingActiveContainer = ({
                     "Starting silent phase" : 
                     `Silent measure ${muteMeasureCount} of ${muteDurationMeasures}`}
                 </span>
+                {muteDurationMeasures > 1 && renderBeatIndicators(muteMeasureCount, muteDurationMeasures)}
               </div>
             </div>
           ) : (
@@ -139,11 +218,15 @@ const MultiCircleTrainingActiveContainer = ({
                   <div 
                     className="progress-bar" 
                     style={{width: `${measureProgress}%`}}
+                    aria-valuenow={measureProgress}
+                    aria-valuemin="0"
+                    aria-valuemax="100"
                   ></div>
                 </div>
                 <span className="counter-text">
                   {formatMeasureText(measureCount, measuresUntilMute)}
                 </span>
+                {measuresUntilMute > 1 && renderBeatIndicators(measureCount, measuresUntilMute)}
               </div>
             </div>
           )}
@@ -165,23 +248,30 @@ const MultiCircleTrainingActiveContainer = ({
             <div className="status-info">
               {speedMode === 1 ? (
                 <>
-                  <span className="status-label">Next Increase In</span>
+                  <span className="status-label">Next Tempo Increase</span>
                   <div className="progress-container">
                     <div 
                       className="progress-bar" 
                       style={{
                         width: `${(currentMeasure / measuresUntilSpeedUp) * 100}%`
                       }}
+                      aria-valuenow={(currentMeasure / measuresUntilSpeedUp) * 100}
+                      aria-valuemin="0"
+                      aria-valuemax="100"
                     ></div>
                   </div>
                   <span className="counter-text">
                     {formatCountdownText(remainingMeasures)}
                   </span>
+                  {measuresUntilSpeedUp > 1 && renderBeatIndicators(currentMeasure, measuresUntilSpeedUp)}
                 </>
               ) : (
-                <span className="status-label">
-                  Press "Accelerate" to increase tempo by {tempoIncreasePercent}%
-                </span>
+                <>
+                  <span className="status-label">Manual Speed Increase</span>
+                  <span className="counter-text">
+                    Press "Accelerate" to increase tempo by {tempoIncreasePercent}%
+                  </span>
+                </>
               )}
             </div>
           </div>
@@ -190,14 +280,18 @@ const MultiCircleTrainingActiveContainer = ({
       
       <div className="training-active-tip">
         <span className="tip-icon">💡</span>
-        {macroMode !== 0 && isSilencePhase ? (
-          <span className="tip-text">Focus on maintaining your internal tempo during silence</span>
-        ) : speedMode !== 0 ? (
-          <span className="tip-text">Maintain good technique as the tempo increases</span>
-        ) : (
-          <span className="tip-text">Use training mode to improve your timing skills</span>
-        )}
+        <div>
+          <span className="tip-title">Multi-Circle Tip</span>
+          <span className="tip-text">{getCurrentTip()}</span>
+        </div>
       </div>
+      
+      {/* Keyboard shortcut hint - only show on desktop */}
+      {!isMobile && (
+        <div className="keyboard-hint">
+          Press <kbd>R</kbd> to toggle training mode settings
+        </div>
+      )}
     </div>
   );
 };

@@ -2,40 +2,41 @@
 
 .training-active-container {
   margin: 20px auto;
-  padding: 15px;
-  border-radius: 8px;
+  padding: 16px;
+  border-radius: 10px;
   background-color: #ffffff;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--neutral-border);
   max-width: 350px;
   text-align: left;
   font-family: 'Lato', sans-serif;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  color: #333;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  color: var(--text-primary);
+  transition: all 0.3s ease;
 }
 
 .training-active-header {
   display: flex;
   align-items: center;
-  margin-bottom: 12px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #eee;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--neutral-border-light);
 }
 
 .training-active-indicator {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background-color: #00A0A0;
-  margin-right: 8px;
+  background-color: var(--primary-teal);
+  margin-right: 10px;
   animation: pulse 2s infinite;
 }
 
 @keyframes pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(0, 160, 160, 0.4);
+    box-shadow: 0 0 0 0 rgba(0, 160, 160, 0.6);
   }
   70% {
-    box-shadow: 0 0 0 6px rgba(0, 160, 160, 0);
+    box-shadow: 0 0 0 8px rgba(0, 160, 160, 0);
   }
   100% {
     box-shadow: 0 0 0 0 rgba(0, 160, 160, 0);
@@ -44,15 +45,21 @@
 
 .training-active-title {
   margin: 0;
-  color: #00A0A0;
+  color: var(--primary-teal);
   font-size: 16px;
   font-weight: bold;
 }
 
 .training-active-section {
-  margin-bottom: 15px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid #eee;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--neutral-border-light);
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .training-active-section:last-of-type {
@@ -68,47 +75,56 @@
 
 .training-active-section-title {
   font-weight: bold;
-  color: #555;
+  color: var(--text-primary);
+  font-size: 14px;
 }
 
 .training-active-section-type {
   font-size: 13px;
-  color: #00A0A0;
-  background-color: rgba(0, 160, 160, 0.1);
-  padding: 3px 8px;
+  color: var(--primary-teal);
+  background-color: var(--primary-teal-ultra-light);
+  padding: 4px 10px;
   border-radius: 12px;
 }
 
 .training-active-status-box {
   display: flex;
   align-items: center;
-  background-color: #f9f9f9;
-  border-radius: 6px;
-  padding: 10px;
-  margin-top: 8px;
+  background-color: var(--neutral-bg-alt);
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 10px;
+  transition: all 0.3s ease;
 }
 
 .training-active-status-box.silent {
-  background-color: #fff5f5;
-  border-left: 3px solid #f44336;
+  background-color: #ffeaea;
+  border-left: 4px solid var(--error);
+  animation: highlight-silent 1s infinite alternate;
+}
+
+@keyframes highlight-silent {
+  from { box-shadow: 0 0 3px rgba(244, 67, 54, 0.2); }
+  to { box-shadow: 0 0 8px rgba(244, 67, 54, 0.4); }
 }
 
 .training-active-status-box.playing {
-  background-color: #f0f8ff;
-  border-left: 3px solid #4285f4;
+  background-color: var(--primary-teal-ultra-light);
+  border-left: 4px solid var(--primary-teal);
 }
 
 .training-active-status-box.speed {
-  background-color: #f0fff4;
-  border-left: 3px solid #0f9d58;
+  background-color: var(--secondary-gold-ultra-light);
+  border-left: 4px solid var(--secondary-gold);
 }
 
 .status-icon {
-  font-size: 18px;
-  margin-right: 12px;
+  font-size: 20px;
+  margin-right: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: 24px;
 }
 
 .status-info {
@@ -117,66 +133,166 @@
 
 .status-label {
   display: block;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
-  margin-bottom: 5px;
+  margin-bottom: 6px;
+  color: var(--text-primary);
 }
 
 .progress-container {
-  height: 6px;
-  background-color: #e0e0e0;
-  border-radius: 3px;
+  height: 8px;
+  background-color: rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
   overflow: hidden;
-  margin-bottom: 5px;
+  margin-bottom: 6px;
+  position: relative;
 }
 
 .progress-bar {
   height: 100%;
-  background-color: #00A0A0;
-  transition: width 0.5s ease;
+  background-color: var(--primary-teal);
+  transition: width 0.3s ease-out;
+}
+
+.progress-bar.animated {
+  background-image: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.15) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.15) 75%,
+    transparent 75%,
+    transparent
+  );
+  background-size: 16px 16px;
+  animation: progress-bar-stripes 1s linear infinite;
+}
+
+@keyframes progress-bar-stripes {
+  from { background-position: 16px 0; }
+  to { background-position: 0 0; }
 }
 
 .silent .progress-bar {
-  background-color: #f44336;
+  background-color: var(--error);
 }
 
 .playing .progress-bar {
-  background-color: #4285f4;
+  background-color: var(--primary-teal);
 }
 
 .speed .progress-bar {
-  background-color: #0f9d58;
+  background-color: var(--secondary-gold-dark);
 }
 
 .counter-text {
-  font-size: 12px;
-  color: #666;
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
 }
 
 .training-active-tip {
   display: flex;
   align-items: flex-start;
-  background-color: #fffde7;
-  border-radius: 6px;
-  padding: 10px;
-  margin-top: 5px;
+  background-color: var(--training-tip-bg);
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 8px;
   font-size: 13px;
+  border-left: 3px solid var(--secondary-gold);
+  animation: fadeTip 0.5s ease-in;
+}
+
+@keyframes fadeTip {
+  from { opacity: 0.7; }
+  to { opacity: 1; }
 }
 
 .tip-icon {
-  margin-right: 8px;
+  margin-right: 10px;
+  font-size: 16px;
 }
 
 .tip-text {
-  color: #5f6368;
+  color: var(--text-secondary);
   line-height: 1.4;
+}
+
+.tip-title {
+  font-weight: bold;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  display: block;
+}
+
+/* Keyboard shortcut hint */
+.keyboard-hint {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  text-align: center;
+  padding: 6px;
+  background-color: var(--neutral-bg);
+  border-radius: 4px;
+}
+
+.keyboard-hint kbd {
+  background-color: #fff;
+  border: 1px solid var(--neutral-border);
+  border-radius: 3px;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+  padding: 2px 5px;
+  margin: 0 3px;
+  font-family: monospace;
+}
+
+/* Status indicators */
+.beat-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin: 0 2px;
+  background-color: var(--beat-muted);
+}
+
+.beat-indicator.active {
+  background-color: var(--primary-teal);
+  animation: beat-pulse 0.3s ease;
+}
+
+.silent .beat-indicator.active {
+  background-color: var(--error);
+}
+
+.playing .beat-indicator.active {
+  background-color: var(--primary-teal);
+}
+
+.speed .beat-indicator.active {
+  background-color: var(--secondary-gold-dark);
+}
+
+@keyframes beat-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.5); }
+  100% { transform: scale(1); }
+}
+
+/* Beat indicators container */
+.beat-indicators {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 6px;
+  flex-wrap: wrap;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .training-active-container {
-    max-width: 320px;
-    padding: 12px;
+    max-width: 330px;
+    padding: 14px;
     margin: 15px auto;
   }
   
@@ -202,5 +318,9 @@
   
   .training-active-tip {
     font-size: 12px;
+  }
+  
+  .keyboard-hint {
+    display: none; /* Hide keyboard shortcuts on mobile */
   }
 }
