@@ -333,24 +333,23 @@ export function AdvancedMetronomeWithCircle({
       </div>
 
       {/* Tap Tempo on Mobile */}
-      {isMobile && (
-        <button
-          onClick={logic.tapTempo}
-          aria-label="Tap Tempo"
-          style={{
-            background: 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-            marginTop: '20px',
-          }}
-        >
-          <img
-            src={tapButtonIcon}
-            alt="Tap Tempo"
-            style={{ height: 35, objectFit: 'contain' }}
-          />
-        </button>
-      )}
+      <button
+        onClick={logic.tapTempo}
+        aria-label="Tap Tempo"
+        style={{
+          background: 'transparent',
+          border: 'none',
+          cursor: 'pointer',
+          marginTop: '20px',
+          display: isMobile ? 'inline-block' : 'none'
+        }}
+      >
+        <img
+          src={tapButtonIcon}
+          alt="Tap Tempo"
+          style={{ height: 35, objectFit: 'contain' }}
+        />
+      </button>
 
       {/* Legend - explain what the beat states mean */}
       <div style={{ 

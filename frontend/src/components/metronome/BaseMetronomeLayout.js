@@ -9,6 +9,7 @@ export default function BaseMetronomeLayout({
   swing, setSwing,
   isPaused, onTogglePlay, onTapTempo,
   showSwingSlider = true, useTapButtonMobile = true,
+  logic, // Add logic prop for direct reference to metronome logic
 }) {
   const [containerSize, setContainerSize] = useState(300);
 
@@ -47,7 +48,7 @@ export default function BaseMetronomeLayout({
         )}
       </div>
       {useTapButtonMobile && (
-        <button className="tap-button" onClick={onTapTempo}>
+        <button className="tap-button" onClick={logic ? logic.tapTempo : onTapTempo}>
           <img src="/assets/svg/tap-button.svg" alt="Tap Tempo" />
         </button>
       )}
