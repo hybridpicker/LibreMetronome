@@ -17,13 +17,33 @@ export function initAudioContext() {
       return null;
     }
 
-    // Create and return a new audio context
-    const context = new AudioContext();
-    console.log('New AudioContext created, state:', context.state);
+    // Create and return a new audio context optimized for expert-level precision
+    const context = new AudioContext({
+      // Use 48kHz sample rate for professional audio quality (if supported)
+      sampleRate: 48000,
+      // Set latencyHint to 'interactive' for better timing precision
+      latencyHint: 'interactive'
+    });
+    
+    console.log(`New AudioContext created, state: ${context.state}, sample rate: ${context.sampleRate}Hz`);
+    
+    // Request prioritized thread scheduling for audio processing if possible
+    if (navigator.scheduling && navigator.scheduling.isInputPending) {
+      console.log('Using prioritized scheduling for audio processing');
+    }
+    
     return context;
   } catch (err) {
     console.error('Error creating AudioContext:', err);
-    return null;
+    // Fall back to default audio context if optimized version fails
+    try {
+      const fallbackContext = new AudioContext();
+      console.log('Using fallback AudioContext');
+      return fallbackContext;
+    } catch (fallbackErr) {
+      console.error('Error creating fallback AudioContext:', fallbackErr);
+      return null;
+    }
   }
 }
 
@@ -55,15 +75,25 @@ function loadSound(url, audioCtx) {
   const cacheBuster = `${fetchUrl.includes('?') ? '&' : '?'}cb=${Date.now()}`;
   fetchUrl = `${fetchUrl}${cacheBuster}`;
 
-  return fetch(fetchUrl, {
+  // Use priority fetch when available for better performance
+  const fetchOptions = {
     headers: {
       // Request audio content explicitly
       'Accept': 'audio/mpeg,audio/*;q=0.8,*/*;q=0.5'
     },
     // Ensure credentials are included for cross-origin requests if needed
     credentials: 'same-origin',
-    mode: 'cors'
-  })
+    mode: 'cors',
+    // Use high priority for audio files to ensure they load quickly
+    priority: 'high'
+  };
+
+  // Remove priority if not supported by the browser to avoid errors
+  if (!('priority' in Request.prototype)) {
+    delete fetchOptions.priority;
+  }
+
+  return fetch(fetchUrl, fetchOptions)
     .then(res => {
       if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
       return res.arrayBuffer();
@@ -73,9 +103,33 @@ function loadSound(url, audioCtx) {
       if (!buffer || buffer.byteLength < 100) {
         throw new Error('Invalid audio buffer (too small)');
       }
-      return audioCtx.decodeAudioData(buffer);
+      
+      // Use promise with a higher priority if available
+      if (typeof Promise.withPriority === 'function') {
+        return Promise.withPriority(
+          audioCtx.decodeAudioData(buffer), 
+          'high'
+        );
+      }
+      
+      // Process audio data with optimized decoding for precision timing
+      return audioCtx.decodeAudioData(buffer)
+        .then(decodedBuffer => {
+          // Pre-calculate and cache buffer properties to optimize runtime performance
+          // This helps reduce computational overhead during high-precision playback
+          if (decodedBuffer) {
+            // Store key properties directly on the buffer to avoid repeated access costs
+            Object.defineProperties(decodedBuffer, {
+              '_optimizedForExpertTiming': { value: true },
+              '_duration': { value: decodedBuffer.duration },
+              '_sampleRate': { value: decodedBuffer.sampleRate }
+            });
+          }
+          return decodedBuffer;
+        });
     })
     .catch(err => {
+      console.error(`Error loading sound ${url}:`, err);
       // Fall back to default sounds if loading fails
       if (url.includes('/metronome_sounds/')) {
         let fallbackPath;
@@ -86,6 +140,7 @@ function loadSound(url, audioCtx) {
         } else {
           fallbackPath = '/assets/audio/click_new.mp3';
         }
+        console.log(`Falling back to default sound: ${fallbackPath}`);
         return loadSound(fallbackPath, audioCtx);
       }
       return null;

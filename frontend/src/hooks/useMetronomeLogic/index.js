@@ -5,7 +5,7 @@ import { useMetronomeRefs } from './references';
 import { createTapTempoLogic } from './tapTempo';
 import { handleMeasureBoundary, shouldMuteThisBeat } from './trainingLogic';
 import { runScheduler, scheduleSubdivision } from './scheduler';
-import { TEMPO_MIN, TEMPO_MAX } from './constants';
+import { TEMPO_MIN, TEMPO_MAX, SCHEDULER_INTERVAL } from './constants';
 import { getActiveSoundSet } from '../../services/soundSetService';
 
 /**
@@ -48,10 +48,13 @@ export default function useMetronomeLogic({
     currentSubStartRef,
     currentSubIntervalRef,
     playedBeatTimesRef,
+    highResTimingsRef,
     schedulerRunningRef,
     lookaheadRef,
     actualBpm, setActualBpm,
-    nodeRefs // Collection of active audio nodes for cleanup
+    timingPrecision, setTimingPrecision,
+    nodeRefs, // Collection of active audio nodes for cleanup
+    audioWorkletRef
   } = useMetronomeRefs();
 
   const [currentSubdivision, setCurrentSubdivision] = useState(0);
@@ -130,24 +133,62 @@ export default function useMetronomeLogic({
     if (times.length < 2) return;
     
     // Calculate average time between beats
-    const recentTimes = times.slice(-4); // Last 4 beats
+    // Use more recent beats (8 instead of 4) for more accurate averaging
+    const recentTimes = times.slice(-8); // Last 8 beats for better statistical sample
     let totalDiff = 0;
     let numDiffs = 0;
+    let diffsSquared = 0; // For calculating timing precision (variance)
     
+    // Record high-resolution timings for expert analysis
+    if (highResTimingsRef && highResTimingsRef.current) {
+      // Keep only most recent 50 timing records to avoid memory growth
+      if (highResTimingsRef.current.length > 50) {
+        highResTimingsRef.current = highResTimingsRef.current.slice(-50);
+      }
+      
+      // Add most recent timing
+      if (recentTimes.length >= 2) {
+        highResTimingsRef.current.push({
+          time: performance.now(),
+          interval: recentTimes[recentTimes.length-1] - recentTimes[recentTimes.length-2]
+        });
+      }
+    }
+    
+    // Calculate precise average and variance
     for (let i = 1; i < recentTimes.length; i++) {
-      totalDiff += recentTimes[i] - recentTimes[i-1];
+      const diff = recentTimes[i] - recentTimes[i-1];
+      totalDiff += diff;
       numDiffs++;
     }
     
     if (numDiffs === 0) return;
     const avgTimeBetweenBeats = totalDiff / numDiffs;
-    const beatsPerSec = 1 / avgTimeBetweenBeats;
+    
+    // Calculate variance for timing precision measurement
+    for (let i = 1; i < recentTimes.length; i++) {
+      const diff = recentTimes[i] - recentTimes[i-1];
+      const deviation = diff - avgTimeBetweenBeats;
+      diffsSquared += deviation * deviation;
+    }
+    
+    // Calculate standard deviation in milliseconds for timing precision
+    const variance = diffsSquared / numDiffs;
+    const standardDeviation = Math.sqrt(variance);
+    
+    // Update timing precision (variance) - lower is better
+    if (setTimingPrecision) {
+      setTimingPrecision(standardDeviation.toFixed(2));
+    }
+    
+    // Calculate BPM with higher precision
+    const beatsPerSec = 1000 / avgTimeBetweenBeats; // Convert ms to seconds
     const beatsPerMin = beatsPerSec * 60;
     
-    // Round to nearest integer BPM
-    const newBpm = Math.round(beatsPerMin);
+    // Use more precise BPM with one decimal place for expert musicians
+    const newBpm = Math.round(beatsPerMin * 10) / 10;
     setActualBpm(newBpm);
-  }, [playedBeatTimesRef, setActualBpm]);
+  }, [playedBeatTimesRef, highResTimingsRef, setActualBpm, setTimingPrecision]);
   
   // Handle tempo adjustments for training mode
   const handleTrainingModeTempoAdjustments = useCallback(() => {
@@ -297,7 +338,7 @@ export default function useMetronomeLogic({
         // Restart with a new interval to ensure timing is updated
         lookaheadRef.current = setInterval(
           () => doSchedulerLoopRef.current && doSchedulerLoopRef.current(),
-          20
+          SCHEDULER_INTERVAL
         );
       }
     }
@@ -406,9 +447,10 @@ export default function useMetronomeLogic({
         playedBeatTimesRef.current = [];
         
         // Start scheduling loop with doSchedulerLoopRef to ensure we use the latest version
+        // Use the SCHEDULER_INTERVAL constant for more precise and frequent updates
         lookaheadRef.current = setInterval(
           () => doSchedulerLoopRef.current && doSchedulerLoopRef.current(),
-          20
+          SCHEDULER_INTERVAL
         );
       } catch (err) {
         console.error('Error starting metronome:', err);
@@ -487,6 +529,7 @@ export default function useMetronomeLogic({
   return {
     currentSubdivision,
     actualBpm,
+    timingPrecision, // Now exposing timing precision for expert musicians
     audioCtx: audioCtxRef.current,
     tapTempo: handleTapTempo,
     currentSubStartRef,
@@ -507,6 +550,28 @@ export default function useMetronomeLogic({
       }
       
       return newMultiplier;
+    },
+    // Add high-resolution timing data access for experts
+    getTimingStats: () => {
+      if (!highResTimingsRef.current || highResTimingsRef.current.length < 2) {
+        return { average: 0, min: 0, max: 0, stdDev: 0 };
+      }
+      
+      const intervals = highResTimingsRef.current.map(t => t.interval);
+      const sum = intervals.reduce((a, b) => a + b, 0);
+      const avg = sum / intervals.length;
+      const min = Math.min(...intervals);
+      const max = Math.max(...intervals);
+      
+      // Calculate standard deviation
+      const squareDiffs = intervals.map(value => {
+        const diff = value - avg;
+        return diff * diff;
+      });
+      const avgSquareDiff = squareDiffs.reduce((a, b) => a + b, 0) / intervals.length;
+      const stdDev = Math.sqrt(avgSquareDiff);
+      
+      return { average: avg.toFixed(2), min: min.toFixed(2), max: max.toFixed(2), stdDev: stdDev.toFixed(2) };
     }
   };
 }
