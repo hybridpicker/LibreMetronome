@@ -11,6 +11,8 @@ import '../Controls/slider-styles.css';
 import withTrainingContainer from '../../Training/withTrainingContainer'; // Use the standard training container
 import { getActiveSoundSet } from "../../../services/soundSetService";
 import { loadClickBuffers } from "../../../hooks/useMetronomeLogic/audioBuffers";
+import MultiCircleControls from './MultiCircleControls';
+
 
 import NoteSelector from "../Controls/NoteSelector";
 import SubdivisionSelector from "../Controls/SubdivisionSelector";
@@ -779,9 +781,17 @@ function MultiCircleMetronome(props) {
         <PlayButton handlePlayPause={handlePlayPause} isPaused={isPaused} />
         
         {/* Controls section */}
-        <div className="controls-section" style={{ marginTop: "20px" }}>
-          {/* ... existing controls ... */}
-        </div>
+        <MultiCircleControls
+          circleSettings={circleSettings}
+          setCircleSettings={setCircleSettings}
+          activeCircle={activeCircle}
+          tempo={tempo}
+          setTempo={setTempo}
+          volume={volume}
+          setVolume={setVolume}
+          swing={swing}
+          setSwing={setSwing}
+        />
       </div>
   );
 }
