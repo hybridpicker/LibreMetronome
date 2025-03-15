@@ -32,6 +32,7 @@ logs
 **/*.back.*
 node_modules
 bower_components
+.env.production
 
 # IDE-specific directories (e.g., Visual Studio Code)
 .vscode/
