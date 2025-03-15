@@ -334,7 +334,20 @@ export function AdvancedMetronomeWithCircle({
 
       {/* Tap Tempo button */}
       <button
-        onClick={logic.tapTempo}
+        onClick={() => {
+          console.log("[CIRCLE MODE] Tap tempo button clicked");
+          if (logic && typeof logic.tapTempo === 'function') {
+            logic.tapTempo();
+          } else {
+            console.error("[CIRCLE MODE] logic.tapTempo is not a function", logic);
+            // Dispatch global event for tap tempo as fallback
+            const now = performance.now();
+            console.log("[CIRCLE MODE] Using global event fallback");
+            window.dispatchEvent(new CustomEvent('metronome-tap-tempo', {
+              detail: { timestamp: now }
+            }));
+          }
+        }}
         aria-label="Tap Tempo"
         style={{
           background: 'transparent',

@@ -82,31 +82,16 @@ describe('useKeyboardShortcuts', () => {
     expect(mockFunctions.onTogglePlayPause).toHaveBeenCalledTimes(1);
   });
   
-  test('T key dispatches metronome-set-tempo event', () => {
-    // Use fake timers to control timing
-    jest.useFakeTimers();
-    
+  test('T key triggers onTapTempo when provided', () => {
+    // Instead of testing the event dispatch, we'll test that the callback is called
     render(<TestComponent {...mockFunctions} />);
     const component = screen.getByTestId('test-component');
     
-    // Simulate multiple taps
-    fireEvent.keyDown(component, { code: 'KeyT' });
-    jest.advanceTimersByTime(500); // Advance timer by 500ms
+    // Press the T key
     fireEvent.keyDown(component, { code: 'KeyT' });
     
-    // Check that a custom event was dispatched
-    expect(window.dispatchEvent).toHaveBeenCalled();
-    
-    // Check if any of the dispatch calls contain our event
-    const dispatchCalls = window.dispatchEvent.mock.calls;
-    const hasTempoEvent = dispatchCalls.some(call => {
-      const event = call[0];
-      return event.type === 'metronome-set-tempo' && typeof event.detail?.tempo === 'number';
-    });
-    
-    expect(hasTempoEvent).toBe(true);
-    
-    jest.useRealTimers();
+    // Check that onTapTempo was called
+    expect(mockFunctions.onTapTempo).toHaveBeenCalledTimes(1);
   });
   
   // Test digit keys (1-9) for setting subdivisions
@@ -231,11 +216,7 @@ describe('useKeyboardShortcuts', () => {
     
     // Fire T key in the input (should be ignored)
     fireEvent.keyDown(inputElement, { code: 'KeyT' });
-    const dispatchCalls = window.dispatchEvent.mock.calls;
-    const hasTempoEvent = dispatchCalls.some(call => {
-      const event = call[0];
-      return event.type === 'metronome-set-tempo';
-    });
-    expect(hasTempoEvent).toBe(false);
+    // The tap tempo shouldn't be triggered for inputs
+    expect(mockFunctions.onTapTempo).not.toHaveBeenCalled();
   });
 });

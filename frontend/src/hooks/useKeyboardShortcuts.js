@@ -2,6 +2,42 @@
 
 import { useEffect, useRef } from 'react';
 
+// Helper function to process tap times and calculate tempo
+const processTapTimesForTempo = (tapTimes) => {
+  // Keep only the last 5 taps
+  while (tapTimes.length > 5) {
+    tapTimes.shift();
+  }
+  
+  // Calculate tempo with at least 2 taps
+  if (tapTimes.length >= 2) {
+    // Calculate average interval
+    let sum = 0;
+    for (let i = 1; i < tapTimes.length; i++) {
+      const interval = tapTimes[i] - tapTimes[i - 1];
+      sum += interval;
+      console.log(`[KEYBOARD] Interval ${i}: ${Math.round(interval)}ms`);
+    }
+    const avgMs = sum / (tapTimes.length - 1);
+    console.log(`[KEYBOARD] Average interval: ${Math.round(avgMs)}ms`);
+    
+    // Convert to BPM and clamp
+    const newTempo = Math.round(60000 / avgMs);
+    const clampedTempo = Math.max(15, Math.min(240, newTempo));
+    console.log(`[KEYBOARD] Setting tempo to ${clampedTempo} BPM`);
+    
+    // Dispatch a custom event that App.js can listen for
+    const tempoEvent = new CustomEvent('metronome-set-tempo', {
+      detail: { tempo: clampedTempo }
+    });
+    window.dispatchEvent(tempoEvent);
+    return clampedTempo;
+  } else {
+    console.log(`[KEYBOARD] Need ${2 - tapTimes.length} more tap(s) to set tempo`);
+    return null;
+  }
+};
+
 const useKeyboardShortcuts = ({
   onTogglePlayPause,
   onTapTempo,
@@ -29,6 +65,31 @@ const useKeyboardShortcuts = ({
   useEffect(() => {
     tapTempoRef.current = onTapTempo;
   }, [onTapTempo]);
+  
+  // Add global event listener for tap-tempo events from any component
+  useEffect(() => {
+    const handleGlobalTapTempo = (event) => {
+      console.log("[KEYBOARD] Received global tap tempo event");
+      // If we have a tap tempo handler, use it
+      if (tapTempoRef.current) {
+        console.log("[KEYBOARD] Using provided tapTempo handler");
+        tapTempoRef.current();
+      } else {
+        // Otherwise fall back to the built-in implementation
+        console.log("[KEYBOARD] Using built-in implementation for tap event");
+        // Record the tap time
+        const tapTime = event.detail?.timestamp || performance.now();
+        tapTimesRef.current.push(tapTime);
+        console.log(`[KEYBOARD] Global tap recorded: ${tapTimesRef.current.length} total taps`);
+        
+        // Process the taps the same way as keyboard taps
+        processTapTimesForTempo(tapTimesRef.current);
+      }
+    };
+    
+    window.addEventListener('metronome-tap-tempo', handleGlobalTapTempo);
+    return () => window.removeEventListener('metronome-tap-tempo', handleGlobalTapTempo);
+  }, []);
 
   const lastSpaceKeyTimeRef = useRef(0);
   const lastTapKeyTimeRef = useRef(0);
@@ -60,9 +121,22 @@ const useKeyboardShortcuts = ({
       // Handle other shortcuts
       switch (event.code) {
         case 'KeyT':
+          console.log("[KEYBOARD] 'T' key pressed for tap tempo");
+          
+          // Check if we have a tap tempo function from the metronome
+          if (tapTempoRef.current) {
+            console.log("[KEYBOARD] Using metronome's tapTempo function");
+            tapTempoRef.current();
+            break;
+          }
+          
+          // If no tap tempo function is provided, fall back to our own implementation
+          console.log("[KEYBOARD] No tapTempo function provided, using fallback implementation");
+          
           // Rate limit for key repeats
           const now = Date.now();
           if (now - lastTapKeyTimeRef.current < 100) {
+            console.log("[KEYBOARD] Tap too soon after previous tap, ignoring");
             return;
           }
           lastTapKeyTimeRef.current = now;
@@ -71,31 +145,10 @@ const useKeyboardShortcuts = ({
           // Record the tap time
           const tapTime = performance.now();
           tapTimesRef.current.push(tapTime);
+          console.log(`[KEYBOARD] Tap recorded: ${tapTimesRef.current.length} total taps`);
           
-          // Keep only the last 5 taps
-          if (tapTimesRef.current.length > 5) {
-            tapTimesRef.current.shift();
-          }
-          
-          // Calculate tempo with at least 2 taps
-          if (tapTimesRef.current.length >= 2) {
-            // Calculate average interval
-            let sum = 0;
-            for (let i = 1; i < tapTimesRef.current.length; i++) {
-              sum += tapTimesRef.current[i] - tapTimesRef.current[i - 1];
-            }
-            const avgMs = sum / (tapTimesRef.current.length - 1);
-            
-            // Convert to BPM and clamp
-            const newTempo = Math.round(60000 / avgMs);
-            const clampedTempo = Math.max(15, Math.min(240, newTempo));
-            
-            // Dispatch a custom event that App.js can listen for
-            const tempoEvent = new CustomEvent('metronome-set-tempo', {
-              detail: { tempo: clampedTempo }
-            });
-            window.dispatchEvent(tempoEvent);
-          }
+          // Process taps to calculate tempo
+          processTapTimesForTempo(tapTimesRef.current);
           break;
           
         case 'KeyR':
