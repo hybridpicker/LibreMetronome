@@ -450,7 +450,7 @@ const GridModeMetronome = (props) => {
           marginTop: '20px',
           padding: '10px',
           outline: 'none',
-          display: isMobile ? 'inline-block' : 'none'
+          display: 'inline-block'
         }}
         aria-label="Tap Tempo"
       >

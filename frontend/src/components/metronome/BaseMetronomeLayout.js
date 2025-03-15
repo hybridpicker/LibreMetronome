@@ -47,11 +47,9 @@ export default function BaseMetronomeLayout({
           </label>
         )}
       </div>
-      {useTapButtonMobile && (
-        <button className="tap-button" onClick={logic ? logic.tapTempo : onTapTempo}>
-          <img src="/assets/svg/tap-button.svg" alt="Tap Tempo" />
-        </button>
-      )}
+      <button className="tap-button" onClick={logic ? logic.tapTempo : onTapTempo}>
+        <img src="/assets/svg/tap-button.svg" alt="Tap Tempo" />
+      </button>
     </div>
   );
 }
