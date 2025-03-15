@@ -1,4 +1,8 @@
 // src/hooks/useMetronomeLogic/audioBuffers.js
+
+// Use an environment variable with a fallback to localhost for development
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
+
 export let globalAudioCtx = null;
 
 /**
@@ -12,7 +16,7 @@ export function initAudioContext() {
       console.error('Web Audio API is not supported in this browser');
       return null;
     }
-    
+
     // Create and return a new audio context
     const context = new AudioContext();
     console.log('New AudioContext created, state:', context.state);
@@ -27,27 +31,30 @@ export function initAudioContext() {
  * Loads a single audio file and decodes it into a Web Audio buffer.
  */
 function loadSound(url, audioCtx) {
-  // Convert relative URLs to use the Django backend when they're API sound files
+  // Convert relative URLs to use the backend when they're API sound files
   let fetchUrl = url;
+
   if (url.includes('/metronome_sounds/')) {
+    // If the URL starts with http://localhost:3000, replace with BACKEND_URL
     if (url.startsWith('http://localhost:3000')) {
-      // Replace frontend domain with backend domain
-      fetchUrl = url.replace('http://localhost:3000', 'http://localhost:8000');
-      
-    } else if (!(url.startsWith('http://') || url.startsWith('https://'))) {
-      fetchUrl = `http://localhost:8000${url}`;
-      
+      fetchUrl = url.replace('http://localhost:3000', BACKEND_URL);
+    }
+    // If the URL doesn't start with http/https, prepend BACKEND_URL
+    else if (!(url.startsWith('http://') || url.startsWith('https://'))) {
+      fetchUrl = `${BACKEND_URL}${url}`;
     } else {
+      // URL is already absolute (http/https), so we keep it as is
       fetchUrl = url;
     }
   } else {
+    // Non-metronome_sounds paths remain unchanged
     fetchUrl = url;
   }
-  
+
   // Add a timestamp to bust cache if needed
   const cacheBuster = `${fetchUrl.includes('?') ? '&' : '?'}cb=${Date.now()}`;
   fetchUrl = `${fetchUrl}${cacheBuster}`;
-  
+
   return fetch(fetchUrl, {
     headers: {
       // Request audio content explicitly
@@ -64,17 +71,13 @@ function loadSound(url, audioCtx) {
     .then(buffer => {
       // Check if buffer is empty or too small to be valid audio
       if (!buffer || buffer.byteLength < 100) {
-        
         throw new Error('Invalid audio buffer (too small)');
       }
-      
       return audioCtx.decodeAudioData(buffer);
     })
     .catch(err => {
-      
       // Fall back to default sounds if loading fails
       if (url.includes('/metronome_sounds/')) {
-        
         let fallbackPath;
         if (url.includes('first_')) {
           fallbackPath = '/assets/audio/click_new_first.mp3';
@@ -91,7 +94,7 @@ function loadSound(url, audioCtx) {
 
 /**
  * Loads your standard metronome click buffers (normal, accent, first).
- * Now supports custom sound sets from the API
+ * Supports custom sound sets from the API.
  */
 export async function loadClickBuffers({
   audioCtx,
@@ -101,25 +104,19 @@ export async function loadClickBuffers({
   soundSet = null
 }) {
   if (!audioCtx) {
-    
     return;
   }
-  
+
   // Default paths (fallback)
   let normalPath = '/assets/audio/click_new.mp3';
   let accentPath = '/assets/audio/click_new_accent.mp3';
   let firstPath = '/assets/audio/click_new_first.mp3';
-  
+
   // If we have a sound set from the API, use those paths
   if (soundSet) {
     normalPath = soundSet.normal_beat_sound_url || normalPath;
     accentPath = soundSet.accent_sound_url || accentPath;
     firstPath = soundSet.first_beat_sound_url || firstPath;
-    
-    
-    
-  } else {
-    
   }
 
   try {
@@ -136,13 +133,9 @@ export async function loadClickBuffers({
     normalBufferRef.current = normal;
     accentBufferRef.current = accent;
     firstBufferRef.current = first;
-    
-    
   } catch (error) {
-    
-    // Try loading default sounds as fallback
+    // Try loading default sounds as fallback if something failed
     if (soundSet) {
-      
       return loadClickBuffers({
         audioCtx,
         normalBufferRef,
