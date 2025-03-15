@@ -1,9 +1,9 @@
 import { getCookie } from './cookieUtils';
 
-// Base URL for the API requests
+// Verwende in Produktion zunächst REACT_APP_BACKEND_URL (falls gesetzt) oder window.location.origin
 const API_BASE_URL =
   process.env.NODE_ENV === 'production'
-    ? window.location.origin
+    ? (process.env.REACT_APP_BACKEND_URL || window.location.origin)
     : 'http://localhost:8000';
 
 /**

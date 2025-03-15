@@ -157,6 +157,9 @@ SECURE_SSL_REDIRECT = False
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
 CSRF_TRUSTED_ORIGINS = ["http://localhost:3000", "http://localhost:3001", "http://localhost:8000"]
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+]
 
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
