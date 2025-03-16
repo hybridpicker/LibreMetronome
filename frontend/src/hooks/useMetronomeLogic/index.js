@@ -65,10 +65,18 @@ export default function useMetronomeLogic({
       measureCountRef.current = 0;
       muteMeasureCountRef.current = 0;
       isSilencePhaseRef.current = false;
+      
+      // Also update the global reference to ensure UI consistency
+      if (typeof window !== 'undefined') {
+        window.isSilencePhaseRef = isSilencePhaseRef;
+      }
     }
+    
+    // Only reset counters when starting from paused to playing
+    // Don't reset when going from playing to paused
     if (isPaused) {
-      measureCountRef.current = 0;
-      muteMeasureCountRef.current = 0;
+      // Don't change the silence phase when paused
+      // Just stop counting
     }
   }, [speedMode, macroMode, isPaused, measuresUntilSpeedUp]);
 
@@ -184,6 +192,12 @@ export default function useMetronomeLogic({
   const doSchedulerLoop = useCallback(() => {
     if (!audioCtxRef.current) return;
     const adjustedTempo = handleTrainingModeTempoAdjustments();
+    
+    // Make isSilencePhaseRef available globally for UI components
+    if (typeof window !== 'undefined') {
+      window.isSilencePhaseRef = isSilencePhaseRef;
+    }
+    
     runScheduler({
       audioCtxRef,
       nextNoteTimeRef,
@@ -191,43 +205,71 @@ export default function useMetronomeLogic({
       currentSubdivisionSetter: setCurrentSubdivision,
       getCurrentSubIntervalSec,
       tempo: adjustedTempo,
-      handleMeasureBoundary: () => handleMeasureBoundary({
-        measureCountRef,
-        muteMeasureCountRef,
-        isSilencePhaseRef,
-        macroMode,
-        speedMode,
-        measuresUntilMute,
-        muteDurationMeasures,
-        muteProbability,
-        measuresUntilSpeedUp,
-        tempoIncreasePercent,
-        tempoRef,
-        setTempo
-      }),
-      scheduleSubFn: (subIndex, when, nodeRefs) => scheduleSubdivision({
-        subIndex,
-        when,
-        audioCtx: audioCtxRef.current,
-        analogMode,
-        gridMode,
-        multiCircleMode,
-        volumeRef,
-        onAnySubTrigger,
-        normalBufferRef,
-        accentBufferRef,
-        firstBufferRef,
-        beatConfigRef,
-        accentsRef,
-        shouldMute: shouldMuteThisBeat({
+      handleMeasureBoundary: () => {
+        // Create event for measure boundary transitions
+        window.dispatchEvent(new CustomEvent('metronome-measure-boundary', {
+          detail: {
+            timestamp: performance.now(),
+            isSilencePhase: isSilencePhaseRef?.current,
+            measureCount: measureCountRef?.current,
+            muteMeasureCount: muteMeasureCountRef?.current
+          }
+        }));
+        
+        return handleMeasureBoundary({
+          measureCountRef,
+          muteMeasureCountRef,
+          isSilencePhaseRef,
+          macroMode,
+          speedMode,
+          measuresUntilMute,
+          muteDurationMeasures,
+          muteProbability,
+          measuresUntilSpeedUp,
+          tempoIncreasePercent,
+          tempoRef,
+          setTempo
+        });
+      },
+      scheduleSubFn: (subIndex, when, nodeRefs) => {
+        // Get mute status before scheduling
+        const shouldMuteCurrentBeat = shouldMuteThisBeat({
           macroMode,
           muteProbability,
           isSilencePhaseRef
-        }),
-        playedBeatTimesRef,
-        updateActualBpm,
-        nodeRefs
-      }),
+        });
+        
+        // Always dispatch event for training UI sync
+        window.dispatchEvent(new CustomEvent('metronome-beat', {
+          detail: {
+            timestamp: performance.now(),
+            subIndex,
+            when,
+            isSilencePhase: isSilencePhaseRef?.current,
+            isMuted: shouldMuteCurrentBeat
+          }
+        }));
+        
+        scheduleSubdivision({
+          subIndex,
+          when,
+          audioCtx: audioCtxRef.current,
+          analogMode,
+          gridMode,
+          multiCircleMode,
+          volumeRef,
+          onAnySubTrigger,
+          normalBufferRef,
+          accentBufferRef,
+          firstBufferRef,
+          beatConfigRef,
+          accentsRef,
+          shouldMute: shouldMuteCurrentBeat,
+          playedBeatTimesRef,
+          updateActualBpm,
+          nodeRefs
+        });
+      },
       subdivisionsRef,
       multiCircleMode,
       nodeRefs,

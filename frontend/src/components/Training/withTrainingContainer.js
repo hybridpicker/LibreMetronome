@@ -14,8 +14,8 @@ const withTrainingContainer = (WrappedMetronome) => {
   return function WrappedWithTraining(props) {
     // Extract training props
     const {
-      macroMode = 0,
-      speedMode = 0,
+      macroMode: initialMacroMode = 0,
+      speedMode: initialSpeedMode = 0,
       isSilencePhaseRef,
       measureCountRef,
       measuresUntilMute = 4,
@@ -25,8 +25,34 @@ const withTrainingContainer = (WrappedMetronome) => {
       tempoIncreasePercent = 5,
       measuresUntilSpeedUp = 4,
       isPaused,
+      setTrainingSettings,
       ...rest
     } = props;
+    
+    // Use state for training modes and parameters to allow toggling and editing
+    const [macroMode, setMacroMode] = useState(initialMacroMode);
+    const [speedMode, setSpeedMode] = useState(initialSpeedMode);
+    const [localMeasuresUntilMute, setLocalMeasuresUntilMute] = useState(measuresUntilMute);
+    const [localMuteDurationMeasures, setLocalMuteDurationMeasures] = useState(muteDurationMeasures);
+    const [localMeasuresUntilSpeedUp, setLocalMeasuresUntilSpeedUp] = useState(measuresUntilSpeedUp);
+    const [localTempoIncreasePercent, setLocalTempoIncreasePercent] = useState(tempoIncreasePercent);
+    
+    // Update local state when props change
+    useEffect(() => {
+      setMacroMode(initialMacroMode);
+      setSpeedMode(initialSpeedMode);
+      setLocalMeasuresUntilMute(measuresUntilMute);
+      setLocalMuteDurationMeasures(muteDurationMeasures);
+      setLocalMeasuresUntilSpeedUp(measuresUntilSpeedUp);
+      setLocalTempoIncreasePercent(tempoIncreasePercent);
+    }, [
+      initialMacroMode, 
+      initialSpeedMode, 
+      measuresUntilMute, 
+      muteDurationMeasures, 
+      measuresUntilSpeedUp, 
+      tempoIncreasePercent
+    ]);
     
     console.log(`[withTrainingContainer] Wrapping ${WrappedMetronome.name || 'Component'} with TrainingContainer`);
     console.log(`[withTrainingContainer] macroMode=${macroMode}, speedMode=${speedMode}`);
@@ -84,6 +110,122 @@ const withTrainingContainer = (WrappedMetronome) => {
       forceUIUpdate();
     }, [macroMode, speedMode, isPaused]);
     
+    // Listen for training settings update events
+    useEffect(() => {
+      const handleTrainingSettingsUpdate = (event) => {
+        const { 
+          macroMode: newMacroMode, 
+          speedMode: newSpeedMode 
+        } = event.detail;
+        
+        if (newMacroMode !== undefined) {
+          console.log(`[withTrainingContainer] Updating macroMode to ${newMacroMode}`);
+          setMacroMode(newMacroMode);
+          
+          // Reset training state
+          localSilenceRef.current = false;
+          localMeasureCountRef.current = 0;
+          localMuteCountRef.current = 0;
+          
+          // Update parent component if setTrainingSettings is available
+          if (setTrainingSettings) {
+            setTrainingSettings(prev => ({
+              ...prev,
+              macroMode: newMacroMode
+            }));
+          }
+        }
+        
+        if (newSpeedMode !== undefined) {
+          console.log(`[withTrainingContainer] Updating speedMode to ${newSpeedMode}`);
+          setSpeedMode(newSpeedMode);
+          
+          // Update parent component if setTrainingSettings is available
+          if (setTrainingSettings) {
+            setTrainingSettings(prev => ({
+              ...prev,
+              speedMode: newSpeedMode
+            }));
+          }
+        }
+        
+        forceUIUpdate();
+      };
+      
+      window.addEventListener('training-settings-update', handleTrainingSettingsUpdate);
+      
+      return () => {
+        window.removeEventListener('training-settings-update', handleTrainingSettingsUpdate);
+      };
+    }, [setTrainingSettings]);
+    
+    // Listen for training parameter update events
+    useEffect(() => {
+      const handleTrainingParamUpdate = (event) => {
+        const { type, newValue } = event.detail;
+        
+        console.log(`[withTrainingContainer] Updating ${type} to ${newValue}`);
+        
+        switch (type) {
+          case 'measuresUntilMute':
+            setLocalMeasuresUntilMute(newValue);
+            if (setTrainingSettings) {
+              setTrainingSettings(prev => ({
+                ...prev,
+                measuresUntilMute: newValue
+              }));
+            }
+            break;
+            
+          case 'muteDurationMeasures':
+            setLocalMuteDurationMeasures(newValue);
+            if (setTrainingSettings) {
+              setTrainingSettings(prev => ({
+                ...prev,
+                muteDurationMeasures: newValue
+              }));
+            }
+            break;
+            
+          case 'measuresUntilSpeedUp':
+            setLocalMeasuresUntilSpeedUp(newValue);
+            if (setTrainingSettings) {
+              setTrainingSettings(prev => ({
+                ...prev,
+                measuresUntilSpeedUp: newValue
+              }));
+            }
+            break;
+            
+          case 'tempoIncreasePercent':
+            setLocalTempoIncreasePercent(newValue);
+            if (setTrainingSettings) {
+              setTrainingSettings(prev => ({
+                ...prev,
+                tempoIncreasePercent: newValue
+              }));
+            }
+            break;
+            
+          default:
+            console.warn(`[withTrainingContainer] Unknown parameter type: ${type}`);
+        }
+        
+        // Reset training state when parameters change
+        localSilenceRef.current = false;
+        localMeasureCountRef.current = 0;
+        localMuteCountRef.current = 0;
+        
+        forceUIUpdate();
+      };
+      
+      window.addEventListener('training-param-update', handleTrainingParamUpdate);
+      
+      return () => {
+        window.removeEventListener('training-param-update', handleTrainingParamUpdate);
+      };
+    }, [setTrainingSettings]);
+
     // Set up global event listeners to sync state and update UI more frequently.
     useEffect(() => {
       const handleMeasureUpdate = (event) => {
@@ -161,7 +303,8 @@ const withTrainingContainer = (WrappedMetronome) => {
       measuresUntilSpeedUp,
       setMeasureCount,
       setMuteMeasureCount,
-      setIsSilencePhase
+      setIsSilencePhase,
+      setTrainingSettings
     ]);
     
     // Always render the metronome canvas.
@@ -175,11 +318,11 @@ const withTrainingContainer = (WrappedMetronome) => {
             speedMode={speedMode}
             isSilencePhaseRef={effectiveIsSilencePhaseRef}
             measureCountRef={effectiveMeasureCountRef}
-            measuresUntilMute={measuresUntilMute}
+            measuresUntilMute={localMeasuresUntilMute}
             muteMeasureCountRef={effectiveMuteMeasureCountRef}
-            muteDurationMeasures={muteDurationMeasures}
-            tempoIncreasePercent={tempoIncreasePercent}
-            measuresUntilSpeedUp={measuresUntilSpeedUp}
+            muteDurationMeasures={localMuteDurationMeasures}
+            tempoIncreasePercent={localTempoIncreasePercent}
+            measuresUntilSpeedUp={localMeasuresUntilSpeedUp}
             isPaused={isPaused}
             forceUpdate={updateCounter}
           />
@@ -190,12 +333,12 @@ const withTrainingContainer = (WrappedMetronome) => {
           speedMode={speedMode}
           isSilencePhaseRef={effectiveIsSilencePhaseRef}
           measureCountRef={effectiveMeasureCountRef}
-          measuresUntilMute={measuresUntilMute}
+          measuresUntilMute={localMeasuresUntilMute}
           muteMeasureCountRef={effectiveMuteMeasureCountRef}
-          muteDurationMeasures={muteDurationMeasures}
+          muteDurationMeasures={localMuteDurationMeasures}
           muteProbability={muteProbability}
-          tempoIncreasePercent={tempoIncreasePercent}
-          measuresUntilSpeedUp={measuresUntilSpeedUp}
+          tempoIncreasePercent={localTempoIncreasePercent}
+          measuresUntilSpeedUp={localMeasuresUntilSpeedUp}
           isPaused={isPaused}
           forceTrainingUpdate={forceUIUpdate}
           {...rest} 

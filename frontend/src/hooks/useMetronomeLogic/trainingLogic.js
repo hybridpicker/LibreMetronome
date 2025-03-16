@@ -26,6 +26,14 @@ export function forceTrainingUpdate(detail = {}) {
       bubbles: true, 
       detail: commonDetail 
     }));
+    
+    // Add a specific force-update event for components to listen for
+    window.dispatchEvent(new CustomEvent('force-training-update', { 
+      detail: commonDetail 
+    }));
+    
+    // Log for debugging
+    console.log('[Training] Force update triggered:', commonDetail);
   } catch (err) {
     console.warn('[Training] Error forcing update:', err);
   }

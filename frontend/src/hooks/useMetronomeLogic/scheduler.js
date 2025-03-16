@@ -95,9 +95,16 @@ export function scheduleSubdivision({
     onAnySubTrigger(subIndex);
   }
 
-  // If we are muting, skip playback
+  // If we are muting, skip playback but still fire event for UI sync
   if (shouldMute) {
-    
+    // Dispatch event for silent phase beat to update UI
+    window.dispatchEvent(new CustomEvent('silent-beat-played', {
+      detail: { 
+        timestamp: performance.now(),
+        subIndex: subIndex,
+        when: when
+      }
+    }));
     return;
   } else {
     // record the time for actual BPM measurement

@@ -194,7 +194,7 @@ const MultiCircleTrainingActiveContainer = ({
                 <span className="status-label">Silent Phase</span>
                 <div className="progress-container">
                   <div 
-                    className="progress-bar animated" 
+                    className="progress-bar" 
                     style={{width: `${muteProgress}%`}}
                     aria-valuenow={muteProgress}
                     aria-valuemin="0"
@@ -202,9 +202,7 @@ const MultiCircleTrainingActiveContainer = ({
                   ></div>
                 </div>
                 <span className="counter-text">
-                  {muteMeasureCount === 0 ? 
-                    "Starting silent phase" : 
-                    `Silent measure ${muteMeasureCount} of ${muteDurationMeasures}`}
+                  Silent measures: {muteDurationMeasures} total
                 </span>
                 {muteDurationMeasures > 1 && renderBeatIndicators(muteMeasureCount, muteDurationMeasures)}
               </div>
@@ -224,7 +222,7 @@ const MultiCircleTrainingActiveContainer = ({
                   ></div>
                 </div>
                 <span className="counter-text">
-                  {formatMeasureText(measureCount, measuresUntilMute)}
+                  Playing measures: {measuresUntilMute} total
                 </span>
                 {measuresUntilMute > 1 && renderBeatIndicators(measureCount, measuresUntilMute)}
               </div>
@@ -261,7 +259,7 @@ const MultiCircleTrainingActiveContainer = ({
                     ></div>
                   </div>
                   <span className="counter-text">
-                    {formatCountdownText(remainingMeasures)}
+                    Every {measuresUntilSpeedUp} measures
                   </span>
                   {measuresUntilSpeedUp > 1 && renderBeatIndicators(currentMeasure, measuresUntilSpeedUp)}
                 </>
