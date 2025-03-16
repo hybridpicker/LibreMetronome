@@ -1,8 +1,238 @@
-// src/hooks/useMetronomeLogic/trainingLogic.js
-import { TEMPO_MIN, TEMPO_MAX } from './constants';
+// src/hooks/useMetronomeLogic/trainingLogic.js - Enhanced Version
 
 /**
- * Manually accelerate tempo using the same logic as auto tempo increase
+ * Special utility to force training UI updates across all metronome modes.
+ * This creates and dispatches events that notify the training container.
+ * 
+ * @param {Object} detail - Optional details to include with the event
+ */
+export function forceTrainingUpdate(detail = {}) {
+  try {
+    // Try to use the global force update function if available
+    if (typeof window !== 'undefined' && window.forceTrainingUpdate) {
+      window.forceTrainingUpdate();
+    }
+    
+    // Dispatch specialized events
+    const commonDetail = {
+      timestamp: Date.now(),
+      silencePhase: window.isSilencePhaseRef?.current,
+      ...detail
+    };
+    
+    // Dispatch multiple event types for redundancy
+    window.dispatchEvent(new CustomEvent('training-measure-update', { detail: commonDetail }));
+    document.dispatchEvent(new CustomEvent('training-state-changed', { 
+      bubbles: true, 
+      detail: commonDetail 
+    }));
+  } catch (err) {
+    console.warn('[Training] Error forcing update:', err);
+  }
+}
+
+/**
+ * Determine whether this beat should be muted based on training mode settings.
+ * 
+ * @param {Object} config 
+ * @param {number} config.macroMode - 0: off, 1: fixed silence, 2: random silence
+ * @param {Object} config.isSilencePhaseRef - Reference to silence phase state
+ * @param {number} config.muteProbability - Probability of muting (for random mode)
+ * @returns {boolean} - Whether to mute this beat
+ */
+export function shouldMuteThisBeat({ macroMode, isSilencePhaseRef, muteProbability }) {
+  // No muting if training mode is off
+  if (macroMode === 0) return false;
+  
+  // Always ensure global silence ref is updated
+  if (isSilencePhaseRef) {
+    window.isSilencePhaseRef = isSilencePhaseRef;
+  }
+  
+  // Fixed silence intervals (mode 1)
+  if (macroMode === 1) {
+    return isSilencePhaseRef?.current === true;
+  }
+  
+  // Random silence (mode 2)
+  if (macroMode === 2) {
+    // Generate random mute based on probability
+    const randomMute = Math.random() < (muteProbability || 0.3);
+    
+    // Update the silence phase for UI components to read
+    if (isSilencePhaseRef) {
+      // Only update and dispatch events if the state changed
+      if (isSilencePhaseRef.current !== randomMute) {
+        isSilencePhaseRef.current = randomMute;
+        
+        // Update global reference
+        window.isSilencePhaseRef = isSilencePhaseRef;
+        
+        // Force training UI update
+        forceTrainingUpdate({ mode: 'random', value: randomMute });
+      }
+    }
+    
+    return randomMute;
+  }
+  
+  return false;
+}
+
+/**
+ * Logic to handle measure boundaries in training mode.
+ * This function should be called at the start of each measure.
+ * 
+ * @param {Object} config
+ * @param {number} config.macroMode - 0: off, 1: fixed silence, 2: random silence
+ * @param {number} config.speedMode - 0: off, 1: auto increase
+ * @param {Object} config.measureCountRef - Reference to measure count
+ * @param {number} config.measuresUntilMute - Measures to play before muting
+ * @param {Object} config.isSilencePhaseRef - Reference to silence phase state
+ * @param {Object} config.muteMeasureCountRef - Reference to mute measure count
+ * @param {number} config.muteDurationMeasures - How long to stay muted
+ * @param {function} config.setTempo - Function to set new tempo
+ * @param {Object} config.tempoRef - Reference to current tempo
+ * @param {number} config.tempoIncreasePercent - Percentage to increase tempo
+ * @param {number} config.measuresUntilSpeedUp - Measures before increasing tempo
+ * @returns {boolean} - Whether to continue scheduler
+ */
+export function handleMeasureBoundary({
+  macroMode,
+  speedMode,
+  measureCountRef,
+  measuresUntilMute,
+  isSilencePhaseRef,
+  muteMeasureCountRef,
+  muteDurationMeasures,
+  setTempo,
+  tempoRef,
+  tempoIncreasePercent,
+  measuresUntilSpeedUp
+}) {
+  // No-op if training mode is off
+  if (macroMode === 0 && speedMode === 0) return true;
+  
+  // Always ensure global silence ref is updated
+  if (isSilencePhaseRef) {
+    window.isSilencePhaseRef = isSilencePhaseRef;
+  }
+  
+  // Increment measure counter at the start of each measure
+  let shouldForceUpdate = false;
+  
+  if (measureCountRef) {
+    measureCountRef.current += 1;
+    shouldForceUpdate = true;
+  }
+  
+  // Handle macro timing training (fixed silence intervals)
+  if (macroMode === 1) {
+    if (isSilencePhaseRef && !isSilencePhaseRef.current) {
+      // Check if we should enter silence phase
+      if (measureCountRef && measureCountRef.current >= measuresUntilMute) {
+        console.log(`[Training] 🔇 STARTING SILENCE PHASE 🔇`);
+        
+        // Store previous state for comparison
+        const prevState = isSilencePhaseRef.current;
+        
+        // Set the silence phase
+        isSilencePhaseRef.current = true;
+        
+        // Update global reference
+        window.isSilencePhaseRef = isSilencePhaseRef;
+        
+        // Reset mute measure counter
+        if (muteMeasureCountRef) {
+          muteMeasureCountRef.current = 0;
+        }
+        
+        // Force an immediate update since this is a critical state change
+        forceTrainingUpdate({ 
+          event: 'silence-start',
+          prevState,
+          newState: true
+        });
+      }
+    } else if (isSilencePhaseRef && isSilencePhaseRef.current) {
+      // Already in silence phase, increment counter
+      if (muteMeasureCountRef) {
+        muteMeasureCountRef.current += 1;
+        shouldForceUpdate = true;
+        
+        // Check if we should exit silence phase
+        if (muteMeasureCountRef.current >= muteDurationMeasures) {
+          console.log(`[Training] 🔊 ENDING SILENCE PHASE 🔊`);
+          
+          // Store previous state for comparison
+          const prevState = isSilencePhaseRef.current;
+          
+          // Set the silence phase
+          isSilencePhaseRef.current = false;
+          
+          // Update global reference 
+          window.isSilencePhaseRef = isSilencePhaseRef;
+          
+          // Reset both counters
+          muteMeasureCountRef.current = 0;
+          if (measureCountRef) {
+            measureCountRef.current = 0;
+          }
+          
+          // Force an immediate update since this is a critical state change
+          forceTrainingUpdate({
+            event: 'silence-end',
+            prevState,
+            newState: false
+          });
+        }
+      }
+    }
+  }
+  
+  // Handle speed training (auto tempo increase)
+  if (speedMode === 1) {
+    // Only process when not in silence phase
+    if (!isSilencePhaseRef || !isSilencePhaseRef.current) {
+      if (measureCountRef && measureCountRef.current >= measuresUntilSpeedUp) {
+        // Calculate new tempo with percentage increase
+        if (tempoRef && setTempo) {
+          const factor = 1 + tempoIncreasePercent / 100;
+          const newTempo = Math.min(Math.round(tempoRef.current * factor), 240);
+          
+          // Only increase if it would change by at least 1 BPM
+          if (newTempo > tempoRef.current) {
+            console.log(`[Training] ⏩ AUTO INCREASING TEMPO from ${tempoRef.current} to ${newTempo} BPM`);
+            setTempo(newTempo);
+          }
+        }
+        
+        // Reset measure counter after tempo increase
+        if (measureCountRef) {
+          measureCountRef.current = 0;
+          shouldForceUpdate = true;
+        }
+      }
+    }
+  }
+  
+  // If any counters changed, force a training UI update
+  if (shouldForceUpdate) {
+    forceTrainingUpdate({ event: 'measure-boundary' });
+  }
+  
+  // Always continue scheduler
+  return true;
+}
+
+/**
+ * Handle manual tempo acceleration for speed training mode 2.
+ * 
+ * @param {Object} config
+ * @param {number} config.tempoIncreasePercent - Percentage to increase tempo
+ * @param {Object} config.tempoRef - Reference to current tempo value
+ * @param {function} config.setTempo - Function to set new tempo
+ * @returns {number} - The new tempo value
  */
 export function manualTempoAcceleration({
   tempoIncreasePercent,
@@ -10,106 +240,30 @@ export function manualTempoAcceleration({
   setTempo
 }) {
   // Validate inputs
-  if (!tempoRef || typeof tempoRef.current !== 'number') {
+  if (!tempoRef || tempoRef.current === undefined) {
     throw new Error('Invalid tempoRef');
   }
+  
   if (typeof setTempo !== 'function') {
     throw new Error('setTempo must be a function');
   }
-
+  
   // Calculate new tempo with percentage increase
-  const factor = 1 + tempoIncreasePercent / 100;
-  const newTempo = Math.round(tempoRef.current * factor);
+  const factor = 1 + (tempoIncreasePercent || 5) / 100;
+  const currentTempo = tempoRef.current;
+  const newTempo = Math.min(Math.round(currentTempo * factor), 240);
   
-  // Clamp to maximum tempo
-  const clampedTempo = Math.min(newTempo, TEMPO_MAX);
+  console.log(`[Training] ⏩ MANUAL TEMPO INCREASE from ${currentTempo} to ${newTempo} BPM`);
   
-  // Set the new tempo
-  setTempo(clampedTempo);
+  // Apply the new tempo
+  setTempo(newTempo);
   
-  return clampedTempo;
-}
-
-/**
- * Called every time subIndex returns to 0 (i.e. at the start of each measure).
- * 
- * In "fixed silence" or "random silence" modes, we track measure counts and
- * possibly enable or disable silence. In "speed mode," we might automatically
- * increase the BPM after a certain # of measures.
- */
-export function handleMeasureBoundary({
-  measureCountRef,
-  muteMeasureCountRef,
-  isSilencePhaseRef,
-  macroMode,
-  speedMode,
-  measuresUntilMute,
-  muteDurationMeasures,
-  muteProbability,
-  measuresUntilSpeedUp,
-  tempoIncreasePercent,
-  tempoRef, // so we can read the current tempo
-  setTempo
-}) {
-  // Increment measure count
-  measureCountRef.current += 1;
-  
-  // Macro mode 1: "fixed silence after X measures"
-  if (macroMode === 1) {
-    if (!isSilencePhaseRef.current) {
-      // check if we should enter silence
-      if (measureCountRef.current >= measuresUntilMute) {
-        isSilencePhaseRef.current = true;
-        muteMeasureCountRef.current = 0;
-        measureCountRef.current = 0;
-      }
-    } else {
-      // we are in silence → keep counting
-      muteMeasureCountRef.current += 1;
-      if (muteMeasureCountRef.current >= muteDurationMeasures) {
-        isSilencePhaseRef.current = false;
-        muteMeasureCountRef.current = 0;
-        measureCountRef.current = 0;
-      }
-    }
-  }
-  // Macro mode 2: random-silence logic could go here
-
-  // Speed mode 1: Increase tempo after X measures
-  if (speedMode === 1 && !isSilencePhaseRef.current) {
-    if (measureCountRef.current >= measuresUntilSpeedUp) {
-      const factor = 1 + tempoIncreasePercent / 100;
-      const newTempo = Math.round(tempoRef.current * factor);
-      setTempo(prev => Math.min(newTempo, 240));
-      measureCountRef.current = 0;
-    }
-  }
-  
-  // Dispatch event to notify components of measure count update
-  const measureUpdateEvent = new CustomEvent('training-measure-update', {
-    detail: {
-      measureCount: measureCountRef.current,
-      muteMeasureCount: muteMeasureCountRef.current,
-      isSilencePhase: isSilencePhaseRef.current
-    }
+  // Force an update to refresh the UI
+  forceTrainingUpdate({
+    event: 'manual-tempo-increase',
+    oldTempo: currentTempo,
+    newTempo: newTempo
   });
-  window.dispatchEvent(measureUpdateEvent);
-}
-
-/**
- * For deciding if the current beat is muted due to macro-mode (e.g. random silence).
- */
-export function shouldMuteThisBeat({
-  macroMode,
-  muteProbability,
-  isSilencePhaseRef
-}) {
-  if (macroMode === 1 && isSilencePhaseRef.current) {
-    return true;
-  }
-  if (macroMode === 2) {
-    // random chance
-    return Math.random() < muteProbability;
-  }
-  return false;
+  
+  return newTempo;
 }

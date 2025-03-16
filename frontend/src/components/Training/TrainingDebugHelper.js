@@ -5,6 +5,16 @@ import React, { useState, useEffect } from 'react';
  * A debug component to help troubleshoot training mode issues.
  * This component will display the current state of training mode variables
  * and can be temporarily added to any metronome component.
+ * 
+ * To use: Import this component and add it to your metronome component:
+ * <TrainingDebugHelper 
+ *   macroMode={macroMode}
+ *   speedMode={speedMode}
+ *   isSilencePhaseRef={isSilencePhaseRef}
+ *   measureCountRef={measureCountRef}
+ *   muteMeasureCountRef={muteMeasureCountRef}
+ *   enabled={true}
+ * />
  */
 const TrainingDebugHelper = ({
   macroMode,
@@ -109,9 +119,9 @@ const TrainingDebugHelper = ({
         paddingBottom: '6px',
         borderBottom: '1px solid rgba(255,255,255,0.2)'
       }}>
-        <h4 style={{ margin: '0', color: 'var(--primary-teal)', fontSize: '14px' }}>Training Debug</h4>
+        <h4 style={{ margin: '0', color: '#00A0A0', fontSize: '14px' }}>Training Debug</h4>
         <span style={{ 
-          color: macroMode !== 0 || speedMode !== 0 ? 'var(--primary-teal)' : 'var(--error)',
+          color: macroMode !== 0 || speedMode !== 0 ? '#00A0A0' : '#ff4d4d',
           fontSize: '11px',
           padding: '2px 6px',
           background: 'rgba(255,255,255,0.1)',
@@ -131,7 +141,7 @@ const TrainingDebugHelper = ({
                   background: macroMode !== 0 ? 'rgba(0, 160, 160, 0.2)' : 'rgba(255,255,255,0.1)',
                   padding: '2px 6px',
                   borderRadius: '3px',
-                  color: macroMode !== 0 ? 'var(--primary-teal)' : '#aaa'
+                  color: macroMode !== 0 ? '#00A0A0' : '#aaa'
                 }}>
                   {macroMode === 0 ? 'OFF' : macroMode === 1 ? 'FIXED' : 'RANDOM'}
                 </span>
@@ -144,7 +154,7 @@ const TrainingDebugHelper = ({
                   background: speedMode !== 0 ? 'rgba(248, 211, 141, 0.2)' : 'rgba(255,255,255,0.1)',
                   padding: '2px 6px',
                   borderRadius: '3px',
-                  color: speedMode !== 0 ? 'var(--secondary-gold-dark)' : '#aaa'
+                  color: speedMode !== 0 ? '#f8d38d' : '#aaa'
                 }}>
                   {speedMode === 0 ? 'OFF' : speedMode === 1 ? 'AUTO' : 'MANUAL'}
                 </span>
@@ -162,7 +172,7 @@ const TrainingDebugHelper = ({
           <span style={{ color: '#aaa', fontSize: '11px' }}>Local Silence:</span>
           <span style={{ 
             fontWeight: 'bold', 
-            color: isSilencePhase ? 'var(--error)' : 'var(--success)'
+            color: isSilencePhase ? '#ff4d4d' : '#4caf50'
           }}>
             {String(isSilencePhase)}
           </span>
@@ -171,7 +181,7 @@ const TrainingDebugHelper = ({
           <span style={{ color: '#aaa', fontSize: '11px' }}>Global Silence:</span>
           <span style={{ 
             fontWeight: 'bold', 
-            color: windowSilencePhase ? 'var(--error)' : 'var(--success)'
+            color: windowSilencePhase ? '#ff4d4d' : '#4caf50'
           }}>
             {String(windowSilencePhase)}
           </span>
@@ -183,7 +193,7 @@ const TrainingDebugHelper = ({
             background: 'rgba(244, 67, 54, 0.2)', 
             borderRadius: '3px',
             fontSize: '10px',
-            color: 'var(--error)'
+            color: '#ff4d4d'
           }}>
             WARNING: Mismatch between local and global silence state!
           </div>
@@ -226,7 +236,7 @@ const TrainingDebugHelper = ({
             background: 'rgba(255,255,255,0.1)', 
             padding: '1px 4px', 
             borderRadius: '3px',
-            color: 'var(--secondary-gold)'
+            color: '#f8d38d'
           }}>
             {tempoIncreasePercent}%
           </code>
