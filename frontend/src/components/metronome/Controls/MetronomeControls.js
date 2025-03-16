@@ -73,7 +73,7 @@ const MetronomeControls = ({
           {/* Swing slider LAST - only shown when conditions are met */}
           {mode === "analog" ? (
             <label className="disabled-swing-label">
-              Swing: 0% (not available in analog mode)
+              (Swing is not available in pendulum mode)
               <input
                 type="range"
                 min={0}
