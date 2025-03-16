@@ -41,9 +41,9 @@ describe('App Component', () => {
 
   test('renders mode selector buttons', async () => {
     render(<App />);
-    expect(screen.getByText('Analog Mode')).toBeInTheDocument();
-    expect(screen.getByText('Circle Mode')).toBeInTheDocument();
-    expect(screen.getByText('Grid Mode')).toBeInTheDocument();
+    expect(screen.getByText('Pendulum')).toBeInTheDocument();
+    expect(screen.getByText('Circle')).toBeInTheDocument();
+    expect(screen.getByText('Grid')).toBeInTheDocument();
     expect(screen.getByText('Multi Circle')).toBeInTheDocument();
   });
 });

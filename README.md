@@ -147,10 +147,10 @@ The backend will run at http://localhost:8000
 | T | Tap tempo |
 | 1-9 | Set beats per measure |
 | ← / → | Decrease/increase tempo by 5 BPM |
-| A | Switch to Analog Mode |
-| C | Switch to Circle Mode |
-| G | Switch to Grid Mode |
-| M | Switch to Multi Circle Mode |
+| P | Switch to Pendulum |
+| C | Switch to Circle |
+| G | Switch to Grid |
+| M | Switch to Multi Circle |
 | I | Toggle Info Overlay |
 | R | Toggle Training Mode Settings |
 | S | Toggle Settings Panel |

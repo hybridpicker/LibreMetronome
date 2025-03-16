@@ -143,11 +143,11 @@ describe('useKeyboardShortcuts', () => {
   });
   
   // Test mode switching keys
-  test('A key switches to analog mode', () => {
+  test('P key switches to analog mode', () => {
     render(<TestComponent {...mockFunctions} />);
     const component = screen.getByTestId('test-component');
     
-    fireEvent.keyDown(component, { code: 'KeyA' });
+    fireEvent.keyDown(component, { code: 'KeyP' });
     
     expect(mockFunctions.onSwitchToAnalog).toHaveBeenCalledTimes(1);
   });

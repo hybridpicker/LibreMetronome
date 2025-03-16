@@ -198,7 +198,7 @@ const useKeyboardShortcuts = ({
         case 'ArrowLeft':
           if (onDecreaseTempo) onDecreaseTempo();
           break;
-        case 'KeyA':
+        case 'KeyP':
           if (onSwitchToAnalog) onSwitchToAnalog();
           break;
         case 'KeyC':

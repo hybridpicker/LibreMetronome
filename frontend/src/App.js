@@ -353,19 +353,19 @@ function App() {
           onClick={() => setMode("analog")} 
           className={`mode-button ${mode === "analog" ? "mode-button-active" : ""}`}
         >
-          Analog Mode
+          Pendulum
         </button>
         <button 
           onClick={() => setMode("circle")} 
           className={`mode-button ${mode === "circle" ? "mode-button-active" : ""}`}
         >
-          Circle Mode
+          Circle
         </button>
         <button 
           onClick={() => setMode("grid")} 
           className={`mode-button ${mode === "grid" ? "mode-button-active" : ""}`}
         >
-          Grid Mode
+          Grid
         </button>
         <button 
           onClick={() => setMode("multi")} 

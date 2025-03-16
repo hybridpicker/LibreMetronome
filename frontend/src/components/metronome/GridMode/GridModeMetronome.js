@@ -7,8 +7,6 @@ import './GridAnimation.css';
 import withTrainingContainer from '../../Training/withTrainingContainer';
 import AccelerateButton from '../Controls/AccelerateButton';
 import { manualTempoAcceleration } from '../../../hooks/useMetronomeLogic/trainingLogic';
-import { getActiveSoundSet } from '../../../services/soundSetService';
-import { loadClickBuffers } from '../../../hooks/useMetronomeLogic/audioBuffers';
 
 const GridModeMetronome = (props) => {
   // Initialize gridConfig based on the current subdivisions (1 to 9)
@@ -61,17 +59,11 @@ const GridModeMetronome = (props) => {
     if (logic.reloadSounds) {
       logic.reloadSounds()
         .then(success => {
-          if (success) {
-            
-          } else {
-            
-          }
+          // Success handling
         })
         .catch(err => {
-          
+          // Error handling
         });
-    } else {
-      
     }
   }, [props.soundSetReloadTrigger, logic]);
 
@@ -88,7 +80,10 @@ const GridModeMetronome = (props) => {
     });
   }, [props.updateAccents]);
 
-  // Animation function for the current beat
+  // Track if we're on the first beat
+  const [isFirstBeatPlaying, setIsFirstBeatPlaying] = useState(false);
+
+  // Minimalist animation function for the current beat
   const animateCurrentBeat = useCallback(() => {
     if (props.isPaused) {
       if (animationRef.current) {
@@ -96,10 +91,16 @@ const GridModeMetronome = (props) => {
         animationRef.current = null;
       }
       setAnimationFrame(null);
+      setIsFirstBeatPlaying(false);
       return;
     }
 
-    setAnimationFrame(logic.currentSubdivision);
+    const currentBeat = logic.currentSubdivision;
+    setAnimationFrame(currentBeat);
+    
+    // Check if this is the first beat of the measure
+    // In a standard metronome, the first beat would be at position 0
+    setIsFirstBeatPlaying(currentBeat === 0);
     
     animationRef.current = requestAnimationFrame(animateCurrentBeat);
   }, [logic.currentSubdivision, props.isPaused]);
@@ -125,25 +126,26 @@ const GridModeMetronome = (props) => {
   const squareSize = 50;
   const gapSize = 8;
   
-  // Calculate total grid width including ample padding to prevent cutoff
-  const gridWidth = props.subdivisions * (squareSize + gapSize);
-  
-  // Gold color palette
+  // Minimalist color palette - reduced contrast
   const colors = {
-    inactive: "#e8e8e8", // Very light gray for inactive squares
-    level1: "#fae3ad",   // Lighter version of base gold color
-    level2: "#f8d38d",   // Base gold color (as specified)
-    level3: "#f5c26d",   // Slightly darker, but still bright
-    highlight: "#f9d69a"  // Softer highlight color
+    inactive: "#f0f0f0",     // Lighter inactive
+    level1: "#fae8c1",       // Softer light
+    level2: "#f8d38d",       // Base gold
+    level3: "#f5c26d",       // First beat
+    muted: "#f5f5f5",        // Background for muted
+    teal: "#4db6ac",         // Teal for first beat highlighting
+    tealDark: "#26a69a"      // Darker teal for active first beat
   };
   
-  // First column (first beat) gets a warmer gold
+  // First column colors with minimal difference
   const firstBeatColors = {
-    inactive: "#e8e8e8",
-    level1: "#fcd592",   // Warmer but light
-    level2: "#f8c978",   // Warmer medium
-    level3: "#f5bc5e",   // Warmer but still bright
-    highlight: "#f7ca80"  // Softer highlight color
+    inactive: "#f0f0f0",
+    level1: "#fae3ad", 
+    level2: "#f8c978",
+    level3: "#f5bc5e", 
+    muted: "#f5f5f5",
+    teal: "#4db6ac",
+    tealDark: "#26a69a"
   };
   
   // Responsive behavior for mobile devices
@@ -158,29 +160,23 @@ const GridModeMetronome = (props) => {
     if (props.isPaused) {
       // Initialize audio context if needed
       if (!logic.audioCtx) {
-        
-        // The startScheduler method will handle initialization
         props.setIsPaused(false);
         return;
       }
       
       // If we have audio but it's suspended, resume it
       if (logic.audioCtx.state === 'suspended') {
-        
         logic.audioCtx.resume().then(() => {
-          
           props.setIsPaused(false);
           logic.startScheduler();
         }).catch((err) => {
-          
+          // Error handling
         });
       } else {
-        
         props.setIsPaused(false);
         logic.startScheduler();
       }
     } else {
-      
       props.setIsPaused(true);
       logic.stopScheduler();
     }
@@ -217,7 +213,7 @@ const GridModeMetronome = (props) => {
     }
   }, [props.isPaused, props.tempo, props.tempoIncreasePercent, props.setTempo]);
 
-  // Render grid as an SVG with enhanced styling
+  // Minimalist grid squares renderer
   const renderGridSquares = () => {
     return Array.from({ length: props.subdivisions }, (_, colIndex) => {
       const isCurrentBeat = colIndex === animationFrame && !props.isPaused;
@@ -225,7 +221,7 @@ const GridModeMetronome = (props) => {
       const columnLevel = gridConfig[colIndex];
       const colorSet = isFirstBeat ? firstBeatColors : colors;
       
-      // Skip rendering squares if column level is 0 (muted)
+      // Render muted squares with minimal styling
       if (columnLevel === 0) {
         return (
           <div 
@@ -241,22 +237,22 @@ const GridModeMetronome = (props) => {
             }}
           >
             <div style={{ 
-              height: `${3 * squareSize + 8}px`, // Height of 3 squares + 2 gaps
+              height: `${3 * squareSize + 8}px`,
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center'
             }}>
               <div style={{ 
-                width: '24px', 
-                height: '24px', 
-                border: '2px dashed #ccc',
+                width: '20px', 
+                height: '20px', 
+                border: '1px dashed #ddd',
                 borderRadius: '50%',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
                 color: '#ccc',
-                fontSize: '18px'
+                fontSize: '14px'
               }}>
                 +
               </div>
@@ -264,8 +260,8 @@ const GridModeMetronome = (props) => {
             <div style={{ 
               fontSize: '12px', 
               marginTop: '8px', 
-              color: colIndex === 0 ? "#f5bc5e" : "#666",
-              fontWeight: colIndex === 0 ? "bold" : "normal"
+              color: colIndex === 0 ? "#f5bc5e" : "#999",
+              fontWeight: colIndex === 0 ? "500" : "normal"
             }}>
               {colIndex + 1}
             </div>
@@ -296,32 +292,48 @@ const GridModeMetronome = (props) => {
             const isActive = activeRows.includes(rowIndex);
             const isHighlighted = isCurrentBeat && isActive;
             
-            // Select appropriate color based on state
-            let fillColor = isActive ? 
-              (rowIndex === 0 && columnLevel === 3 ? colorSet.level3 : 
-               rowIndex === 1 && columnLevel >= 2 ? colorSet.level2 : 
-               colorSet.level1) : 
-              colors.inactive;
-            
-            // Override with highlight color if currently playing
-            if (isHighlighted) {
-              fillColor = colorSet.highlight;
+            // Determine square type for CSS classes
+            let squareType = '';
+            if (isActive) {
+              if (rowIndex === 0 && columnLevel === 3) {
+                squareType = 'first-beat';
+              } else if (rowIndex === 1 && columnLevel >= 2) {
+                squareType = 'accent';
+              } else {
+                squareType = 'normal';
+              }
             }
+            
+            // Select appropriate color based on state
+            let fillColor = colors.inactive;
+            if (isActive) {
+              if (rowIndex === 0 && columnLevel === 3) {
+                fillColor = colorSet.level3;
+              } else if (rowIndex === 1 && columnLevel >= 2) {
+                fillColor = colorSet.level2;
+              } else {
+                fillColor = colorSet.level1;
+              }
+            }
+            
+            // Build className for CSS animations
+            const classNames = [
+              'grid-square',
+              isActive ? 'grid-square-active' : '',
+              isHighlighted ? 'grid-square-playing' : '',
+              squareType ? `grid-square-${squareType}` : ''
+            ].filter(Boolean).join(' ');
             
             return (
               <div
                 key={rowIndex}
+                className={classNames}
                 style={{
                   width: `${squareSize}px`,
                   height: `${squareSize}px`,
-                  borderRadius: '6px',
                   backgroundColor: fillColor,
                   marginBottom: '4px',
-                  opacity: isActive ? 1 : 0.3,
-                  transition: 'all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)',
-                  transform: isHighlighted ? 'scale(1.03)' : 'scale(1)',
-                  boxShadow: isHighlighted ? '0 0 4px rgba(248, 211, 141, 0.4)' : 'none',
-                  filter: isHighlighted ? 'brightness(1.05)' : 'none'
+                  opacity: isActive ? 1 : 0.4
                 }}
               />
             );
@@ -329,8 +341,8 @@ const GridModeMetronome = (props) => {
           <div style={{ 
             fontSize: '12px', 
             marginTop: '8px', 
-            color: colIndex === 0 ? "#f5bc5e" : "#666",
-            fontWeight: colIndex === 0 ? "bold" : "normal"
+            color: colIndex === 0 ? "#f5bc5e" : "#999",
+            fontWeight: colIndex === 0 ? "500" : "normal"
           }}>
             {colIndex + 1}
           </div>
@@ -340,15 +352,18 @@ const GridModeMetronome = (props) => {
   };
 
   return (
-    <div style={{ textAlign: 'center', padding: '20px 0' }}>
-      {/* COMPLETELY REDESIGNED CONTAINER: Using native divs instead of SVG */}
+    <div 
+      style={{ textAlign: 'center', padding: '20px 0' }}
+      className={`${!props.isPaused ? 'metronome-active' : ''} ${isFirstBeatPlaying ? 'first-beat-playing' : ''}`}
+    >
+      {/* Grid container with minimalist styling */}
       <div style={{ 
         margin: '0 auto',
         padding: '20px',
         maxWidth: '100%',
-        overflowX: 'auto', // Allow horizontal scrolling on small screens
+        overflowX: 'auto', 
         overflowY: 'visible',
-        whiteSpace: 'nowrap' // Keep squares in a row
+        whiteSpace: 'nowrap'
       }}>
         {renderGridSquares()}
       </div>
@@ -379,13 +394,13 @@ const GridModeMetronome = (props) => {
             style={{
               width: '40px',
               height: '40px',
-              transition: 'transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)'
+              transition: 'transform 0.2s ease-out'
             }}
           />
         </button>
       </div>
 
-      {/* Legend - explain what the colors mean */}
+      {/* Legend with minimalist styling */}
       <div style={{ 
         marginTop: '15px', 
         display: 'flex', 
@@ -393,64 +408,72 @@ const GridModeMetronome = (props) => {
         gap: '15px',
         flexWrap: 'wrap',
         fontSize: '12px',
-        color: '#666'
+        color: '#888'
       }}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <div style={{ 
-            width: '12px', 
-            height: '12px', 
+            width: '10px', 
+            height: '10px', 
             backgroundColor: colors.inactive, 
             borderRadius: '2px',
             marginRight: '5px',
-            border: '1px solid #ddd'
+            border: '1px solid #eee'
           }}></div>
           Mute
         </div>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <div style={{ 
-            width: '12px', 
-            height: '12px', 
+            width: '10px', 
+            height: '10px', 
             backgroundColor: colors.level1, 
             borderRadius: '2px',
             marginRight: '5px',
-            border: '1px solid #ddd'
+            border: '1px solid #eee'
           }}></div>
           Normal Beat
         </div>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <div style={{ 
-            width: '12px', 
-            height: '12px', 
+            width: '10px', 
+            height: '10px', 
             backgroundColor: colors.level2, 
             borderRadius: '2px',
             marginRight: '5px',
-            border: '1px solid #ddd'
+            border: '1px solid #eee'
           }}></div>
           Accent
         </div>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <div style={{ 
-            width: '12px', 
-            height: '12px', 
+            width: '10px', 
+            height: '10px', 
             backgroundColor: colors.level3, 
             borderRadius: '2px',
             marginRight: '5px',
-            border: '1px solid #ddd'
+            border: '1px solid #eee'
           }}></div>
           First Beat
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div style={{ 
+            width: '10px', 
+            height: '10px', 
+            backgroundColor: colors.teal, 
+            borderRadius: '2px',
+            marginRight: '5px',
+            border: '1px solid #eee'
+          }}></div>
+          First Beat Sound
         </div>
       </div>
       
       <button
         onClick={() => {
-          console.log("[GRID MODE] Tap tempo button clicked");
           if (logic && typeof logic.tapTempo === 'function') {
             logic.tapTempo();
           } else {
-            console.error("[GRID MODE] logic.tapTempo is not a function", logic);
             // Dispatch global event for tap tempo as fallback
             const now = performance.now();
-            console.log("[GRID MODE] Using global event fallback");
             window.dispatchEvent(new CustomEvent('metronome-tap-tempo', {
               detail: { timestamp: now }
             }));
@@ -473,7 +496,7 @@ const GridModeMetronome = (props) => {
           style={{
             height: '35px',
             objectFit: 'contain',
-            transition: 'all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)'
+            transition: 'all 0.15s ease-out'
           }}
         />
       </button>
