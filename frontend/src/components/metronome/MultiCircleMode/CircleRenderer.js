@@ -24,7 +24,7 @@ const CircleRenderer = ({
   isSilencePhaseRef,
   isMobile
 }) => {
-  // Add visual indicators for different states - UPDATED FOR CLARITY
+  // Add visual indicators for different states
   let activeBoxShadow = "none"; // Default - no highlight
   
   if (isActiveUI) {
@@ -33,10 +33,10 @@ const CircleRenderer = ({
   }
   
   if (isPlaying) {
-    // Circle is currently playing - gold highlight (takes precedence)
+    // Circle is currently playing - teal highlight (takes precedence)
     activeBoxShadow = isTransitioning 
-      ? "0 0 0 3px #FFA500, 0 0 10px rgba(255, 165, 0, 0.6)" // Orange for transition
-      : "0 0 0 4px #FFD700, 0 0 10px rgba(255, 215, 0, 0.8)"; // Bolder gold for playing
+      ? "0 0 0 3px #00A0A0, 0 0 15px rgba(0, 160, 160, 0.7)" // Teal with glow for transition
+      : "0 0 0 4px #00A0A0, 0 0 15px rgba(0, 160, 160, 0.8)"; // Bolder teal for playing
   }
   
   // Add visual indicator for silence phase
@@ -44,6 +44,8 @@ const CircleRenderer = ({
     activeBoxShadow = "0 0 0 3px #ff5722, 0 0 10px rgba(255, 87, 34, 0.6)";
   }
   
+  // Determine border style - dashed for inactive, non-playing circles
+  const borderStyle = (!isActiveUI && !isPlaying) ? "dashed" : "solid";
 
   const iconSize = 24;
   const beats = Array.from({ length: settings.subdivisions || 4 }, (_, i) => {
@@ -76,7 +78,7 @@ const CircleRenderer = ({
             width: "24px",
             height: "24px",
             borderRadius: "50%",
-            border: "2px dashed rgb(204, 204, 204)",
+            border: "2px dashed rgb(0, 160, 160)",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
@@ -166,22 +168,22 @@ const CircleRenderer = ({
       </div>
     );
     
-    // Add a musical note symbol indicator for the beat mode - REPOSITIONED LOWER
+    // Add a musical note symbol indicator for the beat mode
     const beatModeIndicator = (
       <div
         key="beat-mode-indicator"
         style={{
           position: "absolute",
-          bottom: "-38px", // Moved lower from -26px to -38px
+          bottom: "-38px",
           left: "50%",
           transform: "translateX(-50%)",
-          fontSize: "20px", // Larger font for the musical symbol
+          fontSize: "20px",
           fontWeight: "bold",
-          fontFamily: "Arial, 'Times New Roman', serif", // Better font for musical symbols
+          fontFamily: "Arial, 'Times New Roman', serif",
           color: isPlaying ? "#FFD700" : "#00A0A0",
           backgroundColor: "rgba(255, 255, 255, 0.9)",
-          padding: "2px 14px", // Slightly wider padding
-          borderRadius: "12px", // Slightly more rounded
+          padding: "2px 14px",
+          borderRadius: "12px",
           zIndex: 5,
           border: "1px solid #eee",
           boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
@@ -200,10 +202,10 @@ const CircleRenderer = ({
           width: containerSize,
           height: containerSize,
           borderRadius: "50%",
-          border: "2px solid transparent",
+          border: `2px ${borderStyle} ${(!isActiveUI && !isPlaying) ? "#ccc" : "transparent"}`,
           boxShadow: activeBoxShadow,
-          margin: isMobile ? "15px 0 38px 0" : "15px 15px 38px 15px", // Added bottom margin to make space for the indicator
-          transition: "box-shadow 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)",
+          margin: isMobile ? "15px 0 38px 0" : "15px 15px 38px 15px",
+          transition: "box-shadow 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), border 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)",
           cursor: "pointer",
           overflow: "visible"
         }}
@@ -223,28 +225,28 @@ const CircleRenderer = ({
         width: containerSize,
         height: containerSize,
         borderRadius: "50%",
-        border: "2px solid transparent",
+        border: `2px ${borderStyle} ${(!isActiveUI && !isPlaying) ? "#ccc" : "transparent"}`,
         boxShadow: activeBoxShadow,
-        margin: isMobile ? "15px 0 38px 0" : "15px 15px 38px 15px", // Added bottom margin to make space for the indicator
-        transition: "box-shadow 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)",
+        margin: isMobile ? "15px 0 38px 0" : "15px 15px 38px 15px",
+        transition: "box-shadow 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), border 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)",
         cursor: "pointer",
         overflow: "visible"
       }}
     >
-      {/* Add musical note symbol for single circle as well - REPOSITIONED LOWER */}
+      {/* Musical note symbol for single circle as well */}
       <div
         style={{
           position: "absolute",
-          bottom: "-38px", // Moved lower from -26px to -38px
+          bottom: "-38px",
           left: "50%",
           transform: "translateX(-50%)",
-          fontSize: "20px", // Larger font for the musical symbol
+          fontSize: "20px",
           fontWeight: "bold",
-          fontFamily: "Arial, 'Times New Roman', serif", // Better font for musical symbols
+          fontFamily: "Arial, 'Times New Roman', serif",
           color: isPlaying ? "#FFD700" : "#00A0A0",
           backgroundColor: "rgba(255, 255, 255, 0.9)",
-          padding: "2px 14px", // Slightly wider padding
-          borderRadius: "12px", // Slightly more rounded
+          padding: "2px 14px",
+          borderRadius: "12px",
           zIndex: 5,
           border: "1px solid #eee",
           boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
@@ -258,4 +260,4 @@ const CircleRenderer = ({
   );
 };
 
-export default CircleRenderer; 
+export default CircleRenderer;

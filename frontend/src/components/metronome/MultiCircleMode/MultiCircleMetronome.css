@@ -18,19 +18,27 @@
   box-sizing: border-box;
   overflow: visible;
   cursor: pointer;
-  transition: box-shadow 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transition: box-shadow 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), border 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.metronome-circle-inactive {
+  border: 2px dashed #ccc;
 }
 
 .metronome-circle-active {
   box-shadow: 0 0 0 3px #00A0A0, 0 0 10px rgba(0, 160, 160, 0.6);
+  border: 2px solid transparent;
 }
 
 .metronome-circle-playing {
-  box-shadow: 0 0 0 3px #FFD700, 0 0 10px rgba(255, 215, 0, 0.6);
+  box-shadow: 0 0 0 3px #00A0A0, 0 0 15px rgba(0, 160, 160, 0.8) !important;
+  border: 2px solid transparent !important;
+  animation: circle-pulse 2s infinite ease-in-out;
 }
 
 .metronome-circle-silent {
   box-shadow: 0 0 0 3px #ff5722, 0 0 10px rgba(255, 87, 34, 0.6);
+  border: 2px solid transparent;
 }
 
 .beat-icon {
@@ -70,13 +78,11 @@
 
 .add-circle-button {
   position: relative;
-  border-radius: 50%;
-  border: 2px dashed #00A0A0;
-  margin: 15px;
-  cursor: pointer;
   display: flex;
   justify-content: center;
   align-items: center;
+  margin: 15px;
+  cursor: pointer;
   transition: all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
@@ -198,6 +204,32 @@
   }
 }
 
+/* Animation for playing circle */
+@keyframes circle-pulse {
+  0% {
+    box-shadow: 0 0 0 3px #00A0A0, 0 0 8px rgba(0, 160, 160, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 0 4px #00A0A0, 0 0 15px rgba(0, 160, 160, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 0 3px #00A0A0, 0 0 8px rgba(0, 160, 160, 0.6);
+  }
+}
+
+/* Animation for playing indicator */
+@keyframes fade-pulse {
+  0% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.8;
+  }
+}
+
 @media (max-width: 768px) {
   .metronome-circle,
   .add-circle-button {
@@ -216,37 +248,20 @@
   }
 }
 
-.metronome-circle-playing {
-  box-shadow: 0 0 0 4px #FFD700, 0 0 10px rgba(255, 215, 0, 0.8) !important;
-  border: 2px solid #FFD700 !important;
-}
-
 .playing-indicator {
   position: absolute;
   top: -30px;
   left: 50%;
   transform: translateX(-50%);
-  background-color: #FFD700;
-  color: #333;
-  padding: 4px 10px;
+  background-color: #00A0A0;
+  color: white;
+  padding: 3px 12px;
   border-radius: 12px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: bold;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   z-index: 10;
-  animation: pulse-playing 1.5s infinite;
-}
-
-@keyframes pulse-playing {
-  0% {
-    box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7);
-  }
-  70% {
-    box-shadow: 0 0 0 6px rgba(255, 215, 0, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
-  }
+  animation: fade-pulse 1.5s infinite;
 }
 
 .circle-number {

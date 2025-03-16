@@ -1,4 +1,4 @@
-// src/components/metronome/MultiCircleMode/MultiCircleMetronome.js - with all fixes
+// src/components/metronome/MultiCircleMode/MultiCircleMetronome.js
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import useMultiCircleMetronomeLogic from "./hooks/useMultiCircleMetronomeLogic";
 import useKeyboardShortcuts from "../../../hooks/useKeyboardShortcuts";
@@ -12,7 +12,6 @@ import withTrainingContainer from '../../Training/withTrainingContainer'; // Use
 import { getActiveSoundSet } from "../../../services/soundSetService";
 import { loadClickBuffers } from "../../../hooks/useMetronomeLogic/audioBuffers";
 import MultiCircleControls from './MultiCircleControls';
-
 
 import NoteSelector from "../Controls/NoteSelector";
 import SubdivisionSelector from "../Controls/SubdivisionSelector";
@@ -58,15 +57,15 @@ const PlayButton = ({ handlePlayPause, isPaused }) => (
   </div>
 );
 
+// Modified AddCircleButton without dashed border, just the + symbol
 const AddCircleButton = ({ addCircle, containerSize, isMobile }) => (
   <div
     onClick={addCircle}
+    className="add-circle-button"
     style={{
       position: "relative",
       width: containerSize,
       height: containerSize,
-      borderRadius: "50%",
-      border: "2px dashed #00A0A0",
       margin: isMobile ? "15px 0" : "15px",
       display: "flex",
       justifyContent: "center",
@@ -76,6 +75,7 @@ const AddCircleButton = ({ addCircle, containerSize, isMobile }) => (
     }}
   >
     <div
+      className="plus-button"
       style={{
         width: "60px",
         height: "60px",
@@ -174,18 +174,6 @@ function MultiCircleMetronome(props) {
     ...circleSettings[activeCircle] || { subdivisions: 4, accents: [3, 1, 1, 1], beatMode: "quarter" },
     activeCircle
   };
-  
-  // Debugging for initialization
-  useEffect(() => {
-    console.log("MultiCircleMetronome initialized with settings:", {
-      circleSettings,
-      activeCircle,
-      playingCircle,
-      isPaused,
-      speedMode,
-      macroMode
-    });
-  }, []);
   
   // State tracking references
   const isProcessingPlayPauseRef = useRef(false);
