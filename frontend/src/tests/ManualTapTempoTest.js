@@ -52,7 +52,8 @@ const ManualTapTempoTest = () => {
       if (intervals.length > 0) {
         const avgInterval = intervals.reduce((sum, val) => sum + val, 0) / intervals.length;
         const tempo = Math.round(60000 / avgInterval);
-        // We don't set the tempo here as we're just monitoring the system
+        // We don't set the tempo here as we're just monitoring the system.
+        console.log(`Calculated tempo: ${tempo} BPM`);
       }
     }
   };
