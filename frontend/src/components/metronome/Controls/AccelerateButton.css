@@ -1,0 +1,44 @@
+/* src/components/metronome/Controls/AccelerateButton.css */
+.accelerate-button-container {
+  display: flex;
+  justify-content: center;
+  margin: 15px 0;
+}
+
+.accelerate-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8d38d;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+  min-width: 120px;
+  letter-spacing: 0.5px;
+  position: relative;
+}
+
+.accelerate-button:hover {
+  background-color: #f6cc7c;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+}
+
+.accelerate-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* For mobile devices */
+@media (max-width: 600px) {
+  .accelerate-button {
+    min-width: 110px;
+    font-size: 14px;
+  }
+}

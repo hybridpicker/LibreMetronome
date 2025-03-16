@@ -210,20 +210,29 @@ export function AdvancedMetronomeWithCircle({
       window.removeEventListener('beat-mode-change', handleBeatModeChange);
     };
   }, [isPaused]);
-
-  // --------------------------
-  //  Keyboard Shortcuts
-  // --------------------------
-  useKeyboardShortcuts({
-    onTogglePlayPause: () => handlePlayPause(),
-    onTapTempo: logic.tapTempo
-  });
-
+  
+  // Listen for training mode toggle events
   useEffect(() => {
-    if (registerTogglePlay) {
-      registerTogglePlay(handlePlayPause);
-    }
-  }, [registerTogglePlay]);
+    const handleTrainingModeToggle = (event) => {
+      const { type, newValue } = event.detail;
+      
+      // Create a new custom event to update training settings in parent components
+      const updateEvent = new CustomEvent('training-settings-update', {
+        detail: { 
+          [type]: newValue
+        }
+      });
+      
+      // Dispatch the event to be caught by parent components
+      window.dispatchEvent(updateEvent);
+    };
+    
+    window.addEventListener('training-mode-toggle', handleTrainingModeToggle);
+    
+    return () => {
+      window.removeEventListener('training-mode-toggle', handleTrainingModeToggle);
+    };
+  }, []);
 
   // --------------------------
   //  Play/Pause Handling
@@ -263,6 +272,21 @@ export function AdvancedMetronomeWithCircle({
       });
     }
   }, [isPaused, tempo, tempoIncreasePercent, setTempo]);
+  
+  // --------------------------
+  //  Keyboard Shortcuts
+  // --------------------------
+  useKeyboardShortcuts({
+    onTogglePlayPause: () => handlePlayPause(),
+    onTapTempo: logic.tapTempo,
+    onManualTempoIncrease: handleAccelerate
+  });
+
+  useEffect(() => {
+    if (registerTogglePlay) {
+      registerTogglePlay(handlePlayPause);
+    }
+  }, [registerTogglePlay]);
 
   // --------------------------
   //  Layout & Geometry
@@ -587,7 +611,7 @@ export function AdvancedMetronomeWithCircle({
         speedMode={speedMode}
       />
 
-      {/* Tap Tempo button (always visible) */}
+      {/* Tap Tempo button - only visible on smaller screens via CSS */}
       <button
         onClick={() => {
           console.log("[ADVANCED METRONOME] Tap tempo button clicked");
@@ -607,19 +631,11 @@ export function AdvancedMetronomeWithCircle({
           }
         }}
         aria-label="Tap Tempo"
-        style={{
-          background: 'transparent',
-          border: 'none',
-          cursor: 'pointer',
-          marginTop: '20px',
-          display: 'block',
-          margin: '10px auto'
-        }}
+        className="tap-button"
       >
         <img
           src={tapButtonIcon}
           alt="Tap Tempo"
-          style={{ height: 35, objectFit: 'contain' }}
         />
       </button>
 

@@ -42,6 +42,7 @@
     padding: 0;
     outline: none;
     transition: transform 0.2s ease;
+    display: none; /* Hidden by default on desktop */
   }
   
   .tap-button:active {
@@ -51,6 +52,13 @@
   .tap-button img {
     height: 35px;
     object-fit: contain;
+  }
+  
+  /* Show tap button on tablets and mobile */
+  @media (max-width: 1024px) {
+    .tap-button {
+      display: block;
+    }
   }
   
   @media (max-width: 600px) {

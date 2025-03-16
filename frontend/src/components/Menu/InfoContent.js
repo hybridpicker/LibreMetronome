@@ -64,6 +64,7 @@ const InfoContent = () => {
             <li><span className="key">C</span> Switch to Circle</li>
             <li><span className="key">G</span> Switch to Grid</li>
             <li><span className="key">M</span> Switch to Multi Circle</li>
+            <li><span className="key">Enter</span> Accelerate (in Training Mode)</li>
             <li><span className="key">I</span> Show Menu (Info tab)</li>
             <li><span className="key">R</span> Show Menu (Training tab)</li>
             <li><span className="key">S</span> Show Menu (Settings tab)</li>

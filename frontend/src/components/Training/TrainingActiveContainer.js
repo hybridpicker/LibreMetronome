@@ -20,41 +20,30 @@ const TrainingActiveContainer = ({
   const [measureCount, setMeasureCount] = useState(0);
   const [muteMeasureCount, setMuteMeasureCount] = useState(0);
   const [isSilencePhase, setIsSilencePhase] = useState(false);
-  const [tipIndex, setTipIndex] = useState(0);
+  
+  // State for editing parameters
+  const [editingParam, setEditingParam] = useState(null);
+  const [editValue, setEditValue] = useState('');
   
   // Check if device is mobile
   const { width } = useWindowDimensions();
   const isMobile = width <= 768;
   
-  // Training tips array
-  const silentPhaseTips = [
-    "Focus on maintaining your internal tempo during silence",
-    "Try counting out loud to stay on beat during the silent phase",
-    "Imagine hearing the metronome in your head while it's silent",
-    "Keep your movements consistent during both silent and playing phases",
-    "If you lose the beat, don't worry - each attempt improves your timing"
-  ];
-  
-  const speedTrainingTips = [
-    "Maintain good technique as the tempo increases",
-    "Keep your movements relaxed and efficient at higher speeds",
-    "Focus on precision rather than just speed",
-    "Start slow and build gradually for the best results",
-    "If technique suffers at a higher tempo, return to a more comfortable speed"
-  ];
-  
-  const generalTips = [
-    "Use training mode regularly to improve your timing skills",
-    "Combine macro-timing and speed training for comprehensive practice",
-    "Track your progress by noting the tempos and settings you can handle",
-    "Short, focused practice with training modes is more effective than long sessions",
-    "Challenge yourself with new patterns and subdivisions as you improve"
-  ];
 
   // Update local state from refs - this is crucial to ensure UI updates
   useEffect(() => {
+    // Don't update state when paused to prevent flickering
+    if (isPaused) {
+      return;
+    }
+    
     const updateFromRefs = () => {
-      if (isSilencePhaseRef?.current !== undefined) {
+      // Directly access global ref if available
+      const globalSilenceRef = window.isSilencePhaseRef;
+      
+      if (globalSilenceRef?.current !== undefined) {
+        setIsSilencePhase(globalSilenceRef.current);
+      } else if (isSilencePhaseRef?.current !== undefined) {
         setIsSilencePhase(isSilencePhaseRef.current);
       }
       
@@ -67,14 +56,70 @@ const TrainingActiveContainer = ({
       }
     };
     
-    // Update immediately
+    // Update immediately when not paused
     updateFromRefs();
     
-    // Set up interval to periodically check for changes
-    const interval = setInterval(updateFromRefs, 100);
+    // Listen for each beat (including silent ones)
+    const handleBeat = (event) => {
+      // Skip updates when paused
+      if (isPaused) return;
+      
+      if (event.detail?.isSilencePhase !== undefined) {
+        setIsSilencePhase(event.detail.isSilencePhase);
+      } else {
+        updateFromRefs();
+      }
+    };
     
-    return () => clearInterval(interval);
-  }, [isSilencePhaseRef, measureCountRef, muteMeasureCountRef]);
+    // Listen for measure boundary events
+    const handleMeasureBoundary = (event) => {
+      // Skip updates when paused
+      if (isPaused) return;
+      
+      if (event.detail?.isSilencePhase !== undefined) {
+        setIsSilencePhase(event.detail.isSilencePhase);
+      }
+      if (event.detail?.measureCount !== undefined) {
+        setMeasureCount(event.detail.measureCount);
+      }
+      if (event.detail?.muteMeasureCount !== undefined) {
+        setMuteMeasureCount(event.detail.muteMeasureCount);
+      }
+    };
+    
+    // Listen for training state events
+    const handleTrainingStateChange = (event) => {
+      // Skip updates when paused
+      if (isPaused) return;
+      
+      if (event.detail?.silencePhase !== undefined) {
+        setIsSilencePhase(event.detail.silencePhase);
+      } else {
+        updateFromRefs();
+      }
+    };
+    
+    // Add event listeners with high priority
+    window.addEventListener('metronome-beat', handleBeat);
+    window.addEventListener('metronome-measure-boundary', handleMeasureBoundary);
+    window.addEventListener('silent-beat-played', handleBeat);
+    window.addEventListener('training-measure-update', handleTrainingStateChange);
+    document.addEventListener('training-state-changed', handleTrainingStateChange);
+    window.addEventListener('force-training-update', updateFromRefs);
+    
+    // Set up less frequent interval when not paused
+    const interval = setInterval(updateFromRefs, 250);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('metronome-beat', handleBeat);
+      window.removeEventListener('metronome-measure-boundary', handleMeasureBoundary);
+      window.removeEventListener('silent-beat-played', handleBeat);
+      window.removeEventListener('training-measure-update', handleTrainingStateChange);
+      document.removeEventListener('training-state-changed', handleTrainingStateChange);
+      window.removeEventListener('force-training-update', updateFromRefs);
+    };
+  }, [isSilencePhaseRef, measureCountRef, muteMeasureCountRef, isPaused]);
 
   // React to forceUpdate changes
   useEffect(() => {
@@ -102,22 +147,6 @@ const TrainingActiveContainer = ({
     }
   }, [macroMode, speedMode]);
   
-  // Rotate tips every 6 seconds
-  useEffect(() => {
-    if (macroMode === 0 && speedMode === 0) return;
-    
-    const tipInterval = setInterval(() => {
-      setTipIndex(prev => {
-        const tipArray = macroMode !== 0 && isSilencePhase ? 
-          silentPhaseTips : speedMode !== 0 ? 
-          speedTrainingTips : generalTips;
-          
-        return (prev + 1) % tipArray.length;
-      });
-    }, 6000);
-    
-    return () => clearInterval(tipInterval);
-  }, [macroMode, speedMode, isSilencePhase]);
 
   // Don't render anything if training is inactive
   if (macroMode === 0 && speedMode === 0) return null;
@@ -149,16 +178,6 @@ const TrainingActiveContainer = ({
     return `Tempo increases in ${remaining} measures`;
   };
   
-  // Get the current tip based on context
-  const getCurrentTip = () => {
-    if (macroMode !== 0 && isSilencePhase) {
-      return silentPhaseTips[tipIndex % silentPhaseTips.length];
-    } else if (speedMode !== 0) {
-      return speedTrainingTips[tipIndex % speedTrainingTips.length];
-    } else {
-      return generalTips[tipIndex % generalTips.length];
-    }
-  };
   
   // Create beat indicators for visual rhythm pattern
   const renderBeatIndicators = (count, total) => {
@@ -187,54 +206,155 @@ const TrainingActiveContainer = ({
         <div className="training-active-section">
           <div className="training-active-section-header">
             <span className="training-active-section-title">Macro-Timing</span>
-            <span className="training-active-section-type">
+            <span 
+              className="training-active-section-type clickable"
+              onClick={() => {
+                // Toggle between macroMode 1 (Fixed) and 2 (Random)
+                const event = new CustomEvent('training-mode-toggle', {
+                  detail: { 
+                    type: 'macroMode', 
+                    newValue: macroMode === 1 ? 2 : 1 
+                  }
+                });
+                window.dispatchEvent(event);
+              }}
+            >
               {macroMode === 1 ? 'Fixed Silence' : 'Random Silence'}
             </span>
           </div>
           
-          {isSilencePhase ? (
-            <div className="training-active-status-box silent">
-              <div className="status-icon">🔇</div>
-              <div className="status-info">
-                <span className="status-label">Silent Phase</span>
-                <div className="progress-container">
-                  <div 
-                    className="progress-bar animated" 
-                    style={{width: `${muteProgress}%`}}
-                    aria-valuenow={muteProgress}
-                    aria-valuemin="0"
-                    aria-valuemax="100"
-                  ></div>
+          <div className="training-active-status-box training">
+            <div className="status-icon">🎵</div>
+            <div className="status-info">
+              <span className="status-label">Training Active</span>
+              {editingParam === 'measuresUntilMute' ? (
+                <div className="parameter-edit">
+                  <div className="parameter-edit-header">Play Phase Duration</div>
+                  <div className="parameter-edit-controls">
+                    <input
+                      type="number"
+                      min="1"
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          const newValue = parseInt(editValue, 10);
+                          if (!isNaN(newValue) && newValue > 0) {
+                            const event = new CustomEvent('training-param-update', {
+                              detail: { type: 'measuresUntilMute', newValue }
+                            });
+                            window.dispatchEvent(event);
+                            setEditingParam(null);
+                          }
+                        } else if (e.key === 'Escape') {
+                          setEditingParam(null);
+                        }
+                      }}
+                      autoFocus
+                    />
+                    <span>measures</span>
+                  </div>
+                  <div className="parameter-edit-hint">Press Enter to save or Esc to cancel</div>
+                  <div className="parameter-edit-buttons">
+                    <button 
+                      className="parameter-edit-button parameter-edit-save"
+                      onClick={() => {
+                        const newValue = parseInt(editValue, 10);
+                        if (!isNaN(newValue) && newValue > 0) {
+                          const event = new CustomEvent('training-param-update', {
+                            detail: { type: 'measuresUntilMute', newValue }
+                          });
+                          window.dispatchEvent(event);
+                          setEditingParam(null);
+                        }
+                      }}
+                    >
+                      Save
+                    </button>
+                    <button 
+                      className="parameter-edit-button parameter-edit-cancel"
+                      onClick={() => setEditingParam(null)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
-                <span className="counter-text">
-                  {muteMeasureCount === 0 ? 
-                    "Starting silent phase" : 
-                    `Silent measure ${muteMeasureCount} of ${muteDurationMeasures}`}
-                </span>
-                {muteDurationMeasures > 1 && renderBeatIndicators(muteMeasureCount, muteDurationMeasures)}
-              </div>
-            </div>
-          ) : (
-            <div className="training-active-status-box playing">
-              <div className="status-icon">🔊</div>
-              <div className="status-info">
-                <span className="status-label">Playing Phase</span>
-                <div className="progress-container">
-                  <div 
-                    className="progress-bar" 
-                    style={{width: `${measureProgress}%`}}
-                    aria-valuenow={measureProgress}
-                    aria-valuemin="0"
-                    aria-valuemax="100"
-                  ></div>
+              ) : editingParam === 'muteDurationMeasures' ? (
+                <div className="parameter-edit">
+                  <div className="parameter-edit-header">Silent Phase Duration</div>
+                  <div className="parameter-edit-controls">
+                    <input
+                      type="number"
+                      min="1"
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          const newValue = parseInt(editValue, 10);
+                          if (!isNaN(newValue) && newValue > 0) {
+                            const event = new CustomEvent('training-param-update', {
+                              detail: { type: 'muteDurationMeasures', newValue }
+                            });
+                            window.dispatchEvent(event);
+                            setEditingParam(null);
+                          }
+                        } else if (e.key === 'Escape') {
+                          setEditingParam(null);
+                        }
+                      }}
+                      autoFocus
+                    />
+                    <span>measures</span>
+                  </div>
+                  <div className="parameter-edit-hint">Press Enter to save or Esc to cancel</div>
+                  <div className="parameter-edit-buttons">
+                    <button 
+                      className="parameter-edit-button parameter-edit-save"
+                      onClick={() => {
+                        const newValue = parseInt(editValue, 10);
+                        if (!isNaN(newValue) && newValue > 0) {
+                          const event = new CustomEvent('training-param-update', {
+                            detail: { type: 'muteDurationMeasures', newValue }
+                          });
+                          window.dispatchEvent(event);
+                          setEditingParam(null);
+                        }
+                      }}
+                    >
+                      Save
+                    </button>
+                    <button 
+                      className="parameter-edit-button parameter-edit-cancel"
+                      onClick={() => setEditingParam(null)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
+              ) : (
                 <span className="counter-text">
-                  {formatMeasureText(measureCount, measuresUntilMute)}
+                  <span 
+                    className="editable-param" 
+                    onClick={() => {
+                      setEditingParam('measuresUntilMute');
+                      setEditValue(measuresUntilMute.toString());
+                    }}
+                  >
+                    Play: {measuresUntilMute} measures
+                  </span>, 
+                  <span 
+                    className="editable-param"
+                    onClick={() => {
+                      setEditingParam('muteDurationMeasures');
+                      setEditValue(muteDurationMeasures.toString());
+                    }}
+                  >
+                    Silent: {muteDurationMeasures} measures
+                  </span>
                 </span>
-                {measuresUntilMute > 1 && renderBeatIndicators(measureCount, measuresUntilMute)}
-              </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       )}
       
@@ -243,7 +363,19 @@ const TrainingActiveContainer = ({
         <div className="training-active-section">
           <div className="training-active-section-header">
             <span className="training-active-section-title">Speed Training</span>
-            <span className="training-active-section-type">
+            <span 
+              className="training-active-section-type clickable"
+              onClick={() => {
+                // Toggle between speedMode 1 (Auto) and 2 (Manual)
+                const event = new CustomEvent('training-mode-toggle', {
+                  detail: { 
+                    type: 'speedMode', 
+                    newValue: speedMode === 1 ? 2 : 1 
+                  }
+                });
+                window.dispatchEvent(event);
+              }}
+            >
               {speedMode === 1 ? 'Auto Increase' : 'Manual Increase'}
             </span>
           </div>
@@ -251,30 +383,149 @@ const TrainingActiveContainer = ({
           <div className="training-active-status-box speed">
             <div className="status-icon">⏱️</div>
             <div className="status-info">
-              {speedMode === 1 ? (
-                <>
-                  <span className="status-label">Next Tempo Increase</span>
-                  <div className="progress-container">
-                    <div 
-                      className="progress-bar" 
-                      style={{
-                        width: `${(currentMeasure / measuresUntilSpeedUp) * 100}%`
+              {editingParam === 'measuresUntilSpeedUp' ? (
+                <div className="parameter-edit">
+                  <div className="parameter-edit-header">Measures Between Tempo Increases</div>
+                  <div className="parameter-edit-controls">
+                    <input
+                      type="number"
+                      min="1"
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          const newValue = parseInt(editValue, 10);
+                          if (!isNaN(newValue) && newValue > 0) {
+                            const event = new CustomEvent('training-param-update', {
+                              detail: { type: 'measuresUntilSpeedUp', newValue }
+                            });
+                            window.dispatchEvent(event);
+                            setEditingParam(null);
+                          }
+                        } else if (e.key === 'Escape') {
+                          setEditingParam(null);
+                        }
                       }}
-                      aria-valuenow={(currentMeasure / measuresUntilSpeedUp) * 100}
-                      aria-valuemin="0"
-                      aria-valuemax="100"
-                    ></div>
+                      autoFocus
+                    />
+                    <span>measures</span>
                   </div>
+                  <div className="parameter-edit-hint">Press Enter to save or Esc to cancel</div>
+                  <div className="parameter-edit-buttons">
+                    <button 
+                      className="parameter-edit-button parameter-edit-save"
+                      onClick={() => {
+                        const newValue = parseInt(editValue, 10);
+                        if (!isNaN(newValue) && newValue > 0) {
+                          const event = new CustomEvent('training-param-update', {
+                            detail: { type: 'measuresUntilSpeedUp', newValue }
+                          });
+                          window.dispatchEvent(event);
+                          setEditingParam(null);
+                        }
+                      }}
+                    >
+                      Save
+                    </button>
+                    <button 
+                      className="parameter-edit-button parameter-edit-cancel"
+                      onClick={() => setEditingParam(null)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : editingParam === 'tempoIncreasePercent' ? (
+                <div className="parameter-edit">
+                  <div className="parameter-edit-header">Tempo Increase Amount</div>
+                  <div className="parameter-edit-controls">
+                    <input
+                      type="number"
+                      min="1"
+                      max="20"
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          const newValue = parseInt(editValue, 10);
+                          if (!isNaN(newValue) && newValue > 0 && newValue <= 20) {
+                            const event = new CustomEvent('training-param-update', {
+                              detail: { type: 'tempoIncreasePercent', newValue }
+                            });
+                            window.dispatchEvent(event);
+                            setEditingParam(null);
+                          }
+                        } else if (e.key === 'Escape') {
+                          setEditingParam(null);
+                        }
+                      }}
+                      autoFocus
+                    />
+                    <span>percent</span>
+                  </div>
+                  <div className="parameter-edit-hint">Press Enter to save or Esc to cancel</div>
+                  <div className="parameter-edit-buttons">
+                    <button 
+                      className="parameter-edit-button parameter-edit-save"
+                      onClick={() => {
+                        const newValue = parseInt(editValue, 10);
+                        if (!isNaN(newValue) && newValue > 0 && newValue <= 20) {
+                          const event = new CustomEvent('training-param-update', {
+                            detail: { type: 'tempoIncreasePercent', newValue }
+                          });
+                          window.dispatchEvent(event);
+                          setEditingParam(null);
+                        }
+                      }}
+                    >
+                      Save
+                    </button>
+                    <button 
+                      className="parameter-edit-button parameter-edit-cancel"
+                      onClick={() => setEditingParam(null)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : speedMode === 1 ? (
+                <>
+                  <span className="status-label">Auto Speed Increase</span>
                   <span className="counter-text">
-                    {formatCountdownText(remainingMeasures)}
+                    <span 
+                      className="editable-param" 
+                      onClick={() => {
+                        setEditingParam('measuresUntilSpeedUp');
+                        setEditValue(measuresUntilSpeedUp.toString());
+                      }}
+                    >
+                      Every {measuresUntilSpeedUp} measures
+                    </span>, tempo increases by 
+                    <span 
+                      className="editable-param"
+                      onClick={() => {
+                        setEditingParam('tempoIncreasePercent');
+                        setEditValue(tempoIncreasePercent.toString());
+                      }}
+                    >
+                      {tempoIncreasePercent}%
+                    </span>
                   </span>
-                  {measuresUntilSpeedUp > 1 && renderBeatIndicators(currentMeasure, measuresUntilSpeedUp)}
                 </>
               ) : (
                 <>
                   <span className="status-label">Manual Speed Increase</span>
                   <span className="counter-text">
-                    Press "Accelerate" to increase tempo by {tempoIncreasePercent}%
+                    Press "Accelerate" to increase tempo by 
+                    <span 
+                      className="editable-param"
+                      onClick={() => {
+                        setEditingParam('tempoIncreasePercent');
+                        setEditValue(tempoIncreasePercent.toString());
+                      }}
+                    >
+                      {" " + tempoIncreasePercent}%
+                    </span>
                   </span>
                 </>
               )}
@@ -283,13 +534,6 @@ const TrainingActiveContainer = ({
         </div>
       )}
       
-      <div className="training-active-tip">
-        <span className="tip-icon">💡</span>
-        <div>
-          <span className="tip-title">Practice Tip</span>
-          <span className="tip-text">{getCurrentTip()}</span>
-        </div>
-      </div>
       
       {/* Keyboard shortcut hint - only show on desktop */}
       {!isMobile && (

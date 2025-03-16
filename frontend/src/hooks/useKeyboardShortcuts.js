@@ -109,6 +109,13 @@ const useKeyboardShortcuts = ({
       }
 
       switch (event.code) {
+        case 'Enter':
+          // Add Enter key support for manual acceleration in training mode
+          if (onManualTempoIncrease) {
+            event.preventDefault();
+            onManualTempoIncrease();
+          }
+          break;
         case 'KeyT':
           console.log("[KEYBOARD] 'T' key pressed for tap tempo");
           if (tapTempoRef.current) {
