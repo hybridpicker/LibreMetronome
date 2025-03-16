@@ -3,23 +3,6 @@ import React, { useState, useEffect } from 'react';
 import './TrainingActiveContainer.css';
 import useWindowDimensions from '../../hooks/useWindowDimensions';
 
-/**
- * A reusable component to display training mode status
- * This component shows the current status of macro-timing and speed training
- * and can be used across all metronome modes
- * 
- * @param {Object} props - Component properties
- * @param {number} props.macroMode - Current macro timing mode (0: off, 1: fixed silence, 2: random silence)
- * @param {number} props.speedMode - Current speed training mode (0: off, 1: auto increase tempo)
- * @param {Object} props.isSilencePhaseRef - Ref to silence phase state
- * @param {Object} props.measureCountRef - Ref to measure counter
- * @param {number} props.measuresUntilMute - How many measures until mute
- * @param {Object} props.muteMeasureCountRef - Ref to mute measure counter
- * @param {number} props.muteDurationMeasures - How many measures to stay muted
- * @param {number} props.tempoIncreasePercent - Tempo increase percentage for speed training
- * @param {number} props.measuresUntilSpeedUp - Measures until speed up for speed training
- * @returns {JSX.Element|null} - Training status indicator or null if training is inactive
- */
 const TrainingActiveContainer = ({
   macroMode,
   speedMode,
@@ -29,13 +12,14 @@ const TrainingActiveContainer = ({
   muteMeasureCountRef,
   muteDurationMeasures,
   tempoIncreasePercent,
-  measuresUntilSpeedUp
+  measuresUntilSpeedUp,
+  isPaused,
+  forceUpdate // Add forceUpdate prop
 }) => {
-  // State for rendering
+  // State for tracking current values
   const [measureCount, setMeasureCount] = useState(0);
   const [muteMeasureCount, setMuteMeasureCount] = useState(0);
   const [isSilencePhase, setIsSilencePhase] = useState(false);
-  const [, setForceUpdate] = useState(0);
   const [tipIndex, setTipIndex] = useState(0);
   
   // Check if device is mobile
@@ -66,6 +50,57 @@ const TrainingActiveContainer = ({
     "Short, focused practice with training modes is more effective than long sessions",
     "Challenge yourself with new patterns and subdivisions as you improve"
   ];
+
+  // Update local state from refs - this is crucial to ensure UI updates
+  useEffect(() => {
+    const updateFromRefs = () => {
+      if (isSilencePhaseRef?.current !== undefined) {
+        setIsSilencePhase(isSilencePhaseRef.current);
+      }
+      
+      if (measureCountRef?.current !== undefined) {
+        setMeasureCount(measureCountRef.current);
+      }
+      
+      if (muteMeasureCountRef?.current !== undefined) {
+        setMuteMeasureCount(muteMeasureCountRef.current);
+      }
+    };
+    
+    // Update immediately
+    updateFromRefs();
+    
+    // Set up interval to periodically check for changes
+    const interval = setInterval(updateFromRefs, 100);
+    
+    return () => clearInterval(interval);
+  }, [isSilencePhaseRef, measureCountRef, muteMeasureCountRef]);
+
+  // React to forceUpdate changes
+  useEffect(() => {
+    if (forceUpdate !== undefined) {
+      if (isSilencePhaseRef?.current !== undefined) {
+        setIsSilencePhase(isSilencePhaseRef.current);
+      }
+      
+      if (measureCountRef?.current !== undefined) {
+        setMeasureCount(measureCountRef.current);
+      }
+      
+      if (muteMeasureCountRef?.current !== undefined) {
+        setMuteMeasureCount(muteMeasureCountRef.current);
+      }
+    }
+  }, [forceUpdate, isSilencePhaseRef, measureCountRef, muteMeasureCountRef]);
+
+  // Reset local state when training mode is turned off
+  useEffect(() => {
+    if (macroMode === 0 && speedMode === 0) {
+      setMeasureCount(0);
+      setMuteMeasureCount(0);
+      setIsSilencePhase(false);
+    }
+  }, [macroMode, speedMode]);
   
   // Rotate tips every 6 seconds
   useEffect(() => {
@@ -83,45 +118,7 @@ const TrainingActiveContainer = ({
     
     return () => clearInterval(tipInterval);
   }, [macroMode, speedMode, isSilencePhase]);
-  
-  // Listen for training measure updates to force re-renders
-  useEffect(() => {
-    // Only set up listeners if training is active
-    if (macroMode === 0 && speedMode === 0) return;
-    
-    const handleMeasureUpdate = () => {
-      // Read values directly from refs
-      if (measureCountRef?.current !== undefined) {
-        setMeasureCount(measureCountRef.current);
-      }
-      
-      if (muteMeasureCountRef?.current !== undefined) {
-        setMuteMeasureCount(muteMeasureCountRef.current);
-      }
-      
-      if (isSilencePhaseRef?.current !== undefined) {
-        setIsSilencePhase(isSilencePhaseRef.current);
-      }
-      
-      setForceUpdate(prev => prev + 1);
-    };
-    
-    window.addEventListener('training-measure-update', handleMeasureUpdate);
-    
-    // Set up a regular polling interval as a fallback
-    const pollInterval = setInterval(() => {
-      handleMeasureUpdate();
-    }, 300);
-    
-    // Initial read
-    handleMeasureUpdate();
-    
-    return () => {
-      window.removeEventListener('training-measure-update', handleMeasureUpdate);
-      clearInterval(pollInterval);
-    };
-  }, [macroMode, speedMode, measureCountRef, muteMeasureCountRef, isSilencePhaseRef]);
-  
+
   // Don't render anything if training is inactive
   if (macroMode === 0 && speedMode === 0) return null;
   
