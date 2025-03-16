@@ -162,9 +162,11 @@ function MultiCircleMetronome(props) {
       // Update global reference
       window.isSilencePhaseRef = isSilencePhaseRef || localIsSilencePhaseRef;
       
-      // Dispatch event to force training UI update
-      window.dispatchEvent(new CustomEvent('training-measure-update'));
-    }, 200);
+      // Only dispatch update events when training is active
+      if (macroMode !== 0 || speedMode !== 0) {
+        window.dispatchEvent(new CustomEvent('training-measure-update'));
+      }
+    }, 500); // Increased interval to reduce number of events
     
     return () => clearInterval(syncInterval);
   }, [measureCountRef, muteMeasureCountRef, isSilencePhaseRef]);
@@ -323,6 +325,7 @@ function MultiCircleMetronome(props) {
         ...updated[activeCircle],
         subdivisions: subdivisionValue,
         // Create new accents array with first beat as 3 (emphasized)
+        // Note: First beat is also clickable and can be 0,1,2,3 just like other beats
         accents: Array.from({ length: subdivisionValue }, (_, i) => (i === 0 ? 3 : 1))
       };
       return updated;
@@ -401,8 +404,10 @@ function MultiCircleMetronome(props) {
         }
       }
       
-      // Dispatch event to update UI
-      window.dispatchEvent(new CustomEvent('training-measure-update'));
+      // Only dispatch update events when training is active to reduce log noise
+      if (macroMode !== 0 || speedMode !== 0) {
+        window.dispatchEvent(new CustomEvent('training-measure-update'));
+      }
     };
     
     // Custom event listener for the first beat of each circle
@@ -478,10 +483,12 @@ function MultiCircleMetronome(props) {
       // Update global reference
       window.isSilencePhaseRef = localIsSilencePhaseRef;
       
-      // Dispatch event to update UI
-      window.dispatchEvent(new CustomEvent('training-measure-update'));
+      // Only dispatch update events when training is active
+      if (macroMode !== 0 || speedMode !== 0) {
+        window.dispatchEvent(new CustomEvent('training-measure-update'));
+      }
     }
-  }, [isPaused, measureCountRef, muteMeasureCountRef, isSilencePhaseRef]);
+  }, [isPaused, measureCountRef, muteMeasureCountRef, isSilencePhaseRef, macroMode, speedMode]);
 
   // Handle Play/Pause with improved audio handling using a safe start sequence
   const handlePlayPause = useCallback(() => {
@@ -543,10 +550,12 @@ function MultiCircleMetronome(props) {
       localMeasureCountRef.current = 0;
       if (measureCountRef) measureCountRef.current = 0;
       
-      // Dispatch event to update UI
-      window.dispatchEvent(new CustomEvent('training-measure-update'));
+      // Only dispatch update events when training is active
+      if (macroMode !== 0 || speedMode !== 0) {
+        window.dispatchEvent(new CustomEvent('training-measure-update'));
+      }
     }
-  }, [props.isPaused, tempoIncreasePercent, tempo, setTempo, measureCountRef]);
+  }, [props.isPaused, tempoIncreasePercent, tempo, setTempo, measureCountRef, macroMode, speedMode]);
 
   // Register callbacks with parent if provided
   useEffect(() => {
@@ -646,6 +655,8 @@ function MultiCircleMetronome(props) {
         ...prev,
         {
           subdivisions: newSubdivisions,
+          // Create new accents array with first beat as 3 (emphasized) by default
+          // Note: First beat is also clickable and can be 0,1,2,3 just like other beats
           accents: Array.from({ length: newSubdivisions }, (_, i) => (i === 0 ? 3 : 1)),
           beatMode: lastCircle.beatMode === "quarter" ? "eighth" : "quarter"
         }
@@ -693,6 +704,9 @@ function MultiCircleMetronome(props) {
       if (!circle.accents || beatIndex >= circle.accents.length) return prev;
       
       const acc = [...circle.accents];
+      
+      // Remove special handling to allow first beat to be muted in any circle
+      // Regular cycle for all beats including first beat of all circles
       acc[beatIndex] = (acc[beatIndex] + 1) % 4; // cycle 0→1→2→3→0
       
       // Force a deep copy to ensure React detects the change
@@ -701,9 +715,31 @@ function MultiCircleMetronome(props) {
         accents: [...acc] 
       };
       
+      // Only immediately update the accent ref if this is the currently playing circle
+      // We need to be careful not to update the audio scheduler's reference for non-playing circles
+      if (activeCircle === playingCircle && logic && logic.accentsRef) {
+        // Direct update to the audio scheduler's reference ONLY for currently playing circle
+        logic.accentsRef.current = [...acc];
+        console.log(`[MultiCircleMetronome] Directly updated accentsRef for beat ${beatIndex} to ${acc[beatIndex]} (playing circle: ${playingCircle})`);
+      } else {
+        console.log(`[MultiCircleMetronome] NOT updating audio reference - editing circle ${activeCircle} but playing circle ${playingCircle}`);
+      }
+      
       return updated;
     });
-  }, [activeCircle, removeCircle]);
+    
+    // Dispatch an event similar to beat-mode-change for accent changes
+    // Make sure to include playingCircle in the event data to help with debugging
+    // The isPlayingCircle flag ensures changes only affect the currently playing circle
+    window.dispatchEvent(new CustomEvent('accent-change', {
+      detail: {
+        circleIndex: activeCircle,
+        beatIndex,
+        isPlayingCircle: activeCircle === playingCircle,
+        playingCircleIndex: playingCircle
+      }
+    }));
+  }, [activeCircle, playingCircle, removeCircle, logic]);
 
   // Dispatch an event when the playing circle changes
   useEffect(() => {

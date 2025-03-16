@@ -43,6 +43,14 @@ export default function useMultiCircleMetronomeLogic({
     // Ensure circleSettings is defined and non-empty
     if (!circleSettings || circleSettings.length === 0) return 0;
     
+    // CRITICAL FIX: Special handling for exactly 2 circles
+    if (circleSettings.length === 2) {
+      // For two circles: 0->1->0->1 alternation pattern
+      const nextIndex = currentIndex === 0 ? 1 : 0;
+      console.log(`[2-CIRCLE] Force strict alternation: ${currentIndex} -> ${nextIndex}`);
+      return nextIndex;
+    }
+    
     // Special handling for exactly 3 circles
     if (circleSettings.length === 3) {
       console.log(`[3-CIRCLE] Computing next circle from ${currentIndex}`);
@@ -215,6 +223,8 @@ export default function useMultiCircleMetronomeLogic({
   }, [accents]);
 
   useEffect(() => { 
+    // CRITICAL FIX: When changing circles, ensure we update our internal references
+    console.log(`[MultiCircleLogic] Circle changed from ${playingCircleRef.current} to ${playingCircle}`);
     playingCircleRef.current = playingCircle;
     
     // Update subdivisions based on the currently playing circle's settings
@@ -230,13 +240,27 @@ export default function useMultiCircleMetronomeLogic({
       console.log("[MultiCircleLogic] Warning: No circle data found, defaulting to 4 subdivisions");
     }
     
-    // Update accents array for the new circle
+    // CRITICAL: Update accents array for the new circle
     if (circleSettings[playingCircle] && circleSettings[playingCircle].subdivisions) {
-      accentsRef.current = circleSettings[playingCircle].accents || 
-                           new Array(circleSettings[playingCircle].subdivisions).fill(1);
-      if (accentsRef.current[0] !== 3) {
-        accentsRef.current[0] = 3; // First beat is always '3' (first beat sound)
+      // IMPORTANT: We need to make a deep copy to ensure independence between circles
+      let newAccents = [];
+      
+      // Get the current accent pattern from the newly selected circle's settings
+      if (circleSettings[playingCircle].accents && circleSettings[playingCircle].accents.length > 0) {
+        // Make a deep copy of the accents array to prevent cross-circle mutation
+        newAccents = [...circleSettings[playingCircle].accents];
+      } else {
+        // Default accent pattern if none exists
+        newAccents = new Array(circleSettings[playingCircle].subdivisions).fill(1);
       }
+      
+      // Log the old accent pattern and the new one for debugging
+      console.log(`[MultiCircleLogic] CIRCLE CHANGE: Changing accents for circle ${playingCircle}:`, 
+                 `Old: ${accentsRef.current ? accentsRef.current.join(',') : 'none'}`, 
+                 `New: ${newAccents.join(',')}`);
+      
+      // Set the accent pattern for the scheduler
+      accentsRef.current = newAccents;
     }
   }, [playingCircle, circleSettings, playingCircleRef, subdivisionsRef]);
 
@@ -502,6 +526,9 @@ export default function useMultiCircleMetronomeLogic({
     const currentBeatMode = circleSettings[currentCircleIndex]?.beatMode;
     const totalSubs = subdivisionsRef.current;
     
+    // Remove the critical fix that was forcing first beats audible
+    // Now all beats can be muted, including first beats in all circles
+    
     if (subIndex === 0) {
       // Increment beat counter for initial stabilization period
       minBeatsBeforeTransitionRef.current++;
@@ -516,15 +543,18 @@ export default function useMultiCircleMetronomeLogic({
         hasPlayedEnoughRef.current = true;
         
         // Force correct alternating sequence for 2 circles
-        if (minBeatsBeforeTransitionRef.current === 1) {
-          console.log(`[TWOCIRCLE] First beat of sequence - on circle 0`);
-        } else if (minBeatsBeforeTransitionRef.current === 2) {
-          console.log(`[TWOCIRCLE] Second beat - forcing transition to circle 1`);
-          // Force transition to circle 1 on second beat
-          if (playingCircleRef.current !== 1) {
-            playingCircleRef.current = 1;
-            if (onCircleChange) onCircleChange(1);
-          }
+        // Critical fix: First beat (1) is circle 0, second beat (2) is circle 1, and so on
+        // We subtract 1 from minBeatsBeforeTransitionRef.current because it starts at 1, not 0
+        // (1-1)%2=0, (2-1)%2=1, (3-1)%2=0, (4-1)%2=1, etc.
+        const beatIndex = minBeatsBeforeTransitionRef.current - 1;
+        const shouldBeCircle = beatIndex % 2;
+        console.log(`[TWOCIRCLE] Beat ${minBeatsBeforeTransitionRef.current} (index ${beatIndex}) - should be circle ${shouldBeCircle}`);
+        
+        // Force transition to the correct circle on every beat
+        if (playingCircleRef.current !== shouldBeCircle) {
+          console.log(`[TWOCIRCLE] ⚠️ Correcting circle from ${playingCircleRef.current} to ${shouldBeCircle}`);
+          playingCircleRef.current = shouldBeCircle;
+          if (onCircleChange) onCircleChange(shouldBeCircle);
         }
       } else {
         // Normal case for 3+ circles - use standard stabilization period
@@ -680,8 +710,10 @@ export default function useMultiCircleMetronomeLogic({
       // Handle 2-circle case specially for perfect alternation
       if (isTwoCircleCase) {
         // TWO CIRCLE MODE: Strict alternating pattern enforcement
-        // First beat is always circle 0, second beat is always circle 1, and so on
-        const shouldBeCircle = minBeatsBeforeTransitionRef.current % 2 === 0 ? 1 : 0;
+        // CRITICAL FIX: For perfect alternation, odd beats (1,3,5...) are circle 0, even beats (2,4,6...) are circle 1
+        // We subtract 1 from minBeatsBeforeTransitionRef.current to make beat 1 play on circle 0
+        const beatIndex = minBeatsBeforeTransitionRef.current - 1;
+        const shouldBeCircle = beatIndex % 2;
         
         if (playingCircleRef.current !== shouldBeCircle) {
           console.log(`[TWOCIRCLE] 🔄 Enforcing alternating pattern: circle ${shouldBeCircle} for beat ${minBeatsBeforeTransitionRef.current}`);
@@ -986,12 +1018,12 @@ export default function useMultiCircleMetronomeLogic({
         if (circleSettings.length === 2) {
           console.log("[CRITICAL] Two-circle case detected, enforcing strict 0-1-0-1 alternation pattern");
           
-          // Start counter at 1 for circle 0 (odd beats = circle 0, even beats = circle 1)
+          // Start counter at 1 for the first beat (which will play on circle 0)
           minBeatsBeforeTransitionRef.current = 1;
           playingCircleRef.current = 0;
           
           // Force perfect alternation in 2-circle mode regardless of tempo
-          console.log("[TWOCIRCLE] Initializing for perfect alternation: first beat will be circle 0");
+          console.log("[TWOCIRCLE] Initializing for perfect alternation: first beat (1) will be circle 0");
           
           // Make sure the UI shows circle 0
           if (onCircleChange) {
@@ -1137,6 +1169,55 @@ export default function useMultiCircleMetronomeLogic({
       window.removeEventListener('beat-mode-change', handleBeatModeChange);
     };
   }, [updateBeatMultiplier]);
+  
+  // Listen for accent-change events to update audio immediately
+  useEffect(() => {
+    const handleAccentChange = (event) => {
+      const { circleIndex, beatIndex, isPlayingCircle } = event.detail;
+      
+      // CRITICAL FIX: Only update the audio scheduler's accent reference if this is the currently playing circle
+      // This prevents changes to one circle from affecting the sound of another circle
+      if (isPlayingCircle && circleSettings[circleIndex]) {
+        // Get updated accents pattern from the circle settings
+        let updatedAccents = [...circleSettings[circleIndex].accents];
+        
+        // No special handling - allow all beats to be muted including first beat in all circles
+        
+        // Only update the audio reference if this is for the currently playing circle
+        accentsRef.current = updatedAccents;
+        console.log(`[MultiCircleLogic] Updated accent state for beat ${beatIndex} to ${updatedAccents[beatIndex]} (playing circle: ${playingCircleRef.current})`);
+        
+        // Only restart scheduler if we're actually playing (not paused)
+        if (!isPaused && schedulerRunningRef.current) {
+          // Properly restart the scheduler to force the new accent pattern to take effect immediately
+          console.log(`[MultiCircleLogic] Restarting scheduler to apply accent changes`);
+          
+          // Use stopScheduler and startScheduler to ensure clean restart
+          if (lookaheadRef.current) {
+            clearInterval(lookaheadRef.current);
+            lookaheadRef.current = null;
+          }
+          
+          // Briefly delay the restart to ensure clean state
+          setTimeout(() => {
+            if (!isPaused) {
+              // Only restart if still playing
+              lookaheadRef.current = setInterval(doSchedulerLoop, 20);
+              console.log('[MultiCircleLogic] Scheduler restarted after accent change');
+            }
+          }, 20);
+        }
+      } else {
+        console.log(`[MultiCircleLogic] Ignored accent change for non-playing circle ${circleIndex} (current playing: ${playingCircleRef.current})`);
+      }
+    };
+    
+    window.addEventListener('accent-change', handleAccentChange);
+    
+    return () => {
+      window.removeEventListener('accent-change', handleAccentChange);
+    };
+  }, [circleSettings, accentsRef, isPaused, schedulerRunningRef, lookaheadRef, doSchedulerLoop, playingCircleRef]);
 
   // Auto-start/stop based on isPaused
   useEffect(() => {
@@ -1220,6 +1301,8 @@ export default function useMultiCircleMetronomeLogic({
     minBeatsBeforeTransitionRef,
     hasPlayedEnoughRef,
     playStartTimeRef,
+    // Expose accentsRef to allow direct updates
+    accentsRef,
     // Add references to audio buffers for reloading
     reloadSounds: async function() {
       console.log("[MultiCircleLogic] Reloading sounds manually");

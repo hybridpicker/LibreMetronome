@@ -54,8 +54,11 @@ const withTrainingContainer = (WrappedMetronome) => {
       tempoIncreasePercent
     ]);
     
-    console.log(`[withTrainingContainer] Wrapping ${WrappedMetronome.name || 'Component'} with TrainingContainer`);
-    console.log(`[withTrainingContainer] macroMode=${macroMode}, speedMode=${speedMode}`);
+    // Only log if in development mode
+    if (process.env.NODE_ENV === 'development') {
+      console.debug(`[withTrainingContainer] Wrapping ${WrappedMetronome.name || 'Component'} with TrainingContainer`);
+      console.debug(`[withTrainingContainer] macroMode=${macroMode}, speedMode=${speedMode}`);
+    }
 
     // Create local refs that we control completely
     const localSilenceRef = useRef(false);
@@ -72,7 +75,7 @@ const withTrainingContainer = (WrappedMetronome) => {
     
     // Force update function that increments counter
     const forceUIUpdate = () => {
-      console.log('[withTrainingContainer] Forcing UI update');
+      // Removed noisy logging
       setUpdateCounter(prev => prev + 1);
     };
     
@@ -229,24 +232,20 @@ const withTrainingContainer = (WrappedMetronome) => {
     // Set up global event listeners to sync state and update UI more frequently.
     useEffect(() => {
       const handleMeasureUpdate = (event) => {
-        console.log('[withTrainingContainer] Received measure update event');
+        // Removed excessive logging
         
         if (macroMode === 1) {
           if (!localSilenceRef.current) {
             localMeasureCountRef.current += 1;
-            console.log(`[withTrainingContainer] Measure count: ${localMeasureCountRef.current}/${measuresUntilMute}`);
             
             if (localMeasureCountRef.current >= measuresUntilMute) {
-              console.log('[withTrainingContainer] Entering silence phase');
               localSilenceRef.current = true;
               localMuteCountRef.current = 0;
             }
           } else {
             localMuteCountRef.current += 1;
-            console.log(`[withTrainingContainer] Silence count: ${localMuteCountRef.current}/${muteDurationMeasures}`);
             
             if (localMuteCountRef.current >= muteDurationMeasures) {
-              console.log('[withTrainingContainer] Exiting silence phase');
               localSilenceRef.current = false;
               localMeasureCountRef.current = 0;
             }
@@ -255,14 +254,12 @@ const withTrainingContainer = (WrappedMetronome) => {
           localMeasureCountRef.current += 1;
           const shouldMute = Math.random() < muteProbability;
           if (localSilenceRef.current !== shouldMute) {
-            console.log(`[withTrainingContainer] Random silence: ${shouldMute ? 'Muting' : 'Playing'}`);
             localSilenceRef.current = shouldMute;
           }
         }
         
         if (speedMode === 1 && !localSilenceRef.current) {
           localMeasureCountRef.current += 1;
-          console.log(`[withTrainingContainer] Speed training measure: ${localMeasureCountRef.current}/${measuresUntilSpeedUp}`);
           
           if (localMeasureCountRef.current >= measuresUntilSpeedUp) {
             localMeasureCountRef.current = 0;
@@ -277,7 +274,7 @@ const withTrainingContainer = (WrappedMetronome) => {
       
       window.addEventListener('training-measure-update', handleMeasureUpdate);
       
-      // Polling-Intervall reduziert auf 50ms für schnellere Updates
+      // Polling interval for training mode updates
       const pollInterval = setInterval(() => {
         if (macroMode !== 0 || speedMode !== 0) {
           setMeasureCount(localMeasureCountRef.current);
@@ -285,10 +282,12 @@ const withTrainingContainer = (WrappedMetronome) => {
           setIsSilencePhase(localSilenceRef.current);
           forceUIUpdate();
         }
-      }, 50);
+      }, 150); // Increased interval to reduce update frequency
       
-      // Initialer Aufruf
-      handleMeasureUpdate();
+      // Only run initial update for active training modes
+      if (macroMode !== 0 || speedMode !== 0) {
+        handleMeasureUpdate();
+      }
       
       return () => {
         window.removeEventListener('training-measure-update', handleMeasureUpdate);
