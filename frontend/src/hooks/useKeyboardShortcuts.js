@@ -1,5 +1,3 @@
-// src/hooks/useKeyboardShortcuts.js
-
 import { useEffect, useRef } from 'react';
 
 // Helper function to process tap times and calculate tempo
@@ -11,7 +9,6 @@ const processTapTimesForTempo = (tapTimes) => {
   
   // Calculate tempo with at least 2 taps
   if (tapTimes.length >= 2) {
-    // Calculate average interval
     let sum = 0;
     for (let i = 1; i < tapTimes.length; i++) {
       const interval = tapTimes[i] - tapTimes[i - 1];
@@ -55,7 +52,7 @@ const useKeyboardShortcuts = ({
   const togglePlayRef = useRef(onTogglePlayPause);
   const tapTempoRef = useRef(onTapTempo);
 
-  // Store tap times in this hook's own closure
+  // Store tap times in a ref
   const tapTimesRef = useRef([]);
   
   useEffect(() => {
@@ -66,23 +63,18 @@ const useKeyboardShortcuts = ({
     tapTempoRef.current = onTapTempo;
   }, [onTapTempo]);
   
-  // Add global event listener for tap-tempo events from any component
+  // Global event listener for tap tempo events
   useEffect(() => {
     const handleGlobalTapTempo = (event) => {
       console.log("[KEYBOARD] Received global tap tempo event");
-      // If we have a tap tempo handler, use it
       if (tapTempoRef.current) {
         console.log("[KEYBOARD] Using provided tapTempo handler");
         tapTempoRef.current();
       } else {
-        // Otherwise fall back to the built-in implementation
         console.log("[KEYBOARD] Using built-in implementation for tap event");
-        // Record the tap time
         const tapTime = event.detail?.timestamp || performance.now();
         tapTimesRef.current.push(tapTime);
         console.log(`[KEYBOARD] Global tap recorded: ${tapTimesRef.current.length} total taps`);
-        
-        // Process the taps the same way as keyboard taps
         processTapTimesForTempo(tapTimesRef.current);
       }
     };
@@ -96,7 +88,6 @@ const useKeyboardShortcuts = ({
 
   useEffect(() => {
     const handleKeyDown = (event) => {
-      // Skip shortcuts in input elements
       if (
         event.target.tagName === 'INPUT' ||
         event.target.tagName === 'TEXTAREA' ||
@@ -105,7 +96,6 @@ const useKeyboardShortcuts = ({
         return;
       }
 
-      // SPACE key for play/pause
       if (event.code === 'Space') {
         event.preventDefault();
         const now = Date.now();
@@ -118,22 +108,15 @@ const useKeyboardShortcuts = ({
         }
       }
 
-      // Handle other shortcuts
       switch (event.code) {
         case 'KeyT':
           console.log("[KEYBOARD] 'T' key pressed for tap tempo");
-          
-          // Check if we have a tap tempo function from the metronome
           if (tapTempoRef.current) {
             console.log("[KEYBOARD] Using metronome's tapTempo function");
             tapTempoRef.current();
             break;
           }
-          
-          // If no tap tempo function is provided, fall back to our own implementation
           console.log("[KEYBOARD] No tapTempo function provided, using fallback implementation");
-          
-          // Rate limit for key repeats
           const now = Date.now();
           if (now - lastTapKeyTimeRef.current < 100) {
             console.log("[KEYBOARD] Tap too soon after previous tap, ignoring");
@@ -141,16 +124,11 @@ const useKeyboardShortcuts = ({
           }
           lastTapKeyTimeRef.current = now;
           event.preventDefault();
-          
-          // Record the tap time
           const tapTime = performance.now();
           tapTimesRef.current.push(tapTime);
           console.log(`[KEYBOARD] Tap recorded: ${tapTimesRef.current.length} total taps`);
-          
-          // Process taps to calculate tempo
           processTapTimesForTempo(tapTimesRef.current);
           break;
-          
         case 'KeyR':
           if (onToggleTrainingOverlay) onToggleTrainingOverlay();
           break;
