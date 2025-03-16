@@ -1,42 +1,55 @@
-/* Prevent grid mode animation from becoming too large */
-rect[style*="transform"] {
-    transform: scale(1.03) !important; /* Limit the scale to subtle 1.03 */
-    transition: all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
-  }
-  
-  /* Apply softer shadow effect */
-  rect[style*="boxShadow"] {
-    box-shadow: 0 0 6px rgba(248, 211, 141, 0.5) !important; /* Smaller, softer shadow */
-  }
-  
-  /* Remove any brightness filters that might be applied */
-  rect[style*="filter"] {
-    filter: none !important;
-  }
-  
-  /* Ensure smoother transitions */
-  rect {
-    transition: all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
-  }
-  
-  .grid-square-playing {
-    transform: scale(1.01) !important;
-    box-shadow: 0 0 6px rgba(248, 211, 141, 0.5) !important;
-    filter: none !important;
-  }
-  
-  /* Prevent any scaling transformations from going beyond 1.03 */
-  svg g rect {
-    max-width: 50px;
-    max-height: 50px;
-    transform-origin: center center;
-  }
-  
-  /* Ensure highlight colors are never too bright */
-  .grid-highlight-soft {
-    fill: #f9d69a !important; /* Softer highlight for regular beats */
-  }
-  
-  .grid-highlight-first {
-    fill: #f7ca80 !important; /* Softer highlight for first beat */
-  }
+/* Minimalistic animations for grid mode metronome */
+
+/* Base transition for all grid squares */
+.grid-square {
+  transition: all 0.18s ease-out;
+  transform-origin: center center;
+  will-change: transform, box-shadow;
+}
+
+/* Playing state with minimal animation */
+.grid-square-playing {
+  transform: scale(1.03);
+  box-shadow: 0 2px 4px rgba(245, 194, 109, 0.2);
+}
+
+/* First beat animation (subtle emphasis) */
+.grid-square-first-beat.grid-square-playing {
+  transform: scale(1.04);
+  box-shadow: 0 2px 6px rgba(245, 194, 109, 0.25);
+}
+
+/* Accent beat animation */
+.grid-square-accent.grid-square-playing {
+  transform: scale(1.035);
+  box-shadow: 0 2px 5px rgba(245, 194, 109, 0.22);
+}
+
+/* Normal beat animation */
+.grid-square-normal.grid-square-playing {
+  transform: scale(1.025);
+  box-shadow: 0 1px 3px rgba(245, 194, 109, 0.18);
+}
+
+/* Refined color palette for squares */
+.grid-square-first-beat {
+  background-color: #f5bc5e !important;
+}
+
+.grid-square-accent {
+  background-color: #f8c978 !important;
+}
+
+.grid-square-normal {
+  background-color: #fae3ad !important;
+}
+
+/* Ensure edges are clean */
+.grid-square {
+  border-radius: 4px;
+}
+
+/* Add subtle border for definition instead of shadows when not playing */
+.grid-square-active:not(.grid-square-playing) {
+  box-shadow: inset 0 0 0 1px rgba(245, 194, 109, 0.3);
+}

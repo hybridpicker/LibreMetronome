@@ -43,7 +43,7 @@ const InfoModal = ({ onClose }) => {
             <h2>Metronome Modes</h2>
             <ul>
               <li>
-                <strong>Analog Mode:</strong> Traditional pendulum metronome with a swinging arm visualization.
+                <strong>Pendulum:</strong> Traditional pendulum metronome with a swinging arm visualization.
               </li>
               <li>
                 <strong>Circle Mode:</strong> Modern circular visualization with customizable beats and accents.
@@ -77,7 +77,7 @@ const InfoModal = ({ onClose }) => {
               <li><strong>T:</strong> Tap tempo</li>
               <li><strong>1–9:</strong> Set Beats per Bar</li>
               <li><strong>Left/Right Arrows:</strong> Increase/Decrease tempo by 5 BPM</li>
-              <li><strong>A:</strong> Switch to Analog Mode</li>
+              <li><strong>P:</strong> Switch to Pendulum</li>
               <li><strong>C:</strong> Switch to Circle Mode</li>
               <li><strong>G:</strong> Switch to Grid Mode</li>
               <li><strong>M:</strong> Switch to Multi Circle Mode</li>

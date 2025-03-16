@@ -26,7 +26,7 @@ const InfoContent = () => {
           <h3>Metronome Modes</h3>
           <ul>
             <li>
-              <strong>Analog Mode:</strong> Traditional pendulum metronome with a swinging arm visualization. Note: Swing timing is not available in this mode.
+              <strong>Pendulum:</strong> Traditional pendulum metronome with a swinging arm visualization. Note: Swing timing is not available in this mode.
             </li>
             <li>
               <strong>Circle Mode:</strong> Modern circular visualization with customizable beats and accents.
@@ -59,11 +59,11 @@ const InfoContent = () => {
             <li><span className="key">Space</span> Start/Pause</li>
             <li><span className="key">T</span> Tap tempo</li>
             <li><span className="key">1–9</span> Set Beats per Bar</li>
-            <li><span className="key">←/→</span> Decrease/Increase tempo by 5 BPM</li>
-            <li><span className="key">A</span> Switch to Analog Mode (no swing available)</li>
-            <li><span className="key">C</span> Switch to Circle Mode</li>
-            <li><span className="key">G</span> Switch to Grid Mode</li>
-            <li><span className="key">M</span> Switch to Multi Circle Mode</li>
+            <li><span className="key">←/→</span> +/- Tempo (5 BPM)</li>
+            <li><span className="key">P</span> Switch to Pendulum</li>
+            <li><span className="key">C</span> Switch to Circle</li>
+            <li><span className="key">G</span> Switch to Grid</li>
+            <li><span className="key">M</span> Switch to Multi Circle</li>
             <li><span className="key">I</span> Show Menu (Info tab)</li>
             <li><span className="key">R</span> Show Menu (Training tab)</li>
             <li><span className="key">S</span> Show Menu (Settings tab)</li>
