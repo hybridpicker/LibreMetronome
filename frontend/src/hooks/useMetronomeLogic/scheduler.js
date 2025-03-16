@@ -128,6 +128,8 @@ export function scheduleSubdivision({
   } else {
     // circle mode
     const accentVal = accentsRef.current[subIndex];
+    
+    // Normal processing for all beats without special handling
     if (accentVal === 3) { 
       buffer = firstBufferRef.current; 
       soundType = 'first'; 
@@ -138,6 +140,7 @@ export function scheduleSubdivision({
       buffer = normalBufferRef.current; 
       soundType = 'normal'; 
     }
+    // accentVal = 0 => no sound (explicitly allow first beats to be muted in all circles)
     // accentVal = 0 => no sound
   }
 
