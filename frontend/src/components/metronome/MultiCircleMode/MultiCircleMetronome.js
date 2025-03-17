@@ -18,7 +18,7 @@ import SubdivisionSelector from "../Controls/SubdivisionSelector";
 import AccelerateButton from "../Controls/AccelerateButton";
 import { manualTempoAcceleration } from "../../../hooks/useMetronomeLogic/trainingLogic";
 
-const MAX_CIRCLES = 3;
+const MAX_CIRCLES = 2;
 
 const PlayButton = ({ handlePlayPause, isPaused }) => (
   <div style={{ marginTop: "20px", display: "flex", justifyContent: "center" }}>
