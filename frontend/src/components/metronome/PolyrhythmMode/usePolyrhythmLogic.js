@@ -4,6 +4,16 @@ import { getActiveSoundSet } from '../../../services/soundSetService';
 import { SCHEDULE_AHEAD_TIME } from '../../../hooks/useMetronomeLogic/constants';
 import { shouldMuteThisBeat, handleMeasureBoundary } from '../../../hooks/useMetronomeLogic/trainingLogic';
 
+// Import the animation sync utilities
+import { scheduleAnimationUpdate } from './PolyrhythmLogic/animationSync';
+
+// Animation timing constants
+const ANIMATION_TIMING = {
+  UI_RENDER_DELAY: 0.016,    // 16ms - typical React render cycle
+  ANIMATION_DURATION: 0.04,  // 40ms - very short animation for beats
+  PREDICTION_OFFSET: 0.02    // 20ms - less offset for tighter sync
+};
+
 /**
  * Enhanced Polyrhythm hook that properly aligns the first beats of both circles.
  * 
@@ -252,20 +262,18 @@ export default function usePolyrhythmLogic({
       console.log(`${circle.toUpperCase()} beat ${subIndex} scheduled at ${safeTime.toFixed(3)}`);
     }
 
-    // Schedule UI update callback
-    const delayMs = Math.max(0, (safeTime - now) * 1000);
-    setTimeout(() => {
-      if (!schedulerRunningRef.current) return;
-      
-      // Update UI state based on which circle triggered
-      if (circle === 'inner') {
-        setInnerCurrentSub(subIndex);
-        onInnerBeatTriggered?.(subIndex);
-      } else {
-        setOuterCurrentSub(subIndex);
-        onOuterBeatTriggered?.(subIndex);
-      }
-    }, delayMs);
+    // NEW: Use improved animation timing calculation
+    scheduleAnimationUpdate({
+      audioTime: safeTime,
+      audioCtx: ctx,
+      beatIndex: subIndex,
+      isInnerCircle: circle === 'inner',
+      setInnerCurrentSubFn: setInnerCurrentSub,
+      setOuterCurrentSubFn: setOuterCurrentSub,
+      onInnerBeatTriggeredFn: onInnerBeatTriggered,
+      onOuterBeatTriggeredFn: onOuterBeatTriggered,
+      uiAnimationDuration: ANIMATION_TIMING.ANIMATION_DURATION
+    });
 
   }, [onInnerBeatTriggered, onOuterBeatTriggered]);
 
@@ -278,7 +286,7 @@ export default function usePolyrhythmLogic({
     const measureDuration = getMeasureDuration();
     console.log(`Scheduling measure #${measureIndex}, innerBeats=${innerBeatsRef.current}, outerBeats=${outerBeatsRef.current}`);
 
-          // Schedule first beats for both circles at EXACTLY the same time
+    // Schedule first beats for both circles at EXACTLY the same time
     // This is the most critical part for polyrhythms - the synchronized downbeat
     const firstBeatTime = measureStartTime;
     
