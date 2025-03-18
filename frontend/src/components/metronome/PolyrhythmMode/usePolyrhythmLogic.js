@@ -10,7 +10,7 @@ import { shouldMuteThisBeat, handleMeasureBoundary } from '../../../hooks/useMet
  * 
  * Key concepts:
  * - Uses a single Web Audio API timer for precise timing
- * - Maintains synchronized first beats across both circles
+ * - Maintains synchronized first beats (downbeats) across both circles
  * - Calculates separate intervals for each circle based on subdivisions
  * - Integrates with training mode features
  * 
@@ -58,6 +58,9 @@ export default function usePolyrhythmLogic({
   const nextInnerBeatRef = useRef(0);
   const nextOuterBeatRef = useRef(0);
   
+  // Track active nodes for cleanup
+  const activeNodesRef = useRef([]);
+  
   // For training mode
   const measureCountRef = useRef(0);
   const muteMeasureCountRef = useRef(0);
@@ -65,8 +68,8 @@ export default function usePolyrhythmLogic({
   const currentCycleStartTimeRef = useRef(0);
   const measureProcessedRef = useRef(false);
   
-  // Track active nodes for cleanup
-  const activeNodesRef = useRef([]);
+  // Flag to mark that the unified first beat has already been scheduled for this cycle.
+  const firstBeatTriggeredRef = useRef(false);
   
   // State for actual BPM (might change during training)
   const [actualBpm, setActualBpm] = useState(tempo);
@@ -130,41 +133,24 @@ export default function usePolyrhythmLogic({
   }, []);
 
   /**
-   * Calculate the least common multiple (LCM) of two numbers
-   * Used to determine when both rhythms will realign
+   * Calculate the least common multiple (LCM) of two numbers.
    */
   const lcm = useCallback((a, b) => {
-    // Helper to find greatest common divisor
     const gcd = (x, y) => y === 0 ? x : gcd(y, x % y);
     const result = (a * b) / gcd(a, b);
-    
-    // Debug logging for LCM calculation
     console.log(`LCM calculation: ${a}:${b} = ${result}`);
-    
     return result;
   }, []);
 
   /**
-   * Calculate timing information for both circles
-   * - Calculates interval for each circle based on global BPM
-   * - Determines the common cycle length (when both patterns realign)
+   * Calculate timing information for both circles.
    */
   const getTimingInfo = useCallback(() => {
-    // Convert BPM to seconds per beat
     const secondsPerBeat = 60 / tempoRef.current;
-    
-    // Calculate intervals for each circle
-    // Formula: interval = (60 / BPM) / numberOfBeats
     const innerInterval = secondsPerBeat / innerBeatsRef.current;
     const outerInterval = secondsPerBeat / outerBeatsRef.current;
-    
-    // Calculate when both patterns will realign (complete polyrhythm cycle)
     const commonCycleLCM = lcm(innerBeatsRef.current, outerBeatsRef.current);
-    
-    // Duration of complete cycle in seconds
     const cycleDuration = (commonCycleLCM / innerBeatsRef.current) * innerInterval;
-    
-    // Debug logging for polyrhythm timing
     console.log(`Polyrhythm timing:
       - Tempo: ${tempoRef.current} BPM
       - Inner beats: ${innerBeatsRef.current}, interval: ${innerInterval.toFixed(3)}s
@@ -173,174 +159,104 @@ export default function usePolyrhythmLogic({
       - Inner beats in cycle: ${commonCycleLCM / innerBeatsRef.current}
       - Outer beats in cycle: ${commonCycleLCM / outerBeatsRef.current}
     `);
-    
-    return {
-      innerInterval,
-      outerInterval,
-      cycleDuration,
-      commonCycleLCM
-    };
+    return { innerInterval, outerInterval, cycleDuration, commonCycleLCM };
   }, [lcm]);
 
   /**
-   * Schedule audio playback for a beat
-   * @param {number} time Precise time when the beat should play
-   * @param {number} beatIndex Which beat in the pattern (0-indexed)
-   * @param {boolean} isInnerCircle Whether this is for inner or outer circle
-   * @param {boolean} mute Whether audio should be muted (for training mode)
-   * @param {boolean} isFirstBeatOfBoth Optional flag to indicate this is the synchronized first beat of both circles
+   * Schedule audio playback for a beat.
+   * If the requested time is in the past, play immediately.
+   * When a first beat (beat index 0) is played, log the event.
    */
   const scheduleBeat = useCallback((time, beatIndex, isInnerCircle, mute = false, isFirstBeatOfBoth = false) => {
     if (!audioCtxRef.current || mute) return;
-    
-    // Get the right accent array for this circle
     const accents = isInnerCircle ? innerAccentsRef.current : outerAccentsRef.current;
-    
-    // Determine which accent value to use (0=muted, 1=normal, 2=accent, 3=first) 
     const accentValue = beatIndex < accents.length ? accents[beatIndex] : 1;
-    
-    // Skip if explicitly muted in accent pattern
     if (accentValue === 0) return;
-    
-    // Select the right buffer based on accent value
     let buffer = normalBufferRef.current;
     if (accentValue === 3) {
       buffer = firstBufferRef.current;
     } else if (accentValue === 2) {
       buffer = accentBufferRef.current;
     }
-    
     if (!buffer) return;
-    
-    // Create and configure audio source
     const source = audioCtxRef.current.createBufferSource();
     source.buffer = buffer;
-    
-    // Create volume node
     const gainNode = audioCtxRef.current.createGain();
     gainNode.gain.value = volumeRef.current;
-    
-    // Connect audio nodes
     source.connect(gainNode);
     gainNode.connect(audioCtxRef.current.destination);
-    
-    // Log when scheduling a first beat (for debugging)
     if (beatIndex === 0 || isFirstBeatOfBoth) {
       const circleType = isInnerCircle ? 'INNER' : 'OUTER';
       console.log(`Scheduling ${circleType} FIRST BEAT at time ${time.toFixed(4)}s${isFirstBeatOfBoth ? ' (UNIFIED)' : ''}`);
     }
-    
-    // Schedule precise playback
-    source.start(time);
-    
-    // Store for cleanup
+    const currentTime = audioCtxRef.current.currentTime;
+    const safeTime = time < currentTime ? currentTime : time;
+    source.start(safeTime);
     activeNodesRef.current.push({ source, gainNode });
-    
-    // Set up cleanup once audio is done playing
     source.onended = () => {
       source.disconnect();
       gainNode.disconnect();
       const index = activeNodesRef.current.findIndex(n => n.source === source);
-      if (index !== -1) {
-        activeNodesRef.current.splice(index, 1);
-      }
+      if (index !== -1) activeNodesRef.current.splice(index, 1);
     };
-    
-    // Create visual UI updates scheduled for the same time
-    // We need to schedule these relative to current time
-    const delayUntilBeat = Math.max(0, (time - audioCtxRef.current.currentTime) * 1000);
-    
+    const delayUntilBeat = Math.max(0, (safeTime - currentTime) * 1000);
     setTimeout(() => {
-      // Only update if we're still running (avoid stale updates if stopped)
       if (!schedulerRunningRef.current) return;
-      
-      // Update UI state
+      // Log first-beat playback only once for unified beats (log only for inner circle)
+      if (beatIndex === 0 && (!isFirstBeatOfBoth || (isFirstBeatOfBoth && isInnerCircle))) {
+        console.log(`PLAYED: FIRST BEAT at ${audioCtxRef.current.currentTime.toFixed(4)}s`);
+      }
       if (isInnerCircle) {
         setInnerCurrentBeat(beatIndex);
-        if (typeof onInnerBeatTriggered === 'function') {
-          onInnerBeatTriggered(beatIndex);
-        }
+        if (typeof onInnerBeatTriggered === 'function') onInnerBeatTriggered(beatIndex);
       } else {
         setOuterCurrentBeat(beatIndex);
-        if (typeof onOuterBeatTriggered === 'function') {
-          onOuterBeatTriggered(beatIndex);
-        }
+        if (typeof onOuterBeatTriggered === 'function') onOuterBeatTriggered(beatIndex);
       }
     }, delayUntilBeat);
   }, [onInnerBeatTriggered, onOuterBeatTriggered]);
 
   /**
-   * This function specifically schedules the unified first beat for both circles
-   * Ensures that both inner and outer first beats occur at the exact same time
-   * @param {number} time Precise time when the unified first beat should play
-   * @param {boolean} mute Whether audio should be muted (for training mode)
+   * Schedule the unified first beat for both circles.
+   * Sets the flag to avoid duplicate scheduling of beat 0 in the scheduler loop.
    */
   const scheduleUnifiedFirstBeat = useCallback((time, mute = false) => {
-    // Log unified first beat scheduling
     console.log(`=== SCHEDULING UNIFIED FIRST BEAT at ${time.toFixed(4)}s ===`);
-    
-    // Schedule the inner circle first beat with special flag
+    firstBeatTriggeredRef.current = true;
     scheduleBeat(time, 0, true, mute, true);
-    
-    // Schedule the outer circle first beat with special flag
     scheduleBeat(time, 0, false, mute, true);
-    
-    // Update UI states immediately for both circles
     const delayUntilBeat = Math.max(0, (time - audioCtxRef.current.currentTime) * 1000);
     setTimeout(() => {
       if (!schedulerRunningRef.current) return;
-      
       setInnerCurrentBeat(0);
       setOuterCurrentBeat(0);
-      
-      if (typeof onInnerBeatTriggered === 'function') {
-        onInnerBeatTriggered(0);
-      }
-      
-      if (typeof onOuterBeatTriggered === 'function') {
-        onOuterBeatTriggered(0);
-      }
+      if (typeof onInnerBeatTriggered === 'function') onInnerBeatTriggered(0);
+      if (typeof onOuterBeatTriggered === 'function') onOuterBeatTriggered(0);
     }, delayUntilBeat);
   }, [scheduleBeat, onInnerBeatTriggered, onOuterBeatTriggered]);
 
   /**
-   * The main scheduler loop that runs repeatedly
-   * Schedules beats ahead of time for precise timing
+   * The main scheduler loop that repeatedly schedules beats.
    */
   const schedulerLoop = useCallback(() => {
     if (!audioCtxRef.current || !schedulerRunningRef.current) return;
-    
     const now = audioCtxRef.current.currentTime;
     const { innerInterval, outerInterval, cycleDuration, commonCycleLCM } = getTimingInfo();
-    
-    // Schedule ahead window (how far into the future we schedule beats)
     const scheduleAheadTime = now + SCHEDULE_AHEAD_TIME;
-    
-    // Only schedule new beats if necessary
     if (lastScheduleTimeRef.current >= scheduleAheadTime) return;
-    
-    // First, check if we need to process measure boundaries for training mode
-    // This happens at the start of each common cycle
     const timeSinceStart = now - startTimeRef.current;
-    const currentCycleStartTime = startTimeRef.current + 
-      (Math.floor(timeSinceStart / cycleDuration) * cycleDuration);
-    
-    // Calculate number of completed cycles since start
+    const currentCycleStartTime = startTimeRef.current + (Math.floor(timeSinceStart / cycleDuration) * cycleDuration);
     const completedCycles = Math.floor(timeSinceStart / cycleDuration);
-    
-    // Detect new measure/cycle boundaries for training mode
     if (currentCycleStartTime > currentCycleStartTimeRef.current) {
-      // Log cycle boundaries for debugging
       console.log(`New polyrhythm cycle at ${now.toFixed(3)}s, cycle #${completedCycles}`);
       console.log(`Expected alignment: Inner beat ${(completedCycles * commonCycleLCM) % innerBeatsRef.current}, Outer beat ${(completedCycles * commonCycleLCM) % outerBeatsRef.current}`);
-      
-      // New cycle detected - handle training logic
       currentCycleStartTimeRef.current = currentCycleStartTime;
-      
+      // Reset the first-beat flag and pointers for the new cycle.
+      firstBeatTriggeredRef.current = false;
+      nextInnerBeatRef.current = currentCycleStartTime;
+      nextOuterBeatRef.current = currentCycleStartTime;
       if (!measureProcessedRef.current) {
         measureProcessedRef.current = true;
-        
-        // Handle training mode logic at measure boundaries
         handleMeasureBoundary({
           measureCountRef,
           muteMeasureCountRef,
@@ -354,112 +270,65 @@ export default function usePolyrhythmLogic({
           measuresUntilSpeedUp,
           tempoIncreasePercent
         });
-        
-        // Update UI if tempo changed
-        if (tempoRef.current !== actualBpm) {
-          setActualBpm(tempoRef.current);
-        }
+        if (tempoRef.current !== actualBpm) setActualBpm(tempoRef.current);
       }
     } else {
       measureProcessedRef.current = false;
     }
-    
-    // Determine if we should mute audio based on training mode
     const doMute = shouldMuteThisBeat({
       macroMode: macroModeRef.current,
       muteProbability,
       isSilencePhaseRef
     });
-    
-    // Calculate the next cycle start that falls within our scheduling window
     const nextCycleStart = currentCycleStartTime + cycleDuration;
-    
-    // If the next cycle start is within our scheduling window, we need to schedule
-    // a unified first beat for both circles
-    if (nextCycleStart < scheduleAheadTime) {
-      // Schedule unified first beat for both circles at the exact same time
+    const timeUntilNextCycle = nextCycleStart - now;
+    // Only schedule the unified first beat once per cycle if the next cycle is not imminent (e.g., more than 20ms away)
+    if (nextCycleStart < scheduleAheadTime && !firstBeatTriggeredRef.current && timeUntilNextCycle > 0.02) {
       scheduleUnifiedFirstBeat(nextCycleStart, doMute);
     }
-    
-    // Schedule inner circle beats, but skip scheduling at cycle start points (those are handled by scheduleUnifiedFirstBeat)
+    // Use a slightly relaxed threshold (0.01 s) to detect cycle start.
+    const cycleStartThreshold = 0.01;
     while (nextInnerBeatRef.current < scheduleAheadTime) {
-      // Calculate elapsed time since start
       const elapsedTime = nextInnerBeatRef.current - startTimeRef.current;
-      
-      // Calculate which beat this is (0-indexed) within the pattern
       const beatCount = Math.floor(elapsedTime / innerInterval);
       const beatIndex = beatCount % innerBeatsRef.current;
-      
-      // Only schedule if this isn't a cycle start (unified beat) or if it's not the first beat
-      const isCycleStart = Math.abs(nextInnerBeatRef.current - nextCycleStart) < 0.001;
-      
-      if (!isCycleStart || beatIndex !== 0) {
-        // Debug logging for inner beat scheduling (but not too verbose)
+      const isCycleStart = Math.abs(nextInnerBeatRef.current - nextCycleStart) < cycleStartThreshold;
+      if (isCycleStart && beatIndex === 0 && firstBeatTriggeredRef.current) {
+        // Skip duplicate scheduling of the first beat.
+      } else {
         if (beatIndex === 0) {
           console.log(`Scheduling inner first beat #${beatCount} at ${nextInnerBeatRef.current.toFixed(3)}s (beat index: ${beatIndex})`);
         }
-        
-        // Schedule the beat audio and UI update
-        scheduleBeat(
-          nextInnerBeatRef.current,
-          beatIndex,
-          true, // isInnerCircle = true
-          doMute
-        );
+        scheduleBeat(nextInnerBeatRef.current, beatIndex, true, doMute);
       }
-      
-      // Move to next beat time
       nextInnerBeatRef.current += innerInterval;
     }
-    
-    // Schedule outer circle beats, but skip scheduling at cycle start points (those are handled by scheduleUnifiedFirstBeat)
     while (nextOuterBeatRef.current < scheduleAheadTime) {
-      // Calculate elapsed time since start
       const elapsedTime = nextOuterBeatRef.current - startTimeRef.current;
-      
-      // Calculate which beat this is (0-indexed) within the pattern
       const beatCount = Math.floor(elapsedTime / outerInterval);
       const beatIndex = beatCount % outerBeatsRef.current;
-      
-      // Only schedule if this isn't a cycle start (unified beat) or if it's not the first beat
-      const isCycleStart = Math.abs(nextOuterBeatRef.current - nextCycleStart) < 0.001;
-      
-      if (!isCycleStart || beatIndex !== 0) {
-        // Debug logging for outer beat scheduling (but not too verbose)
+      const isCycleStart = Math.abs(nextOuterBeatRef.current - nextCycleStart) < cycleStartThreshold;
+      if (isCycleStart && beatIndex === 0 && firstBeatTriggeredRef.current) {
+        // Skip duplicate scheduling of the first beat.
+      } else {
         if (beatIndex === 0) {
           console.log(`Scheduling outer first beat #${beatCount} at ${nextOuterBeatRef.current.toFixed(3)}s (beat index: ${beatIndex})`);
         }
-        
-        // Schedule the beat audio and UI update
-        scheduleBeat(
-          nextOuterBeatRef.current,
-          beatIndex,
-          false, // isInnerCircle = false
-          doMute
-        );
+        scheduleBeat(nextOuterBeatRef.current, beatIndex, false, doMute);
       }
-      
-      // Move to next beat time
       nextOuterBeatRef.current += outerInterval;
     }
-    
-    // Update last schedule time
     lastScheduleTimeRef.current = scheduleAheadTime;
   }, [getTimingInfo, scheduleBeat, scheduleUnifiedFirstBeat, speedMode, measuresUntilMute, 
-      muteDurationMeasures, muteProbability, measuresUntilSpeedUp, 
-      tempoIncreasePercent, actualBpm]);
+      muteDurationMeasures, muteProbability, measuresUntilSpeedUp, tempoIncreasePercent, actualBpm]);
 
   /**
-   * Start the scheduler and begin playback
-   * Both circles start synchronized at the first beat
+   * Start the scheduler and begin playback.
+   * The unified first beat is scheduled immediately using the current time.
    */
   const startScheduler = useCallback(async () => {
-    if (schedulerRunningRef.current) {
-      return; // Already running
-    }
-
+    if (schedulerRunningRef.current) return;
     try {
-      // Initialize or resume audio context
       if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
         audioCtxRef.current = initAudioContext();
         await loadClickBuffers({
@@ -471,15 +340,8 @@ export default function usePolyrhythmLogic({
       } else if (audioCtxRef.current.state === 'suspended') {
         await audioCtxRef.current.resume();
       }
-
-      // Add a small delay before starting to ensure audio context is ready
-      const startDelay = 0.1; // 100ms buffer
-      
-      // CRITICAL: Both circles must start at the SAME time for first beat sync
-      // This is the key to ensuring the first beats (downbeats) stay synchronized throughout
+      const startDelay = 0; // Immediate playback
       startTimeRef.current = audioCtxRef.current.currentTime + startDelay;
-      
-      // Log polyrhythm setup
       const { innerInterval, outerInterval, cycleDuration, commonCycleLCM } = getTimingInfo();
       console.log(`
 ========================================
@@ -491,131 +353,84 @@ Outer beats: ${outerBeatsRef.current}, interval: ${outerInterval.toFixed(3)}s
 LCM: ${commonCycleLCM} beats, cycle duration: ${cycleDuration.toFixed(3)}s
 ----------------------------------------
 Start time: ${startTimeRef.current.toFixed(3)}s
-UNIFIED FIRST BEAT: Both circles will trigger first beat at the same time
+UNIFIED FIRST BEAT: Both circles will trigger first beat immediately
 ========================================
       `);
-      
-      // Set initial beat times to the start time so both circles begin together
       nextInnerBeatRef.current = startTimeRef.current;
       nextOuterBeatRef.current = startTimeRef.current;
-      
-      // Reset training mode state
       measureCountRef.current = 0;
       muteMeasureCountRef.current = 0;
       isSilencePhaseRef.current = false;
       currentCycleStartTimeRef.current = startTimeRef.current;
       measureProcessedRef.current = false;
-      
-      // Reset the last scheduled time
       lastScheduleTimeRef.current = 0;
-
-      // Reset UI position to the first beat
       setInnerCurrentBeat(0);
       setOuterCurrentBeat(0);
-      
-      // Start with a unified first beat for both circles
-      // This is critical for ensuring the downbeats stay synchronized
-      scheduleUnifiedFirstBeat(startTimeRef.current, false);
-      
-      // Start the scheduler loop
+      // Removed initial unified beat scheduling from startScheduler.
+      // The scheduler loop will handle the unified first beat.
       schedulerRunningRef.current = true;
-      lookaheadIntervalRef.current = setInterval(schedulerLoop, 25); // 40Hz update rate
+      lookaheadIntervalRef.current = setInterval(schedulerLoop, 25);
     } catch (err) {
       console.error('Error starting scheduler:', err);
     }
   }, [getTimingInfo, schedulerLoop, scheduleUnifiedFirstBeat]);
 
   /**
-   * Stop the scheduler and all audio playback
+   * Stop the scheduler and all audio playback.
    */
   const stopScheduler = useCallback(() => {
     if (lookaheadIntervalRef.current) {
       clearInterval(lookaheadIntervalRef.current);
       lookaheadIntervalRef.current = null;
     }
-
     schedulerRunningRef.current = false;
-
-    // Stop and disconnect all active audio nodes
     activeNodesRef.current.forEach(({ source, gainNode }) => {
       try {
         if (source.stop) source.stop(0);
         source.disconnect();
         gainNode.disconnect();
       } catch (e) {
-        // Ignore cleanup errors
+        // ignore cleanup errors
       }
     });
-    
     activeNodesRef.current = [];
-    
-    // Reset beat positions in UI
     setInnerCurrentBeat(0);
     setOuterCurrentBeat(0);
   }, []);
 
-  // Reference for storing tap timestamps
+  // Tap tempo and reloadSounds functions
   const tapTimesRef = useRef([]);
-  
-  /**
-   * Tap tempo implementation for tempo detection
-   * Calculates tempo based on recent tap intervals
-   */
   const tapTempo = useCallback(() => {
     const now = performance.now();
-    
-    // Add this tap to the history
     tapTimesRef.current.push(now);
-    
-    // Need at least 2 taps to calculate tempo
     if (tapTimesRef.current.length < 2) return tempoRef.current;
-    
-    // Only use the most recent taps (sliding window)
     if (tapTimesRef.current.length > 4) {
       tapTimesRef.current = tapTimesRef.current.slice(-4);
     }
-    
-    // Calculate average interval between taps
-    let sum = 0;
-    let count = 0;
-    
+    let sum = 0, count = 0;
     for (let i = 1; i < tapTimesRef.current.length; i++) {
       const interval = tapTimesRef.current[i] - tapTimesRef.current[i - 1];
-      
-      // Filter out unreasonable intervals (too fast or too slow)
       if (interval > 200 && interval < 2000) {
         sum += interval;
         count++;
       }
     }
-    
     if (count > 0) {
-      // Convert average interval to BPM
       const avgMs = sum / count;
       const newTempo = Math.round(60000 / avgMs);
-      
-      // Clamp to reasonable BPM range
       const clampedTempo = Math.min(Math.max(newTempo, 30), 240);
-      
-      // Update tempo
       tempoRef.current = clampedTempo;
       setActualBpm(clampedTempo);
-      
       return clampedTempo;
     }
-    
     return tempoRef.current;
   }, []);
 
-  /**
-   * Reload sound buffers (e.g. after a settings change)
-   */
   const reloadSounds = useCallback(async () => {
     try {
       if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
         audioCtxRef.current = initAudioContext();
       }
-      
       const soundSet = await getActiveSoundSet();
       await loadClickBuffers({
         audioCtx: audioCtxRef.current,
@@ -624,7 +439,6 @@ UNIFIED FIRST BEAT: Both circles will trigger first beat at the same time
         firstBufferRef,
         soundSet
       });
-      
       return true;
     } catch (error) {
       console.error('Error reloading sounds:', error);
@@ -632,10 +446,8 @@ UNIFIED FIRST BEAT: Both circles will trigger first beat at the same time
     }
   }, []);
 
-  // Start/stop based on isPaused prop
   useEffect(() => {
     isPausedRef.current = isPaused;
-    
     if (isPaused) {
       stopScheduler();
     } else {
@@ -643,29 +455,22 @@ UNIFIED FIRST BEAT: Both circles will trigger first beat at the same time
     }
   }, [isPaused, startScheduler, stopScheduler]);
 
-  // Restart when beat counts change
   useEffect(() => {
     if (!isPaused && schedulerRunningRef.current) {
       stopScheduler();
-      // Small delay to ensure clean restart
       setTimeout(() => {
         startScheduler();
       }, 50);
     }
   }, [innerBeats, outerBeats, isPaused, stopScheduler, startScheduler]);
 
-  // Update tempo when it changes
   useEffect(() => {
     if (tempo !== tempoRef.current) {
       tempoRef.current = tempo;
-      
-      if (tempo !== actualBpm) {
-        setActualBpm(tempo);
-      }
+      if (tempo !== actualBpm) setActualBpm(tempo);
     }
   }, [tempo, actualBpm]);
 
-  // Return values and functions for component use
   return {
     innerCurrentSubdivision: innerCurrentBeat,
     outerCurrentSubdivision: outerCurrentBeat,
