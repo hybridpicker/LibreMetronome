@@ -37,7 +37,7 @@
 
 /* Icon container */
 .mode-icon {
-  display: none /* Placeholder for SVG*/
+  display: none !important; /* Placeholder for SVG*/
   width: 24px;
   height: 24px;
   margin-bottom: 6px;
