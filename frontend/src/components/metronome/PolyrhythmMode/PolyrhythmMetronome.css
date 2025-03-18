@@ -1,0 +1,368 @@
+/* src/components/metronome/PolyrhythmMode/PolyrhythmMetronome.css */
+
+.polyrhythm-container {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto 20px;
+}
+
+.polyrhythm-circles {
+  position: relative;
+  margin: 0 auto;
+}
+
+.inner-circle, .outer-circle {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px dashed #ccc;
+  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  box-sizing: border-box;
+}
+
+.inner-circle.active, 
+.outer-circle.active {
+  border: 2px solid transparent;
+  box-shadow: 0 0 0 3px #00A0A0, 0 0 10px rgba(0, 160, 160, 0.6);
+}
+
+/* Updated dot animation with simpler scaling */
+.beat-dot {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #fce9c6;
+  cursor: default;
+  transition: all 0.15s ease-out,
+              left 0.3s cubic-bezier(0.25, 0.1, 0.25, 1),
+              top 0.3s cubic-bezier(0.25, 0.1, 0.25, 1),
+              background-color 0.3s ease;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Simple scaling animation for active dots */
+.beat-dot.active {
+  transform: translate(-50%, -50%) scale(1.25);
+  box-shadow: 0 0 8px rgba(248, 211, 141, 0.6);
+}
+
+.beat-dot.first-beat {
+  background-color: #00A0A0;
+}
+
+.beat-dot.inner-beat {
+  background-color: #fce9c6; /* Lighter yellow */
+}
+
+.beat-dot.outer-beat {
+  background-color: #f6cc7c; /* Darker yellow */
+}
+
+.beat-dot.inner-beat.accent-beat {
+  background-color: #f5d69c; /* Accented inner beat */
+  box-shadow: 0 0 8px rgba(245, 214, 156, 0.6);
+}
+
+.beat-dot.outer-beat.accent-beat {
+  background-color: #f5bb57; /* Accented outer beat */
+  box-shadow: 0 0 8px rgba(245, 187, 87, 0.6);
+}
+
+.beat-dot.muted {
+  background-color: #e8e8e8;
+  opacity: 0.7;
+}
+
+/* Transition indicator classes */
+.transitioning {
+  opacity: 0.7 !important;
+}
+
+.beat-dot.transitioning {
+  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1),
+              left 0.3s cubic-bezier(0.25, 0.1, 0.25, 1),
+              top 0.3s cubic-bezier(0.25, 0.1, 0.25, 1),
+              background-color 0.3s ease;
+}
+
+/* Configuration UI */
+.polyrhythm-controls {
+  max-width: 600px;
+  margin: 0 auto 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.polyrhythm-config {
+  text-align: center;
+}
+
+.polyrhythm-label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #333;
+  transition: all 0.3s ease;
+}
+
+.polyrhythm-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.polyrhythm-button {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  border: 1px solid #ccc;
+  background-color: white;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.25s ease;
+}
+
+.polyrhythm-button:hover {
+  background-color: #f5f5f5;
+  transform: translateY(-1px);
+}
+
+.polyrhythm-button.active {
+  background-color: #00A0A0;
+  color: white;
+  border-color: #00A0A0;
+  transform: scale(1.05);
+}
+
+.polyrhythm-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.polyrhythm-ratio {
+  margin-bottom: 20px;
+  font-size: 16px;
+  color: #666;
+  transition: all 0.3s ease;
+}
+
+.ratio-value {
+  font-weight: bold;
+  color: #00A0A0;
+  transition: all 0.3s ease;
+}
+
+/* Sliders from BaseMetronomeLayout */
+.sliders-container {
+  width: 100%;
+  max-width: 400px;
+  margin: 20px auto;
+  padding: 0 10px;
+}
+
+.sliders-container label {
+  display: block;
+  margin-bottom: 15px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.sliders-container input[type="range"] {
+  width: 100%;
+  -webkit-appearance: none;
+  margin-top: 8px;
+  height: 6px;
+  border-radius: 3px;
+  background: #e0e0e0;
+  outline: none;
+}
+
+.sliders-container input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #00A0A0;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sliders-container input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #00A0A0;
+  cursor: pointer;
+  border: none;
+}
+
+.sliders-container input[type="range"]::-webkit-slider-thumb:hover {
+  background: #008080;
+  transform: scale(1.1);
+}
+
+.sliders-container input[type="range"]::-moz-range-thumb:hover {
+  background: #008080;
+  transform: scale(1.1);
+}
+
+.sliders-container input[type="range"]:disabled {
+  opacity: 0.5;
+}
+
+.sliders-container input[type="range"]:disabled::-webkit-slider-thumb {
+  cursor: not-allowed;
+}
+
+.sliders-container input[type="range"]:disabled::-moz-range-thumb {
+  cursor: not-allowed;
+}
+
+/* Switch circles button styles */
+.switch-circles-container {
+  margin: 5px auto 20px;
+  text-align: center;
+}
+
+.switch-circles-button {
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.switch-circles-button:hover {
+  background-color: #008080 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.switch-circles-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.switch-circles-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Legend */
+.polyrhythm-legend {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin: 20px auto;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: #666;
+  transition: opacity 0.3s ease;
+}
+
+.legend-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.legend-color.inner-beat {
+  background-color: #fce9c6;
+}
+
+.legend-color.outer-beat {
+  background-color: #f6cc7c;
+}
+
+.legend-color.first-beat {
+  background-color: #00A0A0;
+}
+
+/* Play/pause button transitions */
+.play-pause-button {
+  transition: opacity 0.2s ease;
+}
+
+.play-pause-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.play-pause-icon {
+  transition: transform 0.2s ease;
+}
+
+.play-pause-button:active .play-pause-icon {
+  transform: scale(0.95);
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .polyrhythm-controls {
+    flex-direction: column;
+  }
+  
+  .polyrhythm-config {
+    width: 100%;
+  }
+  
+  .polyrhythm-button {
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+  }
+  
+  .polyrhythm-legend {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .sliders-container {
+    max-width: 320px;
+  }
+}
+
+@media (min-width: 769px) {
+  .polyrhythm-controls {
+    flex-direction: row;
+    justify-content: space-around;
+  }
+  
+  .polyrhythm-config {
+    flex: 1;
+    max-width: 280px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .beat-dot {
+    transition: none !important;
+  }
+  
+  .slider-container input[type="range"] {
+    transition: opacity 0.2s ease !important;
+  }
+  
+  .inner-circle, .outer-circle,
+  .polyrhythm-button,
+  .switch-circles-button {
+    transition: opacity 0.2s ease !important;
+  }
+}
