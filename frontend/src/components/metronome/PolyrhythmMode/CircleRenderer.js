@@ -16,7 +16,8 @@ const CircleRenderer = ({
   handleToggleAccent,
   macroMode,
   isSilencePhaseRef,
-  isTransitioning = false
+  isTransitioning = false,
+  circleColorSwapped = false  // New prop to handle color swapping
 }) => {
   // Size calculations for inner and outer circles
   const outerRadius = containerSize / 2;
@@ -73,6 +74,8 @@ const CircleRenderer = ({
           beatType="outer"
           silenceModeActive={silenceModeActive}
           isTransitioning={isTransitioning}
+          // Pass the color swap state to control beat colors
+          colorSwapped={circleColorSwapped}
         />
       </div>
       
@@ -105,6 +108,8 @@ const CircleRenderer = ({
           beatType="inner"
           silenceModeActive={silenceModeActive}
           isTransitioning={isTransitioning}
+          // Pass the color swap state to control beat colors
+          colorSwapped={circleColorSwapped}
         />
       </div>
     </div>

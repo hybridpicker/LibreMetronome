@@ -10,7 +10,8 @@ const BeatVisualizer = ({
   handleToggleAccent,
   beatType = 'inner',
   silenceModeActive = false,
-  isTransitioning = false
+  isTransitioning = false,
+  colorSwapped = false // New prop to handle color swapping
 }) => {
   // Keep track of previous subdivision to detect changes
   const prevSubdivisionRef = useRef(currentSubdivision);
@@ -61,13 +62,24 @@ const BeatVisualizer = ({
         if (isActive) beatClasses.push('active');
         if (isTransitioning) beatClasses.push('transitioning');
         
-        // Determine styling based on accent value
+        // Determine styling based on accent value and swap state
+        // First beat always uses the first-beat style regardless of swapping
         if (accentValue === 3) {
           beatClasses.push('first-beat');
-        } else if (accentValue === 2) {
-          beatClasses.push(`${beatType}-beat accent-beat`);
         } else {
-          beatClasses.push(`${beatType}-beat`);
+          // For normal and accent beats, apply the swapped class if needed
+          if (colorSwapped) {
+            // Swap inner and outer beat colors
+            beatClasses.push(beatType === 'inner' ? 'outer-beat' : 'inner-beat');
+          } else {
+            // Use default colors (not swapped)
+            beatClasses.push(beatType === 'inner' ? 'inner-beat' : 'outer-beat');
+          }
+          
+          // Add accent class if needed
+          if (accentValue === 2) {
+            beatClasses.push('accent-beat');
+          }
         }
         
         // Add muted class if in silence mode
@@ -90,7 +102,8 @@ const BeatVisualizer = ({
             : "transform 100ms cubic-bezier(0.25, 0.1, 0.25, 1), opacity 100ms ease, left 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), top 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)",
           willChange: "transform", // Performance hint for browser
           WebkitBackfaceVisibility: "hidden", // Additional GPU acceleration
-          backfaceVisibility: "hidden"
+          backfaceVisibility: "hidden",
+          cursor: 'default' // Changed from pointer to default
         };
 
         return (
@@ -98,7 +111,7 @@ const BeatVisualizer = ({
             key={i}
             className={beatClasses.join(' ')}
             style={styles}
-            onClick={() => !isTransitioning && handleToggleAccent(i)}
+            // No onClick handler since beats should not be clickable
           />
         );
       })}
