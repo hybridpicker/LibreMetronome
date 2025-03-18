@@ -1,3 +1,5 @@
+// src/hooks/useMetronomeLogic/scheduler.js
+
 import { SCHEDULE_AHEAD_TIME } from './constants';
 
 /**
@@ -13,51 +15,43 @@ function schedulePlay({
 }) {
   if (!buffer || !audioCtx) return;
   const now = audioCtx.currentTime;
-  
-  // Ensure the scheduling time is always in the future
-  // Add a small safety buffer (5ms instead of 10ms) for more precise timing
+
+  // Drastically reduce the forced offset to ~1 ms if behind schedule:
   if (when <= now) {
-    when = now + 0.005;
+    when = now + 0.001; // was 0.005 or 0.010 - now only 1 ms
   }
-  
-  // Use more precise scheduling with sub-millisecond accuracy
+
+  // The rest is unchanged:
   const source = audioCtx.createBufferSource();
   source.buffer = buffer;
 
-  // Create gain node to control volume with more precise ramping
   const gainNode = audioCtx.createGain();
-  
-  // Shorter fade-in time for better accuracy (3ms instead of 5ms)
-  gainNode.gain.setValueAtTime(0, when - 0.003);
-  gainNode.gain.linearRampToValueAtTime(volumeRef.current, when);
+  // If you used ramping, keep or remove it as you like:
+  gainNode.gain.setValueAtTime(volumeRef.current, when);
 
-  // For expert musicians, ensure the audio signal path is as optimized as possible
   source.connect(gainNode).connect(audioCtx.destination);
-  
-  // The Web Audio API's source.start() method is exceptionally precise
-  // It uses the audio hardware clock for timing, which is much more accurate
-  // than JavaScript's setTimeout or setInterval
   source.start(when);
-  
-  // Register the source with nodeRefs for cleanup when stopping
+
+  // Keep track of the source for cleanup:
   if (nodeRefs && Array.isArray(nodeRefs.current)) {
     nodeRefs.current.push(source);
   }
-  
-  // Clean up to prevent memory leaks
+
+  // Cleanup after playback stops
   source.onended = () => {
-    source.disconnect();
-    gainNode.disconnect();
-    
-    // Remove the source from nodeRefs when it's done playing
+    try {
+      source.disconnect();
+      gainNode.disconnect();
+    } catch (err) {
+      // ignore
+    }
     if (nodeRefs && Array.isArray(nodeRefs.current)) {
-      const index = nodeRefs.current.indexOf(source);
-      if (index !== -1) {
-        nodeRefs.current.splice(index, 1);
+      const idx = nodeRefs.current.indexOf(source);
+      if (idx !== -1) {
+        nodeRefs.current.splice(idx, 1);
       }
     }
   };
-  
   return source;
 }
 
@@ -79,16 +73,13 @@ export function scheduleSubdivision({
   normalBufferRef,
   accentBufferRef,
   firstBufferRef,
-  // for "grid" or "circle" accent logic:
   beatConfigRef,
   accentsRef,
-  // Training
   shouldMute,
   playedBeatTimesRef,
   updateActualBpm,
-  // Debug info for logging
   debugInfo = {},
-  nodeRefs // Add nodeRefs parameter to track audio nodes
+  nodeRefs
 }) {
   // Fire user callback to animate each beat
   if (onAnySubTrigger) {
@@ -97,9 +88,8 @@ export function scheduleSubdivision({
 
   // If we are muting, skip playback but still fire event for UI sync
   if (shouldMute) {
-    // Dispatch event for silent phase beat to update UI
     window.dispatchEvent(new CustomEvent('silent-beat-played', {
-      detail: { 
+      detail: {
         timestamp: performance.now(),
         subIndex: subIndex,
         when: when
@@ -107,29 +97,36 @@ export function scheduleSubdivision({
     }));
     return;
   } else {
-    // record the time for actual BPM measurement
-    playedBeatTimesRef.current.push(performance.now());
-    updateActualBpm?.(); 
+    if (playedBeatTimesRef) {
+      playedBeatTimesRef.current.push(performance.now());
+    }
+    if (typeof updateActualBpm === 'function') {
+      updateActualBpm();
+    }
   }
 
-  // Decide which buffer to use:
   let buffer = null;
   let soundType = 'none';
-  
+
   if (analogMode) {
-    buffer = normalBufferRef.current; // all the same in analog
+    buffer = normalBufferRef.current; 
     soundType = 'normal';
   } else if (gridMode) {
-    const state = beatConfigRef.current[subIndex]; // 3=first,2=accent,1=normal,0=off
-    if (state === 3) { buffer = firstBufferRef.current; soundType = 'first'; }
-    else if (state === 2) { buffer = accentBufferRef.current; soundType = 'accent'; }
-    else if (state === 1) { buffer = normalBufferRef.current; soundType = 'normal'; }
-    // (0 means no sound, effectively muted)
+    const state = beatConfigRef?.current?.[subIndex]; 
+    // 3=first,2=accent,1=normal,0=off
+    if (state === 3) { 
+      buffer = firstBufferRef.current; 
+      soundType = 'first';
+    } else if (state === 2) {
+      buffer = accentBufferRef.current; 
+      soundType = 'accent';
+    } else if (state === 1) {
+      buffer = normalBufferRef.current; 
+      soundType = 'normal';
+    }
   } else {
     // circle mode
-    const accentVal = accentsRef.current[subIndex];
-    
-    // Normal processing for all beats without special handling
+    const accentVal = accentsRef?.current?.[subIndex];
     if (accentVal === 3) { 
       buffer = firstBufferRef.current; 
       soundType = 'first'; 
@@ -140,11 +137,9 @@ export function scheduleSubdivision({
       buffer = normalBufferRef.current; 
       soundType = 'normal'; 
     }
-    // accentVal = 0 => no sound (explicitly allow first beats to be muted in all circles)
-    // accentVal = 0 => no sound
+    // accentVal=0 => no sound
   }
 
-  // If we got a buffer, schedule it:
   if (buffer) {
     schedulePlay({
       buffer,
@@ -168,36 +163,35 @@ export function runScheduler({
   audioCtxRef,
   nextNoteTimeRef,
   currentSubRef,
-  currentSubdivisionSetter, // setCurrentSubdivision
+  currentSubdivisionSetter,
   getCurrentSubIntervalSec,
+  tempo,
   handleMeasureBoundary,
   scheduleSubFn,
   subdivisionsRef,
   multiCircleMode,
-  nodeRefs, // Add nodeRefs parameter to track audio nodes
-  schedulerRunningRef // Add a reference to check if scheduler is running
+  nodeRefs,
+  schedulerRunningRef
 }) {
-  // If scheduler is no longer running, don't schedule anything
-  if (!schedulerRunningRef || !schedulerRunningRef.current) {
-    return;
-  }
+  if (!schedulerRunningRef?.current) return;
+  const audioCtx = audioCtxRef?.current;
+  if (!audioCtx) return;
 
-  const now = audioCtxRef.current?.currentTime || 0;
-  const lookaheadTime = multiCircleMode ? SCHEDULE_AHEAD_TIME * 1.2 : SCHEDULE_AHEAD_TIME;
+  const now = audioCtx.currentTime;
+  const lookaheadTime = multiCircleMode
+    ? SCHEDULE_AHEAD_TIME * 1.2
+    : SCHEDULE_AHEAD_TIME;
 
   while (nextNoteTimeRef.current < now + lookaheadTime) {
-    // Double-check scheduler is still running before scheduling
-    if (!schedulerRunningRef.current) {
-      break;
-    }
-    
+    if (!schedulerRunningRef.current) break;
     const subIndex = currentSubRef.current;
+
     scheduleSubFn(subIndex, nextNoteTimeRef.current, nodeRefs);
 
     // Update UI
     currentSubdivisionSetter(subIndex);
 
-    // Move on to next sub
+    // Next subdivision
     const intervalSec = getCurrentSubIntervalSec(subIndex);
     nextNoteTimeRef.current += intervalSec;
     currentSubRef.current = (subIndex + 1) % subdivisionsRef.current;
@@ -205,10 +199,8 @@ export function runScheduler({
     // If we've hit the start of a new measure
     if (currentSubRef.current === 0) {
       handleMeasureBoundary();
-      
-      // Dispatch a custom event to notify components that a measure is complete
-      const measureCompleteEvent = new CustomEvent('measure-complete');
-      window.dispatchEvent(measureCompleteEvent);
+      // Dispatch a custom event for measure completion
+      window.dispatchEvent(new CustomEvent('measure-complete'));
     }
   }
 }

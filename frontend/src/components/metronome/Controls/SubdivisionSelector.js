@@ -4,16 +4,13 @@ import { subdivisionIcons } from '../../../assets/svg/subdivisionIcons';
 import './SubdivisionSelector.css';
 
 /**
- * SubdivisionSelector component for selecting the number of beats in a measure.
- * This component is used in both regular metronome modes and multi-circle mode.
- * 
- * @param {Object} props - Component properties
- * @param {number} props.subdivisions - Current number of subdivisions
- * @param {Function} props.onSelect - Callback function when a subdivision is selected
- * @param {Object} [props.style] - Optional additional styles for the container
- * @returns {JSX.Element} - Rendered component
+ * SubdivisionSelector Component:
+ * Renders icons for selecting the number of beats per bar.
+ * When "hideOptions" is true, nothing is rendered.
  */
-const SubdivisionSelector = ({ subdivisions, onSelect, style = {} }) => {
+const SubdivisionSelector = ({ subdivisions, onSelect, hideOptions = false, style = {} }) => {
+  if (hideOptions) return null; // Do not render if hideOptions is true
+
   return (
     <div className="subdivision-container" style={style}>
       {Array.from({ length: 9 }, (_, idx) => {
