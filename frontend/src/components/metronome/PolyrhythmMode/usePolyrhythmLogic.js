@@ -1,42 +1,42 @@
-// src/components/metronome/PolyrhythmMode/usePolyrhythmLogic.js
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { initAudioContext, loadClickBuffers } from '../../../hooks/useMetronomeLogic/audioBuffers';
-import { SCHEDULE_AHEAD_TIME } from '../../../hooks/useMetronomeLogic/constants';
 import { getActiveSoundSet } from '../../../services/soundSetService';
+import { SCHEDULE_AHEAD_TIME } from '../../../hooks/useMetronomeLogic/constants';
 import { shouldMuteThisBeat, handleMeasureBoundary } from '../../../hooks/useMetronomeLogic/trainingLogic';
 
 /**
- * Custom hook for handling polyrhythm-specific scheduling logic.
+ * Polyrhythm hook that forces *every* measure boundary to line up for both circles.
  * 
- * Key concepts:
- * - Uses a single Web Audio API timer for precise timing
- * - Maintains synchronized first beats (downbeats) across both circles
- * - Calculates separate intervals for each circle based on subdivisions
- * - Integrates with training mode features
- * 
- * @param {Object} props Configuration options
- * @returns {Object} Beat states and control functions
+ * - We define one measureDuration in real time (like 4 beats * (60/tempo)).
+ * - Circle #1 subdivides that measure into 'innerBeats' parts.
+ * - Circle #2 subdivides that same measure into 'outerBeats' parts.
+ * - So each measure's "first beat" is *identical in time* for both circles, every measure.
+ * - If you set (innerBeats=4, outerBeats=3), you get a measure forcibly started every time,
+ *   with circle #1 hitting 4 subdivisions inside, circle #2 hitting 3 subdivisions inside,
+ *   and both "first beats" unify every measure.
  */
 export default function usePolyrhythmLogic({
   tempo,
-  innerBeats,
-  outerBeats,
-  innerAccents = [],
-  outerAccents = [],
+  innerBeats,          // e.g., 4
+  outerBeats,          // e.g., 3
+  innerAccents = [],   // accent patterns for circle 1
+  outerAccents = [],   // accent patterns for circle 2
   isPaused,
   volume,
-  swing,
+  swing = 0,           // not strictly used here if you want
+  // training mode:
   macroMode = 0,
   speedMode = 0,
   measuresUntilMute = 2,
-  muteDurationMeasures = 1, 
+  muteDurationMeasures = 1,
   muteProbability = 0.3,
   tempoIncreasePercent = 5,
   measuresUntilSpeedUp = 2,
+  // callbacks for UI
   onInnerBeatTriggered = null,
   onOuterBeatTriggered = null
 }) {
-  // Audio context and buffers
+  // Audio
   const audioCtxRef = useRef(null);
   const normalBufferRef = useRef(null);
   const accentBufferRef = useRef(null);
@@ -45,443 +45,366 @@ export default function usePolyrhythmLogic({
   // Scheduler state
   const schedulerRunningRef = useRef(false);
   const lookaheadIntervalRef = useRef(null);
-  const lastScheduleTimeRef = useRef(0);
-  
-  // Current audio context time when the sequence was started
-  const startTimeRef = useRef(0);
-  
-  // Beat tracking for UI updates
-  const [innerCurrentBeat, setInnerCurrentBeat] = useState(0);
-  const [outerCurrentBeat, setOuterCurrentBeat] = useState(0);
-  
-  // Next scheduled beats (internal use only)
-  const nextInnerBeatRef = useRef(0);
-  const nextOuterBeatRef = useRef(0);
-  
-  // Track active nodes for cleanup
-  const activeNodesRef = useRef([]);
-  
-  // For training mode
+
+  // measure-based approach
+  const [currentMeasure, setCurrentMeasure] = useState(0);
+  const measureStartTimeRef = useRef(0);  // time in audioCtx for the *start* of each measure
+  const startTimeRef = useRef(0);         // time we began the entire session
+
+  // track which subdivision is "playing" in each circle, for UI
+  const [innerCurrentSub, setInnerCurrentSub] = useState(0);
+  const [outerCurrentSub, setOuterCurrentSub] = useState(0);
+
+  // Refs for training mode
   const measureCountRef = useRef(0);
   const muteMeasureCountRef = useRef(0);
   const isSilencePhaseRef = useRef(false);
-  const currentCycleStartTimeRef = useRef(0);
-  const measureProcessedRef = useRef(false);
-  
-  // Flag to mark that the unified first beat has already been scheduled for this cycle.
-  const firstBeatTriggeredRef = useRef(false);
-  
-  // State for actual BPM (might change during training)
+
+  // If you want an "actualBpm"
   const [actualBpm, setActualBpm] = useState(tempo);
-  
-  // Store props in refs to avoid stale closures in timers
+
+  // keep local references updated
   const tempoRef = useRef(tempo);
   const volumeRef = useRef(volume);
   const innerBeatsRef = useRef(innerBeats);
   const outerBeatsRef = useRef(outerBeats);
-  const innerAccentsRef = useRef(innerAccents);
-  const outerAccentsRef = useRef(outerAccents);
-  const isPausedRef = useRef(isPaused);
-  const swingRef = useRef(swing);
-  const macroModeRef = useRef(macroMode);
-  
-  // Update refs when props change
   useEffect(() => { tempoRef.current = tempo; }, [tempo]);
   useEffect(() => { volumeRef.current = volume; }, [volume]);
   useEffect(() => { innerBeatsRef.current = innerBeats; }, [innerBeats]);
   useEffect(() => { outerBeatsRef.current = outerBeats; }, [outerBeats]);
-  useEffect(() => { innerAccentsRef.current = innerAccents; }, [innerAccents]);
-  useEffect(() => { outerAccentsRef.current = outerAccents; }, [outerAccents]);
-  useEffect(() => { isPausedRef.current = isPaused; }, [isPaused]);
-  useEffect(() => { swingRef.current = swing; }, [swing]);
-  useEffect(() => { macroModeRef.current = macroMode; }, [macroMode]);
 
-  // Initialize audio context and load sound buffers
+  // --------------------------------------------
+  // load audio on mount
+  // --------------------------------------------
   useEffect(() => {
-    const audioCtx = initAudioContext();
-    audioCtxRef.current = audioCtx;
+    const ctx = initAudioContext();
+    audioCtxRef.current = ctx;
 
-    const loadSounds = async () => {
+    const load = async () => {
       try {
-        const soundSet = await getActiveSoundSet();
+        const set = await getActiveSoundSet();
         await loadClickBuffers({
-          audioCtx,
+          audioCtx: ctx,
           normalBufferRef,
           accentBufferRef,
           firstBufferRef,
-          soundSet
+          soundSet: set
         });
-      } catch (err) {
-        console.error('Error loading sound set:', err);
+      } catch {
+        // fallback
         await loadClickBuffers({
-          audioCtx,
+          audioCtx: ctx,
           normalBufferRef,
           accentBufferRef,
           firstBufferRef
         });
       }
     };
-
-    loadSounds();
+    load();
 
     return () => {
       stopScheduler();
       if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
-        audioCtxRef.current.close().catch(console.error);
+        audioCtxRef.current.close().catch(() => {});
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /**
-   * Calculate the least common multiple (LCM) of two numbers.
-   */
-  const lcm = useCallback((a, b) => {
-    const gcd = (x, y) => y === 0 ? x : gcd(y, x % y);
-    const result = (a * b) / gcd(a, b);
-    console.log(`LCM calculation: ${a}:${b} = ${result}`);
-    return result;
+  // --------------------------------------------
+  // measureDuration: define a single measure in audio time
+  //   For example, measure = "max of innerBeats or outerBeats" * (60/tempo)
+  //   or simply "4 * (60/tempo)" if you want 4 beats as the measure length, etc.
+  // --------------------------------------------
+  const getMeasureDuration = useCallback(() => {
+    // Option 1: measure = the bigger of the two circle's "beats" * spb
+    //   e.g. if inner=4, outer=3 => measure=4*(60/tempo)
+    // Option 2: you might want to just do 1 measure=1 bar => (60/tempo)*4, if you want 4/4 measure.
+    // We'll do "the bigger of the two circle's beats" approach:
+    const spb = 60 / tempoRef.current; // seconds per beat
+    const maxBeats = Math.max(innerBeatsRef.current, outerBeatsRef.current);
+    return maxBeats * spb;
   }, []);
 
-  /**
-   * Calculate timing information for both circles.
-   */
-  const getTimingInfo = useCallback(() => {
-    const secondsPerBeat = 60 / tempoRef.current;
-    const innerInterval = secondsPerBeat / innerBeatsRef.current;
-    const outerInterval = secondsPerBeat / outerBeatsRef.current;
-    const commonCycleLCM = lcm(innerBeatsRef.current, outerBeatsRef.current);
-    const cycleDuration = (commonCycleLCM / innerBeatsRef.current) * innerInterval;
-    console.log(`Polyrhythm timing:
-      - Tempo: ${tempoRef.current} BPM
-      - Inner beats: ${innerBeatsRef.current}, interval: ${innerInterval.toFixed(3)}s
-      - Outer beats: ${outerBeatsRef.current}, interval: ${outerInterval.toFixed(3)}s
-      - LCM: ${commonCycleLCM}, cycle duration: ${cycleDuration.toFixed(3)}s
-      - Inner beats in cycle: ${commonCycleLCM / innerBeatsRef.current}
-      - Outer beats in cycle: ${commonCycleLCM / outerBeatsRef.current}
-    `);
-    return { innerInterval, outerInterval, cycleDuration, commonCycleLCM };
-  }, [lcm]);
-
-  /**
-   * Schedule audio playback for a beat.
-   * If the requested time is in the past, play immediately.
-   * When a first beat (beat index 0) is played, log the event.
-   */
-  const scheduleBeat = useCallback((time, beatIndex, isInnerCircle, mute = false, isFirstBeatOfBoth = false) => {
-    if (!audioCtxRef.current || mute) return;
-    const accents = isInnerCircle ? innerAccentsRef.current : outerAccentsRef.current;
-    const accentValue = beatIndex < accents.length ? accents[beatIndex] : 1;
-    if (accentValue === 0) return;
-    let buffer = normalBufferRef.current;
-    if (accentValue === 3) {
-      buffer = firstBufferRef.current;
-    } else if (accentValue === 2) {
-      buffer = accentBufferRef.current;
+  // --------------------------------------------
+  // schedule a single "hit" for a circle
+  // --------------------------------------------
+  const scheduleHit = useCallback((when, subIndex, circle, accentsArray) => {
+    const ctx = audioCtxRef.current;
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    let safeTime = when;
+    if (safeTime < now) {
+      safeTime = now + 0.001; // minimal clamp
     }
-    if (!buffer) return;
-    const source = audioCtxRef.current.createBufferSource();
-    source.buffer = buffer;
-    const gainNode = audioCtxRef.current.createGain();
+
+    // pick accent
+    if (!accentsArray || !accentsArray[subIndex]) {
+      // default normal accent if not specified
+    }
+    const accentVal = accentsArray[subIndex] || 1;
+    if (accentVal === 0) return; // muted
+
+    let chosenBuf = normalBufferRef.current;
+    if (accentVal === 3) {
+      chosenBuf = firstBufferRef.current;
+    } else if (accentVal === 2) {
+      chosenBuf = accentBufferRef.current;
+    }
+    if (!chosenBuf) return;
+
+    const source = ctx.createBufferSource();
+    source.buffer = chosenBuf;
+
+    const gainNode = ctx.createGain();
     gainNode.gain.value = volumeRef.current;
-    source.connect(gainNode);
-    gainNode.connect(audioCtxRef.current.destination);
-    if (beatIndex === 0 || isFirstBeatOfBoth) {
-      const circleType = isInnerCircle ? 'INNER' : 'OUTER';
-      console.log(`Scheduling ${circleType} FIRST BEAT at time ${time.toFixed(4)}s${isFirstBeatOfBoth ? ' (UNIFIED)' : ''}`);
-    }
-    const currentTime = audioCtxRef.current.currentTime;
-    const safeTime = time < currentTime ? currentTime : time;
+    source.connect(gainNode).connect(ctx.destination);
+
     source.start(safeTime);
-    activeNodesRef.current.push({ source, gainNode });
     source.onended = () => {
-      source.disconnect();
-      gainNode.disconnect();
-      const index = activeNodesRef.current.findIndex(n => n.source === source);
-      if (index !== -1) activeNodesRef.current.splice(index, 1);
+      try { source.disconnect(); gainNode.disconnect(); } catch {}
     };
-    const delayUntilBeat = Math.max(0, (safeTime - currentTime) * 1000);
+
+    // UI
+    const delayMs = (safeTime - now)*1000;
     setTimeout(() => {
       if (!schedulerRunningRef.current) return;
-      // Log first-beat playback only once for unified beats (log only for inner circle)
-      if (beatIndex === 0 && (!isFirstBeatOfBoth || (isFirstBeatOfBoth && isInnerCircle))) {
-        console.log(`PLAYED: FIRST BEAT at ${audioCtxRef.current.currentTime.toFixed(4)}s`);
-      }
-      if (isInnerCircle) {
-        setInnerCurrentBeat(beatIndex);
-        if (typeof onInnerBeatTriggered === 'function') onInnerBeatTriggered(beatIndex);
+      if (circle === 'inner') {
+        setInnerCurrentSub(subIndex);
+        if (subIndex===0) {
+          console.log('INNER measure start => subIndex=0, time=', ctx.currentTime.toFixed(3));
+        }
+        onInnerBeatTriggered?.(subIndex);
       } else {
-        setOuterCurrentBeat(beatIndex);
-        if (typeof onOuterBeatTriggered === 'function') onOuterBeatTriggered(beatIndex);
+        setOuterCurrentSub(subIndex);
+        if (subIndex===0) {
+          console.log('OUTER measure start => subIndex=0, time=', ctx.currentTime.toFixed(3));
+        }
+        onOuterBeatTriggered?.(subIndex);
       }
-    }, delayUntilBeat);
+    }, delayMs);
+
   }, [onInnerBeatTriggered, onOuterBeatTriggered]);
 
-  /**
-   * Schedule the unified first beat for both circles.
-   * Sets the flag to avoid duplicate scheduling of beat 0 in the scheduler loop.
-   */
-  const scheduleUnifiedFirstBeat = useCallback((time, mute = false) => {
-    console.log(`=== SCHEDULING UNIFIED FIRST BEAT at ${time.toFixed(4)}s ===`);
-    firstBeatTriggeredRef.current = true;
-    scheduleBeat(time, 0, true, mute, true);
-    scheduleBeat(time, 0, false, mute, true);
-    const delayUntilBeat = Math.max(0, (time - audioCtxRef.current.currentTime) * 1000);
-    setTimeout(() => {
-      if (!schedulerRunningRef.current) return;
-      setInnerCurrentBeat(0);
-      setOuterCurrentBeat(0);
-      if (typeof onInnerBeatTriggered === 'function') onInnerBeatTriggered(0);
-      if (typeof onOuterBeatTriggered === 'function') onOuterBeatTriggered(0);
-    }, delayUntilBeat);
-  }, [scheduleBeat, onInnerBeatTriggered, onOuterBeatTriggered]);
+  // --------------------------------------------
+  // scheduleOneMeasure => 
+  //   for circle #1: innerBeats subdivisions within measure
+  //   for circle #2: outerBeats subdivisions within measure
+  // --------------------------------------------
+  const scheduleOneMeasure = useCallback((measureIndex, measureStartTime) => {
+    const measureDuration = getMeasureDuration();
 
-  /**
-   * The main scheduler loop that repeatedly schedules beats.
-   */
-  const schedulerLoop = useCallback(() => {
-    if (!audioCtxRef.current || !schedulerRunningRef.current) return;
-    const now = audioCtxRef.current.currentTime;
-    const { innerInterval, outerInterval, cycleDuration, commonCycleLCM } = getTimingInfo();
-    const scheduleAheadTime = now + SCHEDULE_AHEAD_TIME;
-    if (lastScheduleTimeRef.current >= scheduleAheadTime) return;
-    const timeSinceStart = now - startTimeRef.current;
-    const currentCycleStartTime = startTimeRef.current + (Math.floor(timeSinceStart / cycleDuration) * cycleDuration);
-    const completedCycles = Math.floor(timeSinceStart / cycleDuration);
-    if (currentCycleStartTime > currentCycleStartTimeRef.current) {
-      console.log(`New polyrhythm cycle at ${now.toFixed(3)}s, cycle #${completedCycles}`);
-      console.log(`Expected alignment: Inner beat ${(completedCycles * commonCycleLCM) % innerBeatsRef.current}, Outer beat ${(completedCycles * commonCycleLCM) % outerBeatsRef.current}`);
-      currentCycleStartTimeRef.current = currentCycleStartTime;
-      // Reset the first-beat flag and pointers for the new cycle.
-      firstBeatTriggeredRef.current = false;
-      nextInnerBeatRef.current = currentCycleStartTime;
-      nextOuterBeatRef.current = currentCycleStartTime;
-      if (!measureProcessedRef.current) {
-        measureProcessedRef.current = true;
-        handleMeasureBoundary({
-          measureCountRef,
-          muteMeasureCountRef,
-          isSilencePhaseRef,
-          macroMode: macroModeRef.current,
-          speedMode,
-          measuresUntilMute,
-          muteDurationMeasures,
-          muteProbability,
-          tempoRef,
-          measuresUntilSpeedUp,
-          tempoIncreasePercent
-        });
-        if (tempoRef.current !== actualBpm) setActualBpm(tempoRef.current);
-      }
-    } else {
-      measureProcessedRef.current = false;
+    // For circle #1 => we have 'innerBeats' subdivisions
+    // so sub #i happens at measureStartTime + i*(measureDuration/innerBeats)
+    for (let i=0; i<innerBeatsRef.current; i++){
+      // maybe handle random/fixed silence
+      const doMute = shouldMuteThisBeat({
+        macroMode,
+        muteProbability,
+        isSilencePhaseRef
+      });
+      scheduleHit(
+        measureStartTime + i*(measureDuration/innerBeatsRef.current), 
+        i, 
+        'inner',
+        innerAccents
+      );
     }
-    const doMute = shouldMuteThisBeat({
-      macroMode: macroModeRef.current,
+
+    // For circle #2 => 'outerBeats' subdivisions
+    for (let j=0; j<outerBeatsRef.current; j++){
+      const doMute = shouldMuteThisBeat({
+        macroMode,
+        muteProbability,
+        isSilencePhaseRef
+      });
+      scheduleHit(
+        measureStartTime + j*(measureDuration/outerBeatsRef.current),
+        j,
+        'outer',
+        outerAccents
+      );
+    }
+
+    // training measure boundary
+    // run handleMeasureBoundary for each measure
+    handleMeasureBoundary({
+      measureCountRef,
+      muteMeasureCountRef,
+      isSilencePhaseRef,
+      macroMode,
+      speedMode,
+      measuresUntilMute,
+      muteDurationMeasures,
       muteProbability,
-      isSilencePhaseRef
+      tempoRef,
+      measuresUntilSpeedUp,
+      tempoIncreasePercent,
+      setTempo: (t) => setActualBpm(t), // or do nothing if you want
     });
-    const nextCycleStart = currentCycleStartTime + cycleDuration;
-    const timeUntilNextCycle = nextCycleStart - now;
-    // Only schedule the unified first beat once per cycle if the next cycle is not imminent (e.g., more than 20ms away)
-    if (nextCycleStart < scheduleAheadTime && !firstBeatTriggeredRef.current && timeUntilNextCycle > 0.02) {
-      scheduleUnifiedFirstBeat(nextCycleStart, doMute);
-    }
-    // Use a slightly relaxed threshold (0.01 s) to detect cycle start.
-    const cycleStartThreshold = 0.01;
-    while (nextInnerBeatRef.current < scheduleAheadTime) {
-      const elapsedTime = nextInnerBeatRef.current - startTimeRef.current;
-      const beatCount = Math.floor(elapsedTime / innerInterval);
-      const beatIndex = beatCount % innerBeatsRef.current;
-      const isCycleStart = Math.abs(nextInnerBeatRef.current - nextCycleStart) < cycleStartThreshold;
-      if (isCycleStart && beatIndex === 0 && firstBeatTriggeredRef.current) {
-        // Skip duplicate scheduling of the first beat.
-      } else {
-        if (beatIndex === 0) {
-          console.log(`Scheduling inner first beat #${beatCount} at ${nextInnerBeatRef.current.toFixed(3)}s (beat index: ${beatIndex})`);
-        }
-        scheduleBeat(nextInnerBeatRef.current, beatIndex, true, doMute);
-      }
-      nextInnerBeatRef.current += innerInterval;
-    }
-    while (nextOuterBeatRef.current < scheduleAheadTime) {
-      const elapsedTime = nextOuterBeatRef.current - startTimeRef.current;
-      const beatCount = Math.floor(elapsedTime / outerInterval);
-      const beatIndex = beatCount % outerBeatsRef.current;
-      const isCycleStart = Math.abs(nextOuterBeatRef.current - nextCycleStart) < cycleStartThreshold;
-      if (isCycleStart && beatIndex === 0 && firstBeatTriggeredRef.current) {
-        // Skip duplicate scheduling of the first beat.
-      } else {
-        if (beatIndex === 0) {
-          console.log(`Scheduling outer first beat #${beatCount} at ${nextOuterBeatRef.current.toFixed(3)}s (beat index: ${beatIndex})`);
-        }
-        scheduleBeat(nextOuterBeatRef.current, beatIndex, false, doMute);
-      }
-      nextOuterBeatRef.current += outerInterval;
-    }
-    lastScheduleTimeRef.current = scheduleAheadTime;
-  }, [getTimingInfo, scheduleBeat, scheduleUnifiedFirstBeat, speedMode, measuresUntilMute, 
-      muteDurationMeasures, muteProbability, measuresUntilSpeedUp, tempoIncreasePercent, actualBpm]);
+  }, [
+    getMeasureDuration,
+    macroMode,
+    speedMode,
+    measuresUntilMute,
+    muteDurationMeasures,
+    muteProbability,
+    tempoRef,
+    measuresUntilSpeedUp,
+    tempoIncreasePercent,
+    scheduleHit,
+    innerAccents,
+    outerAccents
+  ]);
 
-  /**
-   * Start the scheduler and begin playback.
-   * The unified first beat is scheduled immediately using the current time.
-   */
+  // --------------------------------------------
+  // scheduling loop => schedule measure if approaching end
+  // --------------------------------------------
+  const schedulingLoop = useCallback(() => {
+    if (!audioCtxRef.current || !schedulerRunningRef.current) return;
+    const ctx = audioCtxRef.current;
+    const now = ctx.currentTime;
+    const measureDuration = getMeasureDuration();
+
+    // how many measures have fully completed
+    const totalTimeElapsed = now - startTimeRef.current;
+    const measureIndex = Math.floor(totalTimeElapsed / measureDuration);
+
+    // if we've not scheduled measure #measureIndex+1 yet, do so
+    // look ahead
+    const nextMeasureIndex = currentMeasure; 
+    const nextMeasureStart = startTimeRef.current + nextMeasureIndex*measureDuration;
+
+    const scheduleAhead = now + SCHEDULE_AHEAD_TIME;
+    if (nextMeasureStart < scheduleAhead) {
+      // schedule that measure
+      scheduleOneMeasure(nextMeasureIndex, nextMeasureStart);
+      setCurrentMeasure(m => m+1);
+    }
+  }, [currentMeasure, getMeasureDuration, scheduleOneMeasure]);
+
+  // --------------------------------------------
+  // start/stop
+  // --------------------------------------------
   const startScheduler = useCallback(async () => {
     if (schedulerRunningRef.current) return;
     try {
-      if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
-        audioCtxRef.current = initAudioContext();
-        await loadClickBuffers({
-          audioCtx: audioCtxRef.current,
-          normalBufferRef,
-          accentBufferRef,
-          firstBufferRef
-        });
-      } else if (audioCtxRef.current.state === 'suspended') {
-        await audioCtxRef.current.resume();
+      const ctx = audioCtxRef.current;
+      if (!ctx) return;
+      if (ctx.state === 'suspended') {
+        await ctx.resume();
       }
-      const startDelay = 0; // Immediate playback
-      startTimeRef.current = audioCtxRef.current.currentTime + startDelay;
-      const { innerInterval, outerInterval, cycleDuration, commonCycleLCM } = getTimingInfo();
-      console.log(`
-========================================
-STARTING POLYRHYTHM: ${innerBeatsRef.current}:${outerBeatsRef.current}
-----------------------------------------
-BPM: ${tempoRef.current}
-Inner beats: ${innerBeatsRef.current}, interval: ${innerInterval.toFixed(3)}s
-Outer beats: ${outerBeatsRef.current}, interval: ${outerInterval.toFixed(3)}s
-LCM: ${commonCycleLCM} beats, cycle duration: ${cycleDuration.toFixed(3)}s
-----------------------------------------
-Start time: ${startTimeRef.current.toFixed(3)}s
-UNIFIED FIRST BEAT: Both circles will trigger first beat immediately
-========================================
-      `);
-      nextInnerBeatRef.current = startTimeRef.current;
-      nextOuterBeatRef.current = startTimeRef.current;
+      // ensure buffers
+      if (!normalBufferRef.current || !accentBufferRef.current || !firstBufferRef.current) {
+        try {
+          const set = await getActiveSoundSet();
+          await loadClickBuffers({
+            audioCtx: ctx,
+            normalBufferRef,
+            accentBufferRef,
+            firstBufferRef,
+            soundSet: set
+          });
+        } catch {
+          await loadClickBuffers({
+            audioCtx: ctx,
+            normalBufferRef,
+            accentBufferRef,
+            firstBufferRef
+          });
+        }
+      }
+
+      // reset measure count
+      schedulerRunningRef.current = true;
+      setCurrentMeasure(0);
       measureCountRef.current = 0;
       muteMeasureCountRef.current = 0;
       isSilencePhaseRef.current = false;
-      currentCycleStartTimeRef.current = startTimeRef.current;
-      measureProcessedRef.current = false;
-      lastScheduleTimeRef.current = 0;
-      setInnerCurrentBeat(0);
-      setOuterCurrentBeat(0);
-      // Removed initial unified beat scheduling from startScheduler.
-      // The scheduler loop will handle the unified first beat.
-      schedulerRunningRef.current = true;
-      lookaheadIntervalRef.current = setInterval(schedulerLoop, 25);
-    } catch (err) {
-      console.error('Error starting scheduler:', err);
-    }
-  }, [getTimingInfo, schedulerLoop, scheduleUnifiedFirstBeat]);
 
-  /**
-   * Stop the scheduler and all audio playback.
-   */
+      const now = ctx.currentTime;
+      startTimeRef.current = now;
+      measureStartTimeRef.current = now;
+      
+      // start loop
+      lookaheadIntervalRef.current = setInterval(() => {
+        schedulingLoop();
+      }, 5);
+
+      console.log(`[PolyrhythmU] started at audioCtxTime=${now.toFixed(3)}`);
+    } catch (err) {
+      console.error("Error starting polyrhythm unify-scheduler:", err);
+    }
+  }, [schedulingLoop]);
+
   const stopScheduler = useCallback(() => {
     if (lookaheadIntervalRef.current) {
       clearInterval(lookaheadIntervalRef.current);
       lookaheadIntervalRef.current = null;
     }
     schedulerRunningRef.current = false;
-    activeNodesRef.current.forEach(({ source, gainNode }) => {
-      try {
-        if (source.stop) source.stop(0);
-        source.disconnect();
-        gainNode.disconnect();
-      } catch (e) {
-        // ignore cleanup errors
-      }
-    });
-    activeNodesRef.current = [];
-    setInnerCurrentBeat(0);
-    setOuterCurrentBeat(0);
+    console.log("[PolyrhythmU] stopped scheduler");
   }, []);
 
-  // Tap tempo and reloadSounds functions
-  const tapTimesRef = useRef([]);
-  const tapTempo = useCallback(() => {
-    const now = performance.now();
-    tapTimesRef.current.push(now);
-    if (tapTimesRef.current.length < 2) return tempoRef.current;
-    if (tapTimesRef.current.length > 4) {
-      tapTimesRef.current = tapTimesRef.current.slice(-4);
-    }
-    let sum = 0, count = 0;
-    for (let i = 1; i < tapTimesRef.current.length; i++) {
-      const interval = tapTimesRef.current[i] - tapTimesRef.current[i - 1];
-      if (interval > 200 && interval < 2000) {
-        sum += interval;
-        count++;
-      }
-    }
-    if (count > 0) {
-      const avgMs = sum / count;
-      const newTempo = Math.round(60000 / avgMs);
-      const clampedTempo = Math.min(Math.max(newTempo, 30), 240);
-      tempoRef.current = clampedTempo;
-      setActualBpm(clampedTempo);
-      return clampedTempo;
-    }
-    return tempoRef.current;
-  }, []);
-
-  const reloadSounds = useCallback(async () => {
-    try {
-      if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
-        audioCtxRef.current = initAudioContext();
-      }
-      const soundSet = await getActiveSoundSet();
-      await loadClickBuffers({
-        audioCtx: audioCtxRef.current,
-        normalBufferRef,
-        accentBufferRef,
-        firstBufferRef,
-        soundSet
-      });
-      return true;
-    } catch (error) {
-      console.error('Error reloading sounds:', error);
-      return false;
-    }
-  }, []);
-
+  // respond to isPaused
   useEffect(() => {
-    isPausedRef.current = isPaused;
+    if (!audioCtxRef.current) return;
     if (isPaused) {
       stopScheduler();
+      audioCtxRef.current.suspend().catch(()=>{});
     } else {
-      startScheduler();
+      audioCtxRef.current.resume()
+        .then(()=>startScheduler())
+        .catch(()=>{});
     }
   }, [isPaused, startScheduler, stopScheduler]);
 
+  // if tempo changes while playing => short restart
   useEffect(() => {
     if (!isPaused && schedulerRunningRef.current) {
       stopScheduler();
       setTimeout(() => {
-        startScheduler();
-      }, 50);
+        if (!isPaused) startScheduler();
+      }, 30);
     }
-  }, [innerBeats, outerBeats, isPaused, stopScheduler, startScheduler]);
+  }, [tempo, isPaused, startScheduler, stopScheduler]);
 
-  useEffect(() => {
-    if (tempo !== tempoRef.current) {
-      tempoRef.current = tempo;
-      if (tempo !== actualBpm) setActualBpm(tempo);
-    }
-  }, [tempo, actualBpm]);
-
+  // --------------------------------------------
+  // Expose
+  // --------------------------------------------
   return {
-    innerCurrentSubdivision: innerCurrentBeat,
-    outerCurrentSubdivision: outerCurrentBeat,
-    isSilencePhaseRef,
+    // for UI
+    innerCurrentSubdivision: innerCurrentSub,
+    outerCurrentSubdivision: outerCurrentSub,
     measureCountRef,
     muteMeasureCountRef,
+    isSilencePhaseRef,
     actualBpm,
-    tapTempo,
+
+    // optional reload
+    reloadSounds: async () => {
+      try {
+        if (!audioCtxRef.current || audioCtxRef.current.state==='closed') {
+          audioCtxRef.current = initAudioContext();
+        }
+        const s = await getActiveSoundSet();
+        await loadClickBuffers({
+          audioCtx: audioCtxRef.current,
+          normalBufferRef,
+          accentBufferRef,
+          firstBufferRef,
+          soundSet: s
+        });
+        return true;
+      } catch (err) {
+        console.error("Error reloading unify-sounds:", err);
+        return false;
+      }
+    },
+    audioCtx: audioCtxRef.current,
+    // for debugging if needed
     startScheduler,
     stopScheduler,
-    reloadSounds,
-    audioCtx: audioCtxRef.current
+    tapTempo: ()=>{} // no-op
   };
 }
