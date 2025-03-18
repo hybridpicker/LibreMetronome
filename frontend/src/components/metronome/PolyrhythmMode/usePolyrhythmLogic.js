@@ -32,6 +32,8 @@ export default function usePolyrhythmLogic({
   isPaused,
   volume,
   swing = 0,           // not strictly used here if you want
+  // New parameter for sound swapping
+  soundsSwapped = false,
   // training mode:
   macroMode = 0,
   speedMode = 0,
@@ -80,6 +82,8 @@ export default function usePolyrhythmLogic({
   const isPausedRef = useRef(isPaused);
   const innerAccentsRef = useRef(innerAccents);
   const outerAccentsRef = useRef(outerAccents);
+  // Add ref for sound swapping state
+  const soundsSwappedRef = useRef(soundsSwapped);
 
   useEffect(() => { tempoRef.current = tempo; }, [tempo]);
   useEffect(() => { volumeRef.current = volume; }, [volume]);
@@ -88,6 +92,7 @@ export default function usePolyrhythmLogic({
   useEffect(() => { isPausedRef.current = isPaused; }, [isPaused]);
   useEffect(() => { innerAccentsRef.current = innerAccents; }, [innerAccents]);
   useEffect(() => { outerAccentsRef.current = outerAccents; }, [outerAccents]);
+  useEffect(() => { soundsSwappedRef.current = soundsSwapped; }, [soundsSwapped]);
 
   // --------------------------------------------
   // load audio on mount
@@ -206,10 +211,27 @@ export default function usePolyrhythmLogic({
 
     // Choose buffer based on accent value
     let chosenBuf = normalBufferRef.current;
+    
+    // Determine the appropriate sound based on accent level and whether sounds are swapped
     if (accentVal === 3) {
-      chosenBuf = firstBufferRef.current; // First beat sound
+      // First beat sound always uses the first beat buffer regardless of swapping
+      chosenBuf = firstBufferRef.current;
     } else if (accentVal === 2) {
-      chosenBuf = accentBufferRef.current; // Accent sound
+      // Accent beat always uses the accent buffer regardless of swapping
+      chosenBuf = accentBufferRef.current;
+    } else {
+      // For normal beats, we can apply sound swapping logic if needed
+      if (soundsSwappedRef.current) {
+        // When sounds are swapped, use a different sound assignment if desired
+        // Here you could change the sound between inner and outer circles
+        // For example, you could use different buffer, apply filters, etc.
+        
+        // For demonstration, we'll keep using the normal buffer but could be extended
+        chosenBuf = normalBufferRef.current;
+      } else {
+        // Regular sound assignment
+        chosenBuf = normalBufferRef.current;
+      }
     }
     
     if (!chosenBuf) return;
@@ -223,6 +245,20 @@ export default function usePolyrhythmLogic({
     // IMPROVEMENT: Apply slight ramp to avoid clicks
     gainNode.gain.setValueAtTime(0, safeTime);
     gainNode.gain.linearRampToValueAtTime(volumeRef.current, safeTime + 0.005);
+    
+    // If sounds are swapped, we can modify the audio characteristics
+    if (soundsSwappedRef.current) {
+      // Example: Apply different audio processing based on circle
+      if (circle === 'inner' && accentVal !== 3) { // Don't modify first beats
+        // When swapped, inner circle uses outer circle sound characteristics
+        // For example, change pitch for the inner circle
+        source.detune.value = 200; // Make inner circle sound brighter when swapped
+      } else if (circle === 'outer' && accentVal !== 3) { // Don't modify first beats
+        // When swapped, outer circle uses inner circle sound characteristics
+        // For example, make outer circle sound deeper
+        source.detune.value = -200; // Make outer circle sound deeper when swapped
+      }
+    }
     
     // Connect the audio nodes
     source.connect(gainNode).connect(ctx.destination);
@@ -650,6 +686,24 @@ export default function usePolyrhythmLogic({
       activeNodesRef.current = [];
     };
   }, [stopScheduler]);
+
+  // When sound swapping state changes while playing, we need to restart
+  useEffect(() => {
+    if (schedulerRunningRef.current && !isPausedRef.current) {
+      // Store the current state
+      const wasRunning = schedulerRunningRef.current;
+      
+      // Stop current scheduler cleanly
+      stopScheduler();
+      
+      // Brief delay to ensure clean state
+      setTimeout(() => {
+        if (wasRunning) {
+          startScheduler();
+        }
+      }, 50);
+    }
+  }, [soundsSwapped, stopScheduler, startScheduler]);
 
   // --------------------------------------------
   // Expose public API

@@ -262,6 +262,7 @@ function App() {
             setIsPaused={setIsPaused}
             swing={swing}
             volume={volume}
+            setVolume={setVolume}
             {...trainingSettings}
             registerTogglePlay={registerTogglePlay}
             registerTapTempo={registerTapTempo}

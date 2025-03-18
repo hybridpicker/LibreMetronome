@@ -31,6 +31,7 @@ const PolyrhythmMetronome = (props) => {
     setIsPaused,
     swing,
     volume,
+    setVolume,
     registerTogglePlay,
     registerTapTempo,
     macroMode = 0,
@@ -59,6 +60,10 @@ const PolyrhythmMetronome = (props) => {
   const [outerAccents, setOuterAccents] = useState(
     Array.from({ length: outerBeats }, (_, i) => (i === 0 ? 3 : 1))
   );
+
+  // State for tracking sound and color swapping
+  const [soundsSwapped, setSoundsSwapped] = useState(false);
+  const [circleColorSwapped, setCircleColorSwapped] = useState(false);
 
   // Update accent patterns when beat counts change
   useEffect(() => {
@@ -97,6 +102,7 @@ const PolyrhythmMetronome = (props) => {
     isPaused,
     volume,
     swing,
+    soundsSwapped,
     macroMode,
     speedMode,
     measuresUntilMute,
@@ -272,6 +278,51 @@ const PolyrhythmMetronome = (props) => {
     tapTempo();
   }, [isTransitioning, tapTempo]);
 
+  // Function to swap inner and outer beats and their accent patterns
+  const handleSwitchCircles = useCallback(() => {
+    if (isTransitioning) return;
+    
+    setIsTransitioning(true);
+    
+    if (!isPaused) {
+      stopScheduler();
+    }
+    
+    // Swap the beat counts
+    const tempBeats = innerBeats;
+    setInnerBeats(outerBeats);
+    setOuterBeats(tempBeats);
+    
+    // Swap the accent patterns
+    const tempAccents = [...innerAccents];
+    setInnerAccents([...outerAccents]);
+    setOuterAccents(tempAccents);
+    
+    // Swap the sounds
+    setSoundsSwapped(!soundsSwapped);
+    
+    // Swap the colors
+    setCircleColorSwapped(!circleColorSwapped);
+    
+    // Wait for transition to complete before restarting
+    if (transitionTimerRef.current) {
+      clearTimeout(transitionTimerRef.current);
+    }
+    
+    transitionTimerRef.current = setTimeout(() => {
+      setIsTransitioning(false);
+      if (!isPaused) {
+        startScheduler();
+      }
+    }, 200); // Give a bit more time (200ms) for the swap transition
+  }, [
+    innerBeats, outerBeats, 
+    innerAccents, outerAccents, 
+    soundsSwapped, circleColorSwapped,
+    isPaused, isTransitioning, 
+    startScheduler, stopScheduler
+  ]);
+
   // Cleanup timers on unmount
   useEffect(() => {
     return () => {
@@ -308,6 +359,7 @@ const PolyrhythmMetronome = (props) => {
           macroMode={macroMode}
           isSilencePhaseRef={isSilencePhaseRef}
           isTransitioning={isTransitioning}
+          circleColorSwapped={circleColorSwapped}
         />
       </div>
       <div className="polyrhythm-controls">
@@ -347,6 +399,64 @@ const PolyrhythmMetronome = (props) => {
           Polyrhythm: <span className="ratio-value">{innerBeats}:{outerBeats}</span>
         </h3>
       </div>
+      
+      {/* Tempo and Volume sliders matching BaseMetronomeLayout */}
+      <div className="sliders-container">
+        <label>
+          Tempo: {tempo} BPM
+          <input 
+            type="range" 
+            min={30} 
+            max={240} 
+            step={1} 
+            value={tempo} 
+            onChange={(e) => setTempo(Number(e.target.value))}
+            disabled={isTransitioning} 
+          />
+        </label>
+        <label>
+          Volume: {Math.round(volume * 100)}%
+          <input 
+            type="range" 
+            min={0} 
+            max={1} 
+            step={0.01} 
+            value={volume} 
+            onChange={(e) => setVolume(Number(e.target.value))}
+            disabled={isTransitioning} 
+          />
+        </label>
+      </div>
+      
+      {/* Swap button */}
+      <div className="switch-circles-container">
+        <button
+          onClick={handleSwitchCircles}
+          className="switch-circles-button"
+          style={{
+            background: '#00A0A0',
+            border: 'none',
+            borderRadius: '4px',
+            color: 'white',
+            cursor: isTransitioning ? 'not-allowed' : 'pointer',
+            padding: '8px 12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 20px',
+            opacity: isTransitioning ? 0.7 : 1,
+            transition: 'all 0.2s ease'
+          }}
+          aria-label="Swap Inner and Outer Beat Patterns, Sounds, and Colors"
+          disabled={isTransitioning}
+        >
+          <span style={{ marginRight: '8px' }}>Swap</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M7 16L3 12M3 12L7 8M3 12H16M17 8L21 12M21 12L17 16M21 12H8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+      </div>
+      
       <AccelerateButton onClick={() => {
         if (!isPaused && !isTransitioning) {
           manualTempoAcceleration({
