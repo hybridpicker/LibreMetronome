@@ -1,0 +1,183 @@
+/* ModeSelector.css */
+
+/* Base container with responsive layout */
+.mode-selector {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 auto 20px;
+  padding: 8px;
+  max-width: 600px;
+}
+
+/* Mode buttons with improved styling */
+.mode-button {
+  flex: 1 0 auto;
+  min-width: min-content;
+  padding: 10px 8px;
+  border: none;
+  border-radius: 8px;
+  background-color: #f0f0f0;
+  color: #555;
+  font-size: 14px;
+  font-family: 'Lato', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Icon container */
+.mode-icon {
+  display: none /* Placeholder for SVG*/
+  width: 24px;
+  height: 24px;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+/* Active state */
+.mode-button.mode-button-active {
+  background-color: #00A0A0;
+  color: white;
+  box-shadow: 0 2px 5px rgba(0, 160, 160, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Hover effects */
+.mode-button:hover:not(.mode-button-active) {
+  background-color: #e0e0e0;
+  transform: translateY(-1px);
+}
+
+/* Focus states for accessibility */
+.mode-button:focus {
+  outline: 2px solid #00A0A0;
+  outline-offset: 2px;
+}
+
+/* Desktop layout - show full buttons side by side */
+@media (min-width: 768px) {
+  .mode-button {
+    padding: 12px 16px;
+    font-size: 15px;
+  }
+  
+  .mode-icon {
+    width: 28px;
+    height: 28px;
+    margin-bottom: 8px;
+  }
+}
+
+/* Tablet layout - slightly smaller buttons */
+@media (min-width: 481px) and (max-width: 767px) {
+  .mode-selector {
+    gap: 6px;
+  }
+  
+  .mode-button {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+}
+
+/* Small mobile layout - two rows of buttons */
+@media (max-width: 480px) {
+  .mode-selector {
+    gap: 6px;
+    flex-direction: row;
+  }
+  
+  .mode-button {
+    flex: 0 0 calc(50% - 6px);
+    padding: 8px 4px;
+    font-size: 12px;
+  }
+  
+  /* Optional: Show icons only on very small screens */
+  .mode-button-text-small {
+    display: none;
+  }
+}
+
+/* Extra small screens - compact mode with mini menu */
+@media (max-width: 320px) {
+  .mode-selector {
+    position: relative;
+  }
+  
+  .compact-menu-toggle {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: #00A0A0;
+    color: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    margin-bottom: 8px;
+    cursor: pointer;
+  }
+  
+  .compact-menu-toggle:after {
+    content: "▼";
+    font-size: 10px;
+    transition: transform 0.2s ease;
+  }
+  
+  .compact-menu-toggle.open:after {
+    transform: rotate(180deg);
+  }
+  
+  .compact-menu-content {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .compact-menu-content.open {
+    display: flex;
+  }
+  
+  .compact-menu-content .mode-button {
+    flex: 1 0 auto;
+    width: 100%;
+    border-radius: 0;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+    padding: 10px 15px;
+    flex-direction: row;
+  }
+  
+  .compact-menu-content .mode-button .mode-icon {
+    margin-right: 10px;
+    margin-bottom: 0;
+  }
+  
+  .compact-menu-content .mode-button:last-child {
+    border-bottom: none;
+  }
+  
+  .compact-menu-content .mode-button.mode-button-active {
+    background-color: #f0f8f8;
+    color: #00A0A0;
+  }
+}
