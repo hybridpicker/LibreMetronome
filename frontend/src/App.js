@@ -1,4 +1,4 @@
-// File: src/App.js
+// src/App.js
 import React, { useState, useRef, useEffect } from 'react';
 import './App.css';
 import Header from './components/Header/Header';
@@ -7,7 +7,6 @@ import AdvancedMetronomeWithCircle from './components/AdvancedMetronome';
 import MultiCircleMetronome from './components/metronome/MultiCircleMode';
 import GridModeMetronome from './components/metronome/GridMode/GridModeMetronome';
 import PolyrhythmMetronome from './components/metronome/PolyrhythmMode';
-
 import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
 import MetronomeControls from './components/metronome/Controls/MetronomeControls';
 import MainMenu from './components/Menu/mainMenu';
@@ -17,81 +16,44 @@ import { Helmet } from 'react-helmet';
 const TEMPO_MIN = 15;
 const TEMPO_MAX = 240;
 
-// Global debug helper for sound preview
+// Global debug helper for testing sound preview
 window.metronomeDebug = {
-  // Store audio buffers globally for testing
   audioBuffers: null,
   audioContext: null,
-  
-  // Test function to play sounds directly
   playSound: function(type, volume = 0.5) {
-    
-    
-    if (!this.audioContext) {
-      
-      return false;
-    }
-    
-    if (!this.audioBuffers || !this.audioBuffers[type]) {
-      
-      
-      return false;
-    }
-    
+    if (!this.audioContext) return false;
+    if (!this.audioBuffers || !this.audioBuffers[type]) return false;
     try {
-      // Resume context if needed
       if (this.audioContext.state === 'suspended') {
         this.audioContext.resume();
       }
-      
-      // Create audio source
       const source = this.audioContext.createBufferSource();
       source.buffer = this.audioBuffers[type];
-      
-      // Set volume
       const gainNode = this.audioContext.createGain();
       gainNode.gain.value = volume;
-      
-      // Connect and play
       source.connect(gainNode);
       gainNode.connect(this.audioContext.destination);
       source.start(0);
-      
-      
       return true;
     } catch (error) {
-      
       return false;
     }
   },
-  
-  // Log all registered event listeners
   checkEventListeners: function() {
-    
-    
-    // Create test events
     const soundEvent = new CustomEvent('metronome-preview-sound', { 
       detail: { type: 'first', volume: 0.5 } 
     });
-    
     const patternEvent = new CustomEvent('metronome-preview-pattern', { 
       detail: { volume: 0.5 } 
     });
-    
-    // Dispatch test events to check if listeners are working
-    
     window.dispatchEvent(soundEvent);
-    
-    
     window.dispatchEvent(patternEvent);
-    
     return 'Check console for events';
   }
 };
 
 function App() {
-  // Mode can be: "analog", "circle", "grid", or "multi"
-  const [mode, setMode] = useState("circle");
+  const [mode, setMode] = useState("circle"); // Options: "analog", "circle", "grid", "multi", "polyrhythm"
   const [tempo, setTempo] = useState(120);
   const [isPaused, setIsPaused] = useState(true);
   const [subdivisions, setSubdivisions] = useState(4);
@@ -101,42 +63,28 @@ function App() {
     Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1))
   );
 
-  // Make tempo setter available globally for tap tempo
+  // Make tempo setter globally available (for tap tempo)
   window.setMetronomeTempo = setTempo;
 
-  // Add event listener for tap tempo events
   useEffect(() => {
-    // Event handler for the custom tap tempo event
     const handleTapTempoEvent = (event) => {
       if (event.detail && typeof event.detail.tempo === 'number') {
-        const newTempo = event.detail.tempo;
-        setTempo(newTempo);
+        setTempo(event.detail.tempo);
       }
     };
-
-    // Add the event listener
     window.addEventListener('metronome-set-tempo', handleTapTempoEvent);
-    
-    // Clean up the event listener when component unmounts
-    return () => {
-      window.removeEventListener('metronome-set-tempo', handleTapTempoEvent);
-    };
-  }, []); // Empty dependency array means this runs once on mount
+    return () => window.removeEventListener('metronome-set-tempo', handleTapTempoEvent);
+  }, []);
 
-  // Reinitialize accents whenever subdivisions change.
   useEffect(() => {
     setAccents(Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1)));
   }, [subdivisions]);
 
-  // Maintain playback state when switching modes
   const [prevMode, setPrevMode] = useState(mode);
   useEffect(() => {
     if (prevMode !== mode && !isPaused) {
-      // Short timeout to ensure the new component has mounted and initialized
       const timer = setTimeout(() => {
-        // If metronome was playing before mode switch, ensure it continues playing
         if (togglePlayRef.current) {
-          // Force a restart by toggling twice if already playing
           setIsPaused(true);
           setTimeout(() => setIsPaused(false), 50);
         }
@@ -149,7 +97,7 @@ function App() {
   const toggleAccent = (index) => {
     setAccents(prev => {
       const newAccents = [...prev];
-      newAccents[index] = (newAccents[index] + 1) % 4; 
+      newAccents[index] = (newAccents[index] + 1) % 4;
       return newAccents;
     });
   };
@@ -165,10 +113,7 @@ function App() {
     tempoIncreasePercent: 5
   });
 
-  // This trigger is incremented when settings are applied.
   const [soundSetReloadTrigger, setSoundSetReloadTrigger] = useState(0);
-  
-  // State for showing the settings overlay
   const [settingsVisible, setSettingsVisible] = useState(false);
 
   const togglePlayRef = useRef(null);
@@ -176,7 +121,6 @@ function App() {
   const registerTogglePlay = (fn) => { togglePlayRef.current = fn; };
   const registerTapTempo = (fn) => { tapTempoRef.current = fn; };
 
-  // Make tap tempo ref available globally for emergency fallback
   window.tapTempoRef = tapTempoRef;
 
   useKeyboardShortcuts({
@@ -192,10 +136,8 @@ function App() {
     onToggleInfoOverlay: () => { },
   });
 
-  // Use the version from package.json directly
   const version = '0.4.6';
 
-  // Helper function to generate a description for the current mode.
   const getModeDescription = () => {
     const baseDescription = "LibreMetronome – An advanced, modular metronome service featuring various visualizations and training effects.";
     switch (mode) {
@@ -214,15 +156,11 @@ function App() {
     }
   };
 
-  // This function is called when the user applies new settings.
-  // It updates the backend and increments soundSetReloadTrigger.
   const handleApplySettings = () => {
-    // (Assume that settings are sent to the backend here.)
     setSoundSetReloadTrigger(prev => prev + 1);
     setSettingsVisible(false);
   };
 
-  // Render metronome view based on current mode.
   const renderMetronome = () => {
     switch (mode) {
       case "analog":
@@ -293,7 +231,7 @@ function App() {
             registerTogglePlay={registerTogglePlay}
             registerTapTempo={registerTapTempo}
             beatMultiplier={beatMode === "quarter" ? 1 : 2}
-            soundSetReloadTrigger={soundSetReloadTrigger} // Add this prop
+            soundSetReloadTrigger={soundSetReloadTrigger}
           />
         );
       case "multi":
@@ -312,29 +250,24 @@ function App() {
             registerTogglePlay={registerTogglePlay}
             registerTapTempo={registerTapTempo}
             key="multicircle"
-            soundSetReloadTrigger={soundSetReloadTrigger} // Add this prop
+            soundSetReloadTrigger={soundSetReloadTrigger}
           />
         );
-        case "polyrhythm":
-          return (
-            <PolyrhythmMetronome
-              tempo={tempo}
-              setTempo={setTempo}
-              subdivisions={subdivisions}
-              setSubdivisions={setSubdivisions}
-              isPaused={isPaused}
-              setIsPaused={setIsPaused}
-              swing={swing}
-              setSwing={setSwing}
-              volume={volume}
-              setVolume={setVolume}
-              togglePlay={() => { if (togglePlayRef.current) togglePlayRef.current(); }}
-              {...trainingSettings}
-              registerTogglePlay={registerTogglePlay}
-              registerTapTempo={registerTapTempo}
-              soundSetReloadTrigger={soundSetReloadTrigger}
-            />
-          );
+      case "polyrhythm":
+        return (
+          <PolyrhythmMetronome
+            tempo={tempo}
+            setTempo={setTempo}
+            isPaused={isPaused}
+            setIsPaused={setIsPaused}
+            swing={swing}
+            volume={volume}
+            {...trainingSettings}
+            registerTogglePlay={registerTogglePlay}
+            registerTapTempo={registerTapTempo}
+            soundSetReloadTrigger={soundSetReloadTrigger}
+          />
+        );
       default:
         return null;
     }
@@ -353,7 +286,6 @@ function App() {
         <meta name="twitter:description" content={getModeDescription()} />
       </Helmet>
 
-      {/* Main Menu */}
       <MainMenu
         trainingSettings={trainingSettings}
         setTrainingSettings={setTrainingSettings}
@@ -366,12 +298,11 @@ function App() {
         defaultSubdivisions={subdivisions}
         setDefaultSubdivisions={setSubdivisions}
         currentMode={mode}
-        setSoundSetReloadTrigger={setSoundSetReloadTrigger} // Add this prop
+        setSoundSetReloadTrigger={setSoundSetReloadTrigger}
       />
 
       <Header />
 
-      {/* Mode Selection Buttons */}
       <div className="mode-selector">
         <button 
           onClick={() => setMode("analog")} 
@@ -405,11 +336,9 @@ function App() {
         </button>
       </div>
 
-      {/* Render Metronome View */}
       {renderMetronome()}
 
-      {/* Render Controls only if mode is not multi */}
-      {mode !== "multi" && (
+      {mode !== "multi" && mode !== "polyrhythm" && (
         <MetronomeControls
           mode={mode}
           beatMode={beatMode}
@@ -425,7 +354,6 @@ function App() {
         />
       )}
 
-      {/* Settings Overlay */}
       {settingsVisible && (
         <SettingsContent
           volume={volume}
