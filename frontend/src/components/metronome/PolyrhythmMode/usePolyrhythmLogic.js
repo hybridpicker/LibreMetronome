@@ -188,8 +188,9 @@ export default function usePolyrhythmLogic({
    * @param {number} beatIndex Which beat in the pattern (0-indexed)
    * @param {boolean} isInnerCircle Whether this is for inner or outer circle
    * @param {boolean} mute Whether audio should be muted (for training mode)
+   * @param {boolean} isFirstBeatOfBoth Optional flag to indicate this is the synchronized first beat of both circles
    */
-  const scheduleBeat = useCallback((time, beatIndex, isInnerCircle, mute = false) => {
+  const scheduleBeat = useCallback((time, beatIndex, isInnerCircle, mute = false, isFirstBeatOfBoth = false) => {
     if (!audioCtxRef.current || mute) return;
     
     // Get the right accent array for this circle
@@ -222,6 +223,12 @@ export default function usePolyrhythmLogic({
     // Connect audio nodes
     source.connect(gainNode);
     gainNode.connect(audioCtxRef.current.destination);
+    
+    // Log when scheduling a first beat (for debugging)
+    if (beatIndex === 0 || isFirstBeatOfBoth) {
+      const circleType = isInnerCircle ? 'INNER' : 'OUTER';
+      console.log(`Scheduling ${circleType} FIRST BEAT at time ${time.toFixed(4)}s${isFirstBeatOfBoth ? ' (UNIFIED)' : ''}`);
+    }
     
     // Schedule precise playback
     source.start(time);
@@ -261,6 +268,40 @@ export default function usePolyrhythmLogic({
       }
     }, delayUntilBeat);
   }, [onInnerBeatTriggered, onOuterBeatTriggered]);
+
+  /**
+   * This function specifically schedules the unified first beat for both circles
+   * Ensures that both inner and outer first beats occur at the exact same time
+   * @param {number} time Precise time when the unified first beat should play
+   * @param {boolean} mute Whether audio should be muted (for training mode)
+   */
+  const scheduleUnifiedFirstBeat = useCallback((time, mute = false) => {
+    // Log unified first beat scheduling
+    console.log(`=== SCHEDULING UNIFIED FIRST BEAT at ${time.toFixed(4)}s ===`);
+    
+    // Schedule the inner circle first beat with special flag
+    scheduleBeat(time, 0, true, mute, true);
+    
+    // Schedule the outer circle first beat with special flag
+    scheduleBeat(time, 0, false, mute, true);
+    
+    // Update UI states immediately for both circles
+    const delayUntilBeat = Math.max(0, (time - audioCtxRef.current.currentTime) * 1000);
+    setTimeout(() => {
+      if (!schedulerRunningRef.current) return;
+      
+      setInnerCurrentBeat(0);
+      setOuterCurrentBeat(0);
+      
+      if (typeof onInnerBeatTriggered === 'function') {
+        onInnerBeatTriggered(0);
+      }
+      
+      if (typeof onOuterBeatTriggered === 'function') {
+        onOuterBeatTriggered(0);
+      }
+    }, delayUntilBeat);
+  }, [scheduleBeat, onInnerBeatTriggered, onOuterBeatTriggered]);
 
   /**
    * The main scheduler loop that runs repeatedly
@@ -330,7 +371,17 @@ export default function usePolyrhythmLogic({
       isSilencePhaseRef
     });
     
-    // Schedule inner circle beats
+    // Calculate the next cycle start that falls within our scheduling window
+    const nextCycleStart = currentCycleStartTime + cycleDuration;
+    
+    // If the next cycle start is within our scheduling window, we need to schedule
+    // a unified first beat for both circles
+    if (nextCycleStart < scheduleAheadTime) {
+      // Schedule unified first beat for both circles at the exact same time
+      scheduleUnifiedFirstBeat(nextCycleStart, doMute);
+    }
+    
+    // Schedule inner circle beats, but skip scheduling at cycle start points (those are handled by scheduleUnifiedFirstBeat)
     while (nextInnerBeatRef.current < scheduleAheadTime) {
       // Calculate elapsed time since start
       const elapsedTime = nextInnerBeatRef.current - startTimeRef.current;
@@ -339,24 +390,29 @@ export default function usePolyrhythmLogic({
       const beatCount = Math.floor(elapsedTime / innerInterval);
       const beatIndex = beatCount % innerBeatsRef.current;
       
-      // Debug logging for inner beat scheduling (but not too verbose)
-      if (beatIndex === 0) {
-        console.log(`Scheduling inner first beat #${beatCount} at ${nextInnerBeatRef.current.toFixed(3)}s (beat index: ${beatIndex})`);
-      }
+      // Only schedule if this isn't a cycle start (unified beat) or if it's not the first beat
+      const isCycleStart = Math.abs(nextInnerBeatRef.current - nextCycleStart) < 0.001;
       
-      // Schedule the beat audio and UI update
-      scheduleBeat(
-        nextInnerBeatRef.current,
-        beatIndex,
-        true, // isInnerCircle = true
-        doMute
-      );
+      if (!isCycleStart || beatIndex !== 0) {
+        // Debug logging for inner beat scheduling (but not too verbose)
+        if (beatIndex === 0) {
+          console.log(`Scheduling inner first beat #${beatCount} at ${nextInnerBeatRef.current.toFixed(3)}s (beat index: ${beatIndex})`);
+        }
+        
+        // Schedule the beat audio and UI update
+        scheduleBeat(
+          nextInnerBeatRef.current,
+          beatIndex,
+          true, // isInnerCircle = true
+          doMute
+        );
+      }
       
       // Move to next beat time
       nextInnerBeatRef.current += innerInterval;
     }
     
-    // Schedule outer circle beats
+    // Schedule outer circle beats, but skip scheduling at cycle start points (those are handled by scheduleUnifiedFirstBeat)
     while (nextOuterBeatRef.current < scheduleAheadTime) {
       // Calculate elapsed time since start
       const elapsedTime = nextOuterBeatRef.current - startTimeRef.current;
@@ -365,18 +421,23 @@ export default function usePolyrhythmLogic({
       const beatCount = Math.floor(elapsedTime / outerInterval);
       const beatIndex = beatCount % outerBeatsRef.current;
       
-      // Debug logging for outer beat scheduling (but not too verbose)
-      if (beatIndex === 0) {
-        console.log(`Scheduling outer first beat #${beatCount} at ${nextOuterBeatRef.current.toFixed(3)}s (beat index: ${beatIndex})`);
-      }
+      // Only schedule if this isn't a cycle start (unified beat) or if it's not the first beat
+      const isCycleStart = Math.abs(nextOuterBeatRef.current - nextCycleStart) < 0.001;
       
-      // Schedule the beat audio and UI update
-      scheduleBeat(
-        nextOuterBeatRef.current,
-        beatIndex,
-        false, // isInnerCircle = false
-        doMute
-      );
+      if (!isCycleStart || beatIndex !== 0) {
+        // Debug logging for outer beat scheduling (but not too verbose)
+        if (beatIndex === 0) {
+          console.log(`Scheduling outer first beat #${beatCount} at ${nextOuterBeatRef.current.toFixed(3)}s (beat index: ${beatIndex})`);
+        }
+        
+        // Schedule the beat audio and UI update
+        scheduleBeat(
+          nextOuterBeatRef.current,
+          beatIndex,
+          false, // isInnerCircle = false
+          doMute
+        );
+      }
       
       // Move to next beat time
       nextOuterBeatRef.current += outerInterval;
@@ -384,7 +445,7 @@ export default function usePolyrhythmLogic({
     
     // Update last schedule time
     lastScheduleTimeRef.current = scheduleAheadTime;
-  }, [getTimingInfo, scheduleBeat, speedMode, measuresUntilMute, 
+  }, [getTimingInfo, scheduleBeat, scheduleUnifiedFirstBeat, speedMode, measuresUntilMute, 
       muteDurationMeasures, muteProbability, measuresUntilSpeedUp, 
       tempoIncreasePercent, actualBpm]);
 
@@ -415,6 +476,7 @@ export default function usePolyrhythmLogic({
       const startDelay = 0.1; // 100ms buffer
       
       // CRITICAL: Both circles must start at the SAME time for first beat sync
+      // This is the key to ensuring the first beats (downbeats) stay synchronized throughout
       startTimeRef.current = audioCtxRef.current.currentTime + startDelay;
       
       // Log polyrhythm setup
@@ -429,6 +491,7 @@ Outer beats: ${outerBeatsRef.current}, interval: ${outerInterval.toFixed(3)}s
 LCM: ${commonCycleLCM} beats, cycle duration: ${cycleDuration.toFixed(3)}s
 ----------------------------------------
 Start time: ${startTimeRef.current.toFixed(3)}s
+UNIFIED FIRST BEAT: Both circles will trigger first beat at the same time
 ========================================
       `);
       
@@ -450,13 +513,17 @@ Start time: ${startTimeRef.current.toFixed(3)}s
       setInnerCurrentBeat(0);
       setOuterCurrentBeat(0);
       
+      // Start with a unified first beat for both circles
+      // This is critical for ensuring the downbeats stay synchronized
+      scheduleUnifiedFirstBeat(startTimeRef.current, false);
+      
       // Start the scheduler loop
       schedulerRunningRef.current = true;
       lookaheadIntervalRef.current = setInterval(schedulerLoop, 25); // 40Hz update rate
     } catch (err) {
       console.error('Error starting scheduler:', err);
     }
-  }, [getTimingInfo, schedulerLoop]);
+  }, [getTimingInfo, schedulerLoop, scheduleUnifiedFirstBeat]);
 
   /**
    * Stop the scheduler and all audio playback
