@@ -226,7 +226,7 @@ const PolyrhythmMetronome = (props) => {
         startScheduler();
       }
     }, 100);
-  }, [isPaused, setIsPaused, isTransitioning, startScheduler, stopScheduler]);
+  }, [isPaused, isTransitioning, startScheduler, stopScheduler]);
 
   // Handle subdivision changes for each circle with debounce
   const handleSetSubdivisions = useCallback((value, circle) => {
