@@ -1,5 +1,5 @@
 // src/components/metronome/PolyrhythmMode/PolyrhythmMetronome.js
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import usePolyrhythmLogic from './usePolyrhythmLogic';
 import playIcon from '../../../assets/svg/play.svg';
 import pauseIcon from '../../../assets/svg/pause.svg';
@@ -9,6 +9,19 @@ import './PolyrhythmMetronome.css';
 import withTrainingContainer from '../../Training/withTrainingContainer';
 import AccelerateButton from '../Controls/AccelerateButton';
 import { manualTempoAcceleration } from '../../../hooks/useMetronomeLogic/trainingLogic';
+
+// Utility debounce function to prevent rapid changes
+const debounce = (func, wait) => {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+};
 
 const PolyrhythmMetronome = (props) => {
   const {
@@ -35,7 +48,11 @@ const PolyrhythmMetronome = (props) => {
   const [outerBeats, setOuterBeats] = useState(3); // Default outer circle: 3 beats
   const [activeCircle, setActiveCircle] = useState('inner'); // 'inner' or 'outer'
   
-  // Beat states for both circles - initialized with proper accent patterns
+  // Track transition states
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const transitionTimerRef = useRef(null);
+  
+  // Beat states for both circles – initialized with proper accent patterns
   const [innerAccents, setInnerAccents] = useState(
     Array.from({ length: innerBeats }, (_, i) => (i === 0 ? 3 : 1))
   );
@@ -101,6 +118,8 @@ const PolyrhythmMetronome = (props) => {
     actualBpm,
     tapTempo,
     reloadSounds,
+    startScheduler,
+    stopScheduler
   } = polyrhythmLogic;
 
   useEffect(() => {
@@ -119,53 +138,72 @@ const PolyrhythmMetronome = (props) => {
     }
   }, [soundSetReloadTrigger, reloadSounds]);
 
-  // Handle Play/Pause
+  // Handle Play/Pause - IMPROVED with explicit scheduler control
   const handlePlayPause = useCallback(() => {
+    // Don't toggle during transitions
+    if (isTransitioning) return;
+    
+    // First explicitly stop playback if we're pausing
+    if (!isPaused) {
+      stopScheduler();
+    }
+    
+    // Then toggle the paused state
     setIsPaused(!isPaused);
-  }, [isPaused, setIsPaused]);
+  }, [isPaused, setIsPaused, isTransitioning, stopScheduler]);
 
-  // Register callbacks for togglePlay and tapTempo
+  // Register play/pause toggle for keyboard control (spacebar)
   useEffect(() => {
     if (registerTogglePlay) {
       registerTogglePlay(handlePlayPause);
     }
-    
+  }, [registerTogglePlay, handlePlayPause]);
+
+  // Register tap tempo if available
+  useEffect(() => {
     if (registerTapTempo && tapTempo) {
       registerTapTempo(tapTempo);
     }
+  }, [registerTapTempo, tapTempo]);
+
+  // New helper: pause metronome and then resume after circle change
+  const handleCircleChange = useCallback((circle) => {
+    if (activeCircle === circle || isTransitioning) return;
     
-    return () => {
-      if (registerTogglePlay) registerTogglePlay(null);
-      if (registerTapTempo) registerTapTempo(null);
-    };
-  }, [registerTogglePlay, registerTapTempo, handlePlayPause, tapTempo]);
-
-  // Handle manual tempo acceleration for training mode
-  const handleAccelerate = useCallback(() => {
+    setIsTransitioning(true);
+    
     if (!isPaused) {
-      manualTempoAcceleration({
-        tempoIncreasePercent,
-        tempoRef: { current: tempo },
-        setTempo
-      });
+      stopScheduler();
     }
-  }, [isPaused, tempo, tempoIncreasePercent, setTempo]);
-
-  // Handle subdivision changes for each circle
-  const handleSetSubdivisions = (value, circle) => {
-    if (circle === 'inner') {
-      setInnerBeats(value);
-    } else {
-      setOuterBeats(value);
+    
+    setActiveCircle(circle);
+    
+    // Wait for transition to complete before restarting
+    if (transitionTimerRef.current) {
+      clearTimeout(transitionTimerRef.current);
     }
-  };
+    
+    transitionTimerRef.current = setTimeout(() => {
+      setIsTransitioning(false);
+      if (!isPaused) {
+        startScheduler();
+      }
+    }, 100);
+  }, [activeCircle, isPaused, isTransitioning, startScheduler, stopScheduler]);
 
-  // Handle accent toggles for each circle
-  const handleToggleAccent = (index, circle) => {
+  // Update accent toggles – also pause/resume the metronome when accent is changed
+  const handleToggleAccent = useCallback((index, circle) => {
+    if (isTransitioning) return;
+    
+    setIsTransitioning(true);
+    
+    if (!isPaused) {
+      stopScheduler();
+    }
+    
     if (circle === 'inner') {
       setInnerAccents(prev => {
         const newAccents = [...prev];
-        // Cycle through accent values: 0 (muted) → 1 (normal) → 2 (accent) → 3 (first beat) → 0...
         newAccents[index] = (newAccents[index] + 1) % 4;
         return newAccents;
       });
@@ -176,10 +214,84 @@ const PolyrhythmMetronome = (props) => {
         return newAccents;
       });
     }
-  };
+    
+    // Wait for transition to complete before restarting
+    if (transitionTimerRef.current) {
+      clearTimeout(transitionTimerRef.current);
+    }
+    
+    transitionTimerRef.current = setTimeout(() => {
+      setIsTransitioning(false);
+      if (!isPaused) {
+        startScheduler();
+      }
+    }, 100);
+  }, [isPaused, setIsPaused, isTransitioning, startScheduler, stopScheduler]);
+
+  // Handle subdivision changes for each circle with debounce
+  const handleSetSubdivisions = useCallback((value, circle) => {
+    if (isTransitioning) return;
+    
+    // First mark as transitioning
+    setIsTransitioning(true);
+    
+    // Pause the metronome
+    if (!isPaused) {
+      stopScheduler();
+    }
+    
+    // Update the subdivision count
+    if (circle === 'inner') {
+      setInnerBeats(value);
+    } else {
+      setOuterBeats(value);
+    }
+    
+    // Use a delay before resuming to allow for buffer update
+    if (transitionTimerRef.current) {
+      clearTimeout(transitionTimerRef.current);
+    }
+    
+    transitionTimerRef.current = setTimeout(() => {
+      setIsTransitioning(false);
+      if (!isPaused) {
+        startScheduler();
+      }
+    }, 200); // 200ms delay provides time for state updates to propagate
+  }, [isPaused, isTransitioning, startScheduler, stopScheduler]);
+
+  // Properly debounced button handler to prevent rapid transitions
+  const debouncedSetSubdivisions = useCallback(
+    debounce((value, circle) => handleSetSubdivisions(value, circle), 150),
+    [handleSetSubdivisions]
+  );
+
+  // Handle tap tempo with proper integration
+  const handleTapTempo = useCallback(() => {
+    if (isTransitioning || !tapTempo) return;
+    tapTempo();
+  }, [isTransitioning, tapTempo]);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      if (transitionTimerRef.current) {
+        clearTimeout(transitionTimerRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div style={{ textAlign: 'center', position: 'relative' }}>
+      <AccelerateButton onClick={() => {
+        if (!isPaused && !isTransitioning) {
+          manualTempoAcceleration({
+            tempoIncreasePercent,
+            tempoRef: { current: tempo },
+            setTempo
+          });
+        }
+      }} speedMode={speedMode} />
       <div className="polyrhythm-container">
         <CircleRenderer 
           innerBeats={innerBeats}
@@ -191,14 +303,13 @@ const PolyrhythmMetronome = (props) => {
           isPaused={isPaused}
           containerSize={containerSize}
           activeCircle={activeCircle}
-          setActiveCircle={setActiveCircle}
+          setActiveCircle={handleCircleChange}
           handleToggleAccent={handleToggleAccent}
           macroMode={macroMode}
           isSilencePhaseRef={isSilencePhaseRef}
+          isTransitioning={isTransitioning}
         />
       </div>
-
-      {/* Beats per bar controls */}
       <div className="polyrhythm-controls">
         <div className="polyrhythm-config">
           <label className="polyrhythm-label">Inner Circle: {innerBeats} beats</label>
@@ -207,14 +318,14 @@ const PolyrhythmMetronome = (props) => {
               <button
                 key={`inner-${num}`}
                 className={`polyrhythm-button ${innerBeats === num ? 'active' : ''}`}
-                onClick={() => handleSetSubdivisions(num, 'inner')}
+                onClick={() => debouncedSetSubdivisions(num, 'inner')}
+                disabled={isTransitioning}
               >
                 {num}
               </button>
             ))}
           </div>
         </div>
-        
         <div className="polyrhythm-config">
           <label className="polyrhythm-label">Outer Circle: {outerBeats} beats</label>
           <div className="polyrhythm-buttons">
@@ -222,7 +333,8 @@ const PolyrhythmMetronome = (props) => {
               <button
                 key={`outer-${num}`}
                 className={`polyrhythm-button ${outerBeats === num ? 'active' : ''}`}
-                onClick={() => handleSetSubdivisions(num, 'outer')}
+                onClick={() => debouncedSetSubdivisions(num, 'outer')}
+                disabled={isTransitioning}
               >
                 {num}
               </button>
@@ -230,20 +342,20 @@ const PolyrhythmMetronome = (props) => {
           </div>
         </div>
       </div>
-
       <div className="polyrhythm-ratio">
         <h3>
           Polyrhythm: <span className="ratio-value">{innerBeats}:{outerBeats}</span>
         </h3>
       </div>
-
-      {/* Training Mode Accelerate Button */}
-      <AccelerateButton 
-        onClick={handleAccelerate} 
-        speedMode={speedMode}
-      />
-
-      {/* Play/Pause Button */}
+      <AccelerateButton onClick={() => {
+        if (!isPaused && !isTransitioning) {
+          manualTempoAcceleration({
+            tempoIncreasePercent,
+            tempoRef: { current: tempo },
+            setTempo
+          });
+        }
+      }} speedMode={speedMode} />
       <div style={{ marginTop: 20 }}>
         <button
           onClick={handlePlayPause}
@@ -251,10 +363,12 @@ const PolyrhythmMetronome = (props) => {
           style={{
             background: 'transparent',
             border: 'none',
-            cursor: 'pointer',
-            padding: '10px'
+            cursor: isTransitioning ? 'not-allowed' : 'pointer',
+            padding: '10px',
+            opacity: isTransitioning ? 0.7 : 1
           }}
           aria-label="Toggle play/pause"
+          disabled={isTransitioning}
         >
           <img
             src={isPaused ? playIcon : pauseIcon}
@@ -264,21 +378,21 @@ const PolyrhythmMetronome = (props) => {
           />
         </button>
       </div>
-
-      {/* Tap Tempo button */}
       <button
-        onClick={tapTempo}
+        onClick={handleTapTempo}
         style={{ 
           background: 'transparent', 
           border: 'none', 
-          cursor: 'pointer', 
+          cursor: isTransitioning ? 'not-allowed' : 'pointer', 
           marginTop: '20px',
           padding: '10px',
           outline: 'none',
           display: 'block',
-          margin: '10px auto'
+          margin: '10px auto',
+          opacity: isTransitioning ? 0.7 : 1
         }}
         aria-label="Tap Tempo"
+        disabled={isTransitioning}
       >
         <img
           src={tapButtonIcon}
@@ -290,8 +404,6 @@ const PolyrhythmMetronome = (props) => {
           }}
         />
       </button>
-
-      {/* Legend */}
       <div className="polyrhythm-legend">
         <div className="legend-item">
           <div className="legend-color inner-beat"></div>

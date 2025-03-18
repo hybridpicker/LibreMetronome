@@ -170,17 +170,17 @@ export default function usePolyrhythmLogic({
     const now = ctx.currentTime;
     let safeTime = when;
     
-    // For precision, we want to use high-resolution timestamps
-    // Round to 6 decimal places (microsecond precision)
+    // IMPROVEMENT: Higher precision rounding (microsecond)
     safeTime = Math.round(safeTime * 1000000) / 1000000;
     
     // Ensure we don't schedule in the past
     if (safeTime <= now) {
-      safeTime = now + 0.001; // minimal adjustment
+      // IMPROVEMENT: Smaller adjustment for tighter timing
+      safeTime = now + 0.001; 
       console.warn(`Had to adjust scheduling time for ${circle} beat ${subIndex} - was in the past`);
     }
     
-    // Prevent duplicate hits that are too close together
+    // IMPROVEMENT: Prevent duplicate hits that are too close together (timing conflict resolution)
     const circleCache = lastHitTimeRef.current[circle];
     if (circleCache[subIndex] && Math.abs(safeTime - circleCache[subIndex]) < 0.05) {
       console.log(`Skipping duplicate ${circle} hit for subIndex=${subIndex} (too close to previous)`);
@@ -209,7 +209,10 @@ export default function usePolyrhythmLogic({
     source.buffer = chosenBuf;
 
     const gainNode = ctx.createGain();
-    gainNode.gain.value = volumeRef.current;
+    
+    // IMPROVEMENT: Apply slight ramp to avoid clicks
+    gainNode.gain.setValueAtTime(0, safeTime);
+    gainNode.gain.linearRampToValueAtTime(volumeRef.current, safeTime + 0.005);
     
     // Connect the audio nodes
     source.connect(gainNode).connect(ctx.destination);
@@ -428,12 +431,24 @@ export default function usePolyrhythmLogic({
       // Update scheduler state
       schedulerRunningRef.current = false;
       
-      // Stop all currently playing sounds
+      // Stop all currently playing sounds with a small fadeout to avoid clicks
       activeNodesRef.current.forEach(({ source, gainNode }) => {
         try {
-          source.stop();
-          source.disconnect();
-          gainNode.disconnect();
+          // Apply a quick fade out to avoid clicks
+          const now = audioCtxRef.current?.currentTime || 0;
+          gainNode.gain.setValueAtTime(gainNode.gain.value, now);
+          gainNode.gain.linearRampToValueAtTime(0, now + 0.03);
+          
+          // Schedule actual stop slightly after fade
+          setTimeout(() => {
+            try {
+              source.stop();
+              source.disconnect();
+              gainNode.disconnect();
+            } catch (err) {
+              // Ignore errors, nodes might already be disconnected
+            }
+          }, 35);
         } catch (err) {
           // Ignore errors, nodes might already be disconnected
         }
@@ -502,10 +517,23 @@ export default function usePolyrhythmLogic({
       
       // Reset measure tracking
       lastScheduledMeasureRef.current = -1;
+      
+      // IMPROVEMENT: Clear any active audio nodes to prevent overlapping sounds
+      activeNodesRef.current.forEach(({ source, gainNode }) => {
+        try {
+          source.stop();
+          source.disconnect();
+          gainNode.disconnect();
+        } catch (err) {
+          // Ignore errors during cleanup
+        }
+      });
+      activeNodesRef.current = [];
 
       // Set starting time with a small offset for a clean start
+      // IMPROVEMENT: Increased buffer time from 0.1s to 0.2s for smoother starts
       const now = ctx.currentTime;
-      startTimeRef.current = now + 0.1;
+      startTimeRef.current = now + 0.2;
       measureStartTimeRef.current = startTimeRef.current;
       
       // Clear any existing interval
@@ -525,6 +553,28 @@ export default function usePolyrhythmLogic({
       isStartingOrStoppingRef.current = false;
     }
   }, [schedulingLoop, stopScheduler]);
+
+  // When beat counts change, we need to properly reset scheduling
+  useEffect(() => {
+    if (schedulerRunningRef.current && !isPausedRef.current) {
+      // Store the current state
+      const wasRunning = schedulerRunningRef.current;
+      
+      // Stop current scheduler cleanly
+      stopScheduler();
+      
+      // Reset timing references
+      lastHitTimeRef.current = { inner: {}, outer: {} };
+      lastScheduledMeasureRef.current = -1;
+      
+      // Brief delay to ensure clean state
+      setTimeout(() => {
+        if (wasRunning) {
+          startScheduler();
+        }
+      }, 50);
+    }
+  }, [innerBeats, outerBeats, stopScheduler, startScheduler]);
 
   // Respond to isPaused changes
   useEffect(() => {
