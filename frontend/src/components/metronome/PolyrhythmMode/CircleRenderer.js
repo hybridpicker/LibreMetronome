@@ -1,5 +1,5 @@
 // src/components/metronome/PolyrhythmMode/CircleRenderer.js
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import BeatVisualizer from './BeatVisualizer';
 
 const CircleRenderer = ({
@@ -15,7 +15,8 @@ const CircleRenderer = ({
   setActiveCircle,
   handleToggleAccent,
   macroMode,
-  isSilencePhaseRef
+  isSilencePhaseRef,
+  isTransitioning = false
 }) => {
   // Size calculations for inner and outer circles
   const outerRadius = containerSize / 2;
@@ -25,9 +26,26 @@ const CircleRenderer = ({
   const [innerPulseStates, setInnerPulseStates] = useState(Array(innerBeats).fill(false));
   const [outerPulseStates, setOuterPulseStates] = useState(Array(outerBeats).fill(false));
   
+  // Track previous values to detect changes
+  const previousInnerBeats = useRef(innerBeats);
+  const previousOuterBeats = useRef(outerBeats);
+  
+  // Handle resetting pulse states when beat counts change
+  useEffect(() => {
+    if (previousInnerBeats.current !== innerBeats) {
+      setInnerPulseStates(Array(innerBeats).fill(false));
+      previousInnerBeats.current = innerBeats;
+    }
+    
+    if (previousOuterBeats.current !== outerBeats) {
+      setOuterPulseStates(Array(outerBeats).fill(false));
+      previousOuterBeats.current = outerBeats;
+    }
+  }, [innerBeats, outerBeats]);
+  
   // Trigger pulse animations on beat changes
   useEffect(() => {
-    if (isPaused) return;
+    if (isPaused || isTransitioning) return;
     
     // Pulse animation for inner circle
     if (innerCurrentSubdivision >= 0 && innerCurrentSubdivision < innerBeats) {
@@ -40,17 +58,18 @@ const CircleRenderer = ({
       // Reset pulse after animation completes
       setTimeout(() => {
         setInnerPulseStates(prev => {
+          if (!prev[innerCurrentSubdivision]) return prev;
           const newState = [...prev];
           newState[innerCurrentSubdivision] = false;
           return newState;
         });
       }, 200);
     }
-  }, [innerCurrentSubdivision, innerBeats, isPaused]);
+  }, [innerCurrentSubdivision, innerBeats, isPaused, isTransitioning]);
   
   // Same for outer circle
   useEffect(() => {
-    if (isPaused) return;
+    if (isPaused || isTransitioning) return;
     
     if (outerCurrentSubdivision >= 0 && outerCurrentSubdivision < outerBeats) {
       setOuterPulseStates(prev => {
@@ -61,13 +80,14 @@ const CircleRenderer = ({
       
       setTimeout(() => {
         setOuterPulseStates(prev => {
+          if (!prev[outerCurrentSubdivision]) return prev;
           const newState = [...prev];
           newState[outerCurrentSubdivision] = false;
           return newState;
         });
       }, 200);
     }
-  }, [outerCurrentSubdivision, outerBeats, isPaused]);
+  }, [outerCurrentSubdivision, outerBeats, isPaused, isTransitioning]);
   
   // Add visual indicator for silence phase
   const silenceModeActive = macroMode !== 0 && isSilencePhaseRef?.current;
@@ -83,7 +103,7 @@ const CircleRenderer = ({
     >
       {/* Outer Circle */}
       <div
-        className={`outer-circle ${activeCircle === 'outer' ? 'active' : ''}`}
+        className={`outer-circle ${activeCircle === 'outer' ? 'active' : ''} ${isTransitioning ? 'transitioning' : ''}`}
         style={{
           width: containerSize,
           height: containerSize,
@@ -94,26 +114,29 @@ const CircleRenderer = ({
             activeCircle === 'outer' ? 
               "0 0 0 3px #00A0A0, 0 0 10px rgba(0, 160, 160, 0.6)" : 
               "none",
-          borderStyle: activeCircle === 'outer' ? 'solid' : 'dashed'
+          borderStyle: activeCircle === 'outer' ? 'solid' : 'dashed',
+          opacity: isTransitioning ? 0.8 : 1,
+          transition: 'all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.2s ease'
         }}
-        onClick={() => setActiveCircle('outer')}
+        onClick={() => !isTransitioning && setActiveCircle('outer')}
       >
         <BeatVisualizer
           beats={outerBeats}
           radius={outerRadius}
           accents={outerAccents}
           currentSubdivision={outerCurrentSubdivision}
-          isPaused={isPaused}
+          isPaused={isPaused || isTransitioning}
           pulseStates={outerPulseStates}
           handleToggleAccent={(index) => handleToggleAccent(index, 'outer')}
           beatType="outer"
           silenceModeActive={silenceModeActive}
+          isTransitioning={isTransitioning}
         />
       </div>
       
       {/* Inner Circle */}
       <div
-        className={`inner-circle ${activeCircle === 'inner' ? 'active' : ''}`}
+        className={`inner-circle ${activeCircle === 'inner' ? 'active' : ''} ${isTransitioning ? 'transitioning' : ''}`}
         style={{
           width: innerRadius * 2,
           height: innerRadius * 2,
@@ -124,20 +147,23 @@ const CircleRenderer = ({
             activeCircle === 'inner' ? 
               "0 0 0 3px #00A0A0, 0 0 10px rgba(0, 160, 160, 0.6)" : 
               "none",
-          borderStyle: activeCircle === 'inner' ? 'solid' : 'dashed'
+          borderStyle: activeCircle === 'inner' ? 'solid' : 'dashed',
+          opacity: isTransitioning ? 0.8 : 1,
+          transition: 'all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.2s ease'
         }}
-        onClick={() => setActiveCircle('inner')}
+        onClick={() => !isTransitioning && setActiveCircle('inner')}
       >
         <BeatVisualizer
           beats={innerBeats}
           radius={innerRadius}
           accents={innerAccents}
           currentSubdivision={innerCurrentSubdivision}
-          isPaused={isPaused}
+          isPaused={isPaused || isTransitioning}
           pulseStates={innerPulseStates}
           handleToggleAccent={(index) => handleToggleAccent(index, 'inner')}
           beatType="inner"
           silenceModeActive={silenceModeActive}
+          isTransitioning={isTransitioning}
         />
       </div>
     </div>

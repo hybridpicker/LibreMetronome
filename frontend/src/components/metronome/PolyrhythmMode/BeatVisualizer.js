@@ -1,31 +1,42 @@
 // src/components/metronome/PolyrhythmMode/BeatVisualizer.js
-import React from 'react';
+import React, { useMemo } from 'react';
 
 const BeatVisualizer = ({
   beats,
   radius,
-  accents,
+  accents = [],
   currentSubdivision,
   isPaused,
-  pulseStates,
+  pulseStates = [],
   handleToggleAccent,
   beatType = 'inner',
-  silenceModeActive = false
+  silenceModeActive = false,
+  isTransitioning = false
 }) => {
+  // Use memoization to calculate positions only when beats or radius changes
+  const beatPositions = useMemo(() => {
+    return Array.from({ length: beats }, (_, i) => {
+      // Calculate position on the circle
+      const angle = (2 * Math.PI * i) / beats - Math.PI / 2; // Start from top (12 o'clock)
+      const x = radius + radius * Math.cos(angle);
+      const y = radius + radius * Math.sin(angle);
+      
+      return { x, y, angle };
+    });
+  }, [beats, radius]);
+
   return (
     <>
-      {Array.from({ length: beats }, (_, i) => {
-        // Calculate position on the circle
-        const angle = (2 * Math.PI * i) / beats - Math.PI / 2; // Start from top (12 o'clock)
-        const x = radius + radius * Math.cos(angle);
-        const y = radius + radius * Math.sin(angle);
+      {beatPositions.map((position, i) => {
+        const { x, y } = position;
         
         // Determine if this beat is currently active
-        const isActive = i === currentSubdivision && !isPaused;
-        const isPulsing = pulseStates[i];
+        const isActive = i === currentSubdivision && !isPaused && !isTransitioning;
+        const isPulsing = pulseStates[i] && !isTransitioning;
         
         // Get accent value: 0=muted, 1=normal, 2=accent, 3=first
-        const accentValue = accents[i] || 1;
+        // Safely access accent value with fallback
+        const accentValue = i < accents.length ? accents[i] : 1;
         
         // Skip rendering if muted
         if (accentValue === 0) {
@@ -37,6 +48,7 @@ const BeatVisualizer = ({
         
         if (isActive) beatClasses.push('active');
         if (isPulsing) beatClasses.push('pulsing');
+        if (isTransitioning) beatClasses.push('transitioning');
         
         // Determine styling based on accent value
         if (accentValue === 3) {
@@ -52,6 +64,15 @@ const BeatVisualizer = ({
           beatClasses.push('muted');
         }
         
+        // Calculate scale transformation based on state
+        let scaleValue = 1;
+        if (isActive) scaleValue = 1.15;
+        if (isPulsing) scaleValue = 1.2;
+        if (isTransitioning) scaleValue = 0.95;
+        
+        // Define transition timing
+        const transitionDuration = isTransitioning ? '0.3s' : '0.2s';
+        
         return (
           <div
             key={i}
@@ -59,12 +80,14 @@ const BeatVisualizer = ({
             style={{
               left: `${x}px`,
               top: `${y}px`,
-              opacity: silenceModeActive ? 0.5 : 1,
-              transform: isActive ? 
-                'translate(-50%, -50%) scale(1.15)' : 
-                'translate(-50%, -50%)'
+              opacity: silenceModeActive ? 0.5 : isTransitioning ? 0.8 : 1,
+              transform: `translate(-50%, -50%) scale(${scaleValue})`,
+              transition: `all ${transitionDuration} cubic-bezier(0.25, 0.1, 0.25, 1), 
+                           left 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), 
+                           top 0.3s cubic-bezier(0.25, 0.1, 0.25, 1),
+                           opacity 0.2s ease`
             }}
-            onClick={() => handleToggleAccent(i)}
+            onClick={() => !isTransitioning && handleToggleAccent(i)}
           />
         );
       })}
@@ -72,4 +95,4 @@ const BeatVisualizer = ({
   );
 };
 
-export default BeatVisualizer;
+export default React.memo(BeatVisualizer);
