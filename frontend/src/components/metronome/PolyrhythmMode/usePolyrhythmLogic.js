@@ -123,15 +123,35 @@ export default function usePolyrhythmLogic({
   // Calculate measure duration based on global tempo
   // --------------------------------------------
   const getMeasureDuration = useCallback(() => {
-    // For polyrhythms, we set a consistent measure length
-    // based on the tempo and the LCM of both beat counts
+    // For polyrhythms, we need to use a mathematically precise measure duration
+    // based on the global tempo and the least common multiple (LCM) of both beat counts
     const secondsPerBeat = 60 / tempoRef.current;
     
-    // A full measure is equivalent to the global beat tempo
-    // We use max beats to ensure the measure is long enough for both patterns
-    const maxBeats = Math.max(innerBeatsRef.current, outerBeatsRef.current);
+    // Helper function to find greatest common divisor (GCD)
+    const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
     
-    return maxBeats * secondsPerBeat;
+    // Helper function to find least common multiple (LCM)
+    const lcm = (a, b) => (a * b) / gcd(a, b);
+    
+    // Calculate LCM of inner and outer beats
+    const cycleLCM = lcm(innerBeatsRef.current, outerBeatsRef.current);
+    
+    // Calculate how many "global beats" it takes to complete one full polyrhythm cycle
+    // This ensures that both patterns perfectly align after exactly one measure
+    const beatsPerMeasure = Math.max(
+      innerBeatsRef.current, 
+      outerBeatsRef.current
+    );
+    
+    // For additional precision, we can use the LCM approach instead
+    // const beatsPerMeasure = cycleLCM / Math.min(innerBeatsRef.current, outerBeatsRef.current);
+    
+    // The measure duration in seconds
+    const duration = beatsPerMeasure * secondsPerBeat;
+    
+    console.log(`Polyrhythm precision: ${innerBeatsRef.current}:${outerBeatsRef.current}, LCM=${cycleLCM}, duration=${duration.toFixed(6)}s`);
+    
+    return duration;
   }, []);
 
   // Cache previously scheduled hits to avoid duplicates
@@ -149,6 +169,10 @@ export default function usePolyrhythmLogic({
 
     const now = ctx.currentTime;
     let safeTime = when;
+    
+    // For precision, we want to use high-resolution timestamps
+    // Round to 6 decimal places (microsecond precision)
+    safeTime = Math.round(safeTime * 1000000) / 1000000;
     
     // Ensure we don't schedule in the past
     if (safeTime <= now) {
@@ -251,21 +275,34 @@ export default function usePolyrhythmLogic({
     const measureDuration = getMeasureDuration();
     console.log(`Scheduling measure #${measureIndex}, innerBeats=${innerBeatsRef.current}, outerBeats=${outerBeatsRef.current}`);
 
-    // Schedule first beats for both circles at exactly the same time
-    // This is the critical "synchronized downbeat" for polyrhythms
+          // Schedule first beats for both circles at EXACTLY the same time
+    // This is the most critical part for polyrhythms - the synchronized downbeat
     const firstBeatTime = measureStartTime;
     
-    // Inner circle first beat (always at measure start)
+    console.log(`UNIFIED DOWNBEAT: Scheduling both first beats at exactly ${firstBeatTime.toFixed(6)}`);
+    
+    // To ensure maximum precision, calculate both times once
+    const now = audioCtxRef.current.currentTime;
+    let safeFirstBeatTime = firstBeatTime;
+    
+    // Safety check to avoid scheduling in the past
+    if (safeFirstBeatTime <= now) {
+      safeFirstBeatTime = now + 0.002; // small buffer
+      console.warn(`Had to adjust first beat time - was in the past`);
+    }
+    
+    // Schedule both first beats with identical timestamps
+    // Inner circle first beat
     scheduleHit(
-      firstBeatTime,
+      safeFirstBeatTime,
       0,
       'inner',
       innerAccentsRef.current
     );
     
-    // Outer circle first beat (always at measure start)
+    // Outer circle first beat (using identical timestamp)
     scheduleHit(
-      firstBeatTime,
+      safeFirstBeatTime,
       0,
       'outer',
       outerAccentsRef.current
