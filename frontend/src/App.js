@@ -6,6 +6,8 @@ import Footer from './components/Footer/Footer';
 import AdvancedMetronomeWithCircle from './components/AdvancedMetronome';
 import MultiCircleMetronome from './components/metronome/MultiCircleMode';
 import GridModeMetronome from './components/metronome/GridMode/GridModeMetronome';
+import PolyrhythmMetronome from './components/metronome/PolyrhythmMode';
+
 import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
 import MetronomeControls from './components/metronome/Controls/MetronomeControls';
 import MainMenu from './components/Menu/mainMenu';
@@ -205,6 +207,8 @@ function App() {
         return `${baseDescription} Currently in Grid Mode with customizable beat patterns.`;
       case "multi":
         return `${baseDescription} Currently in Multi-Circle Mode for polyrhythm practice.`;
+      case "polyrhythm":
+        return `${baseDescription} Currently in Polyrhythm Mode for practicing complex rhythmic patterns.`;
       default:
         return baseDescription;
     }
@@ -311,6 +315,26 @@ function App() {
             soundSetReloadTrigger={soundSetReloadTrigger} // Add this prop
           />
         );
+        case "polyrhythm":
+          return (
+            <PolyrhythmMetronome
+              tempo={tempo}
+              setTempo={setTempo}
+              subdivisions={subdivisions}
+              setSubdivisions={setSubdivisions}
+              isPaused={isPaused}
+              setIsPaused={setIsPaused}
+              swing={swing}
+              setSwing={setSwing}
+              volume={volume}
+              setVolume={setVolume}
+              togglePlay={() => { if (togglePlayRef.current) togglePlayRef.current(); }}
+              {...trainingSettings}
+              registerTogglePlay={registerTogglePlay}
+              registerTapTempo={registerTapTempo}
+              soundSetReloadTrigger={soundSetReloadTrigger}
+            />
+          );
       default:
         return null;
     }
@@ -372,6 +396,12 @@ function App() {
           className={`mode-button ${mode === "multi" ? "mode-button-active" : ""}`}
         >
           Multi Circle
+        </button>
+        <button 
+          onClick={() => setMode("polyrhythm")} 
+          className={`mode-button ${mode === "polyrhythm" ? "mode-button-active" : ""}`}
+        >
+          Polyrhythm
         </button>
       </div>
 

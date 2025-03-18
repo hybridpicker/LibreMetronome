@@ -1,7 +1,6 @@
 // src/components/metronome/MultiCircleMode/MultiCircleMetronome.js
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import useMultiCircleMetronomeLogic from "./hooks/useMultiCircleMetronomeLogic";
-import useKeyboardShortcuts from "../../../hooks/useKeyboardShortcuts";
 import CircleRenderer from "./CircleRenderer";
 import tapButtonIcon from "../../../assets/svg/tap-button.svg";
 import playIcon from "../../../assets/svg/play.svg";
@@ -9,12 +8,8 @@ import pauseIcon from "../../../assets/svg/pause.svg";
 import "./MultiCircleMetronome.css";
 import '../Controls/slider-styles.css';
 import withTrainingContainer from '../../Training/withTrainingContainer'; // Use the standard training container
-import { getActiveSoundSet } from "../../../services/soundSetService";
-import { loadClickBuffers } from "../../../hooks/useMetronomeLogic/audioBuffers";
 import MultiCircleControls from './MultiCircleControls';
 
-import NoteSelector from "../Controls/NoteSelector";
-import SubdivisionSelector from "../Controls/SubdivisionSelector";
 import AccelerateButton from "../Controls/AccelerateButton";
 import { manualTempoAcceleration } from "../../../hooks/useMetronomeLogic/trainingLogic";
 
