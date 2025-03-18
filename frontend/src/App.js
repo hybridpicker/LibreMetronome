@@ -12,6 +12,7 @@ import MetronomeControls from './components/metronome/Controls/MetronomeControls
 import MainMenu from './components/Menu/mainMenu';
 import SettingsContent from './components/Menu/SettingsContent';
 import { Helmet } from 'react-helmet';
+import ModeSelector from './components/ModeSelector'; // Import the new ModeSelector component
 
 const TEMPO_MIN = 15;
 const TEMPO_MAX = 240;
@@ -304,38 +305,8 @@ function App() {
 
       <Header />
 
-      <div className="mode-selector">
-        <button 
-          onClick={() => setMode("analog")} 
-          className={`mode-button ${mode === "analog" ? "mode-button-active" : ""}`}
-        >
-          Pendulum
-        </button>
-        <button 
-          onClick={() => setMode("circle")} 
-          className={`mode-button ${mode === "circle" ? "mode-button-active" : ""}`}
-        >
-          Circle
-        </button>
-        <button 
-          onClick={() => setMode("grid")} 
-          className={`mode-button ${mode === "grid" ? "mode-button-active" : ""}`}
-        >
-          Grid
-        </button>
-        <button 
-          onClick={() => setMode("multi")} 
-          className={`mode-button ${mode === "multi" ? "mode-button-active" : ""}`}
-        >
-          Multi Circle
-        </button>
-        <button 
-          onClick={() => setMode("polyrhythm")} 
-          className={`mode-button ${mode === "polyrhythm" ? "mode-button-active" : ""}`}
-        >
-          Polyrhythm
-        </button>
-      </div>
+      {/* Replace the old mode selector with the new ModeSelector component */}
+      <ModeSelector mode={mode} setMode={setMode} />
 
       {renderMetronome()}
 
