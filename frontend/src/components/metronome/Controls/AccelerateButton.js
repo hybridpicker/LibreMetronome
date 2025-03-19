@@ -24,7 +24,6 @@ const AccelerateButton = ({ onClick, speedMode }) => {
         title="Press Enter to accelerate (in Training Mode)"
         aria-label="Accelerate tempo in Training Mode"
       >
-        <span className="icon">⏩</span>
         Accelerate
       </button>
     </div>
