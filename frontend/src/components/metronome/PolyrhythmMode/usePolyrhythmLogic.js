@@ -363,17 +363,13 @@ export default function usePolyrhythmLogic({
     gainNode.gain.setValueAtTime(0, safeTime);
     gainNode.gain.linearRampToValueAtTime(volumeRef.current, safeTime + 0.005);
     
-    // If sounds are swapped, we can modify the audio characteristics
-    if (soundsSwappedRef.current) {
-      // Example: Apply different audio processing based on circle
-      if (circle === 'inner' && accentValue !== 3) { // Don't modify first beats
-        // When swapped, inner circle uses outer circle sound characteristics
-        // For example, change pitch for the inner circle
-        source.detune.value = 200; // Make inner circle sound brighter when swapped
-      } else if (circle === 'outer' && accentValue !== 3) { // Don't modify first beats
-        // When swapped, outer circle uses inner circle sound characteristics
-        // For example, make outer circle sound deeper
-        source.detune.value = -200; // Make outer circle sound deeper when swapped
+    // FIXED CODE: Circle positions should always have the same sounds regardless of swap
+    // Only modify non-first beats (accentValue !== 3)
+    if (accentValue !== 3) {
+      if (circle === 'inner') {
+        source.detune.value = 300; // Inner circle always has higher pitch (300)
+      } else if (circle === 'outer') {
+        source.detune.value = -100; // Outer circle always has lower pitch (-100)
       }
     }
     
