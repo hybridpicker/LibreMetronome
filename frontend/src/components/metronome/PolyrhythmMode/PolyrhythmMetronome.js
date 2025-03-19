@@ -41,7 +41,11 @@ const PolyrhythmMetronome = (props) => {
     muteProbability = 0.3,
     tempoIncreasePercent = 5,
     measuresUntilSpeedUp = 2,
-    soundSetReloadTrigger = 0
+    soundSetReloadTrigger = 0,
+    // Add these lines to use the training container's refs
+    measureCountRef: containerMeasureCountRef,
+    muteMeasureCountRef: containerMuteMeasureCountRef,
+    isSilencePhaseRef: containerSilencePhaseRef
   } = props;
 
   // Polyrhythm settings: Two circles with different beat divisions
@@ -127,6 +131,85 @@ const PolyrhythmMetronome = (props) => {
     startScheduler,
     stopScheduler
   } = polyrhythmLogic;
+
+  // Sync training refs between polyrhythm logic and training container
+  useEffect(() => {
+    // First sync from logic to local refs when component mounts
+    if (containerMeasureCountRef) containerMeasureCountRef.current = measureCountRef.current;
+    if (containerMuteMeasureCountRef) containerMuteMeasureCountRef.current = muteMeasureCountRef.current;
+    if (containerSilencePhaseRef) containerSilencePhaseRef.current = isSilencePhaseRef.current;
+
+    // Setup interval for bidirectional sync
+    const syncInterval = setInterval(() => {
+      if (containerMeasureCountRef) containerMeasureCountRef.current = measureCountRef.current;
+      if (containerMuteMeasureCountRef) containerMuteMeasureCountRef.current = muteMeasureCountRef.current;
+      if (containerSilencePhaseRef) containerSilencePhaseRef.current = isSilencePhaseRef.current;
+      
+      // Make silence phase ref globally available for other components
+      window.isSilencePhaseRef = containerSilencePhaseRef || isSilencePhaseRef;
+    }, 500);
+    
+    return () => clearInterval(syncInterval);
+  }, [
+    containerMeasureCountRef, 
+    containerMuteMeasureCountRef, 
+    containerSilencePhaseRef, 
+    measureCountRef, 
+    muteMeasureCountRef, 
+    isSilencePhaseRef
+  ]);
+  
+  useEffect(() => {
+    // Set up global training refs for the withTrainingContainer HOC
+    if (polyrhythmLogic && polyrhythmLogic.measureCountRef && 
+        polyrhythmLogic.isSilencePhaseRef && polyrhythmLogic.muteMeasureCountRef) {
+      
+      // Destructure these for easier referencing
+      const { measureCountRef, isSilencePhaseRef, muteMeasureCountRef } = polyrhythmLogic;
+      
+      // Make the silence phase reference globally available
+      window.isSilencePhaseRef = isSilencePhaseRef;
+      
+      // Set up training settings update listener
+      const handleTrainingSettingsUpdate = (event) => {
+        const { type, newValue } = event.detail;
+        
+        if (type === 'macroMode' && newValue !== macroMode) {
+          console.log(`[Polyrhythm] Received macroMode update: ${newValue}`);
+          
+          // Reset training state for clean transition
+          measureCountRef.current = 0;
+          muteMeasureCountRef.current = 0;
+          isSilencePhaseRef.current = false;
+          
+          // Force sync
+          window.dispatchEvent(new CustomEvent('training-measure-update'));
+        }
+        
+        if (type === 'speedMode' && newValue !== speedMode) {
+          console.log(`[Polyrhythm] Received speedMode update: ${newValue}`);
+          
+          // Reset training state for clean transition  
+          measureCountRef.current = 0;
+          
+          // Force sync
+          window.dispatchEvent(new CustomEvent('training-measure-update'));
+        }
+      };
+      
+      window.addEventListener('training-param-update', handleTrainingSettingsUpdate);
+      window.addEventListener('training-mode-toggle', handleTrainingSettingsUpdate);
+      
+      return () => {
+        window.removeEventListener('training-param-update', handleTrainingSettingsUpdate);
+        window.removeEventListener('training-mode-toggle', handleTrainingSettingsUpdate);
+      };
+    }
+  }, [
+    macroMode, 
+    speedMode, 
+    polyrhythmLogic
+  ]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -323,6 +406,35 @@ const PolyrhythmMetronome = (props) => {
     startScheduler, stopScheduler
   ]);
 
+  // New unified handler for acceleration
+  const handleAccelerate = useCallback(() => {
+    if (!isPaused && !isTransitioning && speedMode === 2) {
+      console.log(`[Polyrhythm] Manual tempo acceleration (${tempoIncreasePercent}%)`);
+      
+      manualTempoAcceleration({
+        tempoIncreasePercent,
+        tempoRef: { current: tempo },
+        setTempo
+      });
+      
+      // Reset counter for next measure
+      if (polyrhythmLogic && polyrhythmLogic.measureCountRef) {
+        polyrhythmLogic.measureCountRef.current = 0;
+        
+        // Force sync
+        window.dispatchEvent(new CustomEvent('training-measure-update'));
+      }
+    }
+  }, [
+    isPaused, 
+    isTransitioning, 
+    speedMode, 
+    tempoIncreasePercent, 
+    tempo, 
+    setTempo, 
+    polyrhythmLogic
+  ]);
+
   // Cleanup timers on unmount
   useEffect(() => {
     return () => {
@@ -334,15 +446,7 @@ const PolyrhythmMetronome = (props) => {
 
   return (
     <div style={{ textAlign: 'center', position: 'relative' }}>
-      <AccelerateButton onClick={() => {
-        if (!isPaused && !isTransitioning) {
-          manualTempoAcceleration({
-            tempoIncreasePercent,
-            tempoRef: { current: tempo },
-            setTempo
-          });
-        }
-      }} speedMode={speedMode} />
+      <AccelerateButton onClick={handleAccelerate} speedMode={speedMode} />
       <div className="polyrhythm-container">
         <CircleRenderer 
           innerBeats={innerBeats}
@@ -357,7 +461,7 @@ const PolyrhythmMetronome = (props) => {
           setActiveCircle={handleCircleChange}
           handleToggleAccent={handleToggleAccent}
           macroMode={macroMode}
-          isSilencePhaseRef={isSilencePhaseRef}
+          isSilencePhaseRef={polyrhythmLogic ? polyrhythmLogic.isSilencePhaseRef : null}
           isTransitioning={isTransitioning}
           circleColorSwapped={circleColorSwapped}
         />
@@ -457,15 +561,7 @@ const PolyrhythmMetronome = (props) => {
         </button>
       </div>
       
-      <AccelerateButton onClick={() => {
-        if (!isPaused && !isTransitioning) {
-          manualTempoAcceleration({
-            tempoIncreasePercent,
-            tempoRef: { current: tempo },
-            setTempo
-          });
-        }
-      }} speedMode={speedMode} />
+      <AccelerateButton onClick={handleAccelerate} speedMode={speedMode} />
       <div style={{ marginTop: 20 }}>
         <button
           onClick={handlePlayPause}

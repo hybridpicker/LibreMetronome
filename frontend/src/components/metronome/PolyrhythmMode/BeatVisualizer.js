@@ -82,11 +82,6 @@ const BeatVisualizer = ({
           }
         }
         
-        // Add muted class if in silence mode
-        if (silenceModeActive) {
-          beatClasses.push('muted');
-        }
-        
         // Less dramatic scale for subtler, quicker pulses
         const scaleValue = isActive ? 1.2 : 1;
         
@@ -94,7 +89,7 @@ const BeatVisualizer = ({
         const styles = {
           left: `${x}px`,
           top: `${y}px`,
-          opacity: silenceModeActive ? 0.5 : isTransitioning ? 0.8 : 1,
+          opacity: isTransitioning ? 0.8 : 1, // No special silence opacity
           transform: `translate(-50%, -50%) scale(${scaleValue})`,
           // Much faster animation for active beats, standard for inactive
           transition: isActive 
