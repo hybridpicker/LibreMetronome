@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import usePolyrhythmLogic from './usePolyrhythmLogic';
 import playIcon from '../../../assets/svg/play.svg';
 import pauseIcon from '../../../assets/svg/pause.svg';
+import swapIcon from '../../../assets/svg/swap-icon.svg';
 import tapButtonIcon from '../../../assets/svg/tap-button.svg';
 import CircleRenderer from './CircleRenderer';
 import './PolyrhythmMetronome.css';
@@ -115,7 +116,8 @@ const PolyrhythmMetronome = (props) => {
     tempoIncreasePercent,
     measuresUntilSpeedUp,
     onInnerBeatTriggered: handleInnerBeatTriggered,
-    onOuterBeatTriggered: handleOuterBeatTriggered
+    onOuterBeatTriggered: handleOuterBeatTriggered,
+    setTempo // Pass setTempo to the hook
   });
 
   // Extract state and functions from polyrhythm logic
@@ -158,16 +160,25 @@ const PolyrhythmMetronome = (props) => {
     muteMeasureCountRef, 
     isSilencePhaseRef
   ]);
+
+  // Register tap tempo with parent component if needed
+  useEffect(() => {
+    if (registerTapTempo && tapTempo) {
+      console.log("[POLYRHYTHM] Registering tap tempo function with parent");
+      registerTapTempo(tapTempo);
+    }
+    
+    return () => {
+      if (registerTapTempo) {
+        registerTapTempo(null);
+      }
+    };
+  }, [registerTapTempo, tapTempo]);
   
   useEffect(() => {
-    // Set up global training refs for the withTrainingContainer HOC
-    if (polyrhythmLogic && polyrhythmLogic.measureCountRef && 
-        polyrhythmLogic.isSilencePhaseRef && polyrhythmLogic.muteMeasureCountRef) {
-      
-      // Destructure these for easier referencing
-      const { measureCountRef, isSilencePhaseRef, muteMeasureCountRef } = polyrhythmLogic;
-      
-      // Make the silence phase reference globally available
+    // If parent component provides training refs through props, sync with them
+    if (typeof window !== 'undefined') {
+      // Update the global reference
       window.isSilencePhaseRef = isSilencePhaseRef;
       
       // Set up training settings update listener
@@ -208,7 +219,9 @@ const PolyrhythmMetronome = (props) => {
   }, [
     macroMode, 
     speedMode, 
-    polyrhythmLogic
+    measureCountRef,
+    muteMeasureCountRef,
+    isSilencePhaseRef
   ]);
 
   useEffect(() => {
@@ -248,12 +261,29 @@ const PolyrhythmMetronome = (props) => {
     }
   }, [registerTogglePlay, handlePlayPause]);
 
-  // Register tap tempo if available
-  useEffect(() => {
-    if (registerTapTempo && tapTempo) {
-      registerTapTempo(tapTempo);
+  // New improved tap tempo handler function
+  const handleTapTempo = useCallback(() => {
+    console.log("[POLYRHYTHM] Tap tempo button clicked or 'T' key pressed");
+    
+    if (isTransitioning) {
+      console.log("[POLYRHYTHM] Ignoring tap - transition in progress");
+      return;
     }
-  }, [registerTapTempo, tapTempo]);
+    
+    // First check if polyrhythmLogic provides a tapTempo function
+    if (tapTempo && typeof tapTempo === 'function') {
+      console.log("[POLYRHYTHM] Using hook's tapTempo implementation");
+      tapTempo();
+    } else {
+      console.warn("[POLYRHYTHM] No tapTempo implementation found in hook");
+      
+      // Fallback: Dispatch a global tap tempo event
+      const now = performance.now();
+      window.dispatchEvent(new CustomEvent('metronome-tap-tempo', {
+        detail: { timestamp: now }
+      }));
+    }
+  }, [tapTempo, isTransitioning]);
 
   // New helper: pause metronome and then resume after circle change
   const handleCircleChange = useCallback((circle) => {
@@ -355,12 +385,6 @@ const PolyrhythmMetronome = (props) => {
     [handleSetSubdivisions]
   );
 
-  // Handle tap tempo with proper integration
-  const handleTapTempo = useCallback(() => {
-    if (isTransitioning || !tapTempo) return;
-    tapTempo();
-  }, [isTransitioning, tapTempo]);
-
   // Function to swap inner and outer beats and their accent patterns
   const handleSwitchCircles = useCallback(() => {
     if (isTransitioning) return;
@@ -418,8 +442,8 @@ const PolyrhythmMetronome = (props) => {
       });
       
       // Reset counter for next measure
-      if (polyrhythmLogic && polyrhythmLogic.measureCountRef) {
-        polyrhythmLogic.measureCountRef.current = 0;
+      if (measureCountRef) {
+        measureCountRef.current = 0;
         
         // Force sync
         window.dispatchEvent(new CustomEvent('training-measure-update'));
@@ -432,7 +456,7 @@ const PolyrhythmMetronome = (props) => {
     tempoIncreasePercent, 
     tempo, 
     setTempo, 
-    polyrhythmLogic
+    measureCountRef
   ]);
 
   // Cleanup timers on unmount
@@ -508,20 +532,16 @@ const PolyrhythmMetronome = (props) => {
         </div>
         
         <button
-          onClick={handleSwitchCircles}
-          className="switch-circles-button"
-          aria-label="Swap Inner and Outer Beat Patterns, Sounds, and Colors"
-          disabled={isTransitioning}
-          style={{
-            opacity: isTransitioning ? 0.7 : 1,
-            cursor: isTransitioning ? 'not-allowed' : 'pointer'
-          }}
-        >
-          <span>Swap</span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M7 16L3 12M3 12L7 8M3 12H16M17 8L21 12M21 12L17 16M21 12H8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
+        onClick={handleSwitchCircles}
+        className="switch-circles-button"
+        disabled={isTransitioning}
+        aria-label="Swap Inner and Outer Beat Patterns"
+        style={{
+          opacity: isTransitioning ? 0.7 : 1
+        }}
+      >
+        <img src={swapIcon} alt="Swap" />
+      </button>
       </div>
       
       <AccelerateButton onClick={handleAccelerate} speedMode={speedMode} />
@@ -602,6 +622,7 @@ const PolyrhythmMetronome = (props) => {
           }}
         />
       </button>
+
       <div className="polyrhythm-legend">
         <div className="legend-item">
           <div className="legend-color inner-beat"></div>
