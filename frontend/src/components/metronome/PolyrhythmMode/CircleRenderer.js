@@ -33,7 +33,7 @@ const CircleRenderer = ({
     previousOuterBeats.current = outerBeats;
   }, [innerBeats, outerBeats]);
   
-  // Add visual indicator for silence phase
+  // Get silence phase directly but without affecting styles
   const silenceModeActive = macroMode !== 0 && isSilencePhaseRef?.current;
   
   return (
@@ -53,9 +53,7 @@ const CircleRenderer = ({
           height: containerSize,
           top: 0,
           left: 0,
-          boxShadow: silenceModeActive ? 
-            "0 0 0 3px #ff5722, 0 0 10px rgba(255, 87, 34, 0.6)" : 
-            activeCircle === 'outer' ? 
+          boxShadow: activeCircle === 'outer' ? 
               "0 0 0 3px #00A0A0, 0 0 10px rgba(0, 160, 160, 0.6)" : 
               "none",
           borderStyle: activeCircle === 'outer' ? 'solid' : 'dashed',
@@ -87,9 +85,7 @@ const CircleRenderer = ({
           height: innerRadius * 2,
           top: outerRadius - innerRadius,
           left: outerRadius - innerRadius,
-          boxShadow: silenceModeActive ? 
-            "0 0 0 3px #ff5722, 0 0 10px rgba(255, 87, 34, 0.6)" : 
-            activeCircle === 'inner' ? 
+          boxShadow: activeCircle === 'inner' ? 
               "0 0 0 3px #00A0A0, 0 0 10px rgba(0, 160, 160, 0.6)" : 
               "none",
           borderStyle: activeCircle === 'inner' ? 'solid' : 'dashed',
