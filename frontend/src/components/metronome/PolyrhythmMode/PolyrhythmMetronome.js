@@ -498,11 +498,33 @@ const PolyrhythmMetronome = (props) => {
           </div>
         </div>
       </div>
-      <div className="polyrhythm-ratio">
-        <h3>
-          Polyrhythm: <span className="ratio-value">{innerBeats}:{outerBeats}</span>
-        </h3>
+      
+      {/* Side controls with centered layout */}
+      <div className="side-controls">
+        <div className="polyrhythm-ratio">
+          <h3>
+            Polyrhythm: <span className="ratio-value">{innerBeats}:{outerBeats}</span>
+          </h3>
+        </div>
+        
+        <button
+          onClick={handleSwitchCircles}
+          className="switch-circles-button"
+          aria-label="Swap Inner and Outer Beat Patterns, Sounds, and Colors"
+          disabled={isTransitioning}
+          style={{
+            opacity: isTransitioning ? 0.7 : 1,
+            cursor: isTransitioning ? 'not-allowed' : 'pointer'
+          }}
+        >
+          <span>Swap</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M7 16L3 12M3 12L7 8M3 12H16M17 8L21 12M21 12L17 16M21 12H8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
       </div>
+      
+      <AccelerateButton onClick={handleAccelerate} speedMode={speedMode} />
       
       {/* Tempo and Volume sliders matching BaseMetronomeLayout */}
       <div className="sliders-container">
@@ -532,36 +554,6 @@ const PolyrhythmMetronome = (props) => {
         </label>
       </div>
       
-      {/* Swap button */}
-      <div className="switch-circles-container">
-        <button
-          onClick={handleSwitchCircles}
-          className="switch-circles-button"
-          style={{
-            background: '#00A0A0',
-            border: 'none',
-            borderRadius: '4px',
-            color: 'white',
-            cursor: isTransitioning ? 'not-allowed' : 'pointer',
-            padding: '8px 12px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 20px',
-            opacity: isTransitioning ? 0.7 : 1,
-            transition: 'all 0.2s ease'
-          }}
-          aria-label="Swap Inner and Outer Beat Patterns, Sounds, and Colors"
-          disabled={isTransitioning}
-        >
-          <span style={{ marginRight: '8px' }}>Swap</span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M7 16L3 12M3 12L7 8M3 12H16M17 8L21 12M21 12L17 16M21 12H8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
-      </div>
-      
-      <AccelerateButton onClick={handleAccelerate} speedMode={speedMode} />
       <div style={{ marginTop: 20 }}>
         <button
           onClick={handlePlayPause}
