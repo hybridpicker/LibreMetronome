@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { initAudioContext, loadClickBuffers } from '../../../hooks/useMetronomeLogic/audioBuffers';
 import { getActiveSoundSet } from '../../../services/soundSetService';
 import { SCHEDULE_AHEAD_TIME } from '../../../hooks/useMetronomeLogic/constants';
-import { shouldMuteThisBeat, handleMeasureBoundary } from '../../../hooks/useMetronomeLogic/trainingLogic';
+import { shouldMuteThisBeat } from '../../../hooks/useMetronomeLogic/trainingLogic';
 
 // Import the animation sync utilities
 import { scheduleAnimationUpdate } from './PolyrhythmLogic/animationSync';
@@ -94,6 +94,37 @@ export default function usePolyrhythmLogic({
   useEffect(() => { outerAccentsRef.current = outerAccents; }, [outerAccents]);
   useEffect(() => { soundsSwappedRef.current = soundsSwapped; }, [soundsSwapped]);
 
+  /**
+   * Ensure training state changes are properly propagated to UI
+   */
+  const syncTrainingState = useCallback(() => {
+    // Make silence phase ref globally available
+    if (typeof window !== 'undefined') {
+      window.isSilencePhaseRef = isSilencePhaseRef;
+    }
+    
+    // Dispatch events for training container to detect state changes
+    window.dispatchEvent(new CustomEvent('training-measure-update', {
+      detail: {
+        measureCount: measureCountRef.current,
+        muteMeasureCount: muteMeasureCountRef.current,
+        isSilencePhase: isSilencePhaseRef.current,
+        timestamp: Date.now()
+      }
+    }));
+
+    // Also dispatch document-level event for components that might be listening there
+    document.dispatchEvent(new CustomEvent('training-state-changed', {
+      bubbles: true,
+      detail: {
+        measureCount: measureCountRef.current,
+        muteMeasureCount: muteMeasureCountRef.current,
+        isSilencePhase: isSilencePhaseRef.current,
+        timestamp: Date.now()
+      }
+    }));
+  }, [isSilencePhaseRef, measureCountRef, muteMeasureCountRef]);
+
   // --------------------------------------------
   // load audio on mount
   // --------------------------------------------
@@ -180,65 +211,80 @@ export default function usePolyrhythmLogic({
   // --------------------------------------------
   const scheduleHit = useCallback((when, subIndex, circle, accentsArray) => {
     const ctx = audioCtxRef.current;
-    if (!ctx || !schedulerRunningRef.current) return; // Skip if scheduler is no longer running
+    if (!ctx || !schedulerRunningRef.current) return 'no-audio-ctx'; // Skip if scheduler is no longer running
 
-    const now = ctx.currentTime;
-    let safeTime = when;
+    // Check for silence mode BEFORE scheduling any sound
+    const shouldMute = shouldMuteThisBeat({
+      macroMode,
+      muteProbability,
+      isSilencePhaseRef
+    });
     
+    if (shouldMute) {
+      // Still dispatch a UI event for animation during silence
+      window.dispatchEvent(new CustomEvent('silent-beat-played', {
+        detail: {
+          timestamp: performance.now(),
+          subIndex,
+          circle,
+          when
+        }
+      }));
+      return 'muted';
+    }
+
+    // Capture currentTime *once* at the start
+    const now = ctx.currentTime;
+
     // IMPROVEMENT: Higher precision rounding (microsecond)
-    safeTime = Math.round(safeTime * 1000000) / 1000000;
+    const safeTime = Math.round(when * 1000000) / 1000000;
     
     // Ensure we don't schedule in the past
     if (safeTime <= now) {
       // IMPROVEMENT: Smaller adjustment for tighter timing
-      safeTime = now + 0.001; 
+      const adjustedTime = now + 0.001; 
       console.warn(`Had to adjust scheduling time for ${circle} beat ${subIndex} - was in the past`);
+      return scheduleHit(adjustedTime, subIndex, circle, accentsArray);
     }
     
     // IMPROVEMENT: Prevent duplicate hits that are too close together (timing conflict resolution)
     const circleCache = lastHitTimeRef.current[circle];
     if (circleCache[subIndex] && Math.abs(safeTime - circleCache[subIndex]) < 0.05) {
       console.log(`Skipping duplicate ${circle} hit for subIndex=${subIndex} (too close to previous)`);
-      return;
+      return 'duplicate';
     }
     
     // Update our timestamp cache
     circleCache[subIndex] = safeTime;
 
-    // Determine accent level
-    const accentVal = (accentsArray && accentsArray[subIndex]) || 1;
-    if (accentVal === 0) return; // muted beat
-
-    // Choose buffer based on accent value
-    let chosenBuf = normalBufferRef.current;
-    
-    // Determine the appropriate sound based on accent level and whether sounds are swapped
-    if (accentVal === 3) {
-      // First beat sound always uses the first beat buffer regardless of swapping
-      chosenBuf = firstBufferRef.current;
-    } else if (accentVal === 2) {
-      // Accent beat always uses the accent buffer regardless of swapping
-      chosenBuf = accentBufferRef.current;
-    } else {
-      // For normal beats, we can apply sound swapping logic if needed
-      if (soundsSwappedRef.current) {
-        // When sounds are swapped, use a different sound assignment if desired
-        // Here you could change the sound between inner and outer circles
-        // For example, you could use different buffer, apply filters, etc.
-        
-        // For demonstration, we'll keep using the normal buffer but could be extended
-        chosenBuf = normalBufferRef.current;
-      } else {
-        // Regular sound assignment
-        chosenBuf = normalBufferRef.current;
-      }
+    // Identify correct accent array (inner vs. outer)
+    const accents = accentsArray || [];
+    if (!Array.isArray(accents)) {
+      console.warn(`No valid accents array for ${circle} circle.`);
+      return 'no-accents';
     }
+  
+    // Determine accent for this subdivision: 0=muted, 1=normal, 2=accent, 3=first
+    const accentValue = subIndex < accents.length ? accents[subIndex] : 1;
+    if (accentValue === 0) {
+      // A beat that is explicitly muted in the accent pattern
+      return 'accent-muted';
+    }
+  
+    // Pick the right buffer
+    let buffer = normalBufferRef.current;
+    if (accentValue === 3) buffer = firstBufferRef.current;
+    else if (accentValue === 2) buffer = accentBufferRef.current;
+    else if (accentValue === 1) buffer = normalBufferRef.current;
     
-    if (!chosenBuf) return;
-
+    if (!buffer) {
+      console.error('No buffer available for this accentValue:', accentValue);
+      return 'no-buffer';
+    }
+  
     // Create and configure audio nodes
     const source = ctx.createBufferSource();
-    source.buffer = chosenBuf;
+    source.buffer = buffer;
 
     const gainNode = ctx.createGain();
     
@@ -249,11 +295,11 @@ export default function usePolyrhythmLogic({
     // If sounds are swapped, we can modify the audio characteristics
     if (soundsSwappedRef.current) {
       // Example: Apply different audio processing based on circle
-      if (circle === 'inner' && accentVal !== 3) { // Don't modify first beats
+      if (circle === 'inner' && accentValue !== 3) { // Don't modify first beats
         // When swapped, inner circle uses outer circle sound characteristics
         // For example, change pitch for the inner circle
         source.detune.value = 200; // Make inner circle sound brighter when swapped
-      } else if (circle === 'outer' && accentVal !== 3) { // Don't modify first beats
+      } else if (circle === 'outer' && accentValue !== 3) { // Don't modify first beats
         // When swapped, outer circle uses inner circle sound characteristics
         // For example, make outer circle sound deeper
         source.detune.value = -200; // Make outer circle sound deeper when swapped
@@ -267,7 +313,7 @@ export default function usePolyrhythmLogic({
       source.start(safeTime);
     } catch (err) {
       console.error(`Error starting audio at time ${safeTime}:`, err);
-      return;
+      return 'start-error';
     }
     
     // Track active nodes for cleanup
@@ -311,7 +357,101 @@ export default function usePolyrhythmLogic({
       uiAnimationDuration: ANIMATION_TIMING.ANIMATION_DURATION
     });
 
-  }, [onInnerBeatTriggered, onOuterBeatTriggered]);
+    return 'scheduled';
+  }, [
+    macroMode, 
+    muteProbability, 
+    isSilencePhaseRef,
+    onInnerBeatTriggered,
+    onOuterBeatTriggered
+  ]);
+
+  /**
+   * Handle logic at measure boundaries (muting, tempo increases)
+   */
+  const handleMeasureBoundary = useCallback(() => {
+    // Increment the measure counter
+    measureCountRef.current++;
+    
+    console.log(`[Training] Measure count: ${measureCountRef.current}/${measuresUntilMute}, speedMode=${speedMode}`);
+    
+    // Macro Timing Mode - Handle silence phase
+    if (macroMode === 1) {
+      if (!isSilencePhaseRef.current) {
+        // Check if we should enter silence phase
+        if (measureCountRef.current >= measuresUntilMute) {
+          console.log(`[Training] 🔇 STARTING SILENCE PHASE 🔇`);
+          isSilencePhaseRef.current = true;
+          muteMeasureCountRef.current = 0;
+          
+          // Make sure the global silence reference is updated
+          window.isSilencePhaseRef = isSilencePhaseRef;
+          
+          // Sync state to UI immediately for this significant change
+          syncTrainingState();
+        }
+      } else {
+        // Already in silence phase, increment counter
+        muteMeasureCountRef.current++;
+        
+        console.log(`[Training] Silence phase: ${muteMeasureCountRef.current}/${muteDurationMeasures}`);
+        
+        // Check if we should exit silence phase
+        if (muteMeasureCountRef.current >= muteDurationMeasures) {
+          console.log(`[Training] 🔊 ENDING SILENCE PHASE 🔊`);
+          isSilencePhaseRef.current = false;
+          window.isSilencePhaseRef = isSilencePhaseRef;
+          muteMeasureCountRef.current = 0;
+          measureCountRef.current = 0; // Reset measure count after silence ends
+          
+          // Sync state to UI immediately for this significant change
+          syncTrainingState();
+        }
+      }
+    }
+    
+    // Speed Training Mode - Handle auto tempo increase
+    if (speedMode === 1 && !isSilencePhaseRef.current) {
+      if (measureCountRef.current >= measuresUntilSpeedUp) {
+        // Calculate new tempo with percentage increase
+        const factor = 1 + tempoIncreasePercent / 100;
+        const newTempo = Math.min(Math.round(tempoRef.current * factor), 240);
+        
+        // Only increase if it would change by at least 1 BPM
+        if (newTempo > tempoRef.current) {
+          console.log(`⏩ AUTO INCREASING TEMPO from ${tempoRef.current} to ${newTempo} BPM (${tempoIncreasePercent}%)`);
+          
+          // Set new tempo
+          setActualBpm(newTempo);
+          tempoRef.current = newTempo;
+          
+          // Ensure parent component knows about tempo change
+          window.dispatchEvent(new CustomEvent('metronome-set-tempo', {
+            detail: { tempo: newTempo }
+          }));
+          
+          // Reset measure counter after tempo increase
+          measureCountRef.current = 0;
+          
+          // Sync state to UI immediately for this significant change
+          syncTrainingState();
+        }
+      }
+    }
+
+    // Regular sync for normal measure boundaries
+    syncTrainingState();
+
+    return true; // Continue scheduler
+  }, [
+    macroMode,
+    speedMode,
+    measuresUntilMute,
+    muteDurationMeasures,
+    measuresUntilSpeedUp,
+    tempoIncreasePercent,
+    syncTrainingState
+  ]);
 
   // --------------------------------------------
   // Schedule one complete measure with both circles' beats
@@ -321,6 +461,13 @@ export default function usePolyrhythmLogic({
 
     const measureDuration = getMeasureDuration();
     console.log(`Scheduling measure #${measureIndex}, innerBeats=${innerBeatsRef.current}, outerBeats=${outerBeatsRef.current}`);
+
+    // Get the mute status for this measure before scheduling anything
+    const shouldMuteThisMeasure = shouldMuteThisBeat({
+      macroMode,
+      muteProbability,
+      isSilencePhaseRef
+    });
 
     // Schedule first beats for both circles at EXACTLY the same time
     // This is the most critical part for polyrhythms - the synchronized downbeat
@@ -338,31 +485,37 @@ export default function usePolyrhythmLogic({
       console.warn(`Had to adjust first beat time - was in the past`);
     }
     
-    // Schedule both first beats with identical timestamps
-    // Inner circle first beat
-    scheduleHit(
-      safeFirstBeatTime,
-      0,
-      'inner',
-      innerAccentsRef.current
-    );
-    
-    // Outer circle first beat (using identical timestamp)
-    scheduleHit(
-      safeFirstBeatTime,
-      0,
-      'outer',
-      outerAccentsRef.current
-    );
+    // Schedule both first beats with identical timestamps if not muted
+    if (!shouldMuteThisMeasure) {
+      // Inner circle first beat
+      scheduleHit(
+        safeFirstBeatTime,
+        0,
+        'inner',
+        innerAccentsRef.current
+      );
+      
+      // Outer circle first beat (using identical timestamp)
+      scheduleHit(
+        safeFirstBeatTime,
+        0,
+        'outer',
+        outerAccentsRef.current
+      );
+    } else {
+      // Dispatch events for UI animation during silence (first beats)
+      window.dispatchEvent(new CustomEvent('silent-beat-played', {
+        detail: {
+          timestamp: performance.now(),
+          subIndex: 0,
+          circle: 'both',
+          when: safeFirstBeatTime
+        }
+      }));
+    }
     
     // Now schedule the remaining beats for inner circle
     for (let i = 1; i < innerBeatsRef.current; i++) {
-      const doMute = shouldMuteThisBeat({
-        macroMode,
-        muteProbability,
-        isSilencePhaseRef
-      });
-      
       // Calculate precise timing for each subdivision
       const beatTime = measureStartTime + i * (measureDuration / innerBeatsRef.current);
       
@@ -376,12 +529,6 @@ export default function usePolyrhythmLogic({
 
     // Schedule remaining beats for outer circle
     for (let j = 1; j < outerBeatsRef.current; j++) {
-      const doMute = shouldMuteThisBeat({
-        macroMode,
-        muteProbability,
-        isSilencePhaseRef
-      });
-      
       // Calculate precise timing for each subdivision
       const beatTime = measureStartTime + j * (measureDuration / outerBeatsRef.current);
       
@@ -394,30 +541,14 @@ export default function usePolyrhythmLogic({
     }
 
     // Handle training mode boundaries at measure transitions
-    handleMeasureBoundary({
-      measureCountRef,
-      muteMeasureCountRef,
-      isSilencePhaseRef,
-      macroMode,
-      speedMode,
-      measuresUntilMute,
-      muteDurationMeasures,
-      muteProbability,
-      tempoRef,
-      measuresUntilSpeedUp,
-      tempoIncreasePercent,
-      setTempo: (t) => setActualBpm(t),
-    });
+    handleMeasureBoundary();
   }, [
     getMeasureDuration,
     scheduleHit,
     macroMode,
-    speedMode,
-    measuresUntilMute,
-    muteDurationMeasures,
     muteProbability,
-    measuresUntilSpeedUp,
-    tempoIncreasePercent
+    isSilencePhaseRef,
+    handleMeasureBoundary
   ]);
 
   // Track last scheduled measure to ensure sequential scheduling
@@ -501,11 +632,14 @@ export default function usePolyrhythmLogic({
       // Clear active nodes
       activeNodesRef.current = [];
       
+      // Make sure UI shows current state when stopping
+      syncTrainingState();
+      
       console.log("[PolyrhythmU] stopped scheduler");
     } finally {
       isStartingOrStoppingRef.current = false;
     }
-  }, []);
+  }, [syncTrainingState]);
   
   // --------------------------------------------
   // Start the scheduler and begin playing
@@ -552,9 +686,13 @@ export default function usePolyrhythmLogic({
       // Reset all state for a clean start
       schedulerRunningRef.current = true;
       setCurrentMeasure(0);
+      
+      // Reset training mode counters when starting
       measureCountRef.current = 0;
       muteMeasureCountRef.current = 0;
       isSilencePhaseRef.current = false;
+      window.isSilencePhaseRef = isSilencePhaseRef;
+      syncTrainingState(); // Initial sync to ensure UI is updated
       
       // Reset beat scheduling cache
       lastHitTimeRef.current = { inner: {}, outer: {} };
@@ -596,7 +734,7 @@ export default function usePolyrhythmLogic({
     } finally {
       isStartingOrStoppingRef.current = false;
     }
-  }, [schedulingLoop, stopScheduler]);
+  }, [schedulingLoop, stopScheduler, syncTrainingState]);
 
   // When beat counts change, we need to properly reset scheduling
   useEffect(() => {
@@ -663,10 +801,11 @@ export default function usePolyrhythmLogic({
     return () => {
       if (tempoChangeTimeoutRef.current) {
         clearTimeout(tempoChangeTimeoutRef.current);
+        tempoChangeTimeoutRef.current = null;
       }
     };
   }, [tempo, isPaused, startScheduler, stopScheduler]);
-
+    
   // Clean up on unmount
   useEffect(() => {
     return () => {
@@ -704,6 +843,24 @@ export default function usePolyrhythmLogic({
       }, 50);
     }
   }, [soundsSwapped, stopScheduler, startScheduler]);
+
+  // Add this effect to properly integrate with the parent's training container refs
+  useEffect(() => {
+    // If parent component provides training refs through props, sync with them
+    if (typeof window !== 'undefined') {
+      // Update the global reference
+      window.isSilencePhaseRef = isSilencePhaseRef;
+      
+      // Add polling interval for robust state synchronization
+      const syncInterval = setInterval(() => {
+        syncTrainingState();
+      }, 300);
+      
+      return () => {
+        clearInterval(syncInterval);
+      };
+    }
+  }, [syncTrainingState]);
 
   // --------------------------------------------
   // Expose public API
