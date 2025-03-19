@@ -1,4 +1,3 @@
-// src/components/metronome/MultiCircleMode/MultiCircleMetronome.js
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import useMultiCircleMetronomeLogic from "./hooks/useMultiCircleMetronomeLogic";
 import CircleRenderer from "./CircleRenderer";
@@ -6,9 +5,9 @@ import tapButtonIcon from "../../../assets/svg/tap-button.svg";
 import playIcon from "../../../assets/svg/play.svg";
 import pauseIcon from "../../../assets/svg/pause.svg";
 import "./MultiCircleMetronome.css";
-import '../Controls/slider-styles.css';
-import withTrainingContainer from '../../Training/withTrainingContainer'; // Use the standard training container
-import MultiCircleControls from './MultiCircleControls';
+import "../Controls/slider-styles.css";
+import withTrainingContainer from "../../Training/withTrainingContainer";
+import MultiCircleControls from "./MultiCircleControls";
 
 import AccelerateButton from "../Controls/AccelerateButton";
 import { manualTempoAcceleration } from "../../../hooks/useMetronomeLogic/trainingLogic";
@@ -22,16 +21,16 @@ const PlayButton = ({ handlePlayPause, isPaused }) => (
       type="button"
       onClick={handlePlayPause}
       aria-label="Toggle Play/Pause"
-      style={{ 
-        background: "transparent", 
-        border: "none", 
+      style={{
+        background: "transparent",
+        border: "none",
         cursor: "pointer",
         padding: "10px",
         transition: "all 0.2s ease",
         outline: "none"
       }}
     >
-      <img 
+      <img
         className="play-pause-icon"
         src={isPaused ? playIcon : pauseIcon}
         alt={isPaused ? "Play" : "Pause"}
@@ -103,7 +102,6 @@ function MultiCircleMetronome(props) {
     tempoIncreasePercent = 5,
     measuresUntilSpeedUp = 2,
     soundSetReloadTrigger = 0,
-    // training‐related Refs
     measureCountRef,
     muteMeasureCountRef,
     isSilencePhaseRef
@@ -131,13 +129,17 @@ function MultiCircleMetronome(props) {
 
   useEffect(() => {
     if (measureCountRef) localMeasureCountRef.current = measureCountRef.current;
-    if (muteMeasureCountRef) localMuteMeasureCountRef.current = muteMeasureCountRef.current;
-    if (isSilencePhaseRef) localIsSilencePhaseRef.current = isSilencePhaseRef.current;
+    if (muteMeasureCountRef)
+      localMuteMeasureCountRef.current = muteMeasureCountRef.current;
+    if (isSilencePhaseRef)
+      localIsSilencePhaseRef.current = isSilencePhaseRef.current;
 
     const syncInterval = setInterval(() => {
       if (measureCountRef) measureCountRef.current = localMeasureCountRef.current;
-      if (muteMeasureCountRef) muteMeasureCountRef.current = localMuteMeasureCountRef.current;
-      if (isSilencePhaseRef) isSilencePhaseRef.current = localIsSilencePhaseRef.current;
+      if (muteMeasureCountRef)
+        muteMeasureCountRef.current = localMuteMeasureCountRef.current;
+      if (isSilencePhaseRef)
+        isSilencePhaseRef.current = localIsSilencePhaseRef.current;
       window.isSilencePhaseRef = isSilencePhaseRef || localIsSilencePhaseRef;
     }, 500);
     return () => clearInterval(syncInterval);
@@ -186,35 +188,32 @@ function MultiCircleMetronome(props) {
     onCircleChange: setPlayingCircle
   });
 
-  // Listen for beat-mode-change events
   useEffect(() => {
     const handleBeatModeChange = (event) => {
       const { beatMode, beatMultiplier } = event.detail;
-      // if needed, handle externally
+      // Handle externally if needed
     };
-    window.addEventListener('beat-mode-change', handleBeatModeChange);
-    return () => {
-      window.removeEventListener('beat-mode-change', handleBeatModeChange);
-    };
+    window.addEventListener("beat-mode-change", handleBeatModeChange);
+    return () =>
+      window.removeEventListener("beat-mode-change", handleBeatModeChange);
   }, []);
 
-  // Re-load sounds when soundSetReloadTrigger changes
   useEffect(() => {
     if (!logic || !logic.reloadSounds || !soundSetReloadTrigger) return;
-    logic.reloadSounds()
-      .then(success => {
+    logic
+      .reloadSounds()
+      .then((success) => {
         if (success) {
           console.log("Reloaded sound buffers after settings changed");
         } else {
           console.warn("Failed to reload sound buffers");
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Error reloading sound buffers:", err);
       });
   }, [soundSetReloadTrigger, logic]);
 
-  // Provide tap tempo if registerTapTempo is given
   useEffect(() => {
     if (registerTapTempo && logic && logic.tapTempo) {
       registerTapTempo(logic.tapTempo);
@@ -226,7 +225,6 @@ function MultiCircleMetronome(props) {
     };
   }, [logic, registerTapTempo]);
 
-  // Provide play/pause toggle callback if registerTogglePlay is given
   const handlePlayPause = useCallback(() => {
     if (logic && logic.isProcessingPlayPauseRef?.current) {
       console.log("Ignoring play/pause - already processing");
@@ -235,7 +233,6 @@ function MultiCircleMetronome(props) {
     if (!logic) return;
 
     if (isPaused) {
-      // starting
       logic.safelyInitAudioContext?.().then(() => {
         setPlayingCircle(0);
         setIsPaused(false);
@@ -260,7 +257,6 @@ function MultiCircleMetronome(props) {
     };
   }, [handlePlayPause, registerTogglePlay]);
 
-  // Manual accelerate
   const handleAccelerate = useCallback(() => {
     if (!isPaused && tempoIncreasePercent > 0) {
       manualTempoAcceleration({
@@ -270,124 +266,124 @@ function MultiCircleMetronome(props) {
       });
       localMeasureCountRef.current = 0;
       if (macroMode !== 0 || speedMode !== 0) {
-        window.dispatchEvent(new CustomEvent('training-measure-update'));
+        window.dispatchEvent(
+          new CustomEvent("training-measure-update")
+        );
       }
     }
   }, [isPaused, tempoIncreasePercent, tempo, setTempo, macroMode, speedMode]);
 
-  // ─────────────────────────────────────────────────────────
-  //                ***  The critical FIX here  ***
-  // ─────────────────────────────────────────────────────────
-  const removeCircle = useCallback((indexToRemove) => {
-    if (!circleSettings || circleSettings.length <= 1) return;
-    setCircleSettings(prev => prev.filter((_, idx) => idx !== indexToRemove));
+  const removeCircle = useCallback(
+    (indexToRemove) => {
+      if (!circleSettings || circleSettings.length <= 1) return;
+      setCircleSettings((prev) => prev.filter((_, idx) => idx !== indexToRemove));
 
-    if (playingCircle === indexToRemove) {
-      setPlayingCircle(0);
-    } else if (playingCircle > indexToRemove) {
-      setPlayingCircle(prev => prev - 1);
-    }
-    if (activeCircle === indexToRemove) {
-      setActiveCircle(0);
-    } else if (activeCircle > indexToRemove) {
-      setActiveCircle(prev => prev - 1);
-    }
-  }, [circleSettings, playingCircle, activeCircle]);
+      if (playingCircle === indexToRemove) {
+        setPlayingCircle(0);
+      } else if (playingCircle > indexToRemove) {
+        setPlayingCircle((prev) => prev - 1);
+      }
+      if (activeCircle === indexToRemove) {
+        setActiveCircle(0);
+      } else if (activeCircle > indexToRemove) {
+        setActiveCircle((prev) => prev - 1);
+      }
+    },
+    [circleSettings, playingCircle, activeCircle]
+  );
 
-  /**
-   * This function is changed to:
-   * 1) Only update logic.accentsRef when editing the PLAYING circle
-   * 2) Immediately stop/restart scheduler if not paused and editing playing circle,
-   *    ensuring the next measure uses the updated accent.
-   */
-  const updateAccent = useCallback((beatIndex, circleIndex) => {
-    if (beatIndex === 'remove') {
-      removeCircle(circleIndex);
-      return;
-    }
-    
-    setCircleSettings(prev => {
-      if (!prev || !prev.length) return prev;
-      const updated = [...prev];
-      if (activeCircle >= updated.length) return prev;
-  
-      const circle = updated[activeCircle];
-      if (!circle.accents || beatIndex >= circle.accents.length) return prev;
-  
-      const acc = [...circle.accents];
-      acc[beatIndex] = (acc[beatIndex] + 1) % 4; // cycle 0→1→2→3→0
-  
-      updated[activeCircle] = { 
-        ...circle,
-        accents: acc
-      };
-  
-      return updated;
-    });
-  
-    // CRITICAL FIX: Only update the audio scheduler's reference if editing the PLAYING circle
-    if (logic && logic.accentsRef && activeCircle === playingCircle) {
-      // Overwrite the reference with the newly updated array
-      const newArray = circleSettings[activeCircle]?.accents?.slice() || [];
-      newArray[beatIndex] = (newArray[beatIndex] + 1) % 4;
-      logic.accentsRef.current = newArray;
-      
-      // Re-schedule so the next measure doesn't use stale accent data
-      // but ONLY if we're in the playing circle!
-      if (logic.stopScheduler && logic.startScheduler) {
-        logic.stopScheduler();
-        setTimeout(() => {
-          if (!isPaused) {
-            logic.startScheduler();
+  const updateAccent = useCallback(
+    (beatIndex, circleIndex) => {
+      if (beatIndex === "remove") {
+        removeCircle(circleIndex);
+        return;
+      }
+
+      setCircleSettings((prev) => {
+        if (!prev || !prev.length) return prev;
+        const updated = [...prev];
+        if (activeCircle >= updated.length) return prev;
+
+        const circle = updated[activeCircle];
+        if (!circle.accents || beatIndex >= circle.accents.length) return prev;
+
+        const acc = [...circle.accents];
+        acc[beatIndex] = (acc[beatIndex] + 1) % 4;
+
+        updated[activeCircle] = {
+          ...circle,
+          accents: acc
+        };
+
+        return updated;
+      });
+
+      if (logic && logic.accentsRef && activeCircle === playingCircle) {
+        const newArray =
+          circleSettings[activeCircle]?.accents?.slice() || [];
+        newArray[beatIndex] = (newArray[beatIndex] + 1) % 4;
+        logic.accentsRef.current = newArray;
+
+        if (logic.stopScheduler && logic.startScheduler) {
+          logic.stopScheduler();
+          setTimeout(() => {
+            if (!isPaused) {
+              logic.startScheduler();
+            }
+          }, 0);
+        }
+      }
+
+      window.dispatchEvent(
+        new CustomEvent("accent-change", {
+          detail: {
+            circleIndex: activeCircle,
+            beatIndex,
+            playingCircleIndex: playingCircle,
+            isPlayingCircle: activeCircle === playingCircle
           }
-        }, 0);
-      }
-    }
-  
-    // Dispatch an event for potential debugging
-    window.dispatchEvent(new CustomEvent('accent-change', {
-      detail: {
-        circleIndex: activeCircle,
-        beatIndex,
-        playingCircleIndex: playingCircle,
-        isPlayingCircle: activeCircle === playingCircle // Add this property
-      }
-    }));
-  }, [activeCircle, playingCircle, removeCircle, logic, circleSettings, isPaused]);
+        })
+      );
+    },
+    [activeCircle, playingCircle, removeCircle, logic, circleSettings, isPaused]
+  );
 
-  // Add new circle
   const addCircle = useCallback(() => {
-    setCircleSettings(prev => {
+    setCircleSettings((prev) => {
       if (!prev || prev.length >= MAX_CIRCLES) return prev;
       const lastCircle = prev[prev.length - 1];
-      const newSubdivisions = (lastCircle.subdivisions === 4) ? 3 : 4;
-      const newBeatMode = (lastCircle.beatMode === "quarter") ? "eighth" : "quarter";
+      const newSubdivisions = lastCircle.subdivisions === 4 ? 3 : 4;
+      const newBeatMode =
+        lastCircle.beatMode === "quarter" ? "eighth" : "quarter";
 
       return [
         ...prev,
         {
           subdivisions: newSubdivisions,
-          accents: Array.from({ length: newSubdivisions }, (_, i) => (i === 0 ? 3 : 1)),
+          accents: Array.from(
+            { length: newSubdivisions },
+            (_, i) => (i === 0 ? 3 : 1)
+          ),
           beatMode: newBeatMode
         }
       ];
     });
   }, []);
 
-  // Render
   return (
     <div style={{ textAlign: "center" }}>
-      <AccelerateButton onClick={handleAccelerate} speedMode={speedMode} />
-
-      <div className="circles-container" style={{
-        display: "flex",
-        flexDirection: isMobile ? "column" : "row",
-        alignItems: "center",
-        justifyContent: "center",
-        marginTop: "20px",
-        width: "100%",
-        flexWrap: "wrap"
-      }}>
+      <div
+        className="circles-container"
+        style={{
+          display: "flex",
+          flexDirection: isMobile ? "column" : "row",
+          alignItems: "center",
+          justifyContent: "center",
+          marginTop: "20px",
+          width: "100%",
+          flexWrap: "wrap"
+        }}
+      >
         {circleSettings.map((settings, idx) => (
           <CircleRenderer
             key={idx}
@@ -397,8 +393,12 @@ function MultiCircleMetronome(props) {
             isPlaying={idx === playingCircle && !isPaused}
             currentSubdivision={logic?.currentSubdivision || 0}
             isPaused={isPaused}
-            audioCtxRunning={logic?.audioCtx && logic.audioCtx.state === "running"}
-            isTransitioning={logic.isTransitioning && logic.isTransitioning()}
+            audioCtxRunning={
+              logic?.audioCtx && logic.audioCtx.state === "running"
+            }
+            isTransitioning={
+              logic.isTransitioning && logic.isTransitioning()
+            }
             updateAccent={updateAccent}
             radius={containerSize / 2}
             containerSize={containerSize}
@@ -409,7 +409,7 @@ function MultiCircleMetronome(props) {
             isMobile={isMobile}
           />
         ))}
-        
+
         {circleSettings.length < MAX_CIRCLES && (
           <AddCircleButton
             addCircle={addCircle}
@@ -419,28 +419,33 @@ function MultiCircleMetronome(props) {
         )}
       </div>
 
+      {/* Accelerate Button positioned directly after the metronome canvas */}
+      <AccelerateButton onClick={handleAccelerate} speedMode={speedMode} />
+
       <PlayButton handlePlayPause={handlePlayPause} isPaused={isPaused} />
 
       <button
         onClick={() => {
-          if (logic && typeof logic.tapTempo === 'function') {
+          if (logic && typeof logic.tapTempo === "function") {
             logic.tapTempo();
           } else {
             const now = performance.now();
-            window.dispatchEvent(new CustomEvent('metronome-tap-tempo', {
-              detail: { timestamp: now }
-            }));
+            window.dispatchEvent(
+              new CustomEvent("metronome-tap-tempo", {
+                detail: { timestamp: now }
+              })
+            );
           }
         }}
-        style={{ 
-          background: 'transparent', 
-          border: 'none', 
-          cursor: 'pointer', 
-          marginTop: '10px',
-          padding: '10px',
-          outline: 'none',
-          display: 'block',
-          margin: '10px auto'
+        style={{
+          background: "transparent",
+          border: "none",
+          cursor: "pointer",
+          marginTop: "10px",
+          padding: "10px",
+          outline: "none",
+          display: "block",
+          margin: "10px auto"
         }}
         aria-label="Tap Tempo"
       >
@@ -448,9 +453,10 @@ function MultiCircleMetronome(props) {
           src={tapButtonIcon}
           alt="Tap Tempo"
           style={{
-            height: '35px',
-            objectFit: 'contain',
-            transition: 'all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)'
+            height: "35px",
+            objectFit: "contain",
+            transition:
+              "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)"
           }}
         />
       </button>
