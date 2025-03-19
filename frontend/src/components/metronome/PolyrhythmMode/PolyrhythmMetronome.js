@@ -6,9 +6,11 @@ import pauseIcon from '../../../assets/svg/pause.svg';
 import tapButtonIcon from '../../../assets/svg/tap-button.svg';
 import CircleRenderer from './CircleRenderer';
 import './PolyrhythmMetronome.css';
+import './EnhancedPolyrhythmStyles.css'; // Import the enhanced styles
 import withTrainingContainer from '../../Training/withTrainingContainer';
 import AccelerateButton from '../Controls/AccelerateButton';
 import { manualTempoAcceleration } from '../../../hooks/useMetronomeLogic/trainingLogic';
+import PolyrhythmControls from './PolyrhythmControls'; // Import the new controls component
 
 // Utility debounce function to prevent rapid changes
 const debounce = (func, wait) => {
@@ -317,8 +319,8 @@ const PolyrhythmMetronome = (props) => {
     }, 100);
   }, [isPaused, isTransitioning, startScheduler, stopScheduler]);
 
-  // Handle subdivision changes for each circle with debounce
-  const handleSetSubdivisions = useCallback((value, circle) => {
+  // Handle subdivision changes for each circle with transition handling
+  const handleSetInnerBeats = useCallback((value) => {
     if (isTransitioning) return;
     
     // First mark as transitioning
@@ -330,11 +332,7 @@ const PolyrhythmMetronome = (props) => {
     }
     
     // Update the subdivision count
-    if (circle === 'inner') {
-      setInnerBeats(value);
-    } else {
-      setOuterBeats(value);
-    }
+    setInnerBeats(value);
     
     // Use a delay before resuming to allow for buffer update
     if (transitionTimerRef.current) {
@@ -349,11 +347,33 @@ const PolyrhythmMetronome = (props) => {
     }, 200); // 200ms delay provides time for state updates to propagate
   }, [isPaused, isTransitioning, startScheduler, stopScheduler]);
 
-  // Properly debounced button handler to prevent rapid transitions
-  const debouncedSetSubdivisions = useCallback(
-    debounce((value, circle) => handleSetSubdivisions(value, circle), 150),
-    [handleSetSubdivisions]
-  );
+  // Handle outer beats changes
+  const handleSetOuterBeats = useCallback((value) => {
+    if (isTransitioning) return;
+    
+    // First mark as transitioning
+    setIsTransitioning(true);
+    
+    // Pause the metronome
+    if (!isPaused) {
+      stopScheduler();
+    }
+    
+    // Update the subdivision count
+    setOuterBeats(value);
+    
+    // Use a delay before resuming to allow for buffer update
+    if (transitionTimerRef.current) {
+      clearTimeout(transitionTimerRef.current);
+    }
+    
+    transitionTimerRef.current = setTimeout(() => {
+      setIsTransitioning(false);
+      if (!isPaused) {
+        startScheduler();
+      }
+    }, 200); // 200ms delay provides time for state updates to propagate
+  }, [isPaused, isTransitioning, startScheduler, stopScheduler]);
 
   // Handle tap tempo with proper integration
   const handleTapTempo = useCallback(() => {
@@ -466,43 +486,16 @@ const PolyrhythmMetronome = (props) => {
           circleColorSwapped={circleColorSwapped}
         />
       </div>
-      <div className="polyrhythm-controls">
-        <div className="polyrhythm-config">
-          <label className="polyrhythm-label">Inner Circle: {innerBeats} beats</label>
-          <div className="polyrhythm-buttons">
-            {[2, 3, 4, 5, 6, 7, 8, 9].map(num => (
-              <button
-                key={`inner-${num}`}
-                className={`polyrhythm-button ${innerBeats === num ? 'active' : ''}`}
-                onClick={() => debouncedSetSubdivisions(num, 'inner')}
-                disabled={isTransitioning}
-              >
-                {num}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="polyrhythm-config">
-          <label className="polyrhythm-label">Outer Circle: {outerBeats} beats</label>
-          <div className="polyrhythm-buttons">
-            {[2, 3, 4, 5, 6, 7, 8, 9].map(num => (
-              <button
-                key={`outer-${num}`}
-                className={`polyrhythm-button ${outerBeats === num ? 'active' : ''}`}
-                onClick={() => debouncedSetSubdivisions(num, 'outer')}
-                disabled={isTransitioning}
-              >
-                {num}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-      <div className="polyrhythm-ratio">
-        <h3>
-          Polyrhythm: <span className="ratio-value">{innerBeats}:{outerBeats}</span>
-        </h3>
-      </div>
+      
+      {/* Replace the old controls with the new PolyrhythmControls component */}
+      <PolyrhythmControls
+        innerBeats={innerBeats}
+        outerBeats={outerBeats}
+        setInnerBeats={handleSetInnerBeats}
+        setOuterBeats={handleSetOuterBeats}
+        isTransitioning={isTransitioning}
+        handleSwitchCircles={handleSwitchCircles}
+      />
       
       {/* Tempo and Volume sliders matching BaseMetronomeLayout */}
       <div className="sliders-container">
@@ -532,36 +525,7 @@ const PolyrhythmMetronome = (props) => {
         </label>
       </div>
       
-      {/* Swap button */}
-      <div className="switch-circles-container">
-        <button
-          onClick={handleSwitchCircles}
-          className="switch-circles-button"
-          style={{
-            background: '#00A0A0',
-            border: 'none',
-            borderRadius: '4px',
-            color: 'white',
-            cursor: isTransitioning ? 'not-allowed' : 'pointer',
-            padding: '8px 12px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 20px',
-            opacity: isTransitioning ? 0.7 : 1,
-            transition: 'all 0.2s ease'
-          }}
-          aria-label="Swap Inner and Outer Beat Patterns, Sounds, and Colors"
-          disabled={isTransitioning}
-        >
-          <span style={{ marginRight: '8px' }}>Swap</span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M7 16L3 12M3 12L7 8M3 12H16M17 8L21 12M21 12L17 16M21 12H8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
-      </div>
-      
-      <AccelerateButton onClick={handleAccelerate} speedMode={speedMode} />
+      {/* Play/Pause and Tap Tempo buttons */}
       <div style={{ marginTop: 20 }}>
         <button
           onClick={handlePlayPause}
@@ -584,6 +548,7 @@ const PolyrhythmMetronome = (props) => {
           />
         </button>
       </div>
+      
       <button
         onClick={handleTapTempo}
         style={{ 
@@ -610,6 +575,8 @@ const PolyrhythmMetronome = (props) => {
           }}
         />
       </button>
+      
+      {/* Legend */}
       <div className="polyrhythm-legend">
         <div className="legend-item">
           <div className="legend-color inner-beat"></div>

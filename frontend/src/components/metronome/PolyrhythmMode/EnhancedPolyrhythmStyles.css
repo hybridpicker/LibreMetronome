@@ -1,0 +1,280 @@
+/* src/components/metronome/PolyrhythmMode/EnhancedPolyrhythmStyles.css */
+
+/* Minimalistic Polyrhythm Button Styles */
+
+/* Container for all polyrhythm controls */
+.polyrhythm-controls {
+    margin: 0 auto 40px;
+    max-width: 340px;
+  }
+  
+  /* Buttons container with improved spacing */
+  .polyrhythm-buttons-container {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    margin-bottom: 30px;
+  }
+  
+  /* Clean, minimalist section headers */
+  .polyrhythm-section-title {
+    font-size: 15px;
+    font-weight: 400;
+    color: #666;
+    margin-bottom: 12px;
+    opacity: 0.9;
+  }
+  
+  /* Grid layout for buttons */
+  .polyrhythm-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin: 0 auto;
+  }
+  
+  /* Minimalist button styling */
+  .polyrhythm-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid #e6e6e6;
+    background-color: white;
+    color: #666;
+    cursor: pointer;
+    font-weight: normal;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 0;
+    transition: all 0.15s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  }
+  
+  /* Subtle hover effects */
+  .polyrhythm-button:hover:not(:disabled):not(.active) {
+    border-color: #ccc;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  
+  /* Clean active states */
+  .polyrhythm-button.active.inner-circle {
+    background-color: #00A0A0;
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 2px 4px rgba(0, 160, 160, 0.2);
+  }
+  
+  .polyrhythm-button.active.outer-circle {
+    background-color: #00A0A0;
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 2px 4px rgba(0, 160, 160, 0.2);
+  }
+  
+  /* Alternate active state */
+  .polyrhythm-button.highlighted {
+    background-color: #f8f8f8;
+    color: #333;
+    border-color: #ddd;
+  }
+  
+  /* Focus state */
+  .polyrhythm-button:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 160, 160, 0.15);
+  }
+  
+  /* Pressed state */
+  .polyrhythm-button:active:not(:disabled) {
+    transform: translateY(0);
+  }
+  
+  /* Disabled state */
+  .polyrhythm-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  /* Minimal circle indicators */
+  .polyrhythm-button.inner-circle::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background-color: #00A0A0;
+    opacity: 0.7;
+  }
+  
+  .polyrhythm-button.outer-circle::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background-color: #f6cc7c;
+    opacity: 0.7;
+  }
+  
+  /* Clean ratio display */
+  .polyrhythm-ratio {
+    padding: 12px 15px;
+    margin: 15px auto 25px;
+    text-align: center;
+    background-color: rgba(0, 160, 160, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(0, 160, 160, 0.08);
+  }
+  
+  .polyrhythm-ratio h3 {
+    margin: 0;
+    font-size: 15px;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: normal;
+  }
+  
+  .ratio-value {
+    display: inline-block;
+    font-weight: 500;
+    color: #00A0A0;
+    margin-left: 8px;
+    font-size: 17px;
+  }
+  
+  /* Clean, minimal swap button */
+  .switch-circles-button {
+    background: rgba(0, 160, 160, 0.9);
+    border: none;
+    border-radius: 6px;
+    color: white;
+    padding: 10px 15px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    font-weight: 400;
+    font-size: 15px;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  }
+  
+  .switch-circles-button:hover:not(:disabled) {
+    background-color: rgba(0, 128, 128, 0.95);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .switch-circles-button:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+  
+  .switch-circles-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .switch-circles-button svg {
+    margin-left: 6px;
+    opacity: 0.9;
+  }
+  
+  .switch-circles-container {
+    text-align: center;
+    margin: 20px auto;
+  }
+  
+  /* Subtle tooltips */
+  .tooltip {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 3px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+    white-space: nowrap;
+    z-index: 100;
+    pointer-events: none;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.15s ease, visibility 0.15s ease;
+  }
+  
+  .tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -3px;
+    border-width: 3px;
+    border-style: solid;
+    border-color: rgba(0, 0, 0, 0.7) transparent transparent transparent;
+  }
+  
+  .polyrhythm-button:hover .tooltip {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  /* Screen reader only */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+  
+  /* Polyrhythm config container */
+  .polyrhythm-config {
+    margin-bottom: 10px;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 600px) {
+    .polyrhythm-buttons {
+      gap: 8px;
+    }
+    
+    .polyrhythm-button {
+      width: 36px;
+      height: 36px;
+      font-size: 15px;
+    }
+    
+    .switch-circles-button {
+      padding: 8px 12px;
+      font-size: 14px;
+    }
+    
+    .polyrhythm-section-title {
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+  
+    /* Hide tooltips on mobile */
+    .tooltip {
+      display: none;
+    }
+  }
