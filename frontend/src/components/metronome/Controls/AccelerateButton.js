@@ -5,6 +5,8 @@ import './AccelerateButton.css';
 /**
  * AccelerateButton component displays a button that allows manual tempo acceleration
  * when Training Mode is active with speedMode set to 1 (Auto Increase Tempo) or 2 (Manual Increase Only).
+ * 
+ * This component has been updated to ensure consistent positioning and appearance across all metronome modes.
  */
 const AccelerateButton = ({ onClick, speedMode }) => {
   // Only show when speedMode is 1 (Auto Increase) or 2 (Manual Increase Only)
@@ -22,6 +24,7 @@ const AccelerateButton = ({ onClick, speedMode }) => {
         title="Press Enter to accelerate (in Training Mode)"
         aria-label="Accelerate tempo in Training Mode"
       >
+        <span className="icon">⏩</span>
         Accelerate
       </button>
     </div>
