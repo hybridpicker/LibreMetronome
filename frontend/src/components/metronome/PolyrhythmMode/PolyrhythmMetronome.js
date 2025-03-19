@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import usePolyrhythmLogic from './usePolyrhythmLogic';
 import playIcon from '../../../assets/svg/play.svg';
 import pauseIcon from '../../../assets/svg/pause.svg';
+import swapIcon from '../../../assets/svg/swap-icon.svg';
 import tapButtonIcon from '../../../assets/svg/tap-button.svg';
 import CircleRenderer from './CircleRenderer';
 import './PolyrhythmMetronome.css';
@@ -531,20 +532,16 @@ const PolyrhythmMetronome = (props) => {
         </div>
         
         <button
-          onClick={handleSwitchCircles}
-          className="switch-circles-button"
-          aria-label="Swap Inner and Outer Beat Patterns, Sounds, and Colors"
-          disabled={isTransitioning}
-          style={{
-            opacity: isTransitioning ? 0.7 : 1,
-            cursor: isTransitioning ? 'not-allowed' : 'pointer'
-          }}
-        >
-          <span>Swap</span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M7 16L3 12M3 12L7 8M3 12H16M17 8L21 12M21 12L17 16M21 12H8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
+        onClick={handleSwitchCircles}
+        className="switch-circles-button"
+        disabled={isTransitioning}
+        aria-label="Swap Inner and Outer Beat Patterns"
+        style={{
+          opacity: isTransitioning ? 0.7 : 1
+        }}
+      >
+        <img src={swapIcon} alt="Swap" />
+      </button>
       </div>
       
       <AccelerateButton onClick={handleAccelerate} speedMode={speedMode} />
