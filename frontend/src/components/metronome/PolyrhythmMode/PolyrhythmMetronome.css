@@ -337,3 +337,153 @@
     transition: opacity 0.2s ease !important;
   }
 }
+/* Enhanced styling for PolyRhythm Mode buttons */
+
+/* Refined button grid layout for better spacing */
+.polyrhythm-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 0 auto;
+  max-width: 220px;
+}
+
+/* Improved circle button styling */
+.polyrhythm-button {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid #e8e8e8;
+  background-color: white;
+  color: #666;
+  cursor: pointer;
+  font-weight: normal;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 0;
+  transition: all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Enhanced hover state */
+.polyrhythm-button:hover:not(:disabled):not(.active) {
+  border-color: #d5d5d5;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  background-color: #fafafa;
+}
+
+/* Enhanced active state for inner circle */
+.polyrhythm-button.active.inner-circle,
+.polyrhythm-button.active {
+  background-color: #00A0A0; /* Teal color consistent with app */
+  color: white;
+  border-color: #00A0A0;
+  transform: scale(1.05);
+  box-shadow: 0 2px 5px rgba(0, 160, 160, 0.25);
+}
+
+/* Enhanced active state for outer circle - slightly different shade */
+.polyrhythm-button.active.outer-circle {
+  background-color: #00A0A0;
+  color: white;
+  border-color: #00A0A0;
+  transform: scale(1.05);
+  box-shadow: 0 2px 5px rgba(0, 160, 160, 0.25);
+}
+
+/* Pressed state */
+.polyrhythm-button:active:not(:disabled) {
+  transform: scale(0.95);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Disabled state */
+.polyrhythm-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #f8f8f8;
+}
+
+/* Ultra minimalistic swap button - exactly matching tap tempo button */
+.switch-circles-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 10px;
+  outline: none;
+  display: block;
+  margin: 10px auto;
+  transition: transform 0.2s ease;
+}
+
+.switch-circles-button img {
+  height: 35px;
+  object-fit: contain;
+  transition: all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.switch-circles-button:hover:not(:disabled) img {
+  transform: scale(1.1);
+  filter: brightness(0) invert(1); /* This turns the icon white */
+}
+
+.switch-circles-button:active:not(:disabled) img {
+  transform: scale(0.95);
+}
+
+.switch-circles-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Improve polyrhythm ratio display */
+.polyrhythm-ratio {
+  padding: 10px;
+  margin: 10px auto 15px;
+  background-color: rgba(0, 160, 160, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 160, 160, 0.1);
+  display: inline-block;
+  min-width: 120px;
+}
+
+.polyrhythm-ratio h3 {
+  margin: 0;
+  font-size: 15px;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: normal;
+}
+
+.ratio-value {
+  display: inline-block;
+  font-weight: 500;
+  color: #00A0A0;
+  margin-left: 8px;
+  font-size: 17px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .polyrhythm-buttons {
+    gap: 6px;
+    max-width: 200px;
+  }
+  
+  .polyrhythm-button {
+    width: 38px;
+    height: 38px;
+    font-size: 15px;
+  }
+  
+  .switch-circles-button {
+    padding: 6px 12px;
+    font-size: 14px;
+  }
+}
