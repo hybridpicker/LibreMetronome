@@ -7,6 +7,12 @@ import { shouldMuteThisBeat } from '../../../hooks/useMetronomeLogic/trainingLog
 // Import the animation sync utilities
 import { scheduleAnimationUpdate } from './PolyrhythmLogic/animationSync';
 
+// Add these constants at the top
+const TEMPO_MIN = 15;
+const TEMPO_MAX = 240;
+const MAX_TAP_INTERVAL = 2000;
+const MIN_TAPS_REQUIRED = 2;
+
 // Animation timing constants
 const ANIMATION_TIMING = {
   UI_RENDER_DELAY: 0.016,    // 16ms - typical React render cycle
@@ -44,7 +50,8 @@ export default function usePolyrhythmLogic({
   measuresUntilSpeedUp = 2,
   // callbacks for UI
   onInnerBeatTriggered = null,
-  onOuterBeatTriggered = null
+  onOuterBeatTriggered = null,
+  setTempo // Add setTempo to the parameter list
 }) {
   // Audio
   const audioCtxRef = useRef(null);
@@ -93,6 +100,70 @@ export default function usePolyrhythmLogic({
   useEffect(() => { innerAccentsRef.current = innerAccents; }, [innerAccents]);
   useEffect(() => { outerAccentsRef.current = outerAccents; }, [outerAccents]);
   useEffect(() => { soundsSwappedRef.current = soundsSwapped; }, [soundsSwapped]);
+
+  // Add tap tempo state
+  const tapTimesRef = useRef([]);
+
+  /**
+   * Improved tap tempo handler that works for polyrhythm mode
+   */
+  const tapTempo = useCallback(() => {
+    console.log("[POLYRHYTHM] Tap tempo called");
+    const now = performance.now();
+    
+    // Reset if it's been too long since the last tap
+    if (tapTimesRef.current.length > 0 && 
+        now - tapTimesRef.current[tapTimesRef.current.length - 1] > MAX_TAP_INTERVAL) {
+      console.log("[POLYRHYTHM] Interval too long, resetting taps");
+      tapTimesRef.current = [];
+    }
+    
+    // Add this tap time
+    tapTimesRef.current.push(now);
+    console.log(`[POLYRHYTHM] Tap recorded: ${tapTimesRef.current.length} total taps`);
+    
+    // Limit to last 5 taps for better accuracy
+    if (tapTimesRef.current.length > 5) {
+      tapTimesRef.current.shift();
+    }
+    
+    // Calculate tempo if we have enough taps
+    if (tapTimesRef.current.length >= MIN_TAPS_REQUIRED) {
+      // Calculate intervals between taps
+      const intervals = [];
+      for (let i = 1; i < tapTimesRef.current.length; i++) {
+        const interval = tapTimesRef.current[i] - tapTimesRef.current[i - 1];
+        intervals.push(interval);
+        console.log(`[POLYRHYTHM] Interval ${i}: ${Math.round(interval)}ms`);
+      }
+      
+      // Average the intervals
+      const avgInterval = intervals.reduce((sum, val) => sum + val, 0) / intervals.length;
+      console.log(`[POLYRHYTHM] Average interval: ${Math.round(avgInterval)}ms`);
+      
+      // Convert to BPM and clamp to valid range
+      const rawTempo = Math.round(60000 / avgInterval);
+      const newTempo = Math.max(TEMPO_MIN, Math.min(TEMPO_MAX, rawTempo));
+      
+      console.log(`[POLYRHYTHM] Setting tempo to ${newTempo} BPM`);
+      
+      // Update tempo both locally and in parent component
+      tempoRef.current = newTempo;
+      if (setTempo) {
+        setTempo(newTempo);
+      }
+      
+      // Also dispatch a global event for additional integration
+      window.dispatchEvent(new CustomEvent('metronome-set-tempo', {
+        detail: { tempo: newTempo }
+      }));
+      
+      return newTempo;
+    }
+    
+    console.log(`[POLYRHYTHM] Need ${MIN_TAPS_REQUIRED - tapTimesRef.current.length} more tap(s)`);
+    return null;
+  }, [setTempo]);
 
   /**
    * Ensure training state changes are properly propagated to UI
@@ -862,6 +933,41 @@ export default function usePolyrhythmLogic({
     }
   }, [syncTrainingState]);
 
+  /**
+   * Utility function to reload sounds
+   */
+  const reloadSounds = useCallback(async () => {
+    try {
+      if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
+        audioCtxRef.current = initAudioContext();
+      }
+      const soundSet = await getActiveSoundSet();
+      await loadClickBuffers({
+        audioCtx: audioCtxRef.current,
+        normalBufferRef,
+        accentBufferRef,
+        firstBufferRef,
+        soundSet
+      });
+      return true;
+    } catch (err) {
+      console.error("Error reloading sounds:", err);
+      try {
+        // Fallback to default sounds
+        await loadClickBuffers({
+          audioCtx: audioCtxRef.current,
+          normalBufferRef,
+          accentBufferRef,
+          firstBufferRef
+        });
+        return true;
+      } catch (fallbackErr) {
+        console.error("Failed to load fallback sounds:", fallbackErr);
+        return false;
+      }
+    }
+  }, []);
+
   // --------------------------------------------
   // Expose public API
   // --------------------------------------------
@@ -875,30 +981,12 @@ export default function usePolyrhythmLogic({
     actualBpm,
 
     // Sound reload utility
-    reloadSounds: async () => {
-      try {
-        if (!audioCtxRef.current || audioCtxRef.current.state==='closed') {
-          audioCtxRef.current = initAudioContext();
-        }
-        const s = await getActiveSoundSet();
-        await loadClickBuffers({
-          audioCtx: audioCtxRef.current,
-          normalBufferRef,
-          accentBufferRef,
-          firstBufferRef,
-          soundSet: s
-        });
-        return true;
-      } catch (err) {
-        console.error("Error reloading sounds:", err);
-        return false;
-      }
-    },
+    reloadSounds,
     
     // Audio context and controls
     audioCtx: audioCtxRef.current,
     startScheduler,
     stopScheduler,
-    tapTempo: () => {} // Placeholder - you can implement tap tempo if needed
+    tapTempo // Now returning the implemented tapTempo function
   };
 }
