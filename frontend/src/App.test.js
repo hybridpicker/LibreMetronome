@@ -1,3 +1,6 @@
+// App.test.js should remain unchanged to ensure compatibility
+// Keep the existing tests exactly as they are:
+
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
