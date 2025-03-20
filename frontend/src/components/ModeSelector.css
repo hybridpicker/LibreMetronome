@@ -83,7 +83,7 @@
   top: 100%;
   left: 50%;
   transform: translateX(-50%);
-  background-color: rgba(51, 51, 51, 0.95);
+  background-color: rgba(0, 160, 160, 0.9);
   color: white;
   padding: 8px 12px;
   border-radius: 6px;
@@ -107,7 +107,7 @@
   transform: translateX(-50%);
   border-width: 5px;
   border-style: solid;
-  border-color: transparent transparent rgba(51, 51, 51, 0.95) transparent;
+  border-color: transparent transparent rgba(0, 160, 160, 0.9) transparent;
 }
 
 @keyframes pulse {
@@ -136,18 +136,18 @@
 /* Media queries for responsiveness */
 @media (max-width: 600px) {
   .mode-selector {
-    gap: 5px;
-    padding: 8px;
+    gap: 10px;
+    padding: 10px;
   }
   
   .mode-option {
     padding: 8px;
-    min-width: 60px;
+    min-width: 65px;
   }
   
   .mode-icon {
-    width: 35px;
-    height: 35px;
+    width: 40px;
+    height: 40px;
   }
   
   .mode-name {
@@ -157,28 +157,34 @@
 
 @media (max-width: 480px) {
   .mode-selector {
-    gap: 2px;
-    padding: 5px;
+    gap: 8px;
+    padding: 8px;
   }
   
   .mode-option {
-    padding: 5px;
-    min-width: 50px;
+    padding: 6px;
+    min-width: 55px;
+  }
+  
+  .mode-icon-container {
+    width: 55px;
+    height: 55px;
   }
   
   .mode-icon {
-    width: 35px;
-    height: 35px;
+    width: 42px;
+    height: 42px;
   }
   
   .mode-name {
-    font-size: 11px;
+    font-size: 12px;
+    font-weight: 500;
   }
   
   .mode-tooltip {
-    max-width: 150px;
-    font-size: 11px;
-    padding: 6px 10px;
+    max-width: 180px;
+    font-size: 12px;
+    padding: 8px 12px;
   }
 }
 
@@ -187,9 +193,9 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 30px;
-  height: 30px;
-  font-size: 18px;
+  width: 35px;
+  height: 35px;
+  font-size: 20px;
   color: #00A0A0;
   font-weight: bold;
 }
@@ -197,26 +203,27 @@
 /* Tiny screens - optimize for very small displays */
 @media (max-width: 350px) {
   .mode-selector {
-    gap: 1px;
-    padding: 3px;
+    gap: 4px;
+    padding: 5px;
   }
   
   .mode-option {
-    padding: 4px;
-    min-width: 45px;
+    padding: 5px;
+    min-width: 50px;
   }
   
   .mode-icon-container {
-    width: 45px;
-    height: 45px;
+    width: 50px;
+    height: 50px;
   }
   
   .mode-icon {
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
   }
   
   .mode-name {
-    font-size: 10px;
+    font-size: 11px;
+    font-weight: 500;
   }
 }
