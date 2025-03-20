@@ -1,117 +1,134 @@
-// ModeSelector.js
+// src/components/ModeSelector.js
 import React, { useState, useEffect } from 'react';
 import './ModeSelector.css';
 
+// Import SVG icons directly - corrected path
+import AnalogIcon from '../assets/svg/modeIcon/Analog.svg';
+import CircleIcon from '../assets/svg/modeIcon/Circle.svg';
+import GridIcon from '../assets/svg/modeIcon/Grid.svg';
+import MultiIcon from '../assets/svg/modeIcon/Multi.svg';
+import PolyIcon from '../assets/svg/modeIcon/Poly.svg';
+
 const ModeSelector = ({ mode, setMode }) => {
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-  const [isCompactMenuOpen, setIsCompactMenuOpen] = useState(false);
-  
-  // Responsive behavior
+  const [hoveredMode, setHoveredMode] = useState(null);
+  const [showAllModes, setShowAllModes] = useState(window.innerWidth > 350);
+  const [showMoreButton, setShowMoreButton] = useState(window.innerWidth <= 350);
+
+  // Update responsive state on window resize
   useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
+    const handleResize = () => {
+      const isTinyScreen = window.innerWidth <= 350;
+      setShowAllModes(!isTinyScreen);
+      setShowMoreButton(isTinyScreen);
+    };
+    
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-  
-  // Define modes with placeholders for your custom SVG icons
-  const modes = [
-    { id: "analog", label: "Pendulum", iconPlaceholder: "P" },
-    { id: "circle", label: "Circle", iconPlaceholder: "C" },
-    { id: "grid", label: "Grid", iconPlaceholder: "G" },
-    { id: "multi", label: "Multi Circle", iconPlaceholder: "M" },
-    { id: "polyrhythm", label: "Polyrhythm", iconPlaceholder: "R" }
+
+  // Mode configurations with descriptions for tooltips
+  const modeConfigs = [
+    {
+      id: "analog",
+      name: "Analog",
+      icon: AnalogIcon,
+      description: "Classic pendulum-style metronome with realistic motion"
+    },
+    {
+      id: "circle",
+      name: "Circle",
+      icon: CircleIcon,
+      description: "Interactive circular beat visualization with customizable accents"
+    },
+    {
+      id: "grid",
+      name: "Grid",
+      icon: GridIcon,
+      description: "Visual grid pattern for creating and visualizing complex rhythms"
+    },
+    {
+      id: "multi",
+      name: "Multi",
+      icon: MultiIcon,
+      description: "Multiple circles for practicing compound rhythms"
+    },
+    {
+      id: "polyrhythm",
+      name: "Polyrhythm",
+      icon: PolyIcon,
+      description: "Two rhythmic patterns played simultaneously for advanced practice"
+    }
   ];
-  
-  // You will replace these placeholders with your SVG icons later
-  const renderIcon = (mode_item) => {
-    // This returns a placeholder that you can replace with your SVG icons
-    return (
-      <div className="mode-icon">
-        {/* Replace this with your SVG icon */}
-        <div style={{ 
-          width: '100%', 
-          height: '100%', 
-          borderRadius: '50%',
-          background: mode === mode_item.id ? '#ffffff' : '#aaaaaa',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '10px',
-          fontWeight: 'bold'
-        }}>
-          {mode_item.iconPlaceholder}
-        </div>
-      </div>
-    );
-  };
-  
-  // Handle mode selection
-  const handleModeSelect = (modeId) => {
+
+  const handleModeChange = (modeId) => {
     setMode(modeId);
-    setIsCompactMenuOpen(false); // Close menu when selecting
   };
-  
-  // For tiny screens, use a dropdown/expandable menu
-  if (windowWidth <= 320) {
-    const activeMode = modes.find(mode_item => mode_item.id === mode) || modes[0];
-    
-    return (
-      <div className="mode-selector">
-        <div 
-          className={`compact-menu-toggle ${isCompactMenuOpen ? 'open' : ''}`}
-          onClick={() => setIsCompactMenuOpen(!isCompactMenuOpen)}
-        >
-          <span>Mode: {renderIcon(activeMode)} {activeMode.label}</span>
-        </div>
-        <div className={`compact-menu-content ${isCompactMenuOpen ? 'open' : ''}`}>
-          {modes.map(mode_item => (
-            <button
-              key={mode_item.id}
-              className={`mode-button ${mode === mode_item.id ? 'mode-button-active' : ''}`}
-              onClick={() => handleModeSelect(mode_item.id)}
-              aria-label={`Switch to ${mode_item.label} mode`}
-            >
-              {renderIcon(mode_item)} {mode_item.label}
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  }
-  
-  // For small mobile screens, show a more condensed view
-  if (windowWidth <= 480) {
-    return (
-      <div className="mode-selector">
-        {modes.map(mode_item => (
-          <button
-            key={mode_item.id}
-            className={`mode-button ${mode === mode_item.id ? 'mode-button-active' : ''}`}
-            onClick={() => handleModeSelect(mode_item.id)}
-            aria-label={`Switch to ${mode_item.label} mode`}
-          >
-            {renderIcon(mode_item)}
-            <span>{mode_item.label.replace(' Circle', '').replace('rhythm', '')}</span>
-          </button>
-        ))}
-      </div>
-    );
-  }
-  
-  // Default view for larger screens
+
+  const handleMouseEnter = (modeId) => {
+    setHoveredMode(modeId);
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredMode(null);
+  };
+
+  // Function to show essential modes for tiny screens
+  const getVisibleModes = () => {
+    if (showAllModes) {
+      return modeConfigs;
+    } else {
+      // On tiny screens, only show the current mode plus Circle and Grid (most commonly used)
+      return modeConfigs.filter(config => 
+        config.id === mode || 
+        config.id === 'circle' || 
+        config.id === 'grid'
+      );
+    }
+  };
+
   return (
-    <div className="mode-selector">
-      {modes.map(mode_item => (
-        <button
-          key={mode_item.id}
-          className={`mode-button ${mode === mode_item.id ? 'mode-button-active' : ''}`}
-          onClick={() => handleModeSelect(mode_item.id)}
-          aria-label={`Switch to ${mode_item.label} mode`}
-        >
-          {renderIcon(mode_item)}
-          <span>{mode_item.label}</span>
-        </button>
-      ))}
+    <div className="mode-selector-container">
+      <div className="mode-selector">
+        {getVisibleModes().map((modeConfig) => (
+          <div 
+            key={modeConfig.id}
+            className={`mode-option ${mode === modeConfig.id ? 'active' : ''}`}
+            onClick={() => handleModeChange(modeConfig.id)}
+            onMouseEnter={() => handleMouseEnter(modeConfig.id)}
+            onMouseLeave={handleMouseLeave}
+          >
+            <div className="mode-icon-container">
+              <img 
+                src={modeConfig.icon} 
+                alt={`${modeConfig.name} Mode`} 
+                className="mode-icon"
+              />
+              {mode === modeConfig.id && (
+                <div className="active-indicator" aria-hidden="true"></div>
+              )}
+            </div>
+            <div className="mode-name">{modeConfig.name}</div>
+            
+            {hoveredMode === modeConfig.id && (
+              <div className="mode-tooltip">
+                {modeConfig.description}
+              </div>
+            )}
+          </div>
+        ))}
+        
+        {showMoreButton && !showAllModes && (
+          <div 
+            className="mode-option more-button"
+            onClick={() => setShowAllModes(true)}
+          >
+            <div className="mode-icon-container">
+              <div className="more-icon">•••</div>
+            </div>
+            <div className="mode-name">More</div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

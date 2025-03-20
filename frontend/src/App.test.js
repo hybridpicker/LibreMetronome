@@ -1,6 +1,4 @@
-// App.test.js should remain unchanged to ensure compatibility
-// Keep the existing tests exactly as they are:
-
+// App.test.js
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
@@ -44,9 +42,10 @@ describe('App Component', () => {
 
   test('renders mode selector buttons', async () => {
     render(<App />);
-    expect(screen.getByText('Pendulum')).toBeInTheDocument();
+    expect(screen.getByText('Analog')).toBeInTheDocument();
     expect(screen.getByText('Circle')).toBeInTheDocument();
     expect(screen.getByText('Grid')).toBeInTheDocument();
-    expect(screen.getByText('Multi Circle')).toBeInTheDocument();
+    expect(screen.getByText('Multi')).toBeInTheDocument();
+    expect(screen.getByText('Polyrhythm')).toBeInTheDocument();
   });
 });
