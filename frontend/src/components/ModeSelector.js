@@ -11,6 +11,7 @@ import PolyIcon from '../assets/svg/modeIcon/Poly.svg';
 
 const ModeSelector = ({ mode, setMode }) => {
   const [hoveredMode, setHoveredMode] = useState(null);
+  const [touchedMode, setTouchedMode] = useState(null);
   const [showAllModes, setShowAllModes] = useState(window.innerWidth > 350);
   const [showMoreButton, setShowMoreButton] = useState(window.innerWidth <= 350);
 
@@ -25,6 +26,16 @@ const ModeSelector = ({ mode, setMode }) => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Clear touched mode tooltip after delay
+  useEffect(() => {
+    if (touchedMode) {
+      const timer = setTimeout(() => {
+        setTouchedMode(null);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [touchedMode]);
 
   // Mode configurations with descriptions for tooltips
   const modeConfigs = [
@@ -62,14 +73,29 @@ const ModeSelector = ({ mode, setMode }) => {
 
   const handleModeChange = (modeId) => {
     setMode(modeId);
+    // Show tooltip on touch devices when selecting a mode
+    if ('ontouchstart' in window) {
+      setTouchedMode(modeId);
+    }
   };
 
   const handleMouseEnter = (modeId) => {
-    setHoveredMode(modeId);
+    if (!('ontouchstart' in window)) {
+      setHoveredMode(modeId);
+    }
   };
 
   const handleMouseLeave = () => {
     setHoveredMode(null);
+  };
+
+  const handleTouchStart = (modeId) => {
+    // For touch devices, show tooltip on long press
+    const longPressTimer = setTimeout(() => {
+      setTouchedMode(modeId);
+    }, 500);
+    
+    return () => clearTimeout(longPressTimer);
   };
 
   // Function to show essential modes for tiny screens
@@ -77,12 +103,22 @@ const ModeSelector = ({ mode, setMode }) => {
     if (showAllModes) {
       return modeConfigs;
     } else {
-      // On tiny screens, only show the current mode plus Circle and Grid (most commonly used)
-      return modeConfigs.filter(config => 
-        config.id === mode || 
-        config.id === 'circle' || 
-        config.id === 'grid'
-      );
+      // Show the current mode plus most commonly used modes
+      const essentialModes = ['circle', 'grid'];
+      const currentModeIncluded = essentialModes.includes(mode) || mode === 'analog';
+      
+      if (currentModeIncluded) {
+        return modeConfigs.filter(config => 
+          essentialModes.includes(config.id) || config.id === 'analog'
+        );
+      } else {
+        // Always show the currently selected mode plus two essential ones
+        return modeConfigs.filter(config => 
+          config.id === mode || 
+          config.id === 'circle' || 
+          config.id === 'grid'
+        );
+      }
     }
   };
 
@@ -94,8 +130,6 @@ const ModeSelector = ({ mode, setMode }) => {
             key={modeConfig.id}
             className={`mode-option ${mode === modeConfig.id ? 'active' : ''}`}
             onClick={() => handleModeChange(modeConfig.id)}
-            onMouseEnter={() => handleMouseEnter(modeConfig.id)}
-            onMouseLeave={handleMouseLeave}
           >
             <div className="mode-icon-container">
               <img 
@@ -108,12 +142,6 @@ const ModeSelector = ({ mode, setMode }) => {
               )}
             </div>
             <div className="mode-name">{modeConfig.name}</div>
-            
-            {hoveredMode === modeConfig.id && (
-              <div className="mode-tooltip">
-                {modeConfig.description}
-              </div>
-            )}
           </div>
         ))}
         
