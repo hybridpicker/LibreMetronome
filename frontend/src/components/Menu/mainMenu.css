@@ -71,7 +71,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: fadeIn 0.3s ease-out;
 }
 
 @keyframes fadeIn {
@@ -89,12 +88,18 @@
   max-height: 85vh;
   overflow-y: auto;
   box-shadow: var(--modal-shadow);
-  animation: modalFadeIn 0.3s ease-out;
+  animation: menuModalFadeIn 0.3s ease-out;
 }
 
-@keyframes modalFadeIn {
-  from { opacity: 0; transform: scale(0.98); }
-  to { opacity: 1; transform: scale(1); }
+@keyframes menuModalFadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(-10px);
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0);
+  }
 }
 
 .menu-close-button {
@@ -121,6 +126,8 @@
   background-color: var(--primary-teal-light);
   transform: scale(1.1);
 }
+
+
 
 /* Menu Tabs */
 .menu-tabs {
@@ -225,6 +232,7 @@
     max-height: none;
     border-radius: 0;
     padding: 20px 15px 80px;
+    animation: menuModalFadeIn 0.3s ease-out;
   }
   
   .menu-content {
@@ -646,7 +654,6 @@
 
 .training-section.active {
   display: block;
-  animation: fadeIn 0.3s ease-out;
 }
 
 .training-overview {
@@ -850,7 +857,6 @@
 
 .settings-section.active {
   display: block;
-  animation: fadeIn 0.3s ease-out;
 }
 
 .settings-group {
@@ -961,6 +967,7 @@
   .menu-modal {
     padding: 20px 15px;
     width: 95%;
+    animation: menuModalFadeIn 0.3s ease-out;
   }
   
   .menu-tab {
