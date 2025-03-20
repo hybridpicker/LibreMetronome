@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Ebene_2" data-name="Ebene 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 57.15 57.15">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #ffd182;
+      }
+
+      .cls-2 {
+        stroke: #ffd182;
+      }
+
+      .cls-2, .cls-3 {
+        fill: none;
+        stroke-miterlimit: 10;
+        stroke-width: 2px;
+      }
+
+      .cls-3 {
+        stroke: #088296;
+      }
+
+      .cls-4 {
+        fill: #ffca72;
+      }
+    </style>
+  </defs>
+  <g id="Icons">
+    <g id="Circle">
+      <rect class="cls-2" x="1" y="1" width="55.15" height="55.15" rx="6.65" ry="6.65"/>
+      <line class="cls-3" x1="28.27" y1="49.43" x2="49.98" y2="28.02"/>
+      <line class="cls-3" x1="6.59" y1="28.02" x2="28.27" y2="49.93"/>
+      <line class="cls-3" x1="28.27" y1="6.48" x2="6.59" y2="28.02"/>
+      <line class="cls-3" x1="49.98" y1="28.02" x2="28.27" y2="6.48"/>
+      <ellipse class="cls-1" cx="28.27" cy="48.43" rx="3.09" ry="3.08"/>
+      <ellipse class="cls-1" cx="7.59" cy="28.02" rx="2.95" ry="2.94"/>
+      <ellipse class="cls-1" cx="48.98" cy="28.02" rx="2.95" ry="2.94"/>
+      <ellipse class="cls-4" cx="28.27" cy="7.48" rx="3.09" ry="3.08"/>
+    </g>
+  </g>
+</svg>
