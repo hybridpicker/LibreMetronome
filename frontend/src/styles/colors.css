@@ -38,7 +38,9 @@
   --beat-muted: #e8e8e8;         /* Muted beat color */
   --beat-normal: var(--secondary-gold-light); /* Normal beat color */
   --beat-accent: var(--secondary-gold); /* Accented beat color */
-  --beat-first: var( --primary-teal); /* First beat color */
+  --beat-first: var(--primary-teal); /* First beat color */
+  --beat-inner: #fce9c6;         /* Inner beat color for polyrhythm */
+  --beat-outer: #f6cc7c;         /* Outer beat color for polyrhythm */
 
   /* Overlay Colors */
   --overlay-bg: rgba(0, 0, 0, 0.7); /* Dark overlay background */
