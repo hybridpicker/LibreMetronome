@@ -122,14 +122,6 @@ function MultiCircleMetronome(props) {
   const [activeCircle, setActiveCircle] = useState(0);
   const [playingCircle, setPlayingCircle] = useState(0);
 
-  // Make playing circle index available globally
-  useEffect(() => {
-    window.playingCircleIndex = playingCircle;
-    return () => {
-      delete window.playingCircleIndex;
-    };
-  }, [playingCircle]);
-
   // Local training references
   const localMeasureCountRef = useRef(0);
   const localMuteMeasureCountRef = useRef(0);
@@ -160,11 +152,15 @@ function MultiCircleMetronome(props) {
   };
   const [containerSize, setContainerSize] = useState(getContainerSize());
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  
+  // Responsive behavior for mobile devices and tablets
+  const [isMobileOrTablet, setIsMobileOrTablet] = useState(window.innerWidth <= 1024);
 
   useEffect(() => {
     const handleResize = () => {
       setContainerSize(getContainerSize());
       setIsMobile(window.innerWidth < 768);
+      setIsMobileOrTablet(window.innerWidth <= 1024);
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -198,17 +194,13 @@ function MultiCircleMetronome(props) {
 
   useEffect(() => {
     const handleBeatModeChange = (event) => {
-      const { beatMode, beatMultiplier, circleIndex } = event.detail;
-      // Only handle if this is for the currently playing circle
-      if (circleIndex !== undefined && circleIndex === playingCircle) {
-        console.log(`Handling beat mode change for playing circle ${circleIndex}: ${beatMode}`);
-        // Any additional handling if needed
-      }
+      const { beatMode, beatMultiplier } = event.detail;
+      // Handle externally if needed
     };
     window.addEventListener("beat-mode-change", handleBeatModeChange);
     return () =>
       window.removeEventListener("beat-mode-change", handleBeatModeChange);
-  }, [playingCircle]);
+  }, []);
 
   useEffect(() => {
     if (!logic || !logic.reloadSounds || !soundSetReloadTrigger) return;
@@ -436,48 +428,50 @@ function MultiCircleMetronome(props) {
 
       <PlayButton handlePlayPause={handlePlayPause} isPaused={isPaused} />
 
-      <button
-        onClick={() => {
-          if (logic && typeof logic.tapTempo === "function") {
-            logic.tapTempo();
-          } else {
-            const now = performance.now();
-            window.dispatchEvent(
-              new CustomEvent("metronome-tap-tempo", {
-                detail: { timestamp: now }
-              })
-            );
-          }
-        }}
-        style={{
-          background: "transparent",
-          border: "none",
-          cursor: "pointer",
-          marginTop: "10px",
-          padding: "10px",
-          outline: "none",
-          display: "block",
-          margin: "10px auto"
-        }}
-        aria-label="Tap Tempo"
-      >
-        <img
-          src={tapButtonIcon}
-          alt="Tap Tempo"
-          style={{
-            height: "35px",
-            objectFit: "contain",
-            transition:
-              "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)"
+      {/* Only show tap tempo button on mobile and tablet devices */}
+      {isMobileOrTablet && (
+        <button
+          onClick={() => {
+            if (logic && typeof logic.tapTempo === "function") {
+              logic.tapTempo();
+            } else {
+              const now = performance.now();
+              window.dispatchEvent(
+                new CustomEvent("metronome-tap-tempo", {
+                  detail: { timestamp: now }
+                })
+              );
+            }
           }}
-        />
-      </button>
+          style={{
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+            marginTop: "10px",
+            padding: "10px",
+            outline: "none",
+            display: "block",
+            margin: "10px auto"
+          }}
+          aria-label="Tap Tempo"
+        >
+          <img
+            src={tapButtonIcon}
+            alt="Tap Tempo"
+            style={{
+              height: "35px",
+              objectFit: "contain",
+              transition:
+                "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)"
+            }}
+          />
+        </button>
+      )}
 
       <MultiCircleControls
         circleSettings={circleSettings}
         setCircleSettings={setCircleSettings}
         activeCircle={activeCircle}
-        playingCircle={playingCircle}
         tempo={tempo}
         setTempo={setTempo}
         volume={volume}
