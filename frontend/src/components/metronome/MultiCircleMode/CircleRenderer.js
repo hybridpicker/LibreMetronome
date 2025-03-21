@@ -16,7 +16,7 @@ const CircleRenderer = ({
   audioCtxRunning,
   isTransitioning,
   updateAccent,
-  radius,
+  radius,    // We'll use this directly now
   containerSize,
   setActiveCircle,
   circleSettings,
@@ -26,6 +26,13 @@ const CircleRenderer = ({
 }) => {
   // Add visual indicators for different states
   let activeBoxShadow = "none"; // Default - no highlight
+  
+  // Calculate actual circle size - make it smaller
+  // When in multi-circle mode (circleSettings?.length > 1), use a smaller circle
+  const actualContainerSize = circleSettings?.length > 1 ? containerSize * 0.7 : containerSize;
+  
+  // Adjust the radius for beat positioning - make it smaller to match the container
+  const actualRadius = circleSettings?.length > 1 ? radius * 0.7 : radius;
   
   if (isActiveUI) {
     // Circle is selected for editing - teal highlight
@@ -47,11 +54,29 @@ const CircleRenderer = ({
   // Determine border style - dashed for inactive, non-playing circles
   const borderStyle = (!isActiveUI && !isPlaying) ? "dashed" : "solid";
 
+  // Add a visible guide circle to help visualize beat positions
+  const circleGuide = circleSettings?.length > 1 && (
+    <div 
+      style={{
+        position: "absolute",
+        width: "100%",
+        height: "100%",
+        borderRadius: "50%",
+        border: "1px dashed rgba(0, 160, 160, 0.3)",
+        left: 0,
+        top: 0,
+        pointerEvents: "none",
+      }}
+    />
+  );
+
   const iconSize = 24;
   const beats = Array.from({ length: settings.subdivisions || 4 }, (_, i) => {
     const angle = (2 * Math.PI * i) / (settings.subdivisions || 4) - Math.PI / 2;
-    const xPos = radius * Math.cos(angle);
-    const yPos = radius * Math.sin(angle);
+    
+    // Use actualRadius for positioning beats
+    const xPos = actualRadius * Math.cos(angle);
+    const yPos = actualRadius * Math.sin(angle);
     
     // Show active beat regardless of transition state to ensure visual feedback matches audio
     const isActive = i === currentSubdivision &&
@@ -199,8 +224,8 @@ const CircleRenderer = ({
         onClick={() => setActiveCircle(idx)}
         style={{
           position: "relative",
-          width: containerSize,
-          height: containerSize,
+          width: actualContainerSize,
+          height: actualContainerSize,
           borderRadius: "50%",
           border: `2px ${borderStyle} ${(!isActiveUI && !isPlaying) ? "#ccc" : "transparent"}`,
           boxShadow: activeBoxShadow,
@@ -210,6 +235,7 @@ const CircleRenderer = ({
           overflow: "visible"
         }}
       >
+        {circleGuide}
         {removeButton}
         {beatModeIndicator}
         {beats}
@@ -222,7 +248,7 @@ const CircleRenderer = ({
       onClick={() => setActiveCircle(idx)}
       style={{
         position: "relative",
-        width: containerSize,
+        width: containerSize, // Keep original size for single circle
         height: containerSize,
         borderRadius: "50%",
         border: `2px ${borderStyle} ${(!isActiveUI && !isPlaying) ? "#ccc" : "transparent"}`,
