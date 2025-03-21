@@ -205,12 +205,17 @@ export default function useMultiCircleMetronomeLogic({
   // Listen for beat-mode-change events directly in the hook
   useEffect(() => {
     const handleBeatModeChange = (event) => {
-      const { beatMode, beatMultiplier } = event.detail;
+      const { beatMode, beatMultiplier, circleIndex } = event.detail;
       
-      debugLog(`Beat mode change event received: ${beatMode} (multiplier: ${beatMultiplier})`);
+      debugLog(`Beat mode change event received: ${beatMode} (multiplier: ${beatMultiplier}) for circle ${circleIndex}`);
       
-      // Update the beat multiplier
-      updateBeatMultiplier(beatMultiplier);
+      // Only update the beat multiplier if this is for the currently playing circle
+      if (circleIndex !== undefined && circleIndex === playingCircleRef.current) {
+        debugLog(`Updating beat multiplier for playing circle ${circleIndex} to ${beatMultiplier}`);
+        updateBeatMultiplier(beatMultiplier);
+      } else {
+        debugLog(`Ignoring beat mode change for non-playing circle ${circleIndex} (current: ${playingCircleRef.current})`);
+      }
     };
     
     window.addEventListener('beat-mode-change', handleBeatModeChange);
@@ -218,7 +223,7 @@ export default function useMultiCircleMetronomeLogic({
     return () => {
       window.removeEventListener('beat-mode-change', handleBeatModeChange);
     };
-  }, [updateBeatMultiplier]);
+  }, [updateBeatMultiplier, playingCircleRef]);
   
   // Listen for accent-change events to update audio immediately
   useEffect(() => {

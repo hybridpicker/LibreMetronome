@@ -83,6 +83,9 @@ const PolyrhythmMetronome = (props) => {
   };
   const [containerSize, setContainerSize] = useState(getContainerSize());
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  
+  // Responsive behavior for mobile devices and tablets - visibility of tap button
+  const [isMobileOrTablet, setIsMobileOrTablet] = useState(window.innerWidth <= 1024);
 
   const handleInnerBeatTriggered = useCallback((beatIndex) => {
     // Additional actions when inner beat is triggered (if needed)
@@ -207,6 +210,7 @@ const PolyrhythmMetronome = (props) => {
     const handleResize = () => {
       setContainerSize(getContainerSize());
       setIsMobile(window.innerWidth < 768);
+      setIsMobileOrTablet(window.innerWidth <= 1024);
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -460,6 +464,21 @@ const PolyrhythmMetronome = (props) => {
       {/* Accelerate Button positioned directly after the metronome canvas */}
       <AccelerateButton onClick={handleAccelerate} speedMode={speedMode} />
 
+      <div className="polyrhythm-legend">
+        <div className="legend-item">
+          <div className="legend-color inner-beat"></div>
+          <span>Inner Beat</span>
+        </div>
+        <div className="legend-item">
+          <div className="legend-color outer-beat"></div>
+          <span>Outer Beat</span>
+        </div>
+        <div className="legend-item">
+          <div className="legend-color first-beat"></div>
+          <span>First Beat</span>
+        </div>
+      </div>
+
       <div className="polyrhythm-controls">
         <div className="polyrhythm-config">
           <label className="polyrhythm-label">
@@ -524,7 +543,7 @@ const PolyrhythmMetronome = (props) => {
         </button>
       </div>
 
-      {/* Neue Slider für Tempo und Volume */}
+      {/* Tempo and Volume */}
       <div className="sliders-container" style={{ marginTop: "20px" }}>
         <label>
           Tempo: {tempo} BPM
@@ -574,48 +593,38 @@ const PolyrhythmMetronome = (props) => {
           />
         </button>
       </div>
-      <button
-        onClick={handleTapTempo}
-        style={{
-          background: "transparent",
-          border: "none",
-          cursor: isTransitioning ? "not-allowed" : "pointer",
-          marginTop: "20px",
-          padding: "10px",
-          outline: "none",
-          display: "block",
-          margin: "10px auto",
-          opacity: isTransitioning ? 0.7 : 1
-        }}
-        aria-label="Tap Tempo"
-        disabled={isTransitioning}
-      >
-        <img
-          src={tapButtonIcon}
-          alt="Tap Tempo"
+      
+      {/* Only show tap tempo button on mobile and tablet devices */}
+      {isMobileOrTablet && (
+        <button
+          onClick={handleTapTempo}
           style={{
-            height: "35px",
-            objectFit: "contain",
-            transition:
-              "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)"
+            background: "transparent",
+            border: "none",
+            cursor: isTransitioning ? "not-allowed" : "pointer",
+            marginTop: "20px",
+            padding: "10px",
+            outline: "none",
+            display: "block",
+            margin: "10px auto",
+            opacity: isTransitioning ? 0.7 : 1
           }}
-        />
-      </button>
+          aria-label="Tap Tempo"
+          disabled={isTransitioning}
+        >
+          <img
+            src={tapButtonIcon}
+            alt="Tap Tempo"
+            style={{
+              height: "35px",
+              objectFit: "contain",
+              transition:
+                "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)"
+            }}
+          />
+        </button>
+      )}
 
-      <div className="polyrhythm-legend">
-        <div className="legend-item">
-          <div className="legend-color inner-beat"></div>
-          <span>Inner Beat</span>
-        </div>
-        <div className="legend-item">
-          <div className="legend-color outer-beat"></div>
-          <span>Outer Beat</span>
-        </div>
-        <div className="legend-item">
-          <div className="legend-color first-beat"></div>
-          <span>First Beat</span>
-        </div>
-      </div>
     </div>
   );
 };

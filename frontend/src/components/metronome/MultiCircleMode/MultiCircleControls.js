@@ -10,6 +10,7 @@ const MultiCircleControls = ({
   circleSettings,
   setCircleSettings,
   activeCircle,
+  playingCircle,
   tempo,
   setTempo,
   volume,
@@ -26,14 +27,21 @@ const MultiCircleControls = ({
       // Calculate the beat multiplier
       const multiplier = mode === "quarter" ? 1 : 2;
       
-      // Dispatch a custom event to notify that beat mode has changed
-      const beatModeChangeEvent = new CustomEvent('beat-mode-change', {
-        detail: { 
-          beatMode: mode,
-          beatMultiplier: multiplier
-        }
-      });
-      window.dispatchEvent(beatModeChangeEvent);
+      // Only dispatch the event if the active circle is currently playing
+      if (activeCircle === playingCircle) {
+        // Dispatch a custom event to notify that beat mode has changed for the playing circle
+        const beatModeChangeEvent = new CustomEvent('beat-mode-change', {
+          detail: { 
+            beatMode: mode,
+            beatMultiplier: multiplier,
+            circleIndex: activeCircle
+          }
+        });
+        window.dispatchEvent(beatModeChangeEvent);
+        console.log(`Dispatched beat mode change for playing circle ${activeCircle}: ${mode}`);
+      } else {
+        console.log(`Changed beat mode for non-playing circle ${activeCircle} (${mode}). No audio update needed.`);
+      }
       
       return updated;
     });
@@ -43,6 +51,8 @@ const MultiCircleControls = ({
   const handleSetSubdivisions = (subdivisionValue) => {
     setCircleSettings(prev => {
       const updated = [...prev];
+      if (activeCircle >= updated.length) return prev;
+      
       updated[activeCircle] = {
         ...updated[activeCircle],
         subdivisions: subdivisionValue,

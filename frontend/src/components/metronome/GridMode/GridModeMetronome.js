@@ -185,10 +185,11 @@ const GridModeMetronome = (props) => {
     tealDark: "#26a69a"
   };
   
-  // Responsive behavior for mobile devices
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 1400);
+  // Responsive behavior for mobile devices and tablets (modified threshold)
+  // Changed to show tap button only on tablets and mobile (≤ 1024px)
+  const [isMobileOrTablet, setIsMobileOrTablet] = useState(window.innerWidth <= 1024);
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    const handleResize = () => setIsMobileOrTablet(window.innerWidth <= 1024);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -450,38 +451,41 @@ const GridModeMetronome = (props) => {
         </div>
       </div>
 
-      <button
-        onClick={() => {
-          console.log("[GRID MODE] Tap tempo button clicked");
-          if (logic && typeof logic.tapTempo === 'function') {
-            console.log("[GRID MODE] Using metronome logic's tapTempo function");
-            logic.tapTempo();
-          } else {
-            console.warn("[GRID MODE] tapTempo function is not available");
-          }
-        }}
-        aria-label="Tap Tempo"
-        style={{ 
-          background: 'transparent', 
-          border: 'none', 
-          cursor: 'pointer', 
-          marginTop: '20px',
-          padding: '10px',
-          outline: 'none',
-          display: 'block',
-          margin: '10px auto'
-        }}
-      >
-        <img
-          src={tapButtonIcon}
-          alt="Tap Tempo"
-          style={{
-            height: '35px',
-            objectFit: 'contain',
-            transition: 'all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)'
+      {/* Only show tap tempo button on mobile and tablet devices */}
+      {isMobileOrTablet && (
+        <button
+          onClick={() => {
+            console.log("[GRID MODE] Tap tempo button clicked");
+            if (logic && typeof logic.tapTempo === 'function') {
+              console.log("[GRID MODE] Using metronome logic's tapTempo function");
+              logic.tapTempo();
+            } else {
+              console.warn("[GRID MODE] tapTempo function is not available");
+            }
           }}
-        />
-      </button>
+          aria-label="Tap Tempo"
+          style={{ 
+            background: 'transparent', 
+            border: 'none', 
+            cursor: 'pointer', 
+            marginTop: '20px',
+            padding: '10px',
+            outline: 'none',
+            display: 'block',
+            margin: '10px auto'
+          }}
+        >
+          <img
+            src={tapButtonIcon}
+            alt="Tap Tempo"
+            style={{
+              height: '35px',
+              objectFit: 'contain',
+              transition: 'all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)'
+            }}
+          />
+        </button>
+      )}
     </div>
   );
 };
