@@ -122,6 +122,14 @@ function MultiCircleMetronome(props) {
   const [activeCircle, setActiveCircle] = useState(0);
   const [playingCircle, setPlayingCircle] = useState(0);
 
+  // Make playing circle index available globally
+  useEffect(() => {
+    window.playingCircleIndex = playingCircle;
+    return () => {
+      delete window.playingCircleIndex;
+    };
+  }, [playingCircle]);
+
   // Local training references
   const localMeasureCountRef = useRef(0);
   const localMuteMeasureCountRef = useRef(0);
@@ -190,13 +198,17 @@ function MultiCircleMetronome(props) {
 
   useEffect(() => {
     const handleBeatModeChange = (event) => {
-      const { beatMode, beatMultiplier } = event.detail;
-      // Handle externally if needed
+      const { beatMode, beatMultiplier, circleIndex } = event.detail;
+      // Only handle if this is for the currently playing circle
+      if (circleIndex !== undefined && circleIndex === playingCircle) {
+        console.log(`Handling beat mode change for playing circle ${circleIndex}: ${beatMode}`);
+        // Any additional handling if needed
+      }
     };
     window.addEventListener("beat-mode-change", handleBeatModeChange);
     return () =>
       window.removeEventListener("beat-mode-change", handleBeatModeChange);
-  }, []);
+  }, [playingCircle]);
 
   useEffect(() => {
     if (!logic || !logic.reloadSounds || !soundSetReloadTrigger) return;
@@ -465,6 +477,7 @@ function MultiCircleMetronome(props) {
         circleSettings={circleSettings}
         setCircleSettings={setCircleSettings}
         activeCircle={activeCircle}
+        playingCircle={playingCircle}
         tempo={tempo}
         setTempo={setTempo}
         volume={volume}
