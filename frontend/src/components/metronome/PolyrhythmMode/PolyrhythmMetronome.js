@@ -461,21 +461,75 @@ const PolyrhythmMetronome = (props) => {
         />
       </div>
 
-      {/* Accelerate Button positioned directly after the metronome canvas */}
+      {/* Play/Pause button positioned immediately after the metronome canvas */}
+      <div style={{ marginTop: 20 }}>
+        <button
+          onClick={handlePlayPause}
+          className="play-pause-button"
+          style={{
+            background: "transparent",
+            border: "none",
+            cursor: isTransitioning ? "not-allowed" : "pointer",
+            padding: "10px",
+            opacity: isTransitioning ? 0.7 : 1
+          }}
+          aria-label="Toggle play/pause"
+          disabled={isTransitioning}
+        >
+          <img
+            src={isPaused ? playIcon : pauseIcon}
+            alt={isPaused ? "Play" : "Pause"}
+            className="play-pause-icon"
+            style={{ width: 40, height: 40 }}
+          />
+        </button>
+      </div>
+
+      {/* Accelerate Button positioned after the play button */}
       <AccelerateButton onClick={handleAccelerate} speedMode={speedMode} />
 
-      <div className="polyrhythm-legend">
-        <div className="legend-item">
-          <div className="legend-color inner-beat"></div>
-          <span>Inner Beat</span>
+      <div style={{ 
+        marginTop: '20px', 
+        marginBottom: '20px',
+        display: 'flex', 
+        justifyContent: 'center', 
+        gap: '15px',
+        flexWrap: 'wrap',
+        fontSize: '12px',
+        color: 'var(--text-secondary)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div style={{ 
+            width: '12px', 
+            height: '12px', 
+            backgroundColor: 'var(--beat-inner)', 
+            borderRadius: '50%',
+            marginRight: '5px',
+            border: '1px solid var(--neutral-border)'
+          }}></div>
+          Inner Beat
         </div>
-        <div className="legend-item">
-          <div className="legend-color outer-beat"></div>
-          <span>Outer Beat</span>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div style={{ 
+            width: '12px', 
+            height: '12px', 
+            backgroundColor: 'var(--beat-outer)', 
+            borderRadius: '50%',
+            marginRight: '5px',
+            border: '1px solid var(--neutral-border)'
+          }}></div>
+          Outer Beat
         </div>
-        <div className="legend-item">
-          <div className="legend-color first-beat"></div>
-          <span>First Beat</span>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div style={{ 
+            width: '12px', 
+            height: '12px', 
+            backgroundColor: 'var(--beat-first)', 
+            borderRadius: '50%',
+            marginRight: '5px',
+            border: '1px solid var(--neutral-border)'
+          }}></div>
+          First Beat
         </div>
       </div>
 
@@ -569,29 +623,6 @@ const PolyrhythmMetronome = (props) => {
             disabled={isTransitioning}
           />
         </label>
-      </div>
-
-      <div style={{ marginTop: 20 }}>
-        <button
-          onClick={handlePlayPause}
-          className="play-pause-button"
-          style={{
-            background: "transparent",
-            border: "none",
-            cursor: isTransitioning ? "not-allowed" : "pointer",
-            padding: "10px",
-            opacity: isTransitioning ? 0.7 : 1
-          }}
-          aria-label="Toggle play/pause"
-          disabled={isTransitioning}
-        >
-          <img
-            src={isPaused ? playIcon : pauseIcon}
-            alt={isPaused ? "Play" : "Pause"}
-            className="play-pause-icon"
-            style={{ width: 40, height: 40 }}
-          />
-        </button>
       </div>
       
       {/* Only show tap tempo button on mobile and tablet devices */}
