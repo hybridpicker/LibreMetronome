@@ -386,69 +386,60 @@ const GridModeMetronome = (props) => {
       </div>
 
       <div style={{ 
-        marginTop: '15px', 
+        marginTop: '20px', 
+        marginBottom: '20px',
         display: 'flex', 
         justifyContent: 'center', 
         gap: '15px',
         flexWrap: 'wrap',
         fontSize: '12px',
-        color: '#888'
+        color: 'var(--text-secondary)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <div style={{ 
-            width: '10px', 
-            height: '10px', 
+            width: '12px', 
+            height: '12px', 
             backgroundColor: colors.inactive, 
             borderRadius: '2px',
             marginRight: '5px',
-            border: '1px solid #eee'
+            border: '1px solid var(--neutral-border)'
           }}></div>
           Mute
         </div>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <div style={{ 
-            width: '10px', 
-            height: '10px', 
+            width: '12px', 
+            height: '12px', 
             backgroundColor: colors.level1, 
             borderRadius: '2px',
             marginRight: '5px',
-            border: '1px solid #eee'
+            border: '1px solid var(--neutral-border)'
           }}></div>
           Normal Beat
         </div>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <div style={{ 
-            width: '10px', 
-            height: '10px', 
+            width: '12px', 
+            height: '12px', 
             backgroundColor: colors.level2, 
             borderRadius: '2px',
             marginRight: '5px',
-            border: '1px solid #eee'
+            border: '1px solid var(--neutral-border)'
           }}></div>
           Accent
         </div>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <div style={{ 
-            width: '10px', 
-            height: '10px', 
+            width: '12px', 
+            height: '12px', 
             backgroundColor: colors.level3, 
             borderRadius: '2px',
             marginRight: '5px',
-            border: '1px solid #eee'
+            border: '1px solid var(--neutral-border)'
           }}></div>
           First Beat
         </div>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <div style={{ 
-            width: '10px', 
-            height: '10px', 
-            backgroundColor: colors.teal, 
-            borderRadius: '2px',
-            marginRight: '5px',
-            border: '1px solid #eee'
-          }}></div>
-          First Beat Sound
-        </div>
+
       </div>
 
       {/* Only show tap tempo button on mobile and tablet devices */}

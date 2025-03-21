@@ -489,7 +489,8 @@ const PolyrhythmMetronome = (props) => {
       <AccelerateButton onClick={handleAccelerate} speedMode={speedMode} />
 
       <div style={{ 
-        marginTop: '15px', 
+        marginTop: '20px', 
+        marginBottom: '20px',
         display: 'flex', 
         justifyContent: 'center', 
         gap: '15px',
@@ -502,7 +503,7 @@ const PolyrhythmMetronome = (props) => {
             width: '12px', 
             height: '12px', 
             backgroundColor: 'var(--beat-inner)', 
-            borderRadius: '2px',
+            borderRadius: '50%',
             marginRight: '5px',
             border: '1px solid var(--neutral-border)'
           }}></div>
@@ -513,7 +514,7 @@ const PolyrhythmMetronome = (props) => {
             width: '12px', 
             height: '12px', 
             backgroundColor: 'var(--beat-outer)', 
-            borderRadius: '2px',
+            borderRadius: '50%',
             marginRight: '5px',
             border: '1px solid var(--neutral-border)'
           }}></div>
@@ -524,7 +525,7 @@ const PolyrhythmMetronome = (props) => {
             width: '12px', 
             height: '12px', 
             backgroundColor: 'var(--beat-first)', 
-            borderRadius: '2px',
+            borderRadius: '50%',
             marginRight: '5px',
             border: '1px solid var(--neutral-border)'
           }}></div>

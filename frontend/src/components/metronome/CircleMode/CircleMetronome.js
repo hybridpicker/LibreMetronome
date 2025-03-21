@@ -134,7 +134,7 @@ export function AdvancedMetronomeWithCircle({
   };
 
   // =====================
-  //  Single-subdivision “Inactive→Active→Inactive”
+  //  Single-subdivision "Inactive→Active→Inactive"
   // =====================
 
   const [singleActive, setSingleActive] = useState(false);
@@ -366,7 +366,8 @@ export function AdvancedMetronomeWithCircle({
 
       {/* Legend - explain what the beat states mean */}
       <div style={{ 
-        marginTop: '15px', 
+        marginTop: '20px', 
+        marginBottom: '20px',
         display: 'flex', 
         justifyContent: 'center', 
         gap: '15px',
@@ -378,10 +379,10 @@ export function AdvancedMetronomeWithCircle({
           <div style={{ 
             width: '12px', 
             height: '12px', 
-            backgroundColor: 'var(--beat-muted)', 
-            borderRadius: '2px',
+            backgroundColor: 'transparent', 
+            borderRadius: '50%',
             marginRight: '5px',
-            border: '1px solid var(--neutral-border)'
+            border: '1px dashed var(--neutral-border)'
           }}></div>
           Mute
         </div>
@@ -390,7 +391,7 @@ export function AdvancedMetronomeWithCircle({
             width: '12px', 
             height: '12px', 
             backgroundColor: 'var(--beat-normal)', 
-            borderRadius: '2px',
+            borderRadius: '50%',
             marginRight: '5px',
             border: '1px solid var(--neutral-border)'
           }}></div>
@@ -401,7 +402,7 @@ export function AdvancedMetronomeWithCircle({
             width: '12px', 
             height: '12px', 
             backgroundColor: 'var(--beat-accent)', 
-            borderRadius: '2px',
+            borderRadius: '50%',
             marginRight: '5px',
             border: '1px solid var(--neutral-border)'
           }}></div>
@@ -412,7 +413,7 @@ export function AdvancedMetronomeWithCircle({
             width: '12px', 
             height: '12px', 
             backgroundColor: 'var(--beat-first)', 
-            borderRadius: '2px',
+            borderRadius: '50%',
             marginRight: '5px',
             border: '1px solid var(--neutral-border)'
           }}></div>
