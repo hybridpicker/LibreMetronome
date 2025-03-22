@@ -12,71 +12,94 @@ import withTrainingContainer from "../../Training/withTrainingContainer";
 import AccelerateButton from "../Controls/AccelerateButton";
 import { manualTempoAcceleration } from "../../../hooks/useMetronomeLogic/trainingLogic";
 
-// Beat indicator using CSS animations with precise synchronization
+// Beat indicator that ensures tempo is properly set up before starting
 const DirectBeatIndicator = ({ 
   containerSize, 
   isPaused, 
   tempo, 
-  innerBeats,
-  innerCurrentSubdivision
+  innerBeats
 }) => {
   // Calculate center and radius
   const centerX = containerSize / 2;
   const centerY = containerSize / 2;
   const outerRadius = containerSize / 2 - 4;
   
-  // Store the exact animation duration in a ref to avoid re-renders
-  const durationRef = useRef((60 / tempo) * innerBeats);
-  
-  // Track the current animation state
+  // Animation states
   const [animationKey, setAnimationKey] = useState('initial');
-  const isAnimatingRef = useRef(false);
+  const [isAnimating, setIsAnimating] = useState(false);
   
-  // Using useEffect cleanup to ensure we always have the latest event handler
+  // Store previous values to detect changes
+  const tempoRef = useRef(tempo);
+  const beatsRef = useRef(innerBeats);
+  const beatCountRef = useRef(0);
+  
+  // Immediately stop animation when paused
   useEffect(() => {
-    // Update the duration reference when tempo or beats change
-    durationRef.current = (60 / tempo) * innerBeats;
+    if (isPaused) {
+      setIsAnimating(false);
+      beatCountRef.current = 0;
+    }
+  }, [isPaused]);
+  
+  // Detect and handle tempo/beats changes
+  useEffect(() => {
+    // Don't update animation if not currently animating
+    if (!isAnimating || isPaused) return;
     
-    // The handler uses the latest ref values but has stable identity
+    // Only update when tempo or beats actually change
+    if (tempoRef.current !== tempo || beatsRef.current !== innerBeats) {
+      // Update with new timing parameters
+      setAnimationKey(`tempo-${tempo}-beats-${innerBeats}-${Date.now()}`);
+      
+      // Update stored values
+      tempoRef.current = tempo;
+      beatsRef.current = innerBeats;
+    }
+  }, [tempo, innerBeats, isPaused, isAnimating]);
+  
+  // First beat handler with careful synchronization
+  useEffect(() => {
     const handleFirstBeat = () => {
+      // Only process when playing
       if (isPaused) return;
       
-      // Force restart animation precisely on first beat
-      setAnimationKey(`beat-${Date.now()}`);
-      isAnimatingRef.current = true;
+      // Count beats for periodic resyncs
+      beatCountRef.current++;
+      
+      // If not currently animating, start animation with a small delay
+      // to ensure audio is fully set up
+      if (!isAnimating) {
+        // Small delay before starting animation to ensure
+        // audio is fully initialized
+        setTimeout(() => {
+          tempoRef.current = tempo;
+          beatsRef.current = innerBeats;
+          setAnimationKey(`start-${Date.now()}`);
+          setIsAnimating(true);
+        }, 50);
+      }
+      // Periodically resync for complex polyrhythms (every 4 measures)
+      else if (beatCountRef.current % 4 === 0) {
+        setAnimationKey(`sync-${Date.now()}`);
+      }
     };
     
-    // Listen for first beat events from audio engine
     window.addEventListener('polyrhythm-first-beat', handleFirstBeat);
     
-    // Cleanup
     return () => {
       window.removeEventListener('polyrhythm-first-beat', handleFirstBeat);
     };
   }, [isPaused, tempo, innerBeats]);
   
-  // Handle parameter changes
-  useEffect(() => {
-    // Only restart if we're playing and animation has started
-    if (!isPaused && isAnimatingRef.current) {
-      setAnimationKey(`param-${Date.now()}`);
-    }
-  }, [tempo, innerBeats]);
+  // Calculate animation duration
+  const duration = (60 / tempo) * innerBeats;
   
-  // Handle pause state separately
-  useEffect(() => {
-    if (isPaused) {
-      isAnimatingRef.current = false;
-    }
-  }, [isPaused]);
-  
-  // Set up the animation style using the ref for duration
+  // Animation style - only apply animation if actually animating
   const animationStyle = {
-    animation: isPaused 
+    animation: !isAnimating || isPaused 
       ? 'none' 
-      : `rotate ${durationRef.current}s linear infinite`,
-    animationPlayState: isPaused ? 'paused' : 'running',
-    transform: isPaused ? 'rotate(0deg)' : undefined,
+      : `rotate ${duration}s linear infinite`,
+    transform: !isAnimating || isPaused ? 'rotate(0deg)' : undefined,
     transformOrigin: `${centerX}px ${centerY}px`
   };
   
@@ -223,28 +246,20 @@ const PolyrhythmMetronome = (props) => {
   const lastFirstBeatTimeRef = useRef(0);
   
   const handleInnerBeatTriggered = useCallback((beatIndex) => {
-    // Add detailed logs
-    console.log(`[Beat Trigger] Beat index: ${beatIndex}, Inner beats: ${innerBeats}, Tempo: ${tempo}`);
-    
     // Only dispatch first beat event if we're at beat index 0
     // and enough time has passed since last event (prevents double triggers)
     if (beatIndex === 0) {
       const now = performance.now();
       const timeSinceLastBeat = now - lastFirstBeatTimeRef.current;
       
-      console.log(`[First Beat] Time since last first beat: ${Math.round(timeSinceLastBeat)}ms`);
-      
       // Only dispatch if at least 500ms have passed since last beat
       // This prevents multiple triggers in short succession
       if (timeSinceLastBeat > 500) {
-        console.log(`[First Beat] DISPATCHING first beat event at ${now}`);
         lastFirstBeatTimeRef.current = now;
         window.dispatchEvent(new CustomEvent('polyrhythm-first-beat'));
-      } else {
-        console.log(`[First Beat] SKIPPING - too soon after previous (${Math.round(timeSinceLastBeat)}ms)`);
       }
     }
-  }, [innerBeats, tempo]);
+  }, []);
 
   const handleOuterBeatTriggered = useCallback((beatIndex) => {
     // Additional actions when outer beat is triggered (if needed)
