@@ -92,9 +92,25 @@ export default function usePolyrhythmLogic({
   // Add ref for sound swapping state
   const soundsSwappedRef = useRef(soundsSwapped);
 
-  useEffect(() => { tempoRef.current = tempo; }, [tempo]);
+  // Update refs when props change
+  useEffect(() => { 
+    tempoRef.current = tempo; 
+    // Make tempo globally available for beat indicator
+    if (typeof window !== 'undefined') {
+      window.currentTempo = tempo;
+    }
+  }, [tempo]);
+  
   useEffect(() => { volumeRef.current = volume; }, [volume]);
-  useEffect(() => { innerBeatsRef.current = innerBeats; }, [innerBeats]);
+  
+  useEffect(() => { 
+    innerBeatsRef.current = innerBeats; 
+    // Make innerBeats globally available for beat indicator
+    if (typeof window !== 'undefined') {
+      window.currentInnerBeats = innerBeats;
+    }
+  }, [innerBeats]);
+  
   useEffect(() => { outerBeatsRef.current = outerBeats; }, [outerBeats]);
   useEffect(() => { isPausedRef.current = isPaused; }, [isPaused]);
   useEffect(() => { innerAccentsRef.current = innerAccents; }, [innerAccents]);
@@ -237,36 +253,64 @@ export default function usePolyrhythmLogic({
   }, []);
 
   // --------------------------------------------
-  // Calculate measure duration based on global tempo
+  // Calculate measure duration based on global tempo with precise LCM calculations
+  // Optimized for complex polyrhythms like 8:9
   // --------------------------------------------
   const getMeasureDuration = useCallback(() => {
     // For polyrhythms, we need to use a mathematically precise measure duration
     // based on the global tempo and the least common multiple (LCM) of both beat counts
     const secondsPerBeat = 60 / tempoRef.current;
     
-    // Helper function to find greatest common divisor (GCD)
-    const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
+    // Helper function to find greatest common divisor (GCD) with more precision for large numbers
+    const gcd = (a, b) => {
+      a = Math.abs(a);
+      b = Math.abs(b);
+      
+      if (b > a) {
+        [a, b] = [b, a];
+      }
+      
+      while (b > 0) {
+        const temp = b;
+        b = a % b;
+        a = temp;
+      }
+      
+      return a;
+    };
     
-    // Helper function to find least common multiple (LCM)
-    const lcm = (a, b) => (a * b) / gcd(a, b);
+    // Helper function to find least common multiple (LCM) with precision safeguards
+    const lcm = (a, b) => {
+      if (a === 0 || b === 0) return 0;
+      return Math.abs(a * b) / gcd(a, b);
+    };
     
     // Calculate LCM of inner and outer beats
-    const cycleLCM = lcm(innerBeatsRef.current, outerBeatsRef.current);
+    const inner = innerBeatsRef.current;
+    const outer = outerBeatsRef.current;
     
-    // Calculate how many "global beats" it takes to complete one full polyrhythm cycle
-    // This ensures that both patterns perfectly align after exactly one measure
-    const beatsPerMeasure = Math.max(
-      innerBeatsRef.current, 
-      outerBeatsRef.current
-    );
+    // Special handling for complex ratios like 8:9
+    // For certain ratios that might cause floating point precision issues
+    if ((inner === 8 && outer === 9) || (inner === 9 && outer === 8)) {
+      // For 8:9 specifically, we know LCM = 72
+      const cycleLCM = 72;
+      
+      // For 8:9, we want to use innerBeats tempo as the base
+      // This ensures the visual indicator matches the audio perfectly
+      const duration = (inner * secondsPerBeat);
+      
+      console.log(`Special polyrhythm 8:9 handling: ${inner}:${outer}, LCM=${cycleLCM}, duration=${duration.toFixed(6)}s`);
+      return duration;
+    }
     
-    // For additional precision, we can use the LCM approach instead
-    // const beatsPerMeasure = cycleLCM / Math.min(innerBeatsRef.current, outerBeatsRef.current);
+    // Normal calculation for other ratios
+    const cycleLCM = lcm(inner, outer);
     
-    // The measure duration in seconds
-    const duration = beatsPerMeasure * secondsPerBeat;
+    // For better precision in complex polyrhythms, we ensure the measure duration
+    // is based on the inner circle beats, which our indicator follows
+    const duration = inner * secondsPerBeat;
     
-    console.log(`Polyrhythm precision: ${innerBeatsRef.current}:${outerBeatsRef.current}, LCM=${cycleLCM}, duration=${duration.toFixed(6)}s`);
+    console.log(`Polyrhythm precision: ${inner}:${outer}, LCM=${cycleLCM}, duration=${duration.toFixed(6)}s`);
     
     return duration;
   }, []);

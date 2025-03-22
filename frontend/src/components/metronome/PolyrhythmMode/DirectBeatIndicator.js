@@ -1,7 +1,10 @@
 // src/components/metronome/PolyrhythmMode/DirectBeatIndicator.js
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 
-// Beat indicator that ensures tempo is properly set up before starting
+/**
+ * Dedicated beat indicator component optimized for complex polyrhythms like 8:9
+ * Only shows a single line that appears on the second measure to avoid any visual jumps
+ */
 export const DirectBeatIndicator = ({ 
   containerSize, 
   isPaused, 
@@ -13,84 +16,151 @@ export const DirectBeatIndicator = ({
   const centerY = containerSize / 2;
   const outerRadius = containerSize / 2 - 4;
   
-  // Animation states
-  const [animationKey, setAnimationKey] = useState('initial');
-  const [isAnimating, setIsAnimating] = useState(false);
+  // Use reference for rotation instead of state
+  const rotationAngleRef = useRef(0);
+  const svgGroupRef = useRef(null);
   
-  // Store previous values to detect changes
-  const tempoRef = useRef(tempo);
-  const beatsRef = useRef(innerBeats);
-  const beatCountRef = useRef(0);
+  // Animation references
+  const requestIdRef = useRef(null);
+  const startTimeRef = useRef(null);
   
-  // Immediately stop animation when paused
+  // Track measure count to only show on second measure
+  const measureCountRef = useRef(0);
+  const isVisibleRef = useRef(false);
+  
+  // Timing references 
+  const beatPeriodRef = useRef((60 / tempo) * 1000); // ms per beat
+  
+  // Update timing when tempo changes
   useEffect(() => {
-    if (isPaused) {
-      setIsAnimating(false);
-      beatCountRef.current = 0;
+    beatPeriodRef.current = (60 / tempo) * 1000;
+  }, [tempo]);
+  
+  // Apply rotation directly to DOM
+  const applyRotation = useCallback((angle) => {
+    if (svgGroupRef.current) {
+      rotationAngleRef.current = angle;
+      svgGroupRef.current.style.transform = `rotate(${angle}deg)`;
     }
-  }, [isPaused]);
+  }, []);
   
-  // Detect and handle tempo/beats changes
-  useEffect(() => {
-    // Don't update animation if not currently animating
-    if (!isAnimating || isPaused) return;
+  // Animation function
+  const animate = useCallback((timestamp) => {
+    if (!isVisibleRef.current) {
+      // Don't animate if not visible yet
+      requestIdRef.current = requestAnimationFrame(animate);
+      return;
+    }
     
-    // Only update when tempo or beats actually change
-    if (tempoRef.current !== tempo || beatsRef.current !== innerBeats) {
-      // Update with new timing parameters
-      setAnimationKey(`tempo-${tempo}-beats-${innerBeats}-${Date.now()}`);
-      
-      // Update stored values
-      tempoRef.current = tempo;
-      beatsRef.current = innerBeats;
+    // Initialize timing on first animation frame
+    if (!startTimeRef.current) {
+      startTimeRef.current = timestamp;
+      requestIdRef.current = requestAnimationFrame(animate);
+      return;
     }
-  }, [tempo, innerBeats, isPaused, isAnimating]);
+    
+    // Calculate angle based on elapsed time
+    const elapsed = timestamp - startTimeRef.current;
+    const fullRotationTime = beatPeriodRef.current * innerBeats;
+    const phase = (elapsed % fullRotationTime) / fullRotationTime;
+    const newAngle = phase * 360;
+    
+    // Apply directly to DOM
+    applyRotation(newAngle);
+    
+    // Continue animation loop
+    requestIdRef.current = requestAnimationFrame(animate);
+  }, [applyRotation, innerBeats]);
   
-  // First beat handler with careful synchronization
+  // Handle play/pause
   useEffect(() => {
-    const handleFirstBeat = () => {
-      // Only process when playing
-      if (isPaused) return;
-      
-      // Count beats for periodic resyncs
-      beatCountRef.current++;
-      
-      // If not currently animating, start animation with a small delay
-      // to ensure audio is fully set up
-      if (!isAnimating) {
-        // Small delay before starting animation to ensure
-        // audio is fully initialized
-        setTimeout(() => {
-          tempoRef.current = tempo;
-          beatsRef.current = innerBeats;
-          setAnimationKey(`start-${Date.now()}`);
-          setIsAnimating(true);
-        }, 50);
-      }
-      // Periodically resync for complex polyrhythms (every 4 measures)
-      else if (beatCountRef.current % 4 === 0) {
-        setAnimationKey(`sync-${Date.now()}`);
+    const stopAnimation = () => {
+      if (requestIdRef.current) {
+        cancelAnimationFrame(requestIdRef.current);
+        requestIdRef.current = null;
       }
     };
     
+    if (isPaused) {
+      // Stop animation but keep position
+      stopAnimation();
+      
+      // Reset measure counter when paused
+      measureCountRef.current = 0;
+      isVisibleRef.current = false;
+      
+      // Hide the indicator on pause
+      if (svgGroupRef.current) {
+        svgGroupRef.current.style.opacity = "0";
+      }
+    } else {
+      // On play, start animation but keep indicator hidden until 2nd measure
+      if (!requestIdRef.current) {
+        // Restart animation timing
+        startTimeRef.current = null;
+        
+        // Start animation loop (indicator will be invisible until 2nd measure)
+        requestIdRef.current = requestAnimationFrame(animate);
+      }
+    }
+    
+    return stopAnimation;
+  }, [isPaused, animate]);
+  
+  // Listen for first beat events (every measure start)
+  useEffect(() => {
+    const handleFirstBeat = () => {
+      if (isPaused) return;
+      
+      // Count measures (first beat of each measure)
+      measureCountRef.current++;
+      
+      // Only show indicator on second measure
+      if (measureCountRef.current === 2 && !isVisibleRef.current) {
+        console.log("Showing beat indicator on 2nd measure");
+        isVisibleRef.current = true;
+        
+        // Reset start time for smooth beginning
+        startTimeRef.current = performance.now();
+        
+        // Make indicator visible
+        if (svgGroupRef.current) {
+          svgGroupRef.current.style.opacity = "1";
+          // Start at angle 0
+          applyRotation(0);
+        }
+      }
+    };
+    
+    // Reset counters but don't show indicator yet
+    const handlePlaybackStart = () => {
+      measureCountRef.current = 0;
+      isVisibleRef.current = false;
+      
+      // Ensure indicator is hidden on playback start
+      if (svgGroupRef.current) {
+        svgGroupRef.current.style.opacity = "0";
+      }
+    };
+    
+    // Listen for events
     window.addEventListener('polyrhythm-first-beat', handleFirstBeat);
+    window.addEventListener('polyrhythm-playback-start', handlePlaybackStart);
     
     return () => {
       window.removeEventListener('polyrhythm-first-beat', handleFirstBeat);
+      window.removeEventListener('polyrhythm-playback-start', handlePlaybackStart);
     };
-  }, [isPaused, tempo, innerBeats, isAnimating]);
+  }, [isPaused, applyRotation]);
   
-  // Calculate animation duration
-  const duration = (60 / tempo) * innerBeats;
-  
-  // Animation style - only apply animation if actually animating
-  const animationStyle = {
-    animation: !isAnimating || isPaused 
-      ? 'none' 
-      : `rotate ${duration}s linear infinite`,
-    transform: !isAnimating || isPaused ? 'rotate(0deg)' : undefined,
-    transformOrigin: `${centerX}px ${centerY}px`
-  };
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (requestIdRef.current) {
+        cancelAnimationFrame(requestIdRef.current);
+      }
+    };
+  }, []);
   
   return (
     <div style={{
@@ -103,7 +173,6 @@ export const DirectBeatIndicator = ({
       zIndex: 50
     }}>
       <svg
-        key={animationKey}
         width={containerSize}
         height={containerSize}
         style={{
@@ -113,28 +182,25 @@ export const DirectBeatIndicator = ({
           transform: 'translate(-50%, -50%)'
         }}
       >
-        <g style={animationStyle}>
-          {/* Line from center to outer edge - styled to match your design system */}
+        <g 
+          ref={svgGroupRef}
+          style={{
+            transformOrigin: `${centerX}px ${centerY}px`,
+            willChange: 'transform',
+            opacity: 0, // Start hidden
+            transition: 'opacity 0.3s ease' // Smooth fade in
+          }}
+        >
+          {/* Single line from center to outer edge - no dots */}
           <line
             x1={centerX}
             y1={centerY}
             x2={centerX}
             y2={centerY - outerRadius}
             stroke="var(--primary-teal)"
-            strokeWidth={2.5}
+            strokeWidth={3}
             strokeLinecap="round"
-            style={{
-              filter: "drop-shadow(0 0 2px rgba(0, 160, 160, 0.4))"
-            }}
-          />
-          
-          {/* Center dot */}
-          <circle
-            cx={centerX}
-            cy={centerY}
-            r={1.5}
-            fill="var(--primary-teal)"
-            opacity={0.6}
+            className="beat-indicator-line"
           />
         </g>
       </svg>
