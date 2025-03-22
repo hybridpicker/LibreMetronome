@@ -70,7 +70,7 @@
 }
 
 .mode-option.active .mode-name {
-  color: #00A0A0;
+  color: var(--primary-teal);
   font-weight: 500;
 }
 
@@ -196,7 +196,7 @@
   width: 35px;
   height: 35px;
   font-size: 20px;
-  color: #00A0A0;
+  color: var(--primary-teal);
   font-weight: bold;
 }
 

@@ -22,22 +22,22 @@
 }
 
 .metronome-circle-inactive {
-  border: 2px dashed #ccc;
+  border: 2px dashed var(--neutral-border);
 }
 
 .metronome-circle-active {
-  box-shadow: 0 0 0 3px #00A0A0, 0 0 10px rgba(0, 160, 160, 0.6);
+  box-shadow: 0 0 0 3px var(--primary-teal), 0 0 10px rgba(0, 160, 160, 0.6);
   border: 2px solid transparent;
 }
 
 .metronome-circle-playing {
-  box-shadow: 0 0 0 3px #00A0A0, 0 0 15px rgba(0, 160, 160, 0.8) !important;
+  box-shadow: 0 0 0 3px var(--primary-teal), 0 0 15px rgba(0, 160, 160, 0.8) !important;
   border: 2px solid transparent !important;
   animation: circle-pulse 2s infinite ease-in-out;
 }
 
 .metronome-circle-silent {
-  box-shadow: 0 0 0 3px #ff5722, 0 0 10px rgba(255, 87, 34, 0.6);
+  box-shadow: 0 0 0 3px var(--error), 0 0 10px rgba(255, 87, 34, 0.6);
   border: 2px solid transparent;
 }
 
@@ -64,11 +64,11 @@
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background-color: #ff4d4d;
+  background-color: var(--error);
   display: flex;
   justify-content: center;
   align-items: center;
-  color: #fff;
+  color: var(--text-light);
   font-size: 20px;
   font-weight: bold;
   cursor: pointer;
@@ -90,11 +90,11 @@
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background-color: #00A0A0;
+  background-color: var(--primary-teal);
   display: flex;
   justify-content: center;
   align-items: center;
-  color: #fff;
+  color: var(--text-light);
   font-size: 36px;
   font-weight: bold;
   box-shadow: 0 0 8px rgba(0, 160, 160, 0.5);
@@ -104,19 +104,19 @@
   margin-top: 10px;
   padding: 8px;
   border-radius: 5px;
-  background-color: #f8f8f8;
-  border: 1px solid #ddd;
+  background-color: var(--neutral-bg-alt);
+  border: 1px solid var(--neutral-border);
   max-width: 300px;
   margin: 10px auto;
 }
 
 .training-status h4 {
   margin: 0 0 8px 0;
-  color: #00A0A0;
+  color: var(--primary-teal);
 }
 
 .silent-label {
-  color: #f44336;
+  color: var(--error);
   font-weight: bold;
 }
 
@@ -207,13 +207,13 @@
 /* Animation for playing circle */
 @keyframes circle-pulse {
   0% {
-    box-shadow: 0 0 0 3px #00A0A0, 0 0 8px rgba(0, 160, 160, 0.6);
+    box-shadow: 0 0 0 3px var(--primary-teal), 0 0 8px rgba(0, 160, 160, 0.6);
   }
   50% {
-    box-shadow: 0 0 0 4px #00A0A0, 0 0 15px rgba(0, 160, 160, 0.8);
+    box-shadow: 0 0 0 4px var(--primary-teal), 0 0 15px rgba(0, 160, 160, 0.8);
   }
   100% {
-    box-shadow: 0 0 0 3px #00A0A0, 0 0 8px rgba(0, 160, 160, 0.6);
+    box-shadow: 0 0 0 3px var(--primary-teal), 0 0 8px rgba(0, 160, 160, 0.6);
   }
 }
 
@@ -253,8 +253,8 @@
   top: -30px;
   left: 50%;
   transform: translateX(-50%);
-  background-color: #00A0A0;
-  color: white;
+  background-color: var(--primary-teal);
+  color: var(--text-light);
   padding: 3px 12px;
   border-radius: 12px;
   font-size: 11px;
@@ -275,7 +275,7 @@
   height: 24px;
   border-radius: 50%;
   background-color: rgba(0, 0, 0, 0.6);
-  color: white;
+  color: var(--text-light);
   font-size: 14px;
   font-weight: bold;
   z-index: 5;

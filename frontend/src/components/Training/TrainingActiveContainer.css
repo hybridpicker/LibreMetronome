@@ -4,7 +4,7 @@
   margin: 20px auto;
   padding: 16px;
   border-radius: 10px;
-  background-color: #ffffff;
+  background-color: var(--text-light);
   border: 1px solid var(--neutral-border);
   max-width: 350px;
   text-align: left;
@@ -331,13 +331,13 @@
 }
 
 .parameter-edit-cancel {
-  background-color: #f5f5f5;
+  background-color: var(--neutral-bg);
   color: var(--text-secondary);
   border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .parameter-edit-cancel:hover, .parameter-edit-cancel:active {
-  background-color: #e8e8e8;
+  background-color: var(--beat-muted);
   transform: translateY(-1px);
 }
 
@@ -447,7 +447,7 @@
 }
 
 .keyboard-hint kbd {
-  background-color: #fff;
+  background-color: var(--text-light);
   border: 1px solid var(--neutral-border);
   border-radius: 3px;
   box-shadow: 0 1px 1px rgba(0,0,0,0.2);

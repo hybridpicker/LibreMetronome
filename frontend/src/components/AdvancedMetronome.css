@@ -54,7 +54,7 @@
 /* Basic style for the line connections between beats */
 .line-connection {
   height: 1px;
-  background: #00A0A0;
+  background: var(--primary-teal);
   position: absolute;
   pointer-events: none;
   transform-origin: center center;

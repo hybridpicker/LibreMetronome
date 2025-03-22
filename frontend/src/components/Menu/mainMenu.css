@@ -1,27 +1,10 @@
 /* src/components/Menu/mainMenu.css */
 
+/* Use the global color variables from colors.css */
+/* Define only component-specific variables here */
 :root {
-  --primary-teal: #00A0A0;
-  --primary-teal-dark: #008080;
-  --primary-teal-light: rgba(0, 160, 160, 0.1);
-  --secondary-gold: #f8d38d;
-  --overlay-bg: rgba(0, 0, 0, 0.7);
-  --neutral-bg: #f9f9f9;
-  --neutral-bg-alt: #ffffff;
-  --text-primary: #333333;
-  --text-secondary: #666666;
-  --text-tertiary: #999999;
-  --neutral-border: #dddddd;
-  --neutral-border-light: #eeeeee;
-  --beat-muted: #f0f0f0;
-  --beat-normal: #fce9c6;
-  --beat-accent: #f6cc7c;
-  --beat-first: #00A0A0;
-  --training-overview-bg: #f0f8f8;
-  --training-tip-bg: #fff8e8;
-  --modal-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  --button-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   --transition-standard: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  --button-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 /* Main Menu Button */
@@ -789,7 +772,7 @@
 
 .training-save-button {
   background: var(--primary-teal);
-  color: #fff;
+  color: var(--text-light);
   border: none;
   border-radius: 5px;
   padding: 12px 25px;
@@ -943,7 +926,7 @@
 
 .settings-save-button {
   background: var(--primary-teal);
-  color: #fff;
+  color: var(--text-light);
   border: none;
   border-radius: 5px;
   padding: 12px 25px;
