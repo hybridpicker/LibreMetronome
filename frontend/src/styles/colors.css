@@ -1,6 +1,7 @@
 /* 
  * LibreMetronome Color Palette
  * A cohesive color scheme to enhance visual hierarchy and user experience
+ * Updated according to the new color scheme documentation
  */
 
 :root {
@@ -28,12 +29,6 @@
   --text-tertiary: #999999;      /* Tertiary text color for less important text */
   --text-light: #ffffff;         /* Light text color for dark backgrounds */
 
-  /* Semantic Colors */
-  --success: #4CAF50;            /* Success color */
-  --warning: #FF9800;            /* Warning color */
-  --error: #F44336;              /* Error color */
-  --info: #2196F3;               /* Info color */
-
   /* Beat State Colors */
   --beat-muted: #e8e8e8;         /* Muted beat color */
   --beat-normal: var(--secondary-gold-light); /* Normal beat color */
@@ -42,11 +37,52 @@
   --beat-inner: #fce9c6;         /* Inner beat color for polyrhythm */
   --beat-outer: #f6cc7c;         /* Outer beat color for polyrhythm */
 
+  /* Semantic Colors */
+  --success: #3FB6A8;            /* Success color - aligned with teal palette */
+  --warning: #F9CE7A;            /* Warning color - aligned with gold palette */
+  --error: #E67B73;              /* Error color */
+  --info: #73B5E6;               /* Info color */
+
   /* Overlay Colors */
   --overlay-bg: rgba(0, 0, 0, 0.7); /* Dark overlay background */
   --modal-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Shadow for modals */
 
   /* Training Mode Colors */
-  --training-tip-bg: #fffbea;    /* Background for training tips */
-  --training-overview-bg: #f0f8ff; /* Background for training overview */
+  --training-tip-bg: var(--secondary-gold-ultra-light); /* Background for training tips */
+  --training-overview-bg: var(--primary-teal-ultra-light); /* Background for training overview */
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 300ms ease;
+  --transition-slow: 500ms ease;
+
+  /* Borders */
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --border-width: 1px;
+  --border-width-thick: 2px;
 }
+
+/* Dark Mode Theming (Uncomment if implementing dark mode)
+@media (prefers-color-scheme: dark) {
+  :root {
+    --neutral-bg: #222222;
+    --neutral-bg-alt: #2a2a2a;
+    --neutral-border: #444444;
+    --neutral-border-light: #555555;
+    
+    --text-primary: #f5f5f5;
+    --text-secondary: #c0c0c0;
+    --text-tertiary: #999999;
+    
+    /* Other dark mode adjustments as needed */
+/*
+  }
+}
+*/

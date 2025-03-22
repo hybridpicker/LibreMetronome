@@ -407,3 +407,32 @@ button[aria-label="Tap Tempo"]:active {
   top: 85%;
   transform: translate(-50%, -50%) !important;
 }
+
+/* Style Guide Container Styles */
+.style-guide-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: var(--neutral-bg);
+}
+
+.style-guide-header-controls {
+  margin-bottom: 30px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.style-guide-header-controls button {
+  background-color: var(--primary-teal);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  font-family: 'Lato', sans-serif;
+}
+
+.style-guide-header-controls button:hover {
+  background-color: var(--primary-teal-dark);
+}
