@@ -251,6 +251,54 @@
     margin-bottom: 10px;
   }
   
+  /* Beat Sync Line Enhancement Styles */
+  .beat-sync-line-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* Allow clicks to go through to the circles */
+    z-index: 10; /* Higher than circle renderer */
+    transform-style: preserve-3d; /* Keep element visible during transforms */
+  }
+  
+  /* Enhanced sync line styling */
+  .beat-sync-line {
+    stroke-linecap: round;
+    transition: stroke-width 0.15s ease, stroke 0.15s ease;
+    transform-origin: center;  /* Ensure rotation happens from center */
+    will-change: transform;   /* Performance optimization */
+    vector-effect: non-scaling-stroke; /* Maintain stroke width regardless of transforms */
+  }
+  
+  .beat-sync-line.active {
+    animation: lineGlow 0.3s ease-out;
+  }
+  
+  .beat-sync-endpoint {
+    transform-origin: center;
+    transition: r 0.15s ease, fill 0.15s ease;
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3));
+  }
+  
+  .beat-sync-endpoint.active {
+    animation: pulseAndGlow 0.3s ease-out;
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.4));
+  }
+  
+  @keyframes pulseAndGlow {
+    0% { r: 3.5; filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3)); }
+    50% { r: 6; filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.5)); }
+    100% { r: 3.5; filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3)); }
+  }
+  
+  @keyframes lineGlow {
+    0% { stroke-width: 1.5; opacity: 0.7; }
+    50% { stroke-width: 2.5; opacity: 0.9; }
+    100% { stroke-width: 1.5; opacity: 0.7; }
+  }
+  
   /* Responsive adjustments */
   @media (max-width: 600px) {
     .polyrhythm-buttons {
@@ -276,5 +324,25 @@
     /* Hide tooltips on mobile */
     .tooltip {
       display: none;
+    }
+    
+    /* Smaller beat sync endpoint on small screens */
+    .beat-sync-endpoint {
+      r: 3;
+    }
+    
+    @keyframes pulseAndGlow {
+      0% { r: 3; }
+      50% { r: 5; }
+      100% { r: 3; }
+    }
+  }
+  
+  /* Reduced motion preference support */
+  @media (prefers-reduced-motion: reduce) {
+    .beat-sync-line,
+    .beat-sync-endpoint {
+      transition: none !important;
+      animation: none !important;
     }
   }
