@@ -156,7 +156,7 @@
   
   /* Clean, minimal swap button */
   .switch-circles-button {
-    background: rgba(0, 160, 160, 0.9);
+    background: white;
     border: none;
     border-radius: 6px;
     color: white;

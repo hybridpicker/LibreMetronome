@@ -139,17 +139,6 @@ const DirectBeatIndicator = ({
             }}
           />
           
-          {/* End circle */}
-          <circle
-            cx={centerX}
-            cy={centerY - outerRadius}
-            r={5}
-            fill="var(--primary-teal)"
-            style={{
-              filter: "drop-shadow(0 0 2px rgba(0, 160, 160, 0.4))"
-            }}
-          />
-          
           {/* Center dot */}
           <circle
             cx={centerX}
@@ -719,27 +708,6 @@ const PolyrhythmMetronome = (props) => {
             border: '1px solid var(--neutral-border)'
           }}></div>
           First Beat
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <div style={{ 
-            width: '12px', 
-            height: '1px', 
-            backgroundColor: 'var(--highlight)', 
-            marginRight: '5px',
-            position: 'relative',
-            border: '0'
-          }}>
-            <div style={{
-              position: 'absolute',
-              width: '5px',
-              height: '5px',
-              backgroundColor: 'var(--highlight)',
-              borderRadius: '50%',
-              right: '-2px',
-              top: '-2px'
-            }}></div>
-          </div>
-          Beat Sync Line
         </div>
       </div>
 
