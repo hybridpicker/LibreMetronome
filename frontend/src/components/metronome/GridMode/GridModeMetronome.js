@@ -51,26 +51,76 @@ const GridModeMetronome = (props) => {
     beatMultiplier: props.beatMultiplier
   });
 
-  // Define play/pause handler
-  const handlePlayPause = () => {
+  // Define play/pause handler with better audio loading
+  const handlePlayPause = async () => {
     if (props.isPaused) {
-      // Initialize audio context if necessary
-      if (!logic.audioCtx) {
+      try {
+        // First update UI to show user interaction was received
         props.setIsPaused(false);
-        return;
-      }
-      if (logic.audioCtx.state === 'suspended') {
-        logic.audioCtx.resume().then(() => {
-          props.setIsPaused(false);
-          logic.startScheduler();
-        }).catch((err) => {
-          console.error("Error resuming audio context:", err);
-        });
-      } else {
-        props.setIsPaused(false);
+        
+        // Handle the case when audio context is closed - this requires special handling
+        if (logic.audioCtx && logic.audioCtx.state === 'closed') {
+          console.log("Audio context is closed, need complete reinitialization");
+          
+          // We need to force a complete reload of audio context and sounds
+          const loadSuccess = await logic.reloadSounds();
+          if (!loadSuccess) {
+            console.error("Failed to reinitialize audio after closed state");
+            props.setIsPaused(true);
+            
+            // Notify user of the issue
+            if (window.confirm("Audio system needs to be restarted. Refresh the page to fix this issue?")) {
+              window.location.reload();
+            }
+            return;
+          }
+          console.log("Successfully reinitialized audio after closed state");
+        }
+        // Handle missing or suspended audio context
+        else if (!logic.audioCtx || logic.audioCtx.state === 'suspended') {
+          console.log("Initializing or resuming audio context...");
+          
+          // First try to reload sounds if needed
+          if (!logic.audioCtx) {
+            const loadSuccess = await logic.reloadSounds();
+            if (!loadSuccess) {
+              console.error("Failed to load sounds");
+              props.setIsPaused(true);
+              return;
+            }
+            console.log("Sounds loaded successfully");
+          }
+          
+          // Then try to resume if suspended
+          if (logic.audioCtx && logic.audioCtx.state === 'suspended') {
+            try {
+              await logic.audioCtx.resume();
+              console.log("Audio context resumed successfully, state:", logic.audioCtx.state);
+            } catch (resumeError) {
+              console.error("Failed to resume audio context:", resumeError);
+              props.setIsPaused(true);
+              return;
+            }
+          }
+        }
+        
+        // One final check to ensure we're good to go
+        if (!logic.audioCtx || logic.audioCtx.state !== 'running') {
+          console.error("Audio context still not ready after all attempts");
+          props.setIsPaused(true);
+          alert("Unable to start audio system. Please try clicking the play button again or refresh the page.");
+          return;
+        }
+        
+        // Start playing now that we're sure the audio context is ready
+        console.log("Starting metronome with audio context state:", logic.audioCtx.state);
         logic.startScheduler();
+      } catch (err) {
+        console.error("Error starting metronome:", err);
+        props.setIsPaused(true);
       }
     } else {
+      // Stop playing
       props.setIsPaused(true);
       logic.stopScheduler();
     }
