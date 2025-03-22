@@ -55,6 +55,113 @@ window.metronomeDebug = {
 };
 
 function App() {
+  // This hidden button and effect helps initialize the audio context
+  // Many browsers require a user interaction to start audio
+  const audioButtonRef = useRef(null);
+  
+  useEffect(() => {
+    // Auto-click the audio initialization button
+    const triggerAudioContextInit = () => {
+      if (audioButtonRef.current) {
+        console.log("Auto-triggering audio context initialization");
+        audioButtonRef.current.click();
+      }
+    };
+    
+    // Try to initialize on page load
+    triggerAudioContextInit();
+    
+    // Also add event listeners for user interaction to ensure it works
+    const handleUserInteraction = () => {
+      triggerAudioContextInit();
+      document.removeEventListener('click', handleUserInteraction);
+      document.removeEventListener('touchstart', handleUserInteraction);
+      document.removeEventListener('keydown', handleUserInteraction);
+    };
+    
+    document.addEventListener('click', handleUserInteraction);
+    document.addEventListener('touchstart', handleUserInteraction);
+    document.addEventListener('keydown', handleUserInteraction);
+    
+    return () => {
+      document.removeEventListener('click', handleUserInteraction);
+      document.removeEventListener('touchstart', handleUserInteraction);
+      document.removeEventListener('keydown', handleUserInteraction);
+    };
+  }, []);
+  
+  const handleAudioContextInit = () => {
+    try {
+      // Create a silent audio context
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) {
+        console.error("Web Audio API not supported in this browser");
+        return;
+      }
+      
+      // If there's already an audio context but it's closed, remove it
+      if (window._audioContextInit && window._audioContextInit.state === 'closed') {
+        console.log("Removing closed audio context");
+        window._audioContextInit = null;
+      }
+      
+      // Create and store in window for debugging/access
+      if (!window._audioContextInit) {
+        window._audioContextInit = new AudioContext({
+          // Use 48kHz sample rate for professional audio quality
+          sampleRate: 48000,
+          // Set latencyHint to 'interactive' for better timing precision
+          latencyHint: 'interactive'
+        });
+        console.log("Audio context initialized: ", window._audioContextInit.state);
+        
+        // Play a silent sound to ensure the audio context is fully activated
+        const silentOscillator = window._audioContextInit.createOscillator();
+        const silentGain = window._audioContextInit.createGain();
+        silentGain.gain.value = 0.001; // Nearly silent
+        silentOscillator.connect(silentGain);
+        silentGain.connect(window._audioContextInit.destination);
+        silentOscillator.start();
+        silentOscillator.stop(window._audioContextInit.currentTime + 0.001);
+        
+        // Try to resume it immediately
+        window._audioContextInit.resume().then(() => {
+          console.log("Audio context resumed: ", window._audioContextInit.state);
+          
+          // Play another silent sound after resume to ensure it's working
+          setTimeout(() => {
+            try {
+              if (window._audioContextInit && window._audioContextInit.state === 'running') {
+                const checkOscillator = window._audioContextInit.createOscillator();
+                const checkGain = window._audioContextInit.createGain();
+                checkGain.gain.value = 0.001;
+                checkOscillator.connect(checkGain);
+                checkGain.connect(window._audioContextInit.destination);
+                checkOscillator.start();
+                checkOscillator.stop(window._audioContextInit.currentTime + 0.001);
+                console.log("Verification sound played successfully");
+              }
+            } catch (e) {
+              console.error("Error playing verification sound:", e);
+            }
+          }, 500);
+        }).catch(err => {
+          console.error("Failed to resume audio context:", err);
+        });
+      } else if (window._audioContextInit.state === 'suspended') {
+        // If it exists but is suspended, try to resume it
+        console.log("Attempting to resume existing audio context");
+        window._audioContextInit.resume().then(() => {
+          console.log("Existing audio context resumed: ", window._audioContextInit.state);
+        }).catch(err => {
+          console.error("Failed to resume existing audio context:", err);
+        });
+      }
+    } catch (err) {
+      console.error("Error initializing audio context:", err);
+    }
+  };
+  
   const [mode, setMode] = useState("circle"); // Options: "analog", "circle", "grid", "multi", "polyrhythm"
   const [showStyleGuide, setShowStyleGuide] = useState(false); // Toggle for style guide display
   const [tempo, setTempo] = useState(120);
@@ -83,19 +190,37 @@ function App() {
     setAccents(Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1)));
   }, [subdivisions]);
 
+  // Track when mode is changed
   const [prevMode, setPrevMode] = useState(mode);
+  const playStateRef = useRef(isPaused);
+  
+  // Update playStateRef when isPaused changes
   useEffect(() => {
-    if (prevMode !== mode && !isPaused) {
-      const timer = setTimeout(() => {
-        if (togglePlayRef.current) {
-          setIsPaused(true);
-          setTimeout(() => setIsPaused(false), 50);
-        }
-      }, 100);
-      return () => clearTimeout(timer);
+    playStateRef.current = isPaused;
+  }, [isPaused]);
+
+  // Handle mode changes and preserve playing state
+  useEffect(() => {
+    if (prevMode !== mode) {
+      const wasPlaying = !playStateRef.current;
+      
+      // Set a small delay to allow the new component to mount before trying to play
+      if (wasPlaying) {
+        // Temporarily pause during transition
+        setIsPaused(true);
+        
+        // Resume playback after component has mounted
+        const timer = setTimeout(() => {
+          if (togglePlayRef.current) {
+            setIsPaused(false);
+          }
+        }, 150); // Slightly longer delay to ensure component is ready
+        
+        return () => clearTimeout(timer);
+      }
     }
     setPrevMode(mode);
-  }, [mode, isPaused, prevMode]);
+  }, [mode, prevMode]);
 
   const toggleAccent = (index) => {
     setAccents(prev => {
@@ -280,6 +405,22 @@ function App() {
 
   return (
     <div className="app-container">
+      {/* Hidden button to initialize audio context */}
+      <button 
+        ref={audioButtonRef}
+        onClick={handleAudioContextInit}
+        style={{ 
+          position: 'absolute', 
+          opacity: 0, 
+          pointerEvents: 'none',
+          width: '1px',
+          height: '1px',
+          overflow: 'hidden'
+        }}
+        aria-hidden="true"
+      >
+        Initialize Audio
+      </button>
       <Helmet>
         <title>{showStyleGuide 
           ? "LibreMetronome - Style Guide" 

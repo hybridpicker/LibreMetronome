@@ -73,6 +73,12 @@ def serve_sound_file(request, filename):
     if content_type:
         response['Content-Type'] = content_type
     response['Content-Disposition'] = f'inline; filename="{filename}"'
+    
+    # Add CORS headers to allow cross-origin requests
+    response['Access-Control-Allow-Origin'] = '*'  # Allow from any origin
+    response['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
+    response['Access-Control-Allow-Headers'] = 'X-Requested-With, Content-Type'
+    
     return response
 
 # API endpoints for sound sets
