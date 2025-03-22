@@ -41,7 +41,7 @@
 }
 
 .grid-square-normal {
-  background-color: #fae3ad !important;
+  background-color: var(--secondary-gold-light) !important;
 }
 
 /* Ensure edges are clean */

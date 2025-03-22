@@ -62,14 +62,14 @@
   
   /* Clean active states */
   .polyrhythm-button.active.inner-circle {
-    background-color: #00A0A0;
+    background-color: var(--primary-teal);
     color: white;
     border-color: transparent;
     box-shadow: 0 2px 4px rgba(0, 160, 160, 0.2);
   }
   
   .polyrhythm-button.active.outer-circle {
-    background-color: #00A0A0;
+    background-color: var(--primary-teal);
     color: white;
     border-color: transparent;
     box-shadow: 0 2px 4px rgba(0, 160, 160, 0.2);
@@ -109,7 +109,7 @@
     width: 3px;
     height: 3px;
     border-radius: 50%;
-    background-color: #00A0A0;
+    background-color: var(--primary-teal);
     opacity: 0.7;
   }
   
@@ -122,7 +122,7 @@
     width: 3px;
     height: 3px;
     border-radius: 50%;
-    background-color: #f6cc7c;
+    background-color: var(--beat-outer);
     opacity: 0.7;
   }
   
@@ -149,7 +149,7 @@
   .ratio-value {
     display: inline-block;
     font-weight: 500;
-    color: #00A0A0;
+    color: var(--primary-teal);
     margin-left: 8px;
     font-size: 17px;
   }
