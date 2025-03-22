@@ -25,7 +25,7 @@
 .inner-circle.active, 
 .outer-circle.active {
   border: 2px solid transparent;
-  box-shadow: 0 0 0 3px #00A0A0, 0 0 10px rgba(0, 160, 160, 0.6);
+  box-shadow: 0 0 0 3px var(--primary-teal), 0 0 10px rgba(0, 160, 160, 0.6);
 }
 
 /* Updated dot animation with simpler scaling */
@@ -34,7 +34,7 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background-color: #fce9c6;
+  background-color: var(--beat-inner);
   cursor: default;
   transition: all 0.15s ease-out,
               left 0.3s cubic-bezier(0.25, 0.1, 0.25, 1),
@@ -54,15 +54,15 @@
 }
 
 .beat-dot.first-beat {
-  background-color: #00A0A0;
+  background-color: var(--primary-teal);
 }
 
 .beat-dot.inner-beat {
-  background-color: #fce9c6; /* Lighter yellow */
+  background-color: var(--beat-inner); /* Lighter yellow */
 }
 
 .beat-dot.outer-beat {
-  background-color: #f6cc7c; /* Darker yellow */
+  background-color: var(--beat-outer); /* Darker yellow */
 }
 
 .beat-dot.inner-beat.accent-beat {
@@ -76,7 +76,7 @@
 }
 
 .beat-dot.muted {
-  background-color: #e8e8e8;
+  background-color: var(--beat-muted);
   opacity: 0.7;
 }
 
@@ -109,7 +109,7 @@
   display: block;
   margin-bottom: 10px;
   font-weight: bold;
-  color: #00a0a0;
+  color: var(--primary-teal);
   transition: all 0.3s ease;
 }
 
@@ -132,14 +132,14 @@
 }
 
 .polyrhythm-button:hover {
-  background-color: #f5f5f5;
+  background-color: var(--neutral-bg);
   transform: translateY(-1px);
 }
 
 .polyrhythm-button.active {
-  background-color: #00A0A0;
+  background-color: var(--primary-teal);
   color: white;
-  border-color: #00A0A0;
+  border-color: var(--primary-teal);
   transform: scale(1.05);
 }
 
@@ -167,7 +167,7 @@
 
 .ratio-value {
   font-weight: bold;
-  color: #00A0A0;
+  color: var(--primary-teal);
   transition: all 0.3s ease;
 }
 
@@ -177,7 +177,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #00A0A0;
+  background: var(--primary-teal);
   border: none;
   border-radius: 4px;
   color: white;
@@ -191,7 +191,7 @@
 }
 
 .switch-circles-button:hover {
-  background-color: #008080 !important;
+  background-color: var(--primary-teal-dark) !important;
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
@@ -233,15 +233,15 @@
 }
 
 .legend-color.inner-beat {
-  background-color: #fce9c6;
+  background-color: var(--beat-inner);
 }
 
 .legend-color.outer-beat {
-  background-color: #f6cc7c;
+  background-color: var(--beat-outer);
 }
 
 .legend-color.first-beat {
-  background-color: #00A0A0;
+  background-color: var(--primary-teal);
 }
 
 /* Play/pause button transitions */
@@ -337,6 +337,56 @@
     transition: opacity 0.2s ease !important;
   }
 }
+
+/* Beat Sync Line Styles */
+.beat-sync-line-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.beat-sync-line {
+  stroke-dasharray: 4, 4;
+  animation: dashAnimation 1s linear infinite;
+  stroke-linecap: round;
+}
+
+@keyframes dashAnimation {
+  to {
+    stroke-dashoffset: -8;
+  }
+}
+
+.beat-sync-endpoint {
+  transform-origin: center;
+  transition: r 0.2s ease, fill 0.2s ease;
+}
+
+.beat-sync-endpoint.active {
+  animation: pulseCircle 0.3s ease-out;
+}
+
+@keyframes pulseCircle {
+  0% { r: 3.5; }
+  50% { r: 6; }
+  100% { r: 3.5; }
+}
+
+/* Rotation animation for the beat sync line */
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Animation for the beat indicator */
+@keyframes rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 /* Enhanced styling for PolyRhythm Mode buttons */
 
 /* Refined button grid layout for better spacing */
@@ -353,9 +403,9 @@
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  border: 1px solid #e8e8e8;
+  border: 1px solid var(--beat-muted);
   background-color: white;
-  color: #00a0a0;
+  color: var(--primary-teal);
   cursor: pointer;
   font-weight: normal;
   font-size: 16px;
@@ -379,18 +429,18 @@
 /* Enhanced active state for inner circle */
 .polyrhythm-button.active.inner-circle,
 .polyrhythm-button.active {
-  background-color: #00A0A0; /* Teal color consistent with app */
+  background-color: var(--primary-teal); /* Teal color consistent with app */
   color: white;
-  border-color: #00A0A0;
+  border-color: var(--primary-teal);
   transform: scale(1.05);
   box-shadow: 0 2px 5px rgba(0, 160, 160, 0.25);
 }
 
 /* Enhanced active state for outer circle - slightly different shade */
 .polyrhythm-button.active.outer-circle {
-  background-color: #00A0A0;
+  background-color: var(--primary-teal);
   color: white;
-  border-color: #00A0A0;
+  border-color: var(--primary-teal);
   transform: scale(1.05);
   box-shadow: 0 2px 5px rgba(0, 160, 160, 0.25);
 }
@@ -464,7 +514,7 @@
 .ratio-value {
   display: inline-block;
   font-weight: 500;
-  color: #00A0A0;
+  color: var(--primary-teal);
   margin-left: 8px;
   font-size: 17px;
 }

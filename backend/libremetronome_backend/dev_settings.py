@@ -8,16 +8,31 @@ DEBUG = True
 # Allow all hosts in development
 ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1']
 
-# Add development-specific CORS settings
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-]
+# CORS settings for development
+CORS_ALLOW_ALL_ORIGINS = True  # This enables CORS for all origins in development
 
-# Allow all CORS in development for easier testing
-CORS_ALLOW_ALL_ORIGINS = True
+# More permissive CORS settings for development
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+CORS_EXPOSE_HEADERS = ['content-disposition']
 
 # Disable security settings for local development
 SECURE_SSL_REDIRECT = False

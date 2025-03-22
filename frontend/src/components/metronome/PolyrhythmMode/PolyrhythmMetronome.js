@@ -5,10 +5,14 @@ import pauseIcon from "../../../assets/svg/pause.svg";
 import swapIcon from "../../../assets/svg/swap-icon.svg";
 import tapButtonIcon from "../../../assets/svg/tap-button.svg";
 import CircleRenderer from "./CircleRenderer";
+import BeatSyncLine from "./BeatSyncLine";
 import "./PolyrhythmMetronome.css";
+import "./EnhancedPolyrhythmStyles.css";
 import withTrainingContainer from "../../Training/withTrainingContainer";
 import AccelerateButton from "../Controls/AccelerateButton";
 import { manualTempoAcceleration } from "../../../hooks/useMetronomeLogic/trainingLogic";
+
+import DirectBeatIndicator from "./DirectBeatIndicator";
 
 // Utility debounce function to prevent rapid changes
 const debounce = (func, wait) => {
@@ -87,8 +91,24 @@ const PolyrhythmMetronome = (props) => {
   // Responsive behavior for mobile devices and tablets - visibility of tap button
   const [isMobileOrTablet, setIsMobileOrTablet] = useState(window.innerWidth <= 1024);
 
+  // Keep track of first beat events to prevent rapid firing
+  const firstBeatTimerRef = useRef(null);
+  const lastFirstBeatTimeRef = useRef(0);
+  
   const handleInnerBeatTriggered = useCallback((beatIndex) => {
-    // Additional actions when inner beat is triggered (if needed)
+    // Only dispatch first beat event if we're at beat index 0
+    // and enough time has passed since last event (prevents double triggers)
+    if (beatIndex === 0) {
+      const now = performance.now();
+      const timeSinceLastBeat = now - lastFirstBeatTimeRef.current;
+      
+      // Only dispatch if at least 500ms have passed since last beat
+      // This prevents multiple triggers in short succession
+      if (timeSinceLastBeat > 500) {
+        lastFirstBeatTimeRef.current = now;
+        window.dispatchEvent(new CustomEvent('polyrhythm-first-beat'));
+      }
+    }
   }, []);
 
   const handleOuterBeatTriggered = useCallback((beatIndex) => {
@@ -221,6 +241,15 @@ const PolyrhythmMetronome = (props) => {
       reloadSounds().catch(console.error);
     }
   }, [soundSetReloadTrigger, reloadSounds]);
+  
+  // Reset beat indicator when play state changes
+  useEffect(() => {
+    if (!isPaused) {
+      // Create a custom event to signal the start of playback
+      // This helps synchronize visual elements with audio playback
+      window.dispatchEvent(new CustomEvent('polyrhythm-playback-start'));
+    }
+  }, [isPaused]);
 
   const handlePlayPause = useCallback(() => {
     if (isTransitioning) return;
@@ -326,6 +355,7 @@ const PolyrhythmMetronome = (props) => {
     (value, circle) => {
       if (isTransitioning) return;
 
+      console.log(`[Polyrhythm] Setting ${circle} beats to ${value} (from ${circle === "inner" ? innerBeats : outerBeats})`);
       setIsTransitioning(true);
 
       if (!isPaused) {
@@ -345,11 +375,12 @@ const PolyrhythmMetronome = (props) => {
       transitionTimerRef.current = setTimeout(() => {
         setIsTransitioning(false);
         if (!isPaused) {
+          console.log(`[Polyrhythm] Restarting scheduler after beat change to ${value}`);
           startScheduler();
         }
       }, 200);
     },
-    [isPaused, isTransitioning, startScheduler, stopScheduler]
+    [isPaused, isTransitioning, startScheduler, stopScheduler, innerBeats, outerBeats]
   );
 
   const debouncedSetSubdivisions = useCallback(
@@ -458,6 +489,14 @@ const PolyrhythmMetronome = (props) => {
           }
           isTransitioning={isTransitioning}
           circleColorSwapped={circleColorSwapped}
+        />
+        
+        {/* Direct beat indicator synchronized with the actual beat position */}
+        <DirectBeatIndicator
+          containerSize={containerSize}
+          isPaused={isPaused || isTransitioning}
+          tempo={tempo}
+          innerBeats={innerBeats}
         />
       </div>
 

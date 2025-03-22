@@ -1,6 +1,7 @@
 import { getCookie, setCookie } from './cookieUtils';
 
 // Use REACT_APP_BACKEND_URL (if set) or window.location.origin in production
+// For development, ensure it's set to the Django backend URL
 const API_BASE_URL =
   process.env.NODE_ENV === 'production'
     ? (process.env.REACT_APP_BACKEND_URL || window.location.origin)
@@ -43,26 +44,39 @@ const defaultSoundSets = [
 export const getAllSoundSets = async () => {
   const url = getApiUrl('/sound-sets/');
   try {
+    console.log("Fetching sound sets from:", url);
     const response = await fetch(url, { 
       credentials: 'include',
       // Add these headers to help with CORS
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json'
-      }
+      },
+      // Add timeout for fetch
+      signal: AbortSignal.timeout(5000) // 5 second timeout
     });
     
     if (!response.ok) {
       throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
     }
     
-    return await response.json();
+    const data = await response.json();
+    console.log("Successfully loaded sound sets:", data.length);
+    return data;
   } catch (error) {
     console.error("Error fetching all sound sets from", url, ":", error);
     console.log("Using default sound sets");
     
-    // Return default sound sets when API access fails
-    return defaultSoundSets;
+    // Pre-check default soundset URLs to make sure they're valid
+    // This prevents propagating bad paths to the audio buffer loader
+    const validSoundSets = defaultSoundSets.map(set => ({
+      ...set,
+      first_beat_sound_url: set.first_beat_sound_url || '/assets/audio/click_new_first.mp3',
+      accent_sound_url: set.accent_sound_url || '/assets/audio/click_new_accent.mp3',
+      normal_beat_sound_url: set.normal_beat_sound_url || '/assets/audio/click_new.mp3'
+    }));
+    
+    return validSoundSets;
   }
 };
 

@@ -36,7 +36,7 @@
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: #00A0A0;
+    background: var(--primary-teal);
     cursor: pointer;
     border: none;
     box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
@@ -47,7 +47,7 @@
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: #00A0A0;
+    background: var(--primary-teal);
     cursor: pointer;
     border: none;
     box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
@@ -56,7 +56,7 @@
   
   /* Hover effects */
   .sliders-container input[type="range"]:hover {
-    background: #e0e0e0;
+    background: var(--neutral-border);
   }
   
   .sliders-container input[type="range"]:hover::-webkit-slider-thumb {

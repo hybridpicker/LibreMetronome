@@ -1,0 +1,120 @@
+/* 
+ * LibreMetronome Utility Classes
+ * Reusable classes for consistent styling across components
+ */
+
+/* Text Color Utilities */
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-tertiary { color: var(--text-tertiary); }
+.text-light { color: var(--text-light); }
+
+.text-teal { color: var(--primary-teal); }
+.text-teal-dark { color: var(--primary-teal-dark); }
+.text-gold { color: var(--secondary-gold); }
+
+/* Background Color Utilities */
+.bg-teal { background-color: var(--primary-teal); }
+.bg-teal-dark { background-color: var(--primary-teal-dark); }
+.bg-teal-light { background-color: var(--primary-teal-light); }
+.bg-teal-ultra-light { background-color: var(--primary-teal-ultra-light); }
+
+.bg-gold { background-color: var(--secondary-gold); }
+.bg-gold-dark { background-color: var(--secondary-gold-dark); }
+.bg-gold-light { background-color: var(--secondary-gold-light); }
+.bg-gold-ultra-light { background-color: var(--secondary-gold-ultra-light); }
+
+.bg-neutral { background-color: var(--neutral-bg); }
+.bg-neutral-alt { background-color: var(--neutral-bg-alt); }
+
+/* Border Utilities */
+.border-neutral { border-color: var(--neutral-border); }
+.border-neutral-light { border-color: var(--neutral-border-light); }
+.border-teal { border-color: var(--primary-teal); }
+.border-gold { border-color: var(--secondary-gold); }
+
+/* Beat-specific Utilities */
+.beat-muted { background-color: var(--beat-muted); }
+.beat-normal { background-color: var(--beat-normal); }
+.beat-accent { background-color: var(--beat-accent); }
+.beat-first { background-color: var(--beat-first); }
+.beat-inner { background-color: var(--beat-inner); }
+.beat-outer { background-color: var(--beat-outer); }
+
+/* Semantic Utilities */
+.text-success { color: var(--success); }
+.text-warning { color: var(--warning); }
+.text-error { color: var(--error); }
+.text-info { color: var(--info); }
+
+.bg-success { background-color: var(--success); }
+.bg-warning { background-color: var(--warning); }
+.bg-error { background-color: var(--error); }
+.bg-info { background-color: var(--info); }
+
+/* Shadow Utilities */
+.shadow-sm { box-shadow: var(--shadow-sm); }
+.shadow-md { box-shadow: var(--shadow-md); }
+.shadow-lg { box-shadow: var(--shadow-lg); }
+
+/* Border Radius Utilities */
+.rounded-sm { border-radius: var(--border-radius-sm); }
+.rounded-md { border-radius: var(--border-radius-md); }
+.rounded-lg { border-radius: var(--border-radius-lg); }
+
+/* Transition Utilities */
+.transition-fast { transition: all var(--transition-fast); }
+.transition-normal { transition: all var(--transition-normal); }
+.transition-slow { transition: all var(--transition-slow); }
+
+/* Common Utility Combinations */
+.card {
+  background-color: var(--neutral-bg-alt);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.card-hover {
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-base {
+  border-radius: var(--border-radius-md);
+  transition: all var(--transition-fast);
+  padding: 8px 16px;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background-color: var(--primary-teal);
+  color: var(--text-light);
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-teal-dark);
+}
+
+.btn-secondary {
+  background-color: var(--secondary-gold);
+  color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+  background-color: var(--secondary-gold-dark);
+}
+
+.btn-outline {
+  background-color: transparent;
+  border: var(--border-width) solid var(--primary-teal);
+  color: var(--primary-teal);
+}
+
+.btn-outline:hover {
+  background-color: var(--primary-teal-ultra-light);
+}

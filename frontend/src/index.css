@@ -1,5 +1,6 @@
 /* src/index.css */
 @import './styles/colors.css';
+@import './styles/utilities.css';
 
 @font-face {
   font-family: 'Lato';

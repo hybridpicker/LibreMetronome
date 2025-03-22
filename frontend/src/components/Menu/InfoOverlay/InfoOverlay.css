@@ -4,7 +4,7 @@
   position: fixed;
   top: 10px;
   left: 10px;
-  background-color: #e8e8e8;
+  background-color: var(--beat-muted);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -25,15 +25,15 @@
 }
 
 .info-button:hover {
-  background-color: #f8d38d;
-  color: #fff;
+  background-color: var(--secondary-gold);
+  color: var(--text-light);
   transform: translateY(-1px);
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
 }
 
 .info-button-active {
-  background-color: #00A0A0;
-  color: #fff;
+  background-color: var(--primary-teal);
+  color: var(--text-light);
   font-weight: bold;
 }
   
@@ -51,7 +51,7 @@
 }
   
 .info-modal {
-  background: #f9f9f9; /* Lighter background to match Training modal */
+  background: var(--neutral-bg-alt); /* Lighter background to match Training modal */
   padding: 30px; /* Increased padding to match Training modal */
   border-radius: 12px; /* Rounded corners to match Training modal */
   max-width: 450px; /* Wider modal to match Training modal */
@@ -65,7 +65,7 @@
 
 .info-modal h2 {
   margin-top: 0;
-  color: #00A0A0;
+  color: var(--primary-teal);
   border-bottom: 1px solid #eee; /* Add border to match Training headers */
   padding-bottom: 8px;
 }
@@ -87,7 +87,7 @@
   border: none;
   font-size: 2.5rem; /* Larger font to match Training close button */
   font-weight: bold;
-  color: #00A0A0;
+  color: var(--primary-teal);
   cursor: pointer;
   transition: all 0.2s ease;
   border-radius: 50%;
