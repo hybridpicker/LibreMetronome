@@ -5,10 +5,141 @@ import pauseIcon from "../../../assets/svg/pause.svg";
 import swapIcon from "../../../assets/svg/swap-icon.svg";
 import tapButtonIcon from "../../../assets/svg/tap-button.svg";
 import CircleRenderer from "./CircleRenderer";
+import BeatSyncLine from "./BeatSyncLine";
 import "./PolyrhythmMetronome.css";
+import "./EnhancedPolyrhythmStyles.css";
 import withTrainingContainer from "../../Training/withTrainingContainer";
 import AccelerateButton from "../Controls/AccelerateButton";
 import { manualTempoAcceleration } from "../../../hooks/useMetronomeLogic/trainingLogic";
+
+// Beat indicator using CSS animations with precise synchronization
+const DirectBeatIndicator = ({ 
+  containerSize, 
+  isPaused, 
+  tempo, 
+  innerBeats,
+  innerCurrentSubdivision
+}) => {
+  // Calculate center and radius
+  const centerX = containerSize / 2;
+  const centerY = containerSize / 2;
+  const outerRadius = containerSize / 2 - 4;
+  
+  // Store the exact animation duration in a ref to avoid re-renders
+  const durationRef = useRef((60 / tempo) * innerBeats);
+  
+  // Track the current animation state
+  const [animationKey, setAnimationKey] = useState('initial');
+  const isAnimatingRef = useRef(false);
+  
+  // Using useEffect cleanup to ensure we always have the latest event handler
+  useEffect(() => {
+    // Update the duration reference when tempo or beats change
+    durationRef.current = (60 / tempo) * innerBeats;
+    
+    // The handler uses the latest ref values but has stable identity
+    const handleFirstBeat = () => {
+      if (isPaused) return;
+      
+      // Force restart animation precisely on first beat
+      setAnimationKey(`beat-${Date.now()}`);
+      isAnimatingRef.current = true;
+    };
+    
+    // Listen for first beat events from audio engine
+    window.addEventListener('polyrhythm-first-beat', handleFirstBeat);
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('polyrhythm-first-beat', handleFirstBeat);
+    };
+  }, [isPaused, tempo, innerBeats]);
+  
+  // Handle parameter changes
+  useEffect(() => {
+    // Only restart if we're playing and animation has started
+    if (!isPaused && isAnimatingRef.current) {
+      setAnimationKey(`param-${Date.now()}`);
+    }
+  }, [tempo, innerBeats]);
+  
+  // Handle pause state separately
+  useEffect(() => {
+    if (isPaused) {
+      isAnimatingRef.current = false;
+    }
+  }, [isPaused]);
+  
+  // Set up the animation style using the ref for duration
+  const animationStyle = {
+    animation: isPaused 
+      ? 'none' 
+      : `rotate ${durationRef.current}s linear infinite`,
+    animationPlayState: isPaused ? 'paused' : 'running',
+    transform: isPaused ? 'rotate(0deg)' : undefined,
+    transformOrigin: `${centerX}px ${centerY}px`
+  };
+  
+  return (
+    <div style={{
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+      pointerEvents: 'none',
+      zIndex: 50
+    }}>
+      <svg
+        key={animationKey}
+        width={containerSize}
+        height={containerSize}
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)'
+        }}
+      >
+        <g style={animationStyle}>
+          {/* Line from center to outer edge - styled to match your design system */}
+          <line
+            x1={centerX}
+            y1={centerY}
+            x2={centerX}
+            y2={centerY - outerRadius}
+            stroke="var(--primary-teal)"
+            strokeWidth={2.5}
+            strokeLinecap="round"
+            style={{
+              filter: "drop-shadow(0 0 2px rgba(0, 160, 160, 0.4))"
+            }}
+          />
+          
+          {/* End circle */}
+          <circle
+            cx={centerX}
+            cy={centerY - outerRadius}
+            r={5}
+            fill="var(--primary-teal)"
+            style={{
+              filter: "drop-shadow(0 0 2px rgba(0, 160, 160, 0.4))"
+            }}
+          />
+          
+          {/* Center dot */}
+          <circle
+            cx={centerX}
+            cy={centerY}
+            r={1.5}
+            fill="var(--primary-teal)"
+            opacity={0.6}
+          />
+        </g>
+      </svg>
+    </div>
+  );
+};
 
 // Utility debounce function to prevent rapid changes
 const debounce = (func, wait) => {
@@ -87,9 +218,33 @@ const PolyrhythmMetronome = (props) => {
   // Responsive behavior for mobile devices and tablets - visibility of tap button
   const [isMobileOrTablet, setIsMobileOrTablet] = useState(window.innerWidth <= 1024);
 
+  // Keep track of first beat events to prevent rapid firing
+  const firstBeatTimerRef = useRef(null);
+  const lastFirstBeatTimeRef = useRef(0);
+  
   const handleInnerBeatTriggered = useCallback((beatIndex) => {
-    // Additional actions when inner beat is triggered (if needed)
-  }, []);
+    // Add detailed logs
+    console.log(`[Beat Trigger] Beat index: ${beatIndex}, Inner beats: ${innerBeats}, Tempo: ${tempo}`);
+    
+    // Only dispatch first beat event if we're at beat index 0
+    // and enough time has passed since last event (prevents double triggers)
+    if (beatIndex === 0) {
+      const now = performance.now();
+      const timeSinceLastBeat = now - lastFirstBeatTimeRef.current;
+      
+      console.log(`[First Beat] Time since last first beat: ${Math.round(timeSinceLastBeat)}ms`);
+      
+      // Only dispatch if at least 500ms have passed since last beat
+      // This prevents multiple triggers in short succession
+      if (timeSinceLastBeat > 500) {
+        console.log(`[First Beat] DISPATCHING first beat event at ${now}`);
+        lastFirstBeatTimeRef.current = now;
+        window.dispatchEvent(new CustomEvent('polyrhythm-first-beat'));
+      } else {
+        console.log(`[First Beat] SKIPPING - too soon after previous (${Math.round(timeSinceLastBeat)}ms)`);
+      }
+    }
+  }, [innerBeats, tempo]);
 
   const handleOuterBeatTriggered = useCallback((beatIndex) => {
     // Additional actions when outer beat is triggered (if needed)
@@ -221,6 +376,15 @@ const PolyrhythmMetronome = (props) => {
       reloadSounds().catch(console.error);
     }
   }, [soundSetReloadTrigger, reloadSounds]);
+  
+  // Reset beat indicator when play state changes
+  useEffect(() => {
+    if (!isPaused) {
+      // Create a custom event to signal the start of playback
+      // This helps synchronize visual elements with audio playback
+      window.dispatchEvent(new CustomEvent('polyrhythm-playback-start'));
+    }
+  }, [isPaused]);
 
   const handlePlayPause = useCallback(() => {
     if (isTransitioning) return;
@@ -326,6 +490,7 @@ const PolyrhythmMetronome = (props) => {
     (value, circle) => {
       if (isTransitioning) return;
 
+      console.log(`[Polyrhythm] Setting ${circle} beats to ${value} (from ${circle === "inner" ? innerBeats : outerBeats})`);
       setIsTransitioning(true);
 
       if (!isPaused) {
@@ -345,11 +510,12 @@ const PolyrhythmMetronome = (props) => {
       transitionTimerRef.current = setTimeout(() => {
         setIsTransitioning(false);
         if (!isPaused) {
+          console.log(`[Polyrhythm] Restarting scheduler after beat change to ${value}`);
           startScheduler();
         }
       }, 200);
     },
-    [isPaused, isTransitioning, startScheduler, stopScheduler]
+    [isPaused, isTransitioning, startScheduler, stopScheduler, innerBeats, outerBeats]
   );
 
   const debouncedSetSubdivisions = useCallback(
@@ -459,6 +625,14 @@ const PolyrhythmMetronome = (props) => {
           isTransitioning={isTransitioning}
           circleColorSwapped={circleColorSwapped}
         />
+        
+        {/* Direct beat indicator synchronized with the actual beat position */}
+        <DirectBeatIndicator
+          containerSize={containerSize}
+          isPaused={isPaused || isTransitioning}
+          tempo={tempo}
+          innerBeats={innerBeats}
+        />
       </div>
 
       {/* Play/Pause button positioned immediately after the metronome canvas */}
@@ -530,6 +704,27 @@ const PolyrhythmMetronome = (props) => {
             border: '1px solid var(--neutral-border)'
           }}></div>
           First Beat
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div style={{ 
+            width: '12px', 
+            height: '1px', 
+            backgroundColor: 'var(--highlight)', 
+            marginRight: '5px',
+            position: 'relative',
+            border: '0'
+          }}>
+            <div style={{
+              position: 'absolute',
+              width: '5px',
+              height: '5px',
+              backgroundColor: 'var(--highlight)',
+              borderRadius: '50%',
+              right: '-2px',
+              top: '-2px'
+            }}></div>
+          </div>
+          Beat Sync Line
         </div>
       </div>
 

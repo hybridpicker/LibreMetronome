@@ -337,6 +337,56 @@
     transition: opacity 0.2s ease !important;
   }
 }
+
+/* Beat Sync Line Styles */
+.beat-sync-line-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.beat-sync-line {
+  stroke-dasharray: 4, 4;
+  animation: dashAnimation 1s linear infinite;
+  stroke-linecap: round;
+}
+
+@keyframes dashAnimation {
+  to {
+    stroke-dashoffset: -8;
+  }
+}
+
+.beat-sync-endpoint {
+  transform-origin: center;
+  transition: r 0.2s ease, fill 0.2s ease;
+}
+
+.beat-sync-endpoint.active {
+  animation: pulseCircle 0.3s ease-out;
+}
+
+@keyframes pulseCircle {
+  0% { r: 3.5; }
+  50% { r: 6; }
+  100% { r: 3.5; }
+}
+
+/* Rotation animation for the beat sync line */
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Animation for the beat indicator */
+@keyframes rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 /* Enhanced styling for PolyRhythm Mode buttons */
 
 /* Refined button grid layout for better spacing */

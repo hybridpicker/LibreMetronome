@@ -42,6 +42,7 @@
   --warning: #F9CE7A;            /* Warning color - aligned with gold palette */
   --error: #E67B73;              /* Error color */
   --info: #73B5E6;               /* Info color */
+  --highlight: #00c2c2;          /* Highlight color for beat sync line */
 
   /* Overlay Colors */
   --overlay-bg: rgba(0, 0, 0, 0.7); /* Dark overlay background */

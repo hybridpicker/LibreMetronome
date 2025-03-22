@@ -54,11 +54,7 @@ const withTrainingContainer = (WrappedMetronome) => {
       tempoIncreasePercent
     ]);
     
-    // Only log if in development mode
-    if (process.env.NODE_ENV === 'development') {
-      console.debug(`[withTrainingContainer] Wrapping ${WrappedMetronome.name || 'Component'} with TrainingContainer`);
-      console.debug(`[withTrainingContainer] macroMode=${macroMode}, speedMode=${speedMode}`);
-    }
+    // Removed console logs
 
     // Create local refs that we control completely
     const localSilenceRef = useRef(false);
@@ -101,12 +97,10 @@ const withTrainingContainer = (WrappedMetronome) => {
     const effectiveMeasureCountRef = localMeasureCountRef;
     const effectiveMuteMeasureCountRef = localMuteCountRef;
     
-    // Reset counters when training mode or Playback-Zustand sich ändert
+    // Reset counters when training mode or playback state changes
     useEffect(() => {
-      console.log(`[withTrainingContainer] Training mode or playback state changed - macroMode=${macroMode}, speedMode=${speedMode}, isPaused=${isPaused}`);
-      
-      // Beim Pausieren und beim Starten wird der Trainingszustand zurückgesetzt,
-      // sodass UI und Audio wieder synchron sind.
+      // Reset training state when modes change or playback state changes
+      // to ensure UI and audio remain in sync
       localSilenceRef.current = false;
       localMeasureCountRef.current = 0;
       localMuteCountRef.current = 0;
@@ -122,7 +116,6 @@ const withTrainingContainer = (WrappedMetronome) => {
         } = event.detail;
         
         if (newMacroMode !== undefined) {
-          console.log(`[withTrainingContainer] Updating macroMode to ${newMacroMode}`);
           setMacroMode(newMacroMode);
           
           // Reset training state
@@ -140,7 +133,6 @@ const withTrainingContainer = (WrappedMetronome) => {
         }
         
         if (newSpeedMode !== undefined) {
-          console.log(`[withTrainingContainer] Updating speedMode to ${newSpeedMode}`);
           setSpeedMode(newSpeedMode);
           
           // Update parent component if setTrainingSettings is available
@@ -167,7 +159,7 @@ const withTrainingContainer = (WrappedMetronome) => {
       const handleTrainingParamUpdate = (event) => {
         const { type, newValue } = event.detail;
         
-        console.log(`[withTrainingContainer] Updating ${type} to ${newValue}`);
+        // Removed console log
         
         switch (type) {
           case 'measuresUntilMute':
@@ -211,7 +203,7 @@ const withTrainingContainer = (WrappedMetronome) => {
             break;
             
           default:
-            console.warn(`[withTrainingContainer] Unknown parameter type: ${type}`);
+            // Silently ignore unknown parameters
         }
         
         // Reset training state when parameters change
