@@ -1,81 +1,114 @@
-// src/components/metronome/PolyrhythmMode/PolyrhythmLogic/animationSync.js
+/**
+ * Animation synchronization utilities for polyrhythm mode
+ * Ensures that visual beats are perfectly aligned with audio beats
+ */
 
 /**
- * Utility for synchronizing audio and visual events
- * This helper accurately predicts when to trigger UI updates
- * to compensate for React rendering time and CSS animation delays
+ * Schedules a UI update to happen at exactly the right time
+ * relative to when an audio beat is scheduled to play.
+ * Enhanced for complex polyrhythms like 8:9.
  */
-export const calculateAnimationTiming = ({
-    scheduledAudioTime,  // When audio will play (in AudioContext time)
-    audioContextTime,    // Current AudioContext time
-    uiAnimationDuration = 0.15,  // Duration of beat animation in seconds
-    uiRenderDelay = 0.016  // Estimated React render delay
-  }) => {
-    // Calculate when to trigger UI update
-    // We subtract animation duration and render delay to ensure
-    // the animation PEAK coincides with the audio beat 
-    const triggerTime = Math.max(
-      0,
-      (scheduledAudioTime - audioContextTime) * 1000 - (uiAnimationDuration * 1000) / 2 - uiRenderDelay * 1000
-    );
-    
-    return {
-      triggerDelayMs: Math.max(0, triggerTime),
-      estimatedPeakTime: scheduledAudioTime
-    };
-  };
+export const scheduleAnimationUpdate = ({
+  audioTime,           // Audio context time when beat is scheduled
+  audioCtx,            // Audio context reference
+  beatIndex,           // Which beat in the pattern (0 = first beat)
+  isInnerCircle,       // Whether this is for inner or outer circle
+  setInnerCurrentSubFn, // Function to update inner beat in UI
+  setOuterCurrentSubFn, // Function to update outer beat in UI
+  onInnerBeatTriggeredFn, // Callback for inner beat (for additional effects)
+  onOuterBeatTriggeredFn, // Callback for outer beat (for additional effects)
+  uiAnimationDuration = 0.04 // How long the beat highlight should show
+}) => {
+  if (!audioCtx || !audioTime) return;
   
-  /**
-   * Improved UI update scheduler that compensates for animation timing
-   */
-  export const scheduleAnimationUpdate = ({
-    audioTime,          // When audio will play
-    audioCtx,           // Current audio context
-    beatIndex,          // Which beat to update
-    isInnerCircle,      // Inner vs outer circle
-    setInnerCurrentSubFn,   // setState for inner circle
-    setOuterCurrentSubFn,   // setState for outer circle
-    onInnerBeatTriggeredFn = null,  // Optional callback for inner
-    onOuterBeatTriggeredFn = null,  // Optional callback for outer
-    uiAnimationDuration = 0.15,
-    shouldRunNow = false // Force immediate update (for paused→play)
-  }) => {
-    if (shouldRunNow) {
-      if (isInnerCircle) {
-        setInnerCurrentSubFn(beatIndex);
-        if (onInnerBeatTriggeredFn) onInnerBeatTriggeredFn(beatIndex);
-      } else {
-        setOuterCurrentSubFn(beatIndex);
-        if (onOuterBeatTriggeredFn) onOuterBeatTriggeredFn(beatIndex);
-      }
-      return;
-    }
+  // Calculate time difference between audio context time and performance.now()
+  const audioNowTime = audioCtx.currentTime;
+  const audioTimeOffset = audioTime - audioNowTime;
   
-    const currentTime = audioCtx.currentTime;
-    
-    const { triggerDelayMs } = calculateAnimationTiming({
-      scheduledAudioTime: audioTime,
-      audioContextTime: currentTime,
-      uiAnimationDuration
-    });
+  // Current performance.now() timestamp
+  const perfNow = performance.now();
   
-    // Better logging to track timing
-    if (beatIndex === 0) {
-      console.log(
-        `${isInnerCircle ? 'INNER' : 'OUTER'} UI update scheduled: ` +
-        `audio at ${audioTime.toFixed(3)}, ` +
-        `animating ${triggerDelayMs.toFixed(0)}ms before audio`
-      );
+  // Calculate target time in performance.now() timeline
+  const targetTime = perfNow + (audioTimeOffset * 1000);
+  
+  // Calculate how long to wait
+  const timeToWait = Math.max(0, targetTime - perfNow);
+  
+  // If it's the first beat of either circle, dispatch a special event
+  if (beatIndex === 0) {
+    // For first beats, we want to ensure precise timing
+    // Save the audio context in the window for DirectBeatIndicator to access
+    if (audioCtx && typeof window !== 'undefined' && !window.audioContext) {
+      window.audioContext = audioCtx;
+      
+      // Dispatch audio time sync event for indicators to use
+      window.dispatchEvent(new CustomEvent('audio-time-sync', {
+        detail: {
+          audioContextTime: audioCtx.currentTime,
+          performanceNow: performance.now()
+        }
+      }));
     }
     
-    // Schedule UI update with precise timing offset
-    setTimeout(() => {
+    // For extremely precise timing, use a setTimeout with the exact timeToWait
+    const timer = setTimeout(() => {
+      // Only dispatch the first-beat event for inner circle to avoid duplicates
       if (isInnerCircle) {
-        setInnerCurrentSubFn(beatIndex);
-        if (onInnerBeatTriggeredFn) onInnerBeatTriggeredFn(beatIndex);
-      } else {
-        setOuterCurrentSubFn(beatIndex);
-        if (onOuterBeatTriggeredFn) onOuterBeatTriggeredFn(beatIndex);
+        // Dispatch a custom event with exact timing information
+        window.dispatchEvent(new CustomEvent('polyrhythm-first-beat', {
+          detail: {
+            timestamp: performance.now(),
+            audioTime: audioTime,
+            bpm: window.currentTempo,
+            innerBeats: window.currentInnerBeats
+          }
+        }));
+        
+        // Also dispatch another audio time sync event at this exact moment
+        window.dispatchEvent(new CustomEvent('audio-time-sync', {
+          detail: {
+            audioContextTime: audioCtx.currentTime,
+            performanceNow: performance.now(),
+            scheduledAudioTime: audioTime
+          }
+        }));
       }
-    }, triggerDelayMs);
-  };
+    }, timeToWait);
+    
+    // Set a cleanup function just to be safe
+    if (typeof window !== 'undefined') {
+      const cleanup = () => {
+        clearTimeout(timer);
+      };
+      
+      window.addEventListener('polyrhythm-cleanup', cleanup);
+      setTimeout(() => {
+        window.removeEventListener('polyrhythm-cleanup', cleanup);
+      }, timeToWait + 100);
+    }
+  }
+  
+  // Schedule the UI update at the exact right time
+  setTimeout(() => {
+    // Update the appropriate circle's current subdivision
+    if (isInnerCircle) {
+      setInnerCurrentSubFn(beatIndex);
+      if (onInnerBeatTriggeredFn) onInnerBeatTriggeredFn(beatIndex);
+    } else {
+      setOuterCurrentSubFn(beatIndex);
+      if (onOuterBeatTriggeredFn) onOuterBeatTriggeredFn(beatIndex);
+    }
+    
+    // If animation duration is set, schedule clearing the highlight
+    if (uiAnimationDuration > 0) {
+      // After specified duration, reset to -1 (no beat highlighted)
+      setTimeout(() => {
+        if (isInnerCircle) {
+          setInnerCurrentSubFn(-1);
+        } else {
+          setOuterCurrentSubFn(-1);
+        }
+      }, uiAnimationDuration * 1000);
+    }
+  }, timeToWait);
+};

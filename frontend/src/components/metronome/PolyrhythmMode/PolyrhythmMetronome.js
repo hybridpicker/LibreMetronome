@@ -95,12 +95,18 @@ const PolyrhythmMetronome = (props) => {
   const firstBeatTimerRef = useRef(null);
   const lastFirstBeatTimeRef = useRef(0);
   
+  // Track beat count to only show indicator after second beat
+  const beatCountRef = useRef(0);
+  
   const handleInnerBeatTriggered = useCallback((beatIndex) => {
     // Only dispatch first beat event if we're at beat index 0
     // and enough time has passed since last event (prevents double triggers)
     if (beatIndex === 0) {
       const now = performance.now();
       const timeSinceLastBeat = now - lastFirstBeatTimeRef.current;
+      
+      // Count beats for the indicator to appear on second beat
+      beatCountRef.current++;
       
       // Only dispatch if at least 500ms have passed since last beat
       // This prevents multiple triggers in short succession
@@ -245,11 +251,20 @@ const PolyrhythmMetronome = (props) => {
   // Reset beat indicator when play state changes
   useEffect(() => {
     if (!isPaused) {
+      // Reset beat counter on play
+      beatCountRef.current = 0;
+      
       // Create a custom event to signal the start of playback
       // This helps synchronize visual elements with audio playback
-      window.dispatchEvent(new CustomEvent('polyrhythm-playback-start'));
+      window.dispatchEvent(new CustomEvent('polyrhythm-playback-start', {
+        detail: {
+          timestamp: performance.now(),
+          tempo: tempo,
+          innerBeats: innerBeats
+        }
+      }));
     }
-  }, [isPaused]);
+  }, [isPaused, tempo, innerBeats]);
 
   const handlePlayPause = useCallback(() => {
     if (isTransitioning) return;
