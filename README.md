@@ -19,7 +19,7 @@ https://github.com/user-attachments/assets/34eab434-1979-484e-96d4-d504b3c203db
 - **Circle Mode** - Interactive circular beat visualization with customizable accents
 - **Analog Mode** - Classic metronome with realistic pendulum animation
 - **Grid Mode** - Visual grid pattern layout for complex rhythms and beat patterns
-- **Multi Circle Mode** - Advanced polyrhythm practice with multiple independent circles
+- **Multi Circle Mode** - Advanced polyrhythm practice with multiple independent circles and synchronized beat line visualization
 
 ### Beat Customization
 
@@ -43,6 +43,7 @@ https://github.com/user-attachments/assets/34eab434-1979-484e-96d4-d504b3c203db
 ### User Experience
 
 - **Dynamic Visualization** - Animated pointer shows beat progression with synchronized visual feedback
+- **Beat Sync Line** - Moving line that synchronizes with the beats in polyrhythmic mode for clear visual tempo representation
 - **Keyboard Shortcuts** - Spacebar for play/pause, number keys for subdivisions, 'T' for tap tempo
 - **Tap Tempo** - Set tempo by tapping at desired speed
 - **Swing Control** - Add rhythmic swing feel from 0-50%

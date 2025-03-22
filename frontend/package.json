@@ -15,7 +15,10 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "test:colors": "react-scripts test ColorScheme.test.js",
+    "test:components": "react-scripts test ComponentColorScheme.test.js",
+    "test:all-colors": "react-scripts test ColorScheme.test.js ComponentColorScheme.test.js"
   },
   "eslintConfig": {
     "extends": [

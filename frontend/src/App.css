@@ -226,7 +226,7 @@ button {
 }
 
 .info-modal {
-  background: #fff;
+  background: var(--text-light);
   padding: 20px;
   border-radius: 8px;
   max-width: 400px;
@@ -257,7 +257,7 @@ button {
   border: none;
   font-size: 1.2rem;
   font-weight: bold;
-  color: #00A0A0;
+  color: var(--primary-teal);
   cursor: pointer;
 }
 
@@ -322,7 +322,7 @@ button[aria-label="Tap Tempo"]:active {
   font-size: 15px;
   border-radius: 8px;
   border: none;
-  background-color: #e8e8e8;
+  background-color: var(--beat-muted);
   color: #666;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
@@ -331,14 +331,14 @@ button[aria-label="Tap Tempo"]:active {
 }
 
 .mode-button:hover {
-  background-color: #f8d38d;
-  color: #fff;
+  background-color: var(--secondary-gold);
+  color: var(--text-light);
   transform: translateY(-1px);
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
 }
 
 .mode-button-active {
-  background-color: #00A0A0;
+  background-color: var(--primary-teal);
   color: white;
   box-shadow: 0 2px 4px rgba(0, 160, 160, 0.3);
 }
@@ -406,4 +406,33 @@ button[aria-label="Tap Tempo"]:active {
   left: 50%;
   top: 85%;
   transform: translate(-50%, -50%) !important;
+}
+
+/* Style Guide Container Styles */
+.style-guide-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: var(--neutral-bg);
+}
+
+.style-guide-header-controls {
+  margin-bottom: 30px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.style-guide-header-controls button {
+  background-color: var(--primary-teal);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  font-family: 'Lato', sans-serif;
+}
+
+.style-guide-header-controls button:hover {
+  background-color: var(--primary-teal-dark);
 }

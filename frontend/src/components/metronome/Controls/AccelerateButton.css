@@ -13,8 +13,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f8d38d;
-  color: #fff;
+  background-color: var(--secondary-gold);
+  color: var(--text-light);
   border: none;
   border-radius: 6px;
   padding: 10px 18px;
@@ -29,7 +29,7 @@
 }
 
 .accelerate-button:hover {
-  background-color: #f6cc7c;
+  background-color: var(--beat-outer);
   transform: translateY(-1px);
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
 }

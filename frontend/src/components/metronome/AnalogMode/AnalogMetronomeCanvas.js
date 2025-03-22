@@ -55,8 +55,8 @@ export default function AnalogMetronomeCanvas({
     };
 
     const animate = () => {
-      ctx.fillStyle = "#f9f9f9";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Clear the canvas with transparency instead of a solid background
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       if (!isPaused && startTimeRef.current === null) {
         startTimeRef.current = performance.now();

@@ -233,7 +233,7 @@
 
 .training-save-button {
   background: var(--primary-teal);
-  color: #fff;
+  color: var(--text-light);
   border: none;
   border-radius: 5px;
   padding: 12px 25px;
@@ -256,7 +256,7 @@
   position: fixed;
   top: 10px;
   left: 80px;
-  background-color: #e8e8e8;
+  background-color: var(--beat-muted);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -277,15 +277,15 @@
 }
 
 .training-button:hover {
-  background-color: #f8d38d;
-  color: #fff;
+  background-color: var(--secondary-gold);
+  color: var(--text-light);
   transform: translateY(-1px);
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
 }
 
 .training-button-active {
   background-color: var(--primary-teal);
-  color: #fff;
+  color: var(--text-light);
   font-weight: bold;
 }
 

@@ -29,7 +29,7 @@
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
-  color: #00A0A0;
+  color: var(--primary-teal);
   width: 30px;
   height: 30px;
   display: flex;
@@ -95,12 +95,12 @@
 .feedback-form input:focus,
 .feedback-form textarea:focus {
   outline: none;
-  border-color: #00A0A0;
+  border-color: var(--primary-teal);
   box-shadow: 0 0 0 2px rgba(0, 160, 160, 0.1);
 }
 
 .feedback-submit-button {
-  background: #00A0A0;
+  background: var(--primary-teal);
   color: white;
   border: none;
   padding: 10px 20px;
@@ -113,7 +113,7 @@
 }
 
 .feedback-submit-button:hover {
-  background: #008080;
+  background: var(--primary-teal-dark);
 }
 
 .feedback-submit-button:disabled {
@@ -125,7 +125,7 @@
   position: fixed;
   bottom: 20px;
   left: 20px;
-  background: #00A0A0;
+  background: var(--primary-teal);
   color: white;
   border: none;
   padding: 8px 15px;
@@ -138,13 +138,13 @@
 }
 
 .feedback-button:hover {
-  background: #008080;
+  background: var(--primary-teal-dark);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
 .feedback-button-active {
-  background: #008080;
+  background: var(--primary-teal-dark);
 }
 
 .feedback-button-disabled {
@@ -190,7 +190,7 @@
 }
 
 .feedback-success h2 {
-  color: #00A0A0;
+  color: var(--primary-teal);
   margin-bottom: 15px;
 }
 
