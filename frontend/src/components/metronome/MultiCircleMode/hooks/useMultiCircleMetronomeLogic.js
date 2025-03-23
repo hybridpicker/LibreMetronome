@@ -319,14 +319,36 @@ export default function useMultiCircleMetronomeLogic({
 
   // Add logging on initialization
   useEffect(() => {
-    debugLog("MultiCircleLogic initialized with settings:", {
+    console.log("[MultiCircleMetronomeLogic] Initializing with settings:", {
       tempo,
       subdivisions,
       playingCircle,
       beatMode,
       circleSettings
     });
-  }, [tempo, subdivisions, playingCircle, beatMode, circleSettings]);
+    
+    // Initialize audio immediately on component mount
+    const initAudio = async () => {
+      try {
+        console.log("[MultiCircleMetronomeLogic] Running initial audio setup");
+        const ctx = await safelyInitAudioContext();
+        console.log("[MultiCircleMetronomeLogic] Initial audio context setup complete:", ctx ? "success" : "failed");
+        
+        // Ensure sound buffers are loaded
+        if (ctx) {
+          console.log("[MultiCircleMetronomeLogic] Loading sound buffers");
+          const success = await reloadSounds();
+          console.log("[MultiCircleMetronomeLogic] Sound buffers loaded:", success);
+        }
+      } catch (err) {
+        console.error("[MultiCircleMetronomeLogic] Error in initialization:", err);
+      }
+    };
+    
+    // Run the initialization
+    initAudio();
+    
+  }, [tempo, subdivisions, playingCircle, beatMode, circleSettings, safelyInitAudioContext, reloadSounds]);
 
   // Logic for detecting when we need to switch circles
   const switchToNextCircle = useCallback(() => {
