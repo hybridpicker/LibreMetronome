@@ -1,25 +1,78 @@
 import { useEffect, useRef } from 'react';
 
 // Helper function to process tap times and calculate tempo
+const MIN_TAP_INTERVAL = 100; // Milliseconds
+const MAX_TAP_INTERVAL = 2000; // Milliseconds
+const COMMON_TEMPOS = [60, 90, 100, 120, 140, 160, 180]; // Common tempos for snap-to
+
 const processTapTimesForTempo = (tapTimes) => {
-  // Keep only the last 5 taps
-  while (tapTimes.length > 5) {
-    tapTimes.shift();
+  // Filter out times that are too close together
+  const filteredTimes = [];
+  let lastTime = 0;
+  
+  for (const time of tapTimes) {
+    if (lastTime === 0 || (time - lastTime >= MIN_TAP_INTERVAL)) {
+      filteredTimes.push(time);
+      lastTime = time;
+    } else {
+      console.log(`[KEYBOARD] Tap too soon (${Math.round(time - lastTime)}ms), ignoring`);
+    }
+  }
+  
+  // Keep only the last 5 valid taps
+  while (filteredTimes.length > 5) {
+    filteredTimes.shift();
   }
   
   // Calculate tempo with at least 2 taps
-  if (tapTimes.length >= 2) {
-    let sum = 0;
-    for (let i = 1; i < tapTimes.length; i++) {
-      const interval = tapTimes[i] - tapTimes[i - 1];
-      sum += interval;
-      console.log(`[KEYBOARD] Interval ${i}: ${Math.round(interval)}ms`);
+  if (filteredTimes.length >= 2) {
+    // Calculate intervals between consecutive taps
+    const intervals = [];
+    for (let i = 1; i < filteredTimes.length; i++) {
+      const interval = filteredTimes[i] - filteredTimes[i - 1];
+      if (interval >= MIN_TAP_INTERVAL && interval <= MAX_TAP_INTERVAL) {
+        intervals.push(interval);
+        console.log(`[KEYBOARD] Interval ${i}: ${Math.round(interval)}ms`);
+      }
     }
-    const avgMs = sum / (tapTimes.length - 1);
+    
+    if (intervals.length === 0) {
+      console.log(`[KEYBOARD] No valid intervals found`);
+      return null;
+    }
+    
+    // If we have enough intervals, filter out outliers
+    if (intervals.length >= 3) {
+      intervals.sort((a, b) => a - b);
+      const median = intervals[Math.floor(intervals.length / 2)];
+      const validIntervals = intervals.filter(interval => 
+        Math.abs(interval - median) / median < 0.4
+      );
+      
+      if (validIntervals.length >= 2) {
+        console.log(`[KEYBOARD] Using ${validIntervals.length} filtered intervals`);
+        intervals.length = 0;
+        intervals.push(...validIntervals);
+      }
+    }
+    
+    const avgMs = intervals.reduce((sum, interval) => sum + interval, 0) / intervals.length;
     console.log(`[KEYBOARD] Average interval: ${Math.round(avgMs)}ms`);
     
-    // Convert to BPM and clamp
-    const newTempo = Math.round(60000 / avgMs);
+    // Convert to BPM
+    let newTempo = Math.round(60000 / avgMs);
+    
+    // Snap to common tempos if close
+    for (const commonTempo of COMMON_TEMPOS) {
+      const percentDifference = Math.abs(newTempo - commonTempo) / commonTempo;
+      if (percentDifference < 0.05) {
+        console.log(`[KEYBOARD] Snapping from ${newTempo} to ${commonTempo} BPM (common tempo)`);
+        newTempo = commonTempo;
+        break;
+      }
+    }
+    
+    // Clamp to valid range
     const clampedTempo = Math.max(15, Math.min(240, newTempo));
     console.log(`[KEYBOARD] Setting tempo to ${clampedTempo} BPM`);
     
@@ -30,7 +83,7 @@ const processTapTimesForTempo = (tapTimes) => {
     window.dispatchEvent(tempoEvent);
     return clampedTempo;
   } else {
-    console.log(`[KEYBOARD] Need ${2 - tapTimes.length} more tap(s) to set tempo`);
+    console.log(`[KEYBOARD] Need ${2 - filteredTimes.length} more tap(s) to set tempo`);
     return null;
   }
 };
@@ -118,11 +171,30 @@ const useKeyboardShortcuts = ({
           break;
         case 'KeyT':
           console.log("[KEYBOARD] 'T' key pressed for tap tempo");
+          event.preventDefault();
+          
+          // Try the global handler first
+          if (window.handleGlobalTapTempo) {
+            console.log("[KEYBOARD] Using global tap tempo handler");
+            window.handleGlobalTapTempo();
+            break;
+          }
+          
+          // Check for global tapTempoRef (added for AdvancedMetronome)
+          if (window.tapTempoRef && typeof window.tapTempoRef.current === 'function') {
+            console.log("[KEYBOARD] Using global tapTempoRef.current");
+            window.tapTempoRef.current();
+            break;
+          }
+          
+          // Then try the component's handler
           if (tapTempoRef.current) {
             console.log("[KEYBOARD] Using metronome's tapTempo function");
             tapTempoRef.current();
             break;
           }
+          
+          // Fallback to the built-in implementation
           console.log("[KEYBOARD] No tapTempo function provided, using fallback implementation");
           const now = Date.now();
           if (now - lastTapKeyTimeRef.current < 100) {
@@ -130,10 +202,17 @@ const useKeyboardShortcuts = ({
             return;
           }
           lastTapKeyTimeRef.current = now;
-          event.preventDefault();
           const tapTime = performance.now();
           tapTimesRef.current.push(tapTime);
           console.log(`[KEYBOARD] Tap recorded: ${tapTimesRef.current.length} total taps`);
+          
+          // Always dispatch a global tap tempo event to ensure it's caught
+          window.dispatchEvent(
+            new CustomEvent("metronome-tap-tempo", {
+              detail: { timestamp: tapTime }
+            })
+          );
+          
           processTapTimesForTempo(tapTimesRef.current);
           break;
         case 'KeyR':

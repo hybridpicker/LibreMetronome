@@ -1,15 +1,44 @@
 // src/components/metronome/Controls/SubdivisionSelector.js
-// This is a stub implementation to make tests pass
-// Replace with actual implementation
-
 import React from 'react';
+import { subdivisionIcons } from '../../../assets/svg/subdivisionIcons';
+import './SubdivisionSelector.css';
 
-const SubdivisionSelector = ({ subdivisions, onSelect }) => {
+/**
+ * SubdivisionSelector Component:
+ * Renders icons for selecting the number of beats per bar.
+ * When "hideOptions" is true, nothing is rendered.
+ */
+const SubdivisionSelector = ({ subdivisions, onSelect, hideOptions = false, style = {} }) => {
+  if (hideOptions) return null; // Do not render if hideOptions is true
+
   return (
-    <div data-testid="subdivision-selector">
-      {[2, 3, 4, 5, 6, 7, 8, 9].map(num => (
-        <button key={num} onClick={() => onSelect(num)}>{num}</button>
-      ))}
+    <div className="subdivision-container" style={style} data-testid="subdivision-selector">
+      {Array.from({ length: 9 }, (_, idx) => {
+        const subVal = idx + 1;
+        const isActive = subVal === subdivisions;
+        const icon = isActive 
+          ? subdivisionIcons[`subdivision${subVal}Active`] 
+          : subdivisionIcons[`subdivision${subVal}`];
+        
+        return (
+          <img
+            key={subVal}
+            src={icon}
+            alt={`Subdivision ${subVal}`}
+            onClick={() => onSelect(subVal)}
+            className="subdivision-button"
+            style={{
+              cursor: "pointer",
+              width: "36px",
+              height: "36px",
+              margin: "0 3px",
+              transition: "transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
+              transform: isActive ? "scale(1.1)" : "scale(1)",
+              filter: isActive ? "drop-shadow(0 0 5px rgba(0, 160, 160, 0.5))" : "none"
+            }}
+          />
+        );
+      })}
     </div>
   );
 };
