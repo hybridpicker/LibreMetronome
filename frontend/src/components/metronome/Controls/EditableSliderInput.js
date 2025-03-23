@@ -1,6 +1,7 @@
 // src/components/metronome/Controls/EditableSliderInput.js
-
 import React, { useState } from 'react';
+import './editable-slider.css';
+import './slider-styles.css';
 
 const EditableSliderInput = ({ 
   label, 
@@ -11,12 +12,14 @@ const EditableSliderInput = ({
   step, 
   className, 
   formatter = (val) => val, 
-  parser = (val) => val 
+  parser = (val) => val,
+  disabled = false
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState(formatter(value));
   
   const handleClick = () => {
+    if (disabled) return;
     setIsEditing(true);
     setInputValue(formatter(value));
   };
@@ -46,9 +49,14 @@ const EditableSliderInput = ({
   const handleChange = (e) => {
     setInputValue(e.target.value);
   };
+
+  const handleSliderChange = (e) => {
+    if (disabled) return;
+    setValue(parseFloat(e.target.value));
+  };
   
   return (
-    <div className={`editable-slider ${className || ''}`}>
+    <div className={`editable-slider ${className || ''} ${disabled ? 'disabled' : ''}`}>
       {isEditing ? (
         <input
           type="text"
@@ -59,12 +67,24 @@ const EditableSliderInput = ({
           className="editable-input"
           autoFocus
           data-testid="editable-input"
+          disabled={disabled}
         />
       ) : (
         <div className="slider-label" onClick={handleClick}>
           {label}: {formatter(value)}
         </div>
       )}
+      
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={handleSliderChange}
+        className={`slider ${disabled ? 'disabled' : ''}`}
+        disabled={disabled}
+      />
     </div>
   );
 };

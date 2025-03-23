@@ -52,6 +52,20 @@ export const getAllSoundSets = async () => {
   const url = getApiUrl('/sound-sets/');
   try {
     console.log("Fetching sound sets from:", url);
+    // Create an AbortController for timeout if AbortSignal.timeout is not available
+    let controller;
+    let signal;
+    
+    // Check if AbortSignal.timeout is supported
+    if (typeof AbortSignal.timeout === 'function') {
+      signal = AbortSignal.timeout(5000); // 5 second timeout
+    } else {
+      // Fallback for environments that don't support AbortSignal.timeout
+      controller = new AbortController();
+      signal = controller.signal;
+      setTimeout(() => controller.abort(), 5000);
+    }
+    
     const response = await fetch(url, { 
       credentials: 'include',
       // Add these headers to help with CORS
@@ -59,8 +73,8 @@ export const getAllSoundSets = async () => {
         'Accept': 'application/json',
         'Content-Type': 'application/json'
       },
-      // Add timeout for fetch
-      signal: AbortSignal.timeout(5000) // 5 second timeout
+      // Add timeout for fetch using the appropriate signal
+      signal
     });
     
     if (!response.ok) {

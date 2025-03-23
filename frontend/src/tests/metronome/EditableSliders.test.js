@@ -20,6 +20,47 @@ jest.mock('../../hooks/useMetronomeLogic', () => {
   }));
 });
 
+// Mock Audio Context for all audio-related code
+const mockOscillator = {
+  connect: jest.fn(),
+  start: jest.fn(),
+  stop: jest.fn(),
+  frequency: { value: 440, setValueAtTime: jest.fn() }
+};
+
+const mockGain = {
+  connect: jest.fn(),
+  gain: { value: 0.5, setValueAtTime: jest.fn() }
+};
+
+const mockAudioBuffer = {};
+
+const mockAudioContext = {
+  createOscillator: jest.fn().mockReturnValue(mockOscillator),
+  createGain: jest.fn().mockReturnValue(mockGain),
+  createBufferSource: jest.fn().mockReturnValue({
+    connect: jest.fn(),
+    start: jest.fn(),
+    stop: jest.fn(),
+    buffer: null
+  }),
+  destination: {},
+  currentTime: 0,
+  state: 'running',
+  resume: jest.fn().mockResolvedValue(undefined),
+  decodeAudioData: jest.fn().mockImplementation((arrayBuffer, onSuccess) => {
+    if (onSuccess) onSuccess(mockAudioBuffer);
+    return Promise.resolve(mockAudioBuffer);
+  })
+};
+
+// Mock AudioContext constructor
+window.AudioContext = jest.fn().mockImplementation(() => mockAudioContext);
+window.webkitAudioContext = window.AudioContext;
+
+// Mock global audio context
+window._audioContextInit = mockAudioContext;
+
 jest.mock('../../hooks/useAudio', () => {
   return jest.fn(() => ({
     isReady: true,
@@ -28,7 +69,50 @@ jest.mock('../../hooks/useAudio', () => {
     updateVolume: jest.fn(),
     updateSwing: jest.fn(),
     updateBeatMode: jest.fn(),
-    updateSubdivisions: jest.fn()
+    updateSubdivisions: jest.fn(),
+    audioCtx: mockAudioContext
+  }));
+});
+
+// Mock fetch API for sound loading
+global.fetch = jest.fn().mockImplementation(() => 
+  Promise.resolve({
+    ok: true,
+    arrayBuffer: () => Promise.resolve(new ArrayBuffer(10)),
+    json: () => Promise.resolve([])
+  })
+);
+
+// Enhanced mocks for the polyrhythm and multi-circle components
+jest.mock('../../components/metronome/PolyrhythmMode/usePolyrhythmLogic', () => {
+  return jest.fn(() => ({
+    tapTempo: jest.fn(),
+    innerCurrentSubdivision: 0,
+    outerCurrentSubdivision: 0,
+    isSilencePhaseRef: { current: false },
+    measureCountRef: { current: 0 },
+    muteMeasureCountRef: { current: 0 },
+    startScheduler: jest.fn(),
+    stopScheduler: jest.fn(),
+    reloadSounds: jest.fn().mockResolvedValue(true),
+    audioCtx: mockAudioContext,
+    load: jest.fn().mockResolvedValue(true),
+    actualBpm: 120
+  }));
+});
+
+jest.mock('../../components/metronome/MultiCircleMode/hooks/useMultiCircleMetronomeLogic', () => {
+  return jest.fn(() => ({
+    tapTempo: jest.fn(),
+    currentSubdivision: 0,
+    isTransitioning: jest.fn().mockReturnValue(false),
+    accentsRef: { current: [3, 1, 1, 1] },
+    isProcessingPlayPauseRef: { current: false },
+    safelyInitAudioContext: jest.fn().mockResolvedValue(true),
+    startScheduler: jest.fn(),
+    stopScheduler: jest.fn(),
+    reloadSounds: jest.fn().mockResolvedValue(true),
+    audioCtx: mockAudioContext
   }));
 });
 
@@ -338,19 +422,29 @@ describe('Editable Sliders in Different Metronome Modes', () => {
   });
   
   // Test consistent behavior across modes
-  test('All modes should render editable sliders', () => {
+  test('All modes should render editable sliders', async () => {
     // Analog mode
     const { unmount: unmountAnalog } = render(<BaseMetronome mode="analog" />);
+    // Wait for loading to complete
+    await waitFor(() => {
+      expect(screen.queryByText(/Loading.../)).not.toBeInTheDocument();
+    });
     expect(screen.getByText(/Tempo:/)).toBeInTheDocument();
     unmountAnalog();
     
     // Circle mode
     const { unmount: unmountCircle } = render(<BaseMetronome mode="circle" />);
+    await waitFor(() => {
+      expect(screen.queryByText(/Loading.../)).not.toBeInTheDocument();
+    });
     expect(screen.getByText(/Tempo:/)).toBeInTheDocument();
     unmountCircle();
     
     // Grid mode
     const { unmount: unmountGrid } = render(<BaseMetronome mode="grid" />);
+    await waitFor(() => {
+      expect(screen.queryByText(/Loading.../)).not.toBeInTheDocument();
+    });
     expect(screen.getByText(/Tempo:/)).toBeInTheDocument();
     unmountGrid();
     
