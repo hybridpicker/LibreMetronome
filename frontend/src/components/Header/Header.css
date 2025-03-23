@@ -1,25 +1,15 @@
 /* File: src/components/Header.css */
 
 /* Styling for the header container */
-  .header {
-    padding: 20px;
-    text-align: center;
-  }
-  
-  /* Styling for the header title */
-  .header h1 {
-    margin: 0;
-    font-size: 2em;
-    font-weight: bold;
-  }
-  
-  /* Styling for 'Libre' part of the title */
-  .header h1 .libre {
-    color: var(--secondary-gold);
-  }
-  
-  /* Styling for 'Metronome' part of the title */
-  .header h1 .metronome {
-    color: var(--primary-teal);
-  }
+.header {
+  padding: 20px;
+  text-align: center;
+}
+
+/* Styling for the logo image */
+.header-logo {
+  height: auto;
+  width: 250px; /* Adjust width as needed */
+  max-width: 100%;
+}
   
