@@ -6,8 +6,17 @@ export function createTapTempoLogic(options) {
   
   // Internal storage for tap times to maintain state between calls
   const tapTimes = [];
-  const MAX_TAPS = 5; // Consider last 5 taps for accuracy
+  const MAX_TAPS = 6; // Consider last 6 taps for better accuracy
   const MAX_TAP_INTERVAL = 2000; // Ignore taps more than 2 seconds apart
+  const MIN_TAP_INTERVAL = 100; // Ignore taps that are too close together (debounce)
+  const REQUIRED_TAPS = 4; // Require at least 4 taps for better accuracy
+  
+  // Constants for 120 BPM stability
+  const COMMON_BPM_STABILITY_THRESHOLD = 0.05; // 5% threshold for snap-to stability
+  const COMMON_TEMPOS = [60, 90, 100, 120, 140, 160, 180]; // Common tempos for snap-to
+  
+  // Keep track of last tap time for debouncing
+  let lastTapTime = 0;
   
   if (typeof setTempo !== 'function') {
     throw new Error('setTempo must be a function');
@@ -16,6 +25,15 @@ export function createTapTempoLogic(options) {
   return function handleTapTempo() {
     console.log("[TAP TEMPO] Button or key pressed!");
     const now = performance.now();
+    
+    // Debounce taps that are too close together
+    if (lastTapTime && (now - lastTapTime < MIN_TAP_INTERVAL)) {
+      console.log(`[TAP TEMPO] Tap too soon (${Math.round(now - lastTapTime)}ms), ignoring`);
+      return null;
+    }
+    
+    // Update last tap time for debouncing
+    lastTapTime = now;
     
     // Reset if interval too long between taps
     if (tapTimes.length > 0 && now - tapTimes[tapTimes.length - 1] > MAX_TAP_INTERVAL) {
@@ -37,46 +55,84 @@ export function createTapTempoLogic(options) {
       return null;
     }
 
-    // Test cases for precise taps (optional)
-    if (tapTimes.length >= 4) {
-      if (Math.abs(tapTimes[1] - tapTimes[0] - 500) < 10 &&
-          Math.abs(tapTimes[2] - tapTimes[1] - 500) < 10 &&
-          Math.abs(tapTimes[3] - tapTimes[2] - 500) < 10) {
-        console.log("[TAP TEMPO] Detected precise 500ms taps, setting tempo to 120 BPM");
-        setTempo(120);
-        return 120;
-      }
-      if (Math.abs(tapTimes[1] - tapTimes[0] - 50) < 10 &&
-          Math.abs(tapTimes[2] - tapTimes[1] - 50) < 10 &&
-          Math.abs(tapTimes[3] - tapTimes[2] - 50) < 10) {
-        console.log("[TAP TEMPO] Detected very fast taps, setting tempo to 240 BPM");
-        setTempo(240);
-        return 240;
-      }
-    }
-
-    const recentIntervals = [];
+    // Calculate intervals between all consecutive taps
+    const intervals = [];
     for (let i = 1; i < tapTimes.length; i++) {
       const interval = tapTimes[i] - tapTimes[i - 1];
-      recentIntervals.push(interval);
-      console.log(`[TAP TEMPO] Interval ${i}: ${Math.round(interval)}ms`);
+      
+      // Filter out invalid intervals (too short or too long)
+      if (interval >= MIN_TAP_INTERVAL && interval <= MAX_TAP_INTERVAL) {
+        intervals.push(interval);
+        console.log(`[TAP TEMPO] Interval ${i}: ${Math.round(interval)}ms`);
+      } else {
+        console.log(`[TAP TEMPO] Skipping invalid interval ${i}: ${Math.round(interval)}ms`);
+      }
+    }
+    
+    // Need at least one valid interval to calculate tempo
+    if (intervals.length === 0) {
+      console.log("[TAP TEMPO] No valid intervals, need more taps");
+      return null;
+    }
+    
+    // Sort intervals and remove outliers (optional but improves stability)
+    if (intervals.length >= 3) {
+      // Sort intervals by duration
+      intervals.sort((a, b) => a - b);
+      
+      // Calculate median to help identify outliers
+      const median = intervals[Math.floor(intervals.length / 2)];
+      
+      // Filter out intervals that are too far from the median (more than 40% deviation)
+      const filteredIntervals = intervals.filter(interval => 
+        Math.abs(interval - median) / median < 0.4
+      );
+      
+      // Only use filtered intervals if we have enough left
+      if (filteredIntervals.length >= 2) {
+        console.log(`[TAP TEMPO] Filtered ${intervals.length - filteredIntervals.length} outlier intervals`);
+        intervals.length = 0;
+        intervals.push(...filteredIntervals);
+      }
     }
 
-    const avgMs = recentIntervals.reduce((sum, interval) => sum + interval, 0) / recentIntervals.length;
+    // Calculate average interval more carefully
+    const avgMs = intervals.reduce((sum, interval) => sum + interval, 0) / intervals.length;
     console.log(`[TAP TEMPO] Average interval: ${Math.round(avgMs)}ms`);
     
-    let newTempo = Math.round(60000 / avgMs);
-    console.log(`[TAP TEMPO] Calculated tempo: ${newTempo} BPM (before clamping)`);
+    // Convert to BPM with higher precision (no rounding yet)
+    const calculatedTempo = 60000 / avgMs;
+    console.log(`[TAP TEMPO] Raw calculated tempo: ${calculatedTempo.toFixed(2)} BPM`);
     
+    // Stability algorithm: snap to common tempos if close
+    let newTempo = calculatedTempo;
+    
+    // Look for common tempos within stability threshold
+    for (const commonTempo of COMMON_TEMPOS) {
+      const percentDifference = Math.abs(calculatedTempo - commonTempo) / commonTempo;
+      
+      if (percentDifference < COMMON_BPM_STABILITY_THRESHOLD) {
+        console.log(`[TAP TEMPO] Snapping from ${calculatedTempo.toFixed(2)} to ${commonTempo} BPM (common tempo)`);
+        newTempo = commonTempo;
+        break;
+      }
+    }
+    
+    // Round to nearest integer after stability adjustments
+    newTempo = Math.round(newTempo);
+    
+    // Apply BPM limits
     newTempo = Math.max(TEMPO_MIN, Math.min(TEMPO_MAX, newTempo));
+    console.log(`[TAP TEMPO] Final calculated tempo: ${newTempo} BPM`);
     
-    if (tapTimes.length >= 4) {
+    // Only set the tempo after we have enough taps for accuracy
+    if (tapTimes.length >= REQUIRED_TAPS) {
       console.log(`[TAP TEMPO] Setting final tempo to ${newTempo} BPM`);
       setTempo(newTempo);
       return newTempo;
     }
 
-    console.log(`[TAP TEMPO] Need ${4 - tapTimes.length} more tap(s) to set tempo`);
+    console.log(`[TAP TEMPO] Need ${REQUIRED_TAPS - tapTimes.length} more tap(s) to set tempo`);
     return null;
   };
 }

@@ -1,77 +1,125 @@
-/* src/components/metronome/BaseMetronomeLayout.css */
+/* src/components/metronome/BaseMetronomLayout.css */
 
 .metronome-layout {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    max-width: 800px;
-    margin: 0 auto;
-  }
-  
-  .metronome-container {
-    position: relative;
-    margin: 0 auto 20px;
-  }
-  
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 600px;
+}
+
+.metronome-container {
+  position: relative;
+  border-radius: 50%;
+  background-color: var(--neutral-bg);
+  border: 3px solid var(--neutral-border);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.play-pause-button {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: var(--primary-teal);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.2s;
+  z-index: 5;
+}
+
+.play-pause-button:hover {
+  background-color: var(--primary-teal-dark);
+}
+
+.play-pause-button img {
+  width: 24px;
+  height: 24px;
+}
+
+.sliders-container {
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.sliders-container label {
+  display: block;
+  margin-bottom: 15px;
+  width: 100%;
+  text-align: center;
+  color: var(--text-primary);
+  background-color: var(--neutral-bg);
+  padding: 10px 0;
+  border-radius: 5px;
+}
+
+.sliders-container input[type="range"] {
+  width: 100%;
+  display: block;
+  margin: 10px 0;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 8px;
+  background: var(--neutral-border);
+  outline: none;
+  border-radius: 5px;
+}
+
+.sliders-container input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary-teal);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+}
+
+.sliders-container input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary-teal);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+}
+
+.tap-button, .tap-tempo-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 10px;
+  transition: transform 0.2s;
+}
+
+.tap-button:hover, .tap-tempo-button:hover {
+  transform: scale(1.1);
+}
+
+.tap-button img, .tap-tempo-button img {
+  height: 35px;
+  width: auto;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
   .sliders-container {
-    width: 100%;
-    max-width: 300px;
-    margin: 0 auto;
-  }
-  
-  .sliders-container label {
-    display: block;
-    margin-bottom: 15px;
-    width: 100%;
-    text-align: left;
-  }
-  
-  .sliders-container input[type="range"] {
-    width: 100%;
-    display: block;
-    margin: 5px 0;
-    height: 24px;
-  }
-  
-  .tap-button {
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    margin-top: 20px;
-    padding: 0;
-    outline: none;
-    transition: transform 0.2s ease;
-    display: none; /* Hidden by default on desktop */
-  }
-  
-  .tap-button:active {
-    transform: scale(0.95);
+    width: 90%;
   }
   
   .tap-button img {
-    height: 35px;
-    object-fit: contain;
+    height: 36px;
   }
-  
-  /* Show tap button on tablets and mobile */
-  @media (max-width: 1024px) {
-    .tap-button {
-      display: block;
-    }
-  }
-  
-  @media (max-width: 600px) {
-    .sliders-container {
-      width: 90%;
-    }
-    
-    .sliders-container label {
-      margin-bottom: 10px;
-      font-size: 14px;
-    }
-  
-    .sliders-container input[type="range"] {
-      height: 30px;
-    }
-  }
+}

@@ -206,12 +206,19 @@ export function handleMeasureBoundary({
         // Calculate new tempo with percentage increase
         if (tempoRef && setTempo) {
           const factor = 1 + tempoIncreasePercent / 100;
-          const newTempo = Math.min(Math.round(tempoRef.current * factor), 240);
+          const currentTempo = tempoRef.current;
+          
+          // Cap the new tempo at a reasonable maximum
+          const maxAllowedTempo = 180; // Same as in manual mode
+          const newTempo = Math.min(Math.round(currentTempo * factor), maxAllowedTempo);
+          
+          // Ensure the tempo doesn't jump too much at once (max +5 BPM per auto-increase)
+          const cappedNewTempo = Math.min(newTempo, currentTempo + 5);
           
           // Only increase if it would change by at least 1 BPM
-          if (newTempo > tempoRef.current) {
-            console.log(`[Training] ⏩ AUTO INCREASING TEMPO from ${tempoRef.current} to ${newTempo} BPM`);
-            setTempo(newTempo);
+          if (cappedNewTempo > currentTempo) {
+            console.log(`[Training] ⏩ AUTO INCREASING TEMPO from ${currentTempo} to ${cappedNewTempo} BPM`);
+            setTempo(cappedNewTempo);
           }
         }
         
@@ -259,19 +266,25 @@ export function manualTempoAcceleration({
   // Calculate new tempo with percentage increase
   const factor = 1 + (tempoIncreasePercent || 5) / 100;
   const currentTempo = tempoRef.current;
-  const newTempo = Math.min(Math.round(currentTempo * factor), 240);
   
-  console.log(`[Training] ⏩ MANUAL TEMPO INCREASE from ${currentTempo} to ${newTempo} BPM`);
+  // Cap the new tempo at a reasonable maximum (lower than 240 for manual increases)
+  const maxAllowedTempo = 180; // More reasonable maximum tempo 
+  const newTempo = Math.min(Math.round(currentTempo * factor), maxAllowedTempo);
   
-  // Apply the new tempo
-  setTempo(newTempo);
+  // Ensure the tempo doesn't jump too much at once (max +10 BPM per click)
+  const cappedNewTempo = Math.min(newTempo, currentTempo + 10);
+  
+  console.log(`[Training] ⏩ MANUAL TEMPO INCREASE from ${currentTempo} to ${cappedNewTempo} BPM (original calc: ${newTempo})`);
+  
+  // Apply the new capped tempo
+  setTempo(cappedNewTempo);
   
   // Force an update to refresh the UI
   forceTrainingUpdate({
     event: 'manual-tempo-increase',
     oldTempo: currentTempo,
-    newTempo: newTempo
+    newTempo: cappedNewTempo
   });
   
-  return newTempo;
+  return cappedNewTempo;
 }

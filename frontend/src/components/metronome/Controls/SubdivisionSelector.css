@@ -1,19 +1,19 @@
 /* SubdivisionSelector.css */
 
 .subdivision-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-    margin: 0 auto;
-    max-width: 100%;
-    padding: 5px;
-  }
-  
-  .subdivision-button {
-    width: 36px;
-    height: 36px;
-    cursor: pointer;
-    object-fit: contain;
-    margin: 0 3px;
-  }
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 auto;
+  max-width: 100%;
+  padding: 5px;
+}
+
+.subdivision-button {
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  object-fit: contain;
+  margin: 0 3px;
+}
