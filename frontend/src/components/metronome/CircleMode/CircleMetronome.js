@@ -242,11 +242,14 @@ export function AdvancedMetronomeWithCircle({
           margin: '0 auto',
         }}
       >
+        {/* Removed the custom tempo display */}
+        
         {analogMode ? (
           <AnalogMetronomeCanvas
             width={containerSize}
             height={containerSize}
             isPaused={isPaused}
+            tempo={tempo} // Explicitly passing tempo prop
             audioCtxCurrentTime={() => logic.audioCtx?.currentTime || 0}
             currentSubStartTime={() => logic.currentSubStartRef.current}
             currentSubInterval={() => logic.currentSubIntervalRef.current}
@@ -254,7 +257,8 @@ export function AdvancedMetronomeWithCircle({
           />
         ) : (
           <>
-            {lineConnections}
+          
+          {lineConnections}
 
             {beatData.map((bd) => {
               // Normal multi-sub approach:
@@ -310,7 +314,9 @@ export function AdvancedMetronomeWithCircle({
       </div>
 
       {/* Play / Pause button */}
-      <div style={{ marginTop: 20 }}>
+      {/* Removing this tempo display since we'll add it to the circle visualization */}
+      
+      <div style={{ marginTop: 10 }}>
         <button
           onClick={handlePlayPause}
           className="play-pause-button"
@@ -348,19 +354,13 @@ export function AdvancedMetronomeWithCircle({
             }));
           }
         }}
+        className="tap-button"
         aria-label="Tap Tempo"
-        style={{
-          background: 'transparent',
-          border: 'none',
-          cursor: 'pointer',
-          marginTop: '20px',
-          display: 'inline-block'
-        }}
       >
         <img
           src={tapButtonIcon}
           alt="Tap Tempo"
-          style={{ height: 35, objectFit: 'contain' }}
+          style={{ height: '35px', objectFit: 'contain' }}
         />
       </button>
 
