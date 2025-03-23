@@ -13,7 +13,7 @@ import MainMenu from './components/Menu/mainMenu';
 import SettingsContent from './components/Menu/SettingsContent';
 import { Helmet } from 'react-helmet';
 import ModeSelector from './components/ModeSelector'; // Import the new ModeSelector component
-import StyleGuide from './components/StyleGuide'; // Import the StyleGuide component
+// StyleGuide component removed
 
 const TEMPO_MIN = 15;
 const TEMPO_MAX = 240;
@@ -163,7 +163,7 @@ function App() {
   };
   
   const [mode, setMode] = useState("circle"); // Options: "analog", "circle", "grid", "multi", "polyrhythm"
-  const [showStyleGuide, setShowStyleGuide] = useState(false); // Toggle for style guide display
+  // Style guide toggle removed
   const [tempo, setTempo] = useState(120);
   const [isPaused, setIsPaused] = useState(true);
   const [subdivisions, setSubdivisions] = useState(4);
@@ -257,12 +257,12 @@ function App() {
     onSetSubdivisions: (num) => { setSubdivisions(num); },
     onIncreaseTempo: () => { setTempo(prev => Math.min(prev + 5, TEMPO_MAX)); },
     onDecreaseTempo: () => { setTempo(prev => Math.max(prev - 5, TEMPO_MIN)); },
-    onSwitchToAnalog: () => { setMode("analog"); setShowStyleGuide(false); },
-    onSwitchToCircle: () => { setMode("circle"); setShowStyleGuide(false); },
-    onSwitchToGrid: () => { setMode("grid"); setShowStyleGuide(false); },
-    onSwitchToMulti: () => { setMode("multi"); setShowStyleGuide(false); },
+    onSwitchToAnalog: () => { setMode("analog"); },
+    onSwitchToCircle: () => { setMode("circle"); },
+    onSwitchToGrid: () => { setMode("grid"); },
+    onSwitchToMulti: () => { setMode("multi"); },
     onToggleInfoOverlay: () => { },
-    onToggleStyleGuide: () => { setShowStyleGuide(prev => !prev); }, // Toggle style guide with keyboard
+    // Style guide toggle removed
   });
 
   const version = '0.4.6';
@@ -422,9 +422,7 @@ function App() {
         Initialize Audio
       </button>
       <Helmet>
-        <title>{showStyleGuide 
-          ? "LibreMetronome - Style Guide" 
-          : `LibreMetronome - ${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode`}</title>
+        <title>{`LibreMetronome - ${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode`}</title>
         <meta name="description" content={getModeDescription()} />
         <meta name="keywords" content={`Metronome, Music, Timing, Training, React, Web Audio, ${mode} mode`} />
         <meta name="application-version" content={version} />
@@ -447,61 +445,45 @@ function App() {
         setDefaultSubdivisions={setSubdivisions}
         currentMode={mode}
         setSoundSetReloadTrigger={setSoundSetReloadTrigger}
-        showStyleGuide={showStyleGuide}
-        setShowStyleGuide={setShowStyleGuide}
       />
 
       <Header />
 
-      {showStyleGuide ? (
-        <div className="style-guide-container">
-          <div className="style-guide-header-controls">
-            <button 
-              className="btn-base btn-primary"
-              onClick={() => setShowStyleGuide(false)}
-            >
-              Back to Metronome
-            </button>
-          </div>
-          <StyleGuide />
-        </div>
-      ) : (
-        <>
-          <ModeSelector mode={mode} setMode={setMode} />
+      <>
+        <ModeSelector mode={mode} setMode={setMode} />
 
-          {renderMetronome()}
+        {renderMetronome()}
 
-          {mode !== "multi" && mode !== "polyrhythm" && (
-            <MetronomeControls
-              mode={mode}
-              beatMode={beatMode}
-              setBeatMode={setBeatMode}
-              subdivisions={subdivisions}
-              setSubdivisions={setSubdivisions}
-              swing={swing}
-              setSwing={setSwing}
-              volume={volume}
-              setVolume={setVolume}
-              tempo={tempo}
-              setTempo={setTempo}
-            />
-          )}
+        {mode !== "multi" && mode !== "polyrhythm" && (
+          <MetronomeControls
+            mode={mode}
+            beatMode={beatMode}
+            setBeatMode={setBeatMode}
+            subdivisions={subdivisions}
+            setSubdivisions={setSubdivisions}
+            swing={swing}
+            setSwing={setSwing}
+            volume={volume}
+            setVolume={setVolume}
+            tempo={tempo}
+            setTempo={setTempo}
+          />
+        )}
 
-          {settingsVisible && (
-            <SettingsContent
-              volume={volume}
-              setVolume={setVolume}
-              defaultTempo={tempo}
-              setDefaultTempo={setTempo}
-              defaultSubdivisions={subdivisions}
-              setDefaultSubdivisions={setSubdivisions}
-              currentMode={mode}
-              onClose={() => setSettingsVisible(false)}
-              setSoundSetReloadTrigger={setSoundSetReloadTrigger}
-            />
-          )}
-        </>
-      )}
+        {settingsVisible && (
+          <SettingsContent
+            volume={volume}
+            setVolume={setVolume}
+            defaultTempo={tempo}
+            setDefaultTempo={setTempo}
+            defaultSubdivisions={subdivisions}
+            setDefaultSubdivisions={setSubdivisions}
+            currentMode={mode}
+            onClose={() => setSettingsVisible(false)}
+            setSoundSetReloadTrigger={setSoundSetReloadTrigger}
+          />
+        )}
+      </>
 
       <Footer />
     </div>

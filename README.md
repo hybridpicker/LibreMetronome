@@ -167,6 +167,10 @@ Libre Metronome bridges traditional musical pedagogy with modern technology, com
 - **Educational** - Training modes to develop internal rhythm and technique
 - **Open** - Free and open-source with customization options
 
+### Style Guide
+
+For developers: A comprehensive style guide reference is available at `frontend/src/docs/style-guide-reference.html`. This document contains the color palette, typography, component styles, and CSS variables used throughout the application. The style guide is for developer reference only and is not displayed in the user interface.
+
 ## Contributing
 
 Contributions to Libre Metronome are welcome! Please feel free to:
