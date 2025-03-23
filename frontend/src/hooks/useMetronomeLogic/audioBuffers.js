@@ -14,8 +14,11 @@ export let globalAudioCtx = null;
  */
 export function initAudioContext() {
   try {
+    // Check if we're in a test environment
+    const isTestEnvironment = process.env.NODE_ENV === 'test';
+    
     const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) {
+    if (!AudioContext && !isTestEnvironment) {
       console.error('Web Audio API is not supported in this browser');
       return null;
     }
