@@ -1,43 +1,4 @@
-/* Ensure editable slider inputs are clickable */
-.polyrhythm-container + div + div + div + div + div .editable-label {
-  z-index: 30 !important;
-  position: relative !important;
-  pointer-events: auto !important;
-}
-
-.polyrhythm-container + div + div + div + div + div .editable-input {
-  z-index: 40 !important;
-  position: relative !important;
-}
-
-/* Make sliders container accessible */
-.polyrhythm-container + div + div + div + div + div .sliders-container {
-  position: relative !important;
-  z-index: 5 !important;
-}
-
-/* Special styling for polyrhythm sliders */
-.polyrhythm-sliders {
-  pointer-events: auto !important;
-  isolation: isolate !important;
-}
-
-.polyrhythm-sliders label,
-.polyrhythm-sliders .editable-label,
-.polyrhythm-sliders input {
-  pointer-events: auto !important;
-}
-
-/* Increase specificity for PolyrhythmMode */
-body .polyrhythm-sliders .editable-label {
-  display: inline-block !important;
-  position: relative !important;
-  z-index: 30 !important;
-}
-
-body .polyrhythm-sliders input[type="text"].editable-input {
-  z-index: 40 !important;
-}/* Enhanced styles for beat indicator and visualization */
+/* Enhanced styles for beat indicator and visualization */
 
 /* Beat indicator pointer styles */
 .beat-indicator-line {

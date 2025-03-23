@@ -46,6 +46,7 @@ export function AdvancedMetronomeWithCircle({
   measuresUntilSpeedUp,
   beatMultiplier = 1,
   registerTogglePlay,
+  registerTapTempo,
   soundSetReloadTrigger
 }) {
   const [currentBeatMultiplier, setCurrentBeatMultiplier] = useState(beatMultiplier);
@@ -215,7 +216,12 @@ export function AdvancedMetronomeWithCircle({
 
   useKeyboardShortcuts({
     onTogglePlayPause: () => handlePlayPause(),
-    onTapTempo: logic.tapTempo,
+    onTapTempo: () => {
+      if (logic && logic.tapTempo) {
+        console.log("[AdvancedMetronome] Using logic.tapTempo from keyboard shortcut");
+        logic.tapTempo();
+      }
+    },
     onManualTempoIncrease: handleAccelerate
   });
 
@@ -224,6 +230,43 @@ export function AdvancedMetronomeWithCircle({
       registerTogglePlay(handlePlayPause);
     }
   }, [registerTogglePlay, handlePlayPause]);
+  
+  // Register the tap tempo handler separately to avoid dependency on registerTapTempo
+  useEffect(() => {
+    // Make the tap tempo function available globally to avoid prop passing issues
+    if (logic && logic.tapTempo) {
+      console.log("[AdvancedMetronome] Making tap tempo handler available globally");
+      
+      // Set both the window.tapTempoRef and App's tapTempoRef
+      window.tapTempoRef = { current: logic.tapTempo };
+      
+      // Try three different approaches to register the tap tempo handler
+      // 1. Use the prop if available
+      if (typeof registerTapTempo === 'function') {
+        console.log("[AdvancedMetronome] Registering via prop");
+        registerTapTempo(logic.tapTempo);
+      }
+      
+      // 2. Update the global App-level tapTempoRef directly
+      if (window.tapTempoRef) {
+        console.log("[AdvancedMetronome] Setting window.tapTempoRef");
+        window.tapTempoRef.current = logic.tapTempo;
+      }
+      
+      // 3. Dispatch a custom event that App.js can listen for
+      console.log("[AdvancedMetronome] Dispatching register-tap-tempo event");
+      window.dispatchEvent(new CustomEvent('register-tap-tempo', {
+        detail: { handler: logic.tapTempo }
+      }));
+    }
+    
+    return () => {
+      // Clean up on unmount if we set the global ref
+      if (window.tapTempoRef && window.tapTempoRef.current === logic.tapTempo) {
+        window.tapTempoRef.current = null;
+      }
+    };
+  }, [logic, registerTapTempo]);
 
   const getContainerSize = () => {
     const w = window.innerWidth;
@@ -566,13 +609,22 @@ export function AdvancedMetronomeWithCircle({
       {/* Tap Tempo button */}
       <button
         onClick={() => {
+          console.log("[AdvancedMetronome] Tap button clicked");
+          
+          // Try multiple approaches to handle tap tempo
           const currentLogic = logicRef.current;
-          if (
-            currentLogic &&
-            typeof currentLogic.tapTempo === "function"
-          ) {
+          
+          if (currentLogic && typeof currentLogic.tapTempo === "function") {
+            console.log("[AdvancedMetronome] Using current logic tapTempo");
             currentLogic.tapTempo();
+          } else if (window.tapTempoRef && typeof window.tapTempoRef.current === 'function') {
+            console.log("[AdvancedMetronome] Using window.tapTempoRef.current");
+            window.tapTempoRef.current();
+          } else if (window.handleGlobalTapTempo) {
+            console.log("[AdvancedMetronome] Using window.handleGlobalTapTempo");
+            window.handleGlobalTapTempo();
           } else {
+            console.log("[AdvancedMetronome] No handler found, dispatching event");
             const now = performance.now();
             window.dispatchEvent(
               new CustomEvent("metronome-tap-tempo", {

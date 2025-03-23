@@ -175,15 +175,171 @@ function App() {
 
   // Make tempo setter globally available (for tap tempo)
   window.setMetronomeTempo = setTempo;
+  
+  // Create a universal tap tempo handler for direct access
+  window.handleGlobalTapTempo = () => {
+    console.log("[GLOBAL] Tap tempo triggered");
+    // Check all possible sources for tap tempo handlers
+    if (tapTempoRef.current) {
+      console.log("[GLOBAL] Using tapTempoRef.current");
+      tapTempoRef.current();
+    } else if (window.tapTempoRef && typeof window.tapTempoRef.current === 'function') {
+      console.log("[GLOBAL] Using window.tapTempoRef.current");
+      window.tapTempoRef.current();
+    } else {
+      // Create a tap tempo event for the event handler to process
+      console.log("[GLOBAL] No direct handler found, dispatching event");
+      const now = performance.now();
+      window.dispatchEvent(
+        new CustomEvent("metronome-tap-tempo", {
+          detail: { timestamp: now }
+        })
+      );
+    }
+  };
 
   useEffect(() => {
+    // Handle the 'metronome-set-tempo' event (created by the tap tempo logic)
     const handleTapTempoEvent = (event) => {
       if (event.detail && typeof event.detail.tempo === 'number') {
         setTempo(event.detail.tempo);
       }
     };
+    
+    // Handle the 'metronome-tap-tempo' event (created by tap tempo button clicks)
+    const handleRawTapTempoEvent = (event) => {
+      console.log("[APP] Tap tempo event received");
+      
+      // First try to use registered handlers
+      if (tapTempoRef.current) {
+        console.log("[APP] Using registered tapTempoRef handler");
+        tapTempoRef.current();
+        return;
+      } else if (window.tapTempoRef && typeof window.tapTempoRef.current === 'function') {
+        console.log("[APP] Using global window.tapTempoRef handler");
+        window.tapTempoRef.current();
+        return;
+      }
+      
+      // Fallback to built-in implementation
+      console.log("[APP] No tap tempo handler registered, using fallback implementation");
+      
+      // Constants for tempo calculation
+      const MIN_TAP_INTERVAL = 200; // Milliseconds
+      const MAX_TAP_INTERVAL = 2000; // Milliseconds
+      const COMMON_TEMPOS = [60, 90, 100, 120, 140, 160, 180]; // Common tempos for stability
+      
+      // Store timestamp for future tap tempo calculation
+      window._tapTempoTimes = window._tapTempoTimes || [];
+      
+      // Get the current timestamp
+      const now = event.detail.timestamp || performance.now();
+      
+      // Check if this tap is too close to the previous one (debounce)
+      if (window._tapTempoTimes.length > 0) {
+        const lastTap = window._tapTempoTimes[window._tapTempoTimes.length - 1];
+        if (now - lastTap < MIN_TAP_INTERVAL) {
+          console.log(`[APP] Tap too soon after previous (${Math.round(now - lastTap)}ms), ignoring`);
+          return;
+        }
+        
+        // Reset if too long between taps
+        if (now - lastTap > MAX_TAP_INTERVAL) {
+          console.log(`[APP] Too long since last tap (${Math.round(now - lastTap)}ms), resetting`);
+          window._tapTempoTimes = [now];
+          return;
+        }
+      }
+      
+      // Add the current tap time
+      window._tapTempoTimes.push(now);
+      console.log(`[APP] Tap recorded: ${window._tapTempoTimes.length} total taps`);
+      
+      // Keep only the last 6 taps
+      while (window._tapTempoTimes.length > 6) {
+        window._tapTempoTimes.shift();
+      }
+      
+      // Need at least 3 taps for a stable tempo
+      if (window._tapTempoTimes.length >= 3) {
+        // Calculate intervals between consecutive taps
+        let intervals = [];
+        for (let i = 1; i < window._tapTempoTimes.length; i++) {
+          const interval = window._tapTempoTimes[i] - window._tapTempoTimes[i-1];
+          if (interval >= MIN_TAP_INTERVAL && interval <= MAX_TAP_INTERVAL) {
+            intervals.push(interval);
+            console.log(`[APP] Interval ${i}: ${Math.round(interval)}ms`);
+          }
+        }
+        
+        // Need at least one valid interval
+        if (intervals.length === 0) {
+          console.log("[APP] No valid intervals");
+          return;
+        }
+        
+        // Remove outliers (intervals that are too far from median)
+        if (intervals.length >= 3) {
+          intervals.sort((a, b) => a - b);
+          const median = intervals[Math.floor(intervals.length / 2)];
+          const filteredIntervals = intervals.filter(i => Math.abs(i - median) / median < 0.4);
+          
+          // Only use filtered intervals if we have enough
+          if (filteredIntervals.length >= 2) {
+            intervals = filteredIntervals;
+          }
+        }
+        
+        // Calculate average interval
+        const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+        let newTempo = Math.round(60000 / avgInterval);
+        
+        // Snap to common tempos if close
+        for (const commonTempo of COMMON_TEMPOS) {
+          const percentDifference = Math.abs(newTempo - commonTempo) / commonTempo;
+          if (percentDifference < 0.05) {
+            console.log(`[APP] Snapping from ${newTempo} to ${commonTempo} BPM (common tempo)`);
+            newTempo = commonTempo;
+            break;
+          }
+        }
+        
+        // Clamp tempo to valid range
+        const clampedTempo = Math.min(Math.max(newTempo, TEMPO_MIN), TEMPO_MAX);
+        console.log(`[APP] Calculated tempo: ${clampedTempo} BPM`);
+        
+        // Only actually set the tempo after we have enough taps for accuracy
+        if (window._tapTempoTimes.length >= 4) {
+          console.log(`[APP] Setting tempo to ${clampedTempo} BPM`);
+          setTempo(clampedTempo);
+          
+          // Reset for next sequence after successfully setting tempo
+          window._tapTempoTimes = [];
+        } else {
+          console.log(`[APP] Need ${4 - window._tapTempoTimes.length} more tap(s) to confirm tempo`);
+        }
+      } else {
+        console.log(`[APP] Need ${3 - window._tapTempoTimes.length} more tap(s) to calculate tempo`);
+      }
+    };
+    
+    // Handle the 'register-tap-tempo' event (from any metronome component)
+    const handleRegisterTapTempo = (event) => {
+      if (event.detail && typeof event.detail.handler === 'function') {
+        console.log("[APP] Received tap tempo handler registration");
+        tapTempoRef.current = event.detail.handler;
+      }
+    };
+    
     window.addEventListener('metronome-set-tempo', handleTapTempoEvent);
-    return () => window.removeEventListener('metronome-set-tempo', handleTapTempoEvent);
+    window.addEventListener('metronome-tap-tempo', handleRawTapTempoEvent);
+    window.addEventListener('register-tap-tempo', handleRegisterTapTempo);
+    
+    return () => {
+      window.removeEventListener('metronome-set-tempo', handleTapTempoEvent);
+      window.removeEventListener('metronome-tap-tempo', handleRawTapTempoEvent);
+      window.removeEventListener('register-tap-tempo', handleRegisterTapTempo);
+    };
   }, []);
 
   useEffect(() => {
@@ -308,6 +464,7 @@ function App() {
             toggleAccent={toggleAccent}
             {...trainingSettings}
             registerTogglePlay={registerTogglePlay}
+            registerTapTempo={registerTapTempo}
             beatMultiplier={beatMode === "quarter" ? 1 : 2}
             soundSetReloadTrigger={soundSetReloadTrigger}
           />
@@ -331,6 +488,7 @@ function App() {
             toggleAccent={toggleAccent}
             {...trainingSettings}
             registerTogglePlay={registerTogglePlay}
+            registerTapTempo={registerTapTempo}
             beatMultiplier={beatMode === "quarter" ? 1 : 2}
             soundSetReloadTrigger={soundSetReloadTrigger}
           />

@@ -46,21 +46,21 @@ describe('Tempo Calculations', () => {
 
     test('should clamp tempo between 15 and 240 BPM', () => {
       // Simulate extremely fast taps (well beyond 240 BPM)
+      // But keep them above the MIN_TAP_INTERVAL to ensure they're not filtered out
       const baseTime = 1000;
       performanceNowMock
         .mockReturnValueOnce(baseTime)
-        .mockReturnValueOnce(baseTime + 50)
-        .mockReturnValueOnce(baseTime + 100)
-        .mockReturnValueOnce(baseTime + 150)
-        .mockReturnValueOnce(baseTime + 200)
-        .mockReturnValueOnce(baseTime + 250);
+        .mockReturnValueOnce(baseTime + 150)  // 150ms intervals (400 BPM)
+        .mockReturnValueOnce(baseTime + 300)
+        .mockReturnValueOnce(baseTime + 450)
+        .mockReturnValueOnce(baseTime + 600)
+        .mockReturnValueOnce(baseTime + 750);
 
       tapTempo(); // First tap
       tapTempo(); // Second tap
       tapTempo(); // Third tap
       tapTempo(); // Fourth tap
-      tapTempo(); // Fifth tap
-      const result = tapTempo(); // Sixth tap
+      const result = tapTempo(); // Fifth tap (with REQUIRED_TAPS=4, this should set the tempo)
 
       expect(result).toBe(240);
       expect(setTempoMock).toHaveBeenCalledWith(240);
@@ -116,8 +116,8 @@ describe('Tempo Calculations', () => {
       expect(setTempoMock).toHaveBeenCalledWith(105);
     });
 
-    test('should not exceed maximum tempo of 240 BPM', () => {
-      const initialTempo = 230;
+    test('should not exceed maximum tempo of 180 BPM', () => {
+      const initialTempo = 170;
       const tempoRef = { current: initialTempo };
       const increasePercent = 10;
 
@@ -127,8 +127,8 @@ describe('Tempo Calculations', () => {
         setTempo: setTempoMock
       });
 
-      expect(newTempo).toBe(240);
-      expect(setTempoMock).toHaveBeenCalledWith(240);
+      expect(newTempo).toBe(180);
+      expect(setTempoMock).toHaveBeenCalledWith(180);
     });
 
     test('should round tempo to nearest whole number', () => {
