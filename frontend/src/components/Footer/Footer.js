@@ -1,11 +1,11 @@
 // File: src/components/Footer.js
 import React from 'react';
-import packageJson from '../../../package.json';
+// Removed unused import
 import './Footer.css';
 
 const Footer = () => {
-  const version = packageJson.version;
-  const isBeta = version.startsWith('0.');
+  // Version variable removed as it's unused
+  // Removed unused variable
 
   return (
     <footer className="footer">

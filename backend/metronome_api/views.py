@@ -86,7 +86,9 @@ from django.http import JsonResponse
 from .models import MetronomeSoundSet
 
 def sound_set_to_dict(sound_set):
-    """Convert a MetronomeSoundSet instance to a dictionary for JSON serialization."""
+    """Convert a MetronomeSoundSet instance to a dictionary for JSON serialization.
+    Always includes an ID but doesn't rely on is_active for the frontend.
+    """
     if not sound_set:
         return None
     
@@ -94,7 +96,8 @@ def sound_set_to_dict(sound_set):
         'id': sound_set.id,
         'name': sound_set.name,
         'description': sound_set.description,
-        'is_active': sound_set.is_active,
+        # Always include is_active for backwards compatibility, but it's not used
+        'is_active': False,  # Default to false since frontend will use cookies now
         'first_beat_sound_url': sound_set.first_beat_sound.url if sound_set.first_beat_sound else None,
         'accent_sound_url': sound_set.accent_sound.url if sound_set.accent_sound else None,
         'normal_beat_sound_url': sound_set.normal_beat_sound.url if sound_set.normal_beat_sound else None,
@@ -105,39 +108,62 @@ def sound_set_to_dict(sound_set):
 @require_POST
 def set_active_sound_set_view(request, id):
     try:
+        # This endpoint no longer updates the is_active flag in the database
+        # Instead, it just validates that the requested sound set exists
+        # and returns it. Selection is handled by cookies in the frontend.
         sound_set = MetronomeSoundSet.objects.get(id=id)
-        MetronomeSoundSet.objects.all().update(is_active=False)
-        sound_set.is_active = True
-        sound_set.save()
-        return JsonResponse(sound_set_to_dict(sound_set))
+        
+        # Just return the requested sound set without modifying is_active
+        response = JsonResponse(sound_set_to_dict(sound_set))
+        
+        # Add CORS headers to allow cross-origin requests if needed
+        response['Access-Control-Allow-Origin'] = '*'
+        response['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+        response['Access-Control-Allow-Headers'] = 'X-Requested-With, Content-Type'
+        
+        return response
     except MetronomeSoundSet.DoesNotExist:
         return JsonResponse({'error': f'Sound set with ID {id} not found'}, status=404)
     except Exception as e:
-        print(f"Error setting active sound set: {e}")
+        print(f"Error handling sound set request: {e}")
         return JsonResponse({'error': str(e)}, status=500)
 
 def active_sound_set(request):
-    """Get the active sound set."""
+    """
+    Get a default sound set, not relying on is_active flag.
+    This endpoint now just returns the first sound set in the database.
+    """
     try:
-        # Get the sound set marked as active
-        sound_set = MetronomeSoundSet.objects.filter(is_active=True).first()
-        if not sound_set:
-            # If no active sound set, get the first one
-            sound_set = MetronomeSoundSet.objects.first()
+        # Simply get the first sound set
+        sound_set = MetronomeSoundSet.objects.first()
         
         if sound_set:
-            return JsonResponse(sound_set_to_dict(sound_set))
+            response = JsonResponse(sound_set_to_dict(sound_set))
+            # Add CORS headers
+            response['Access-Control-Allow-Origin'] = '*'
+            response['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
+            response['Access-Control-Allow-Headers'] = 'X-Requested-With, Content-Type'
+            return response
+        
         return JsonResponse({'error': 'No sound sets found'}, status=404)
     except Exception as e:
-        print(f"Error getting active sound set: {e}")
+        print(f"Error getting sound set: {e}")
         return JsonResponse({'error': str(e)}, status=500)
 
 def default_sound_set(request):
-    """Get the default sound set (same as active for now)."""
+    """Get the default sound set (first one in the database)."""
     try:
-        sound_set = MetronomeSoundSet.objects.filter(is_active=True).first()
+        # Simply get the first sound set, no longer using is_active
+        sound_set = MetronomeSoundSet.objects.first()
+        
         if sound_set:
-            return JsonResponse(sound_set_to_dict(sound_set))
+            response = JsonResponse(sound_set_to_dict(sound_set))
+            # Add CORS headers
+            response['Access-Control-Allow-Origin'] = '*'
+            response['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
+            response['Access-Control-Allow-Headers'] = 'X-Requested-With, Content-Type'
+            return response
+            
         return JsonResponse({'error': 'No default sound set found'}, status=404)
     except Exception as e:
         print(f"Error getting default sound set: {e}")

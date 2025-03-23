@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LibreMetronome Style Guide Reference</title>
+  <style>
+    :root {
+      /* Primary Colors */
+      --primary-teal: #00A0A0;
+      --primary-teal-dark: #008080;
+      --primary-teal-light: #B3E0E0;
+      --primary-teal-ultra-light: #E6F5F5;
+      
+      /* Secondary Colors */
+      --secondary-gold: #f8d38d;
+      --secondary-gold-dark: #f5c26d;
+      --secondary-gold-light: #fae3ad;
+      --secondary-gold-ultra-light: #FFF8E6;
+      
+      /* Neutral Colors */
+      --neutral-bg: #f5f5f5;
+      --neutral-bg-alt: #f9f9f9;
+      --neutral-border: #e0e0e0;
+      --neutral-border-light: #eeeeee;
+      
+      /* Text Colors */
+      --text-primary: #333333;
+      --text-secondary: #666666;
+      --text-tertiary: #999999;
+      --text-light: #ffffff;
+      
+      /* Beat State Colors */
+      --beat-muted: #e8e8e8;
+      --beat-normal: var(--secondary-gold-light);
+      --beat-accent: var(--secondary-gold);
+      --beat-first: var(--primary-teal);
+      --beat-inner: #fce9c6;
+      --beat-outer: #f6cc7c;
+      
+      /* Semantic Colors */
+      --success: #3FB6A8;
+      --warning: #F9CE7A;
+      --error: #E67B73;
+      --info: #73B5E6;
+    }
+
+    body {
+      font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      line-height: 1.6;
+      color: var(--text-primary);
+      background-color: var(--neutral-bg);
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background-color: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    header {
+      border-bottom: 1px solid var(--neutral-border);
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+    }
+
+    h1 {
+      color: var(--primary-teal);
+      margin-top: 0;
+    }
+
+    h2 {
+      color: var(--primary-teal-dark);
+      margin-top: 40px;
+      border-bottom: 2px solid var(--primary-teal-light);
+      padding-bottom: 10px;
+    }
+
+    h3 {
+      color: var(--text-secondary);
+      margin-top: 30px;
+    }
+
+    .developer-note {
+      background-color: var(--primary-teal-ultra-light);
+      border-left: 4px solid var(--primary-teal);
+      padding: 15px;
+      margin-bottom: 30px;
+    }
+
+    .color-section {
+      margin-bottom: 30px;
+    }
+
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .color-card {
+      border: 1px solid var(--neutral-border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .color-preview {
+      height: 80px;
+    }
+
+    .color-info {
+      padding: 15px;
+      background-color: white;
+    }
+
+    .color-name {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .color-variable {
+      font-family: monospace;
+      color: var(--text-secondary);
+      margin-bottom: 5px;
+    }
+
+    .color-hex {
+      font-family: monospace;
+      color: var(--text-tertiary);
+      margin-bottom: 10px;
+    }
+
+    .color-description {
+      font-size: 0.9em;
+      color: var(--text-secondary);
+    }
+
+    .typography-examples {
+      margin-top: 20px;
+    }
+
+    .typography-item {
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--neutral-border-light);
+      padding-bottom: 10px;
+    }
+
+    .typography-details {
+      color: var(--text-secondary);
+      font-size: 0.9em;
+      margin-top: 5px;
+    }
+
+    .body-text {
+      font-size: 1rem;
+    }
+
+    .small-text {
+      font-size: 0.875rem;
+    }
+
+    .button-examples {
+      margin-top: 20px;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+
+    .btn-base {
+      padding: 10px 15px;
+      border-radius: 4px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .btn-primary {
+      background-color: var(--primary-teal);
+      color: white;
+    }
+
+    .btn-secondary {
+      background-color: var(--secondary-gold);
+      color: var(--text-primary);
+    }
+
+    .btn-outline {
+      background-color: transparent;
+      border: 2px solid var(--primary-teal);
+      color: var(--primary-teal);
+    }
+
+    .beat-examples {
+      margin-top: 20px;
+    }
+
+    .beat-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .beat {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      margin-right: 15px;
+    }
+
+    .beat-muted {
+      background-color: var(--beat-muted);
+    }
+
+    .beat-normal {
+      background-color: var(--beat-normal);
+    }
+
+    .beat-accent {
+      background-color: var(--beat-accent);
+    }
+
+    .beat-first {
+      background-color: var(--beat-first);
+    }
+
+    .beat-label {
+      font-weight: 500;
+    }
+
+    .utility-examples {
+      margin-top: 20px;
+    }
+
+    code {
+      background-color: var(--neutral-bg-alt);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: monospace;
+      font-size: 0.9em;
+    }
+
+    pre {
+      background-color: var(--neutral-bg-alt);
+      padding: 15px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-family: monospace;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>LibreMetronome Style Guide Reference</h1>
+      <p>This document provides a comprehensive overview of the visual styling for LibreMetronome.</p>
+      
+      <div class="developer-note">
+        <h3>Developer Note</h3>
+        <p>This is a reference document for developers only. The Style Guide is not displayed in the user interface. Use this document to ensure consistent styling throughout the application.</p>
+      </div>
+    </header>
+
+    <section id="color-system">
+      <h2>Color System</h2>
+      <p>The following color palette ensures visual consistency throughout the application.</p>
+
+      <div class="color-section">
+        <h3>Primary Colors</h3>
+        <div class="color-grid">
+          <div class="color-card">
+            <div class="color-preview" style="background-color: #00A0A0;"></div>
+            <div class="color-info">
+              <div class="color-name">Primary Teal</div>
+              <div class="color-variable">--primary-teal</div>
+              <div class="color-hex">#00A0A0</div>
+              <div class="color-description">Main brand color - used for interactive elements, buttons, links</div>
+            </div>
+          </div>
+          <div class="color-card">
+            <div class="color-preview" style="background-color: #008080;"></div>
+            <div class="color-info">
+              <div class="color-name">Primary Teal Dark</div>
+              <div class="color-variable">--primary-teal-dark</div>
+              <div class="color-hex">#008080</div>
+              <div class="color-description">Darker variant for hover states</div>
+            </div>
+          </div>
+          <div class="color-card">
+            <div class="color-preview" style="background-color: #B3E0E0;"></div>
+            <div class="color-info">
+              <div class="color-name">Primary Teal Light</div>
+              <div class="color-variable">--primary-teal-light</div>
+              <div class="color-hex">#B3E0E0</div>
+              <div class="color-description">Lighter variant for backgrounds, borders</div>
+            </div>
+          </div>
+          <div class="color-card">
+            <div class="color-preview" style="background-color: #E6F5F5;"></div>
+            <div class="color-info">
+              <div class="color-name">Primary Teal Ultra Light</div>
+              <div class="color-variable">--primary-teal-ultra-light</div>
+              <div class="color-hex">#E6F5F5</div>
+              <div class="color-description">Very light teal for subtle backgrounds</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="color-section">
+        <h3>Secondary Colors</h3>
+        <div class="color-grid">
+          <div class="color-card">
+            <div class="color-preview" style="background-color: #f8d38d;"></div>
+            <div class="color-info">
+              <div class="color-name">Secondary Gold</div>
+              <div class="color-variable">--secondary-gold</div>
+              <div class="color-hex">#f8d38d</div>
+              <div class="color-description">Secondary brand color - used for accents, highlights</div>
+            </div>
+          </div>
+          <div class="color-card">
+            <div class="color-preview" style="background-color: #f5c26d;"></div>
+            <div class="color-info">
+              <div class="color-name">Secondary Gold Dark</div>
+              <div class="color-variable">--secondary-gold-dark</div>
+              <div class="color-hex">#f5c26d</div>
+              <div class="color-description">Darker gold for first beats, important elements</div>
+            </div>
+          </div>
+          <div class="color-card">
+            <div class="color-preview" style="background-color: #fae3ad;"></div>
+            <div class="color-info">
+              <div class="color-name">Secondary Gold Light</div>
+              <div class="color-variable">--secondary-gold-light</div>
+              <div class="color-hex">#fae3ad</div>
+              <div class="color-description">Lighter gold for normal beats, subtle highlights</div>
+            </div>
+          </div>
+          <div class="color-card">
+            <div class="color-preview" style="background-color: #FFF8E6;"></div>
+            <div class="color-info">
+              <div class="color-name">Secondary Gold Ultra Light</div>
+              <div class="color-variable">--secondary-gold-ultra-light</div>
+              <div class="color-hex">#FFF8E6</div>
+              <div class="color-description">Very light gold for subtle backgrounds</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="color-section">
+        <h3>Neutral Colors</h3>
+        <div class="color-grid">
+          <div class="color-card">
+            <div class="color-preview" style="background-color: #f5f5f5;"></div>
+            <div class="color-info">
+              <div class="color-name">Neutral Background</div>
+              <div class="color-variable">--neutral-bg</div>
+              <div class="color-hex">#f5f5f5</div>
+              <div class="color-description">Main background color</div>
+            </div>
+          </div>
+          <div class="color-card">
+            <div class="color-preview" style="background-color: #f9f9f9;"></div>
+            <div class="color-info">
+              <div class="color-name">Neutral Background Alt</div>
+              <div class="color-variable">--neutral-bg-alt</div>
+              <div class="color-hex">#f9f9f9</div>
+              <div class="color-description">Alternative background for cards, modals</div>
+            </div>
+          </div>
+          <div class="color-card">
+            <div class="color-preview" style="background-color: #e0e0e0;"></div>
+            <div class="color-info">
+              <div class="color-name">Neutral Border</div>
+              <div class="color-variable">--neutral-border</div>
+              <div class="color-hex">#e0e0e0</div>
+              <div class="color-description">Border color</div>
+            </div>
+          </div>
+          <div class="color-card">
+            <div class="color-preview" style="background-color: #eeeeee;"></div>
+            <div class="color-info">
+              <div class="color-name">Neutral Border Light</div>
+              <div class="color-variable">--neutral-border-light</div>
+              <div class="color-hex">#eeeeee</div>
+              <div class="color-description">Lighter border color</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="color-section">
+        <h3>Text Colors</h3>
+        <div class="color-grid">
+          <div class="color-card">
+            <div class="color-preview" style="background-color: #333333;"></div>
+            <div class="color-info">
+              <div class="color-name">Text Primary</div>
+              <div class="color-variable">--text-primary</div>
+              <div class="color-hex">#333333</div>
+              <div class="color-description">Main text color</div>
+            </div>
+          </div>
+          <div class="color-card">
+            <div class="color-preview" style="background-color: #666666;"></div>
+            <div class="color-info">
+              <div class="color-name">Text Secondary</div>
+              <div class="color-variable">--text-secondary</div>
+              <div class="color-hex">#666666</div>
+              <div class="color-description">Secondary text color</div>
+            </div>
+          </div>
+          <div class="color-card">
+            <div class="color-preview" style="background-color: #999999;"></div>
+            <div class="color-info">
+              <div class="color-name">Text Tertiary</div>
+              <div class="color-variable">--text-tertiary</div>
+              <div class="color-hex">#999999</div>
+              <div class="color-description">Tertiary text color for less important text</div>
+            </div>
+          </div>
+          <div class="color-card">
+            <div class="color-preview" style="background-color: #ffffff;"></div>
+            <div class="color-info">
+              <div class="color-name">Text Light</div>
+              <div class="color-variable">--text-light</div>
+              <div class="color-hex">#ffffff</div>
+              <div class="color-description">Light text color for dark backgrounds</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="color-section">
+        <h3>Beat State Colors</h3>
+        <div class="color-grid">
+          <div class="color-card">
+            <div class="color-preview" style="background-color: #e8e8e8;"></div>
+            <div class="color-info">
+              <div class="color-name">Beat Muted</div>
+              <div class="color-variable">--beat-muted</div>
+              <div class="color-hex">#e8e8e8</div>
+              <div class="color-description">Muted beat color</div>
+            </div>
+          </div>
+          <div class="color-card">
+            <div class="color-preview" style="background-color: #fae3ad;"></div>
+            <div class="color-info">
+              <div class="color-name">Beat Normal</div>
+              <div class="color-variable">--beat-normal</div>
+              <div class="color-hex">var(--secondary-gold-light)</div>
+              <div class="color-description">Normal beat color</div>
+            </div>
+          </div>
+          <div class="color-card">
+            <div class="color-preview" style="background-color: #f8d38d;"></div>
+            <div class="color-info">
+              <div class="color-name">Beat Accent</div>
+              <div class="color-variable">--beat-accent</div>
+              <div class="color-hex">var(--secondary-gold)</div>
+              <div class="color-description">Accented beat color</div>
+            </div>
+          </div>
+          <div class="color-card">
+            <div class="color-preview" style="background-color: #00A0A0;"></div>
+            <div class="color-info">
+              <div class="color-name">Beat First</div>
+              <div class="color-variable">--beat-first</div>
+              <div class="color-hex">var(--primary-teal)</div>
+              <div class="color-description">First beat color</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="color-section">
+        <h3>Semantic Colors</h3>
+        <div class="color-grid">
+          <div class="color-card">
+            <div class="color-preview" style="background-color: #3FB6A8;"></div>
+            <div class="color-info">
+              <div class="color-name">Success</div>
+              <div class="color-variable">--success</div>
+              <div class="color-hex">#3FB6A8</div>
+              <div class="color-description">Success color - aligned with teal palette</div>
+            </div>
+          </div>
+          <div class="color-card">
+            <div class="color-preview" style="background-color: #F9CE7A;"></div>
+            <div class="color-info">
+              <div class="color-name">Warning</div>
+              <div class="color-variable">--warning</div>
+              <div class="color-hex">#F9CE7A</div>
+              <div class="color-description">Warning color - aligned with gold palette</div>
+            </div>
+          </div>
+          <div class="color-card">
+            <div class="color-preview" style="background-color: #E67B73;"></div>
+            <div class="color-info">
+              <div class="color-name">Error</div>
+              <div class="color-variable">--error</div>
+              <div class="color-hex">#E67B73</div>
+              <div class="color-description">Error color</div>
+            </div>
+          </div>
+          <div class="color-card">
+            <div class="color-preview" style="background-color: #73B5E6;"></div>
+            <div class="color-info">
+              <div class="color-name">Info</div>
+              <div class="color-variable">--info</div>
+              <div class="color-hex">#73B5E6</div>
+              <div class="color-description">Info color</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="typography">
+      <h2>Typography</h2>
+      <p>Consistent typography ensures readability and maintains the application's visual hierarchy.</p>
+
+      <div class="typography-examples">
+        <div class="typography-item">
+          <h1>Heading 1</h1>
+          <p class="typography-details">Font: Lato, Bold, 2rem</p>
+        </div>
+        <div class="typography-item">
+          <h2>Heading 2</h2>
+          <p class="typography-details">Font: Lato, Bold, 1.5rem</p>
+        </div>
+        <div class="typography-item">
+          <h3>Heading 3</h3>
+          <p class="typography-details">Font: Lato, Bold, 1.25rem</p>
+        </div>
+        <div class="typography-item">
+          <p class="body-text">Body Text: This is the standard paragraph text used throughout the application.</p>
+          <p class="typography-details">Font: Lato, Regular, 1rem</p>
+        </div>
+        <div class="typography-item">
+          <p class="small-text">Small Text: Used for less important information, captions, etc.</p>
+          <p class="typography-details">Font: Lato, Regular, 0.875rem</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="buttons">
+      <h2>Buttons</h2>
+      <p>Button styling for consistent interactive elements across the application.</p>
+
+      <div class="button-examples">
+        <div class="button-row">
+          <button class="btn-base btn-primary">Primary Button</button>
+          <button class="btn-base btn-secondary">Secondary Button</button>
+          <button class="btn-base btn-outline">Outline Button</button>
+        </div>
+      </div>
+
+      <pre>// Button class usage
+&lt;button class="btn-base btn-primary"&gt;Primary Button&lt;/button&gt;
+&lt;button class="btn-base btn-secondary"&gt;Secondary Button&lt;/button&gt;
+&lt;button class="btn-base btn-outline"&gt;Outline Button&lt;/button&gt;</pre>
+    </section>
+
+    <section id="beat-visualization">
+      <h2>Beat Visualization</h2>
+      <p>Standard styling for beat visualizations in different metronome modes.</p>
+
+      <div class="beat-examples">
+        <div class="beat-row">
+          <div class="beat beat-muted"></div>
+          <div class="beat-label">Beat Muted</div>
+        </div>
+        <div class="beat-row">
+          <div class="beat beat-normal"></div>
+          <div class="beat-label">Beat Normal</div>
+        </div>
+        <div class="beat-row">
+          <div class="beat beat-accent"></div>
+          <div class="beat-label">Beat Accent</div>
+        </div>
+        <div class="beat-row">
+          <div class="beat beat-first"></div>
+          <div class="beat-label">Beat First</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="utility-classes">
+      <h2>Utility Classes</h2>
+      <p>Reusable utility classes for common styling patterns.</p>
+
+      <div class="utility-examples">
+        <h3>Text Colors</h3>
+        <p><code>.text-primary</code>, <code>.text-secondary</code>, <code>.text-tertiary</code>, <code>.text-light</code></p>
+        <p><code>.text-teal</code>, <code>.text-teal-dark</code>, <code>.text-gold</code></p>
+        
+        <h3>Background Colors</h3>
+        <p><code>.bg-teal</code>, <code>.bg-teal-dark</code>, <code>.bg-teal-light</code>, <code>.bg-teal-ultra-light</code></p>
+        <p><code>.bg-gold</code>, <code>.bg-gold-dark</code>, <code>.bg-gold-light</code>, <code>.bg-gold-ultra-light</code></p>
+        
+        <h3>Border Utilities</h3>
+        <p><code>.border-neutral</code>, <code>.border-neutral-light</code>, <code>.border-teal</code>, <code>.border-gold</code></p>
+        
+        <h3>Shadow Utilities</h3>
+        <p><code>.shadow-sm</code>, <code>.shadow-md</code>, <code>.shadow-lg</code></p>
+      </div>
+    </section>
+
+    <section id="css-variables">
+      <h2>CSS Variables Implementation</h2>
+      <p>Copy and paste these CSS variables into your component's CSS file to ensure consistent styling:</p>
+      
+      <pre>:root {
+  /* Primary Colors */
+  --primary-teal: #00A0A0;
+  --primary-teal-dark: #008080;
+  --primary-teal-light: #B3E0E0;
+  --primary-teal-ultra-light: #E6F5F5;
+  
+  /* Secondary Colors */
+  --secondary-gold: #f8d38d;
+  --secondary-gold-dark: #f5c26d;
+  --secondary-gold-light: #fae3ad;
+  --secondary-gold-ultra-light: #FFF8E6;
+  
+  /* Neutral Colors */
+  --neutral-bg: #f5f5f5;
+  --neutral-bg-alt: #f9f9f9;
+  --neutral-border: #e0e0e0;
+  --neutral-border-light: #eeeeee;
+  
+  /* Text Colors */
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-tertiary: #999999;
+  --text-light: #ffffff;
+  
+  /* Beat State Colors */
+  --beat-muted: #e8e8e8;
+  --beat-normal: var(--secondary-gold-light);
+  --beat-accent: var(--secondary-gold);
+  --beat-first: var(--primary-teal);
+  --beat-inner: #fce9c6;
+  --beat-outer: #f6cc7c;
+  
+  /* Semantic Colors */
+  --success: #3FB6A8;
+  --warning: #F9CE7A;
+  --error: #E67B73;
+  --info: #73B5E6;
+}</pre>
+    </section>
+
+    <section id="developer-guidelines">
+      <h2>Developer Guidelines</h2>
+      
+      <h3>CSS Naming Conventions</h3>
+      <p>LibreMetronome follows a modified BEM (Block, Element, Modifier) naming convention:</p>
+      <ul>
+        <li><strong>Block:</strong> Standalone component (e.g., <code>metronome</code>, <code>beat</code>, <code>controls</code>)</li>
+        <li><strong>Element:</strong> Parts of a block (e.g., <code>metronome__indicator</code>, <code>controls__button</code>)</li>
+        <li><strong>Modifier:</strong> Variations of blocks or elements (e.g., <code>beat--accent</code>, <code>button--primary</code>)</li>
+      </ul>
+
+      <h3>Component Organization</h3>
+      <p>Keep CSS organized by following these principles:</p>
+      <ul>
+        <li>Use component-specific CSS files</li>
+        <li>Import global variables from a central location</li>
+        <li>Avoid !important tags</li>
+        <li>Use CSS variables for themes and variants</li>
+        <li>Keep specificity low by avoiding deep nesting</li>
+      </ul>
+
+      <h3>Accessibility Guidelines</h3>
+      <p>Ensure all components meet accessibility standards:</p>
+      <ul>
+        <li>Maintain color contrast ratios (at least 4.5:1 for normal text)</li>
+        <li>Provide focus states for interactive elements</li>
+        <li>Include appropriate ARIA attributes</li>
+        <li>Ensure keyboard navigability</li>
+        <li>Test with screen readers</li>
+      </ul>
+    </section>
+  </div>
+</body>
+</html>

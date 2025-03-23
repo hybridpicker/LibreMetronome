@@ -1,6 +1,7 @@
 // Updated src/components/Menu/SettingsContent.js
-import React, { useState, useEffect } from 'react';
-import { getAllSoundSets, setActiveSoundSet } from '../../services/soundSetService';
+import React, { useState, useEffect, useCallback } from 'react';
+import { getAllSoundSets, setActiveSoundSet, getActiveSoundSetIdFromCookie } from '../../services/soundSetService';
+// Unused import removed
 
 const SettingsContent = ({
   volume,
@@ -24,14 +25,10 @@ const SettingsContent = ({
   const [activeSoundSetId, setActiveSoundSetId] = useState(null);
   const [loadingSoundSets, setLoadingSoundSets] = useState(false);
   const [errorSoundSets, setErrorSoundSets] = useState(null);
-  const [customSoundSets, setCustomSoundSets] = useState([
-    { id: 'woodblock', name: 'Wood Block', is_active: false },
-    { id: 'drums', name: 'Drums', is_active: false }
-  ]);
 
   // Audio context for sound preview
-  const [audioContext, setAudioContext] = useState(null);
-  const [audioBuffers, setAudioBuffers] = useState({});
+  const [audioContext] = useState(null); // Removed unused setter
+  // Removed unused state variable completely
   const [isPreviewPlaying, setIsPreviewPlaying] = useState(false);
 
   // Update local state when props change
@@ -51,16 +48,30 @@ const SettingsContent = ({
         audioContext.close();
       }
     };
-  }, []);
+  }, [audioContext]);
 
   // Fetch sound sets from the API
   useEffect(() => {
     setLoadingSoundSets(true);
+    // Get the cookie id first for more reliable state
+    const cookieId = getActiveSoundSetIdFromCookie();
+    
     getAllSoundSets()
       .then((data) => {
         setSoundSets(data);
         
-        // Determine active sound set
+        // First check for active sound set from cookie
+        if (cookieId) {
+          const cookieIdStr = cookieId.toString();
+          const matchingSet = data.find(set => set.id.toString() === cookieIdStr);
+          if (matchingSet) {
+            setActiveSoundSetId(matchingSet.id);
+            setLoadingSoundSets(false);
+            return;
+          }
+        }
+        
+        // Otherwise find the active set from API response
         const activeSet = data.find((set) => set.is_active);
         if (activeSet) {
           setActiveSoundSetId(activeSet.id);
@@ -78,45 +89,63 @@ const SettingsContent = ({
   }, []);
 
   // State for sound paths
-  const getBackendUrl = (path) => {
+  const getBackendUrl = useCallback((path) => {
+    if (!path) return null;
     const base =
       process.env.NODE_ENV === 'production'
         ? window.location.origin
         : 'http://localhost:8000';
     return `${base}${path}`;
-  };
+  }, []);
+
   const [soundPaths, setSoundPaths] = useState({
     normal: getBackendUrl("/metronome_sounds/wood_normal_sound.mp3"),
     accent: getBackendUrl("/metronome_sounds/wood_accent_sound.mp3"),
     first: getBackendUrl("/metronome_sounds/wood_first_sound.mp3")
   });
   
+  // Update sound paths when active sound set changes
   useEffect(() => {
-    if (activeSoundSetId) {
-      if (activeSoundSetId === 'woodblock') {
+    if (!activeSoundSetId) return;
+    
+    // Find the active sound set in our loaded sound sets
+    const activeSet = soundSets.find(set => set.id.toString() === activeSoundSetId.toString());
+    
+    if (activeSet) {
+      // For backend sound sets
+      if (activeSet.first_beat_sound_url && activeSet.accent_sound_url && activeSet.normal_beat_sound_url) {
         setSoundPaths({
-          normal: getBackendUrl("/metronome_sounds/wood_normal_sound.mp3"),
-          accent: getBackendUrl("/metronome_sounds/wood_accent_sound.mp3"),
-          first: getBackendUrl("/metronome_sounds/wood_first_sound.mp3")
+          normal: getBackendUrl(activeSet.normal_beat_sound_url),
+          accent: getBackendUrl(activeSet.accent_sound_url),
+          first: getBackendUrl(activeSet.first_beat_sound_url)
         });
-      } else if (activeSoundSetId === 'drums') {
-        setSoundPaths({
-          normal: getBackendUrl("/metronome_sounds/drum_normal_sound.mp3"),
-          accent: getBackendUrl("/metronome_sounds/drum_accent_sound.mp3"),
-          first: getBackendUrl("/metronome_sounds/drum_first_sound.mp3")
-        });
-      } else {
-        const activeSet = soundSets.find(set => set.id === activeSoundSetId);
-        if (activeSet && activeSet.first_beat_sound_url && activeSet.accent_sound_url && activeSet.normal_beat_sound_url) {
-          setSoundPaths({
-            normal: getBackendUrl(activeSet.normal_beat_sound_url),
-            accent: getBackendUrl(activeSet.accent_sound_url),
-            first: getBackendUrl(activeSet.first_beat_sound_url)
-          });
-        }
+        return;
       }
     }
-  }, [activeSoundSetId, soundSets]);
+    
+    // Fallback based on ID for custom sound sets
+    if (activeSoundSetId === 'woodblock' || activeSoundSetId === 'default-woodblock') {
+      setSoundPaths({
+        normal: getBackendUrl("/metronome_sounds/wood_normal_sound.mp3"),
+        accent: getBackendUrl("/metronome_sounds/wood_accent_sound.mp3"),
+        first: getBackendUrl("/metronome_sounds/wood_first_sound.mp3")
+      });
+    } else if (activeSoundSetId === 'drums' || activeSoundSetId === 'default-drums') {
+      setSoundPaths({
+        normal: getBackendUrl("/metronome_sounds/drum_normal_sound.mp3"),
+        accent: getBackendUrl("/metronome_sounds/drum_accent_sound.mp3"),
+        first: getBackendUrl("/metronome_sounds/drum_first_sound.mp3")
+      });
+    } else {
+      // Default fallback if we cannot determine the sound set
+      console.warn(`Could not find sound paths for ID: ${activeSoundSetId}, using default`);
+      setSoundPaths({
+        normal: getBackendUrl("/metronome_sounds/wood_normal_sound.mp3"),
+        accent: getBackendUrl("/metronome_sounds/wood_accent_sound.mp3"),
+        first: getBackendUrl("/metronome_sounds/wood_first_sound.mp3")
+      });
+    }
+  }, [activeSoundSetId, soundSets, getBackendUrl]);
 
   // Sound preview functions
   const playSound = async (type) => {
@@ -141,97 +170,42 @@ const SettingsContent = ({
     }
   };
   
-  // Play pattern preview
-  const playPatternPreview = async () => {
-    if (isPreviewPlaying) return;
-    
-    try {
-      // Create audio context on demand if it doesn't exist
-      const ctx = audioContext || new (window.AudioContext || window.webkitAudioContext)();
-      if (!audioContext) {
-        setAudioContext(ctx);
-      }
-      
-      // Resume context if suspended
-      if (ctx.state === 'suspended') {
-        await ctx.resume();
-      }
-      
-      setIsPreviewPlaying(true);
-      
-      const beatDuration = 60 / 120; // 120 BPM for preview
-      const types = ['first', 'normal', 'normal', 'accent'];
-      
-      // Play pattern
-      types.forEach((type, index) => {
-        setTimeout(() => {
-          // Create oscillator for each beat
-          const oscillator = ctx.createOscillator();
-          const gainNode = ctx.createGain();
-          
-          // Configure based on beat type
-          switch(type) {
-            case 'first':
-              oscillator.type = 'triangle';
-              oscillator.frequency.setValueAtTime(880, ctx.currentTime); // A5
-              break;
-            case 'accent':
-              oscillator.type = 'triangle';
-              oscillator.frequency.setValueAtTime(659.25, ctx.currentTime); // E5
-              break;
-            case 'normal':
-            default:
-              oscillator.type = 'triangle';
-              oscillator.frequency.setValueAtTime(440, ctx.currentTime); // A4
-              break;
-          }
-          
-          // Set volume and envelope
-          gainNode.gain.setValueAtTime(localVolume, ctx.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
-          
-          // Connect and play
-          oscillator.connect(gainNode);
-          gainNode.connect(ctx.destination);
-          
-          oscillator.start();
-          oscillator.stop(ctx.currentTime + 0.1);
-          
-          // Reset playing state after last beat
-          if (index === types.length - 1) {
-            setTimeout(() => {
-              setIsPreviewPlaying(false);
-            }, 100);
-          }
-        }, index * beatDuration * 1000);
-      });
-    } catch (error) {
-      console.error('Error playing pattern:', error);
-      setIsPreviewPlaying(false);
-    }
-  };
+  // Pattern preview function removed as it's unused
 
   // Handler to change the active sound set
-  const handleSoundSetChange = (id) => {
-    // Update local state
+  const handleSoundSetChange = async (id) => {
+    // Don't do anything if we're already using this sound set
+    if (id.toString() === activeSoundSetId?.toString()) {
+      console.log(`Sound set ${id} is already active, no change needed`);
+      return;
+    }
+    
+    // Update local state immediately for UI responsiveness
     setActiveSoundSetId(id);
     
-    // Call API to set active sound set
-    setActiveSoundSet(id)
-      .then(() => {
-        // Clear existing audio buffers
-        setAudioBuffers({});
-        
-        // Trigger reload of audio buffers
-        if (setSoundSetReloadTrigger) {
-          setSoundSetReloadTrigger(prev => prev + 1);
-          console.log("Sound set changed, triggering audio buffer reload");
-          window.dispatchEvent(new Event('soundSetChanged'));
+    try {
+      console.log(`Changing sound set to: ${id}`);
+      
+      // Call the service function which handles both API and local storage
+      await setActiveSoundSet(id);
+      
+      // Force immediate audio buffer reload - this works even when playing
+      if (setSoundSetReloadTrigger) {
+        setSoundSetReloadTrigger(prev => prev + 1);
+        console.log("Sound set changed, triggering immediate audio buffer reload");
+      }
+      
+      // Play a preview of the new sound after a short delay to confirm the change worked
+      setTimeout(() => {
+        try {
+          playSound('first');
+        } catch (error) {
+          // Ignore preview errors - it's just a convenience
         }
-      })
-      .catch((error) => {
-        console.error('Error updating sound set:', error);
-      });
+      }, 300);
+    } catch (error) {
+      console.error('Error updating sound set:', error);
+    }
   };
 
   // Handler for volume changes
@@ -243,21 +217,51 @@ const SettingsContent = ({
 
   // Apply settings and close the overlay
   const handleApply = () => {
+    // Update base metronome settings first - these take effect immediately
     setDefaultTempo(localTempo);
     setDefaultSubdivisions(localSubdivisions);
     
-    // Trigger reload of audio buffers if any sound settings were changed
-    if (setSoundSetReloadTrigger) {
-      setSoundSetReloadTrigger(prev => prev + 1);
-      console.log("Settings applied, triggering audio buffer reload");
-      // Ensure the event with sound set ID is properly dispatched to trigger reload
-      window.dispatchEvent(new CustomEvent('soundSetChanged', { 
-        detail: { soundSetId: activeSoundSetId } 
+    // Apply sound set changes and ensure immediate reload
+    if (activeSoundSetId) {
+      console.log("Applying settings with sound set: " + activeSoundSetId);
+      
+      // First dispatch a high-priority event to ensure any playing metronome 
+      // gets notified about the settings change
+      window.dispatchEvent(new CustomEvent('metronome-settings-applied', { 
+        detail: { 
+          tempo: localTempo,
+          subdivisions: localSubdivisions,
+          volume: localVolume,
+          soundSetId: activeSoundSetId.toString()
+        } 
       }));
-    }
-    
-    if (onClose) {
-      onClose();
+      
+      // Then update the sound set through the service
+      setActiveSoundSet(activeSoundSetId)
+        .then(() => {
+          // Force trigger reload of audio buffers - this works even during playback
+          if (setSoundSetReloadTrigger) {
+            setSoundSetReloadTrigger(prev => prev + 1);
+            console.log("Settings applied, triggered immediate audio buffer reload");
+          }
+          
+          // Finally close the settings overlay
+          if (onClose) {
+            onClose();
+          }
+        })
+        .catch(error => {
+          console.error("Failed to update sound set:", error);
+          // Still close the overlay even if there was an error
+          if (onClose) {
+            onClose();
+          }
+        });
+    } else {
+      // No sound set changes, just close the overlay
+      if (onClose) {
+        onClose();
+      }
     }
   };
 
@@ -356,7 +360,7 @@ const SettingsContent = ({
                 <input
                   type="radio"
                   name="soundSet"
-                  checked={activeSoundSetId === set.id}
+                  checked={activeSoundSetId?.toString() === set.id.toString()}
                   onChange={() => handleSoundSetChange(set.id)}
                 />
                 <span>{set.name}</span>

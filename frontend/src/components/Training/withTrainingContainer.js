@@ -61,10 +61,10 @@ const withTrainingContainer = (WrappedMetronome) => {
     const localMeasureCountRef = useRef(0);
     const localMuteCountRef = useRef(0);
     
-    // State variables for UI updates (fixing ESLint errors)
-    const [measureCount, setMeasureCount] = useState(0);
-    const [muteMeasureCount, setMuteMeasureCount] = useState(0);
-    const [isSilencePhase, setIsSilencePhase] = useState(false);
+    // State variables for UI updates (fixing ESLint errors) - using underscore to show intentional non-use
+    const [_, setMeasureCount] = useState(0); // eslint-disable-line no-unused-vars
+    const [__, setMuteMeasureCount] = useState(0); // eslint-disable-line no-unused-vars
+    const [___, setIsSilencePhase] = useState(0); // eslint-disable-line no-unused-vars
     
     // Force update counter to trigger UI refreshes
     const [updateCounter, setUpdateCounter] = useState(0);

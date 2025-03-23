@@ -18,8 +18,7 @@ import withTrainingContainer from "./Training/withTrainingContainer";
 import AccelerateButton from "./metronome/Controls/AccelerateButton";
 import { manualTempoAcceleration } from "../hooks/useMetronomeLogic/trainingLogic";
 
-import { getActiveSoundSet } from "../services/soundSetService";
-import { loadClickBuffers } from "../hooks/useMetronomeLogic/audioBuffers";
+// Unused imports removed
 
 import "./AdvancedMetronome.css";
 
@@ -224,7 +223,7 @@ export function AdvancedMetronomeWithCircle({
     if (registerTogglePlay) {
       registerTogglePlay(handlePlayPause);
     }
-  }, [registerTogglePlay]);
+  }, [registerTogglePlay, handlePlayPause]);
 
   const getContainerSize = () => {
     const w = window.innerWidth;
@@ -288,9 +287,12 @@ export function AdvancedMetronomeWithCircle({
     });
   }
 
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 1400);
+  // isMobile variable removed as it's unused
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    const handleResize = () => {
+      // Resize handler kept for potential future use 
+      // but without the unused state update
+    };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -302,18 +304,77 @@ export function AdvancedMetronomeWithCircle({
         window.metronomeDebug.audioContext = logic.audioCtx;
       }
     }
-  }, [logic.audioBuffers, logic.audioCtx]);
+  }, [logic]);
 
+  // Listen for both soundSetReloadTrigger and soundSetChanged event
   useEffect(() => {
     if (logic && logic.audioCtx && soundSetReloadTrigger > 0) {
       if (logic.reloadSounds) {
+        console.log("Reloading sounds due to soundSetReloadTrigger change");
         logic
           .reloadSounds()
-          .then((success) => {})
-          .catch((err) => {});
+          .then((success) => {
+            if (success) {
+              console.log("Successfully reloaded sound buffers");
+            } else {
+              console.error("Failed to reload sound buffers");
+            }
+          })
+          .catch((err) => {
+            console.error("Error reloading sounds:", err);
+          });
       }
     }
   }, [soundSetReloadTrigger, logic]);
+
+  // Add event listeners for sound set and settings changes
+  useEffect(() => {
+    const handleSoundSetChanged = (event) => {
+      // Only reload if we have the necessary logic methods
+      if (logic && logic.reloadSounds) {
+        const soundSetId = event.detail?.soundSetId;
+        console.log(`Sound set changed event received (ID: ${soundSetId}), reloading sounds immediately`);
+        
+        // Always reload sounds regardless of playing status
+        logic
+          .reloadSounds()
+          .then((success) => {
+            if (success) {
+              console.log("Successfully reloaded sound buffers after sound set change");
+            } else {
+              console.error("Failed to reload sound buffers after sound set change");
+            }
+          })
+          .catch((err) => {
+            console.error("Error reloading sounds after sound set change:", err);
+          });
+      }
+    };
+    
+    const handleSettingsApplied = (event) => {
+      // Force immediate sound reload if we're playing
+      if (!isPaused && logic && logic.reloadSounds) {
+        console.log("Settings applied while playing, forcing immediate sound reload");
+        logic.reloadSounds()
+          .then(success => {
+            if (success) {
+              console.log("Successfully reloaded sound buffers while playing");
+            }
+          })
+          .catch(err => {
+            console.error("Error reloading sounds while playing:", err);
+          });
+      }
+    };
+    
+    window.addEventListener('soundSetChanged', handleSoundSetChanged);
+    window.addEventListener('metronome-settings-applied', handleSettingsApplied);
+    
+    return () => {
+      window.removeEventListener('soundSetChanged', handleSoundSetChanged);
+      window.removeEventListener('metronome-settings-applied', handleSettingsApplied);
+    };
+  }, [logic, isPaused]);
 
   useEffect(() => {
     const handlePreviewSound = (event) => {
