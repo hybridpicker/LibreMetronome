@@ -194,8 +194,7 @@ function MultiCircleMetronome(props) {
 
   useEffect(() => {
     const handleBeatModeChange = (event) => {
-      const { beatMode, beatMultiplier } = event.detail;
-      // Handle externally if needed
+      // Unused event parameters removed - handled externally if needed
     };
     window.addEventListener("beat-mode-change", handleBeatModeChange);
     return () =>

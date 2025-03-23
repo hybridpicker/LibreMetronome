@@ -1,5 +1,5 @@
 // src/components/metronome/MultiCircleMode/hooks/useMultiCircleLogic.js
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import useMetronomeLogic from "../../../../hooks/useMetronomeLogic";
 
 const useMultiCircleLogic = ({
@@ -327,7 +327,7 @@ const useMultiCircleLogic = ({
     if (!isPaused && logic && logic.currentSubdivision !== undefined) {
       handleSubdivisionChange(logic.currentSubdivision);
     }
-  }, [logic?.currentSubdivision, handleSubdivisionChange, isPaused]);
+  }, [logic, logic?.currentSubdivision, handleSubdivisionChange, isPaused]);
 
   // Handle Play/Pause
   const handlePlayPause = useCallback(() => {
@@ -437,7 +437,7 @@ const useMultiCircleLogic = ({
     logic, 
     setIsPaused, 
     circleSettings, 
-    isPaused,
+    // isPaused removed as unnecessary dependency
     macroMode,
     speedMode,
     measuresUntilMute,
@@ -466,7 +466,7 @@ const useMultiCircleLogic = ({
         registerTapTempo(null);
       }
     };
-  }, [handlePlayPause, logic?.tapTempo, registerTogglePlay, registerTapTempo]);
+  }, [handlePlayPause, logic, registerTogglePlay, registerTapTempo]);
 
   return {
     logic,

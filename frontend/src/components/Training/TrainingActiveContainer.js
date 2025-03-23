@@ -17,9 +17,9 @@ const TrainingActiveContainer = ({
   forceUpdate // Add forceUpdate prop
 }) => {
   // State for tracking current values
-  const [measureCount, setMeasureCount] = useState(0);
-  const [muteMeasureCount, setMuteMeasureCount] = useState(0);
-  const [isSilencePhase, setIsSilencePhase] = useState(false);
+  const [_, setMeasureCount] = useState(0); // eslint-disable-line no-unused-vars
+  const [__, setMuteMeasureCount] = useState(0); // eslint-disable-line no-unused-vars
+  const [___, setIsSilencePhase] = useState(false); // eslint-disable-line no-unused-vars
   
   // State for editing parameters
   const [editingParam, setEditingParam] = useState(null);
@@ -151,48 +151,7 @@ const TrainingActiveContainer = ({
   // Don't render anything if training is inactive
   if (macroMode === 0 && speedMode === 0) return null;
   
-  // Calculate progress percentages for visual indicators
-  const measureProgress = Math.min(100, (measureCount / measuresUntilMute) * 100);
-  const muteProgress = Math.min(100, (muteMeasureCount / muteDurationMeasures) * 100);
-  
-  // Calculate current and remaining measures for speed training
-  const currentMeasure = speedMode === 1 ? 
-    (measureCount % measuresUntilSpeedUp) || measuresUntilSpeedUp : 0;
-    
-  const remainingMeasures = speedMode === 1 ? 
-    measuresUntilSpeedUp - currentMeasure : 0;
-  
-  // Format measure text with improved information
-  const formatMeasureText = (current, total) => {
-    if (current === 0 && total === 0) return "Ready to start";
-    if (current === 0) return `Starting ${total}-measure cycle`;
-    
-    const percentage = Math.round((current / total) * 100);
-    return `Measure ${current} of ${total} (${percentage}% complete)`;
-  };
-  
-  // Format countdown text with improved information
-  const formatCountdownText = (remaining) => {
-    if (remaining === 0) return "Increasing tempo now";
-    if (remaining === 1) return "Tempo increases in 1 measure";
-    return `Tempo increases in ${remaining} measures`;
-  };
-  
-  
-  // Create beat indicators for visual rhythm pattern
-  const renderBeatIndicators = (count, total) => {
-    const indicators = [];
-    for (let i = 0; i < total; i++) {
-      indicators.push(
-        <span 
-          key={i} 
-          className={`beat-indicator ${i < count ? 'active' : ''}`}
-          aria-label={`Beat ${i+1} ${i < count ? 'completed' : 'upcoming'}`}
-        />
-      );
-    }
-    return <div className="beat-indicators">{indicators}</div>;
-  };
+  // Unused calculation and helper functions removed
   
   return (
     <div className="training-active-container">

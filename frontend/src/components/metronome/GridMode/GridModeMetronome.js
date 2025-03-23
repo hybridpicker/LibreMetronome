@@ -51,24 +51,28 @@ const GridModeMetronome = (props) => {
     beatMultiplier: props.beatMultiplier
   });
 
-  // Define play/pause handler with better audio loading
-  const handlePlayPause = async () => {
-    if (props.isPaused) {
+  // Extract necessary props to avoid dependency on the entire props object
+  const { 
+    isPaused, 
+    setIsPaused 
+  } = props;
+
+  // Function to handle play/pause functionality
+  const handlePlayPause = useCallback(async () => {
+    if (isPaused) {
       try {
-        // First update UI to show user interaction was received
-        props.setIsPaused(false);
+        // Update UI first
+        setIsPaused(false);
         
-        // Handle the case when audio context is closed - this requires special handling
+        // Handle closed audio context
         if (logic.audioCtx && logic.audioCtx.state === 'closed') {
           console.log("Audio context is closed, need complete reinitialization");
           
-          // We need to force a complete reload of audio context and sounds
           const loadSuccess = await logic.reloadSounds();
           if (!loadSuccess) {
             console.error("Failed to reinitialize audio after closed state");
-            props.setIsPaused(true);
+            setIsPaused(true);
             
-            // Notify user of the issue
             if (window.confirm("Audio system needs to be restarted. Refresh the page to fix this issue?")) {
               window.location.reload();
             }
@@ -80,75 +84,78 @@ const GridModeMetronome = (props) => {
         else if (!logic.audioCtx || logic.audioCtx.state === 'suspended') {
           console.log("Initializing or resuming audio context...");
           
-          // First try to reload sounds if needed
           if (!logic.audioCtx) {
             const loadSuccess = await logic.reloadSounds();
             if (!loadSuccess) {
               console.error("Failed to load sounds");
-              props.setIsPaused(true);
+              setIsPaused(true);
               return;
             }
             console.log("Sounds loaded successfully");
           }
           
-          // Then try to resume if suspended
           if (logic.audioCtx && logic.audioCtx.state === 'suspended') {
             try {
               await logic.audioCtx.resume();
               console.log("Audio context resumed successfully, state:", logic.audioCtx.state);
             } catch (resumeError) {
               console.error("Failed to resume audio context:", resumeError);
-              props.setIsPaused(true);
+              setIsPaused(true);
               return;
             }
           }
         }
         
-        // One final check to ensure we're good to go
+        // Final state check
         if (!logic.audioCtx || logic.audioCtx.state !== 'running') {
           console.error("Audio context still not ready after all attempts");
-          props.setIsPaused(true);
+          setIsPaused(true);
           alert("Unable to start audio system. Please try clicking the play button again or refresh the page.");
           return;
         }
         
-        // Start playing now that we're sure the audio context is ready
+        // Start playing
         console.log("Starting metronome with audio context state:", logic.audioCtx.state);
         logic.startScheduler();
       } catch (err) {
         console.error("Error starting metronome:", err);
-        props.setIsPaused(true);
+        setIsPaused(true);
       }
     } else {
       // Stop playing
-      props.setIsPaused(true);
+      setIsPaused(true);
       logic.stopScheduler();
     }
-  };
+  }, [logic, isPaused, setIsPaused]);
 
+  // Extract additional needed props
+  const { registerTogglePlay, registerTapTempo } = props;
+  
   // Register the toggle play and tap tempo handlers
   useEffect(() => {
-    if (props.registerTogglePlay) {
-      props.registerTogglePlay(handlePlayPause);
+    if (registerTogglePlay) {
+      registerTogglePlay(handlePlayPause);
     }
-    if (props.registerTapTempo) {
+    
+    if (registerTapTempo) {
       // Directly register the tapTempo handler from the metronome logic
       if (logic && typeof logic.tapTempo === 'function') {
-        props.registerTapTempo(logic.tapTempo);
+        registerTapTempo(logic.tapTempo);
       } else {
         console.warn("[GRID MODE] tapTempo function is not available");
-        props.registerTapTempo(null);
+        registerTapTempo(null);
       }
     }
+    
     return () => {
-      if (props.registerTogglePlay) {
-        props.registerTogglePlay(null);
+      if (registerTogglePlay) {
+        registerTogglePlay(null);
       }
-      if (props.registerTapTempo) {
-        props.registerTapTempo(null);
+      if (registerTapTempo) {
+        registerTapTempo(null);
       }
     };
-  }, [props.registerTogglePlay, props.registerTapTempo, logic.tapTempo]);
+  }, [registerTogglePlay, registerTapTempo, handlePlayPause, logic]);
 
   // Effect to reload sounds when triggered
   useEffect(() => {
@@ -164,16 +171,19 @@ const GridModeMetronome = (props) => {
     }
   }, [props.soundSetReloadTrigger, logic]);
 
+  // Destructure specific props needed for the handler to avoid the whole props object as dependency
+  const { updateAccents } = props;
+
   // Handler for changing column configuration
   const handleColumnClick = useCallback((colIndex) => {
     setGridConfig((prev) => {
       const newConfig = [...prev];
       // Cycle through patterns: 0 → 1 → 2 → 3 → 0
       newConfig[colIndex] = (newConfig[colIndex] + 1) % 4;
-      if (props.updateAccents) props.updateAccents(newConfig);
+      if (updateAccents) updateAccents(newConfig);
       return newConfig;
     });
-  }, [props.updateAccents]);
+  }, [updateAccents]);
 
   // State to track if the first beat is playing
   const [isFirstBeatPlaying, setIsFirstBeatPlaying] = useState(false);

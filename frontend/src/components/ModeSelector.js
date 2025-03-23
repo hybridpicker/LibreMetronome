@@ -10,7 +10,7 @@ import MultiIcon from '../assets/svg/modeIcon/Multi.svg';
 import PolyIcon from '../assets/svg/modeIcon/Poly.svg';
 
 const ModeSelector = ({ mode, setMode }) => {
-  const [hoveredMode, setHoveredMode] = useState(null);
+  // State for hover removed as it's not used
   const [touchedMode, setTouchedMode] = useState(null);
   const [showAllModes, setShowAllModes] = useState(window.innerWidth > 350);
   const [showMoreButton, setShowMoreButton] = useState(window.innerWidth <= 350);
@@ -79,24 +79,7 @@ const ModeSelector = ({ mode, setMode }) => {
     }
   };
 
-  const handleMouseEnter = (modeId) => {
-    if (!('ontouchstart' in window)) {
-      setHoveredMode(modeId);
-    }
-  };
-
-  const handleMouseLeave = () => {
-    setHoveredMode(null);
-  };
-
-  const handleTouchStart = (modeId) => {
-    // For touch devices, show tooltip on long press
-    const longPressTimer = setTimeout(() => {
-      setTouchedMode(modeId);
-    }, 500);
-    
-    return () => clearTimeout(longPressTimer);
-  };
+  // Unused event handlers removed
 
   // Function to show essential modes for tiny screens
   const getVisibleModes = () => {
