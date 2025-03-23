@@ -1,4 +1,4 @@
-<img width="488" alt="Logo" src="https://github.com/user-attachments/assets/02d3cd85-3eed-487a-b864-957eeadb81b3" />
+![Logo_LibreMetronome](https://github.com/user-attachments/assets/9fed9e7c-6824-42e5-8b98-53be459d16ca)
 
 ![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)
 
