@@ -66,7 +66,8 @@ export default function usePolyrhythmLogic({
   const activeNodesRef = useRef([]);
 
   // measure-based approach
-  const [currentMeasure, setCurrentMeasure] = useState(0);
+  // Removing unused state variable while keeping the setter for functionality
+  const [_, setCurrentMeasure] = useState(0); // eslint-disable-line no-unused-vars
   const measureStartTimeRef = useRef(0);
   const startTimeRef = useRef(0);
 
@@ -845,7 +846,7 @@ export default function usePolyrhythmLogic({
     } finally {
       isStartingOrStoppingRef.current = false;
     }
-  }, [schedulingLoop, stopScheduler, syncTrainingState]);
+  }, [schedulingLoop, syncTrainingState]); // Fix: Removed stopScheduler from dependencies
 
   // When beat counts change, we need to properly reset scheduling
   useEffect(() => {
@@ -920,7 +921,16 @@ export default function usePolyrhythmLogic({
   // Clean up on unmount
   useEffect(() => {
     return () => {
-      stopScheduler();
+      // Call stopScheduler directly instead of using it as a dependency
+      if (schedulerRunningRef.current) {
+        // Inline the necessary parts of stopScheduler to avoid the dependency
+        if (lookaheadIntervalRef.current) {
+          clearInterval(lookaheadIntervalRef.current);
+          lookaheadIntervalRef.current = null;
+        }
+        
+        schedulerRunningRef.current = false;
+      }
       
       // Stop and disconnect all audio nodes
       activeNodesRef.current.forEach(({ source, gainNode }) => {
@@ -935,7 +945,7 @@ export default function usePolyrhythmLogic({
       
       activeNodesRef.current = [];
     };
-  }, [stopScheduler]);
+  }, []); // Fix: Removed unnecessary eslint-disable comment as it's no longer needed
 
   // When sound swapping state changes while playing, we need to restart
   useEffect(() => {

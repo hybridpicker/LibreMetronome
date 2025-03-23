@@ -285,10 +285,7 @@ function App() {
     }
   };
 
-  const handleApplySettings = () => {
-    setSoundSetReloadTrigger(prev => prev + 1);
-    setSettingsVisible(false);
-  };
+  // Function removed as it was unused
 
   const renderMetronome = () => {
     switch (mode) {

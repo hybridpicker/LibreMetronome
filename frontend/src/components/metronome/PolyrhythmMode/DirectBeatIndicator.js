@@ -1,5 +1,5 @@
 // src/components/metronome/PolyrhythmMode/DirectBeatIndicator.js
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 
 /**
  * Dedicated beat indicator component optimized for complex polyrhythms like 8:9

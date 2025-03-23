@@ -50,7 +50,7 @@ export default function useMetronomeLogic({
     actualBpm, setActualBpm,
     timingPrecision, setTimingPrecision,
     nodeRefs,
-    audioWorkletRef
+    // Removed unused ref
   } = useMetronomeRefs();
 
   const [currentSubdivision, setCurrentSubdivision] = useState(0);

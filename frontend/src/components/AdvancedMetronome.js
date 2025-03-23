@@ -18,8 +18,7 @@ import withTrainingContainer from "./Training/withTrainingContainer";
 import AccelerateButton from "./metronome/Controls/AccelerateButton";
 import { manualTempoAcceleration } from "../hooks/useMetronomeLogic/trainingLogic";
 
-import { getActiveSoundSet } from "../services/soundSetService";
-import { loadClickBuffers } from "../hooks/useMetronomeLogic/audioBuffers";
+// Unused imports removed
 
 import "./AdvancedMetronome.css";
 
@@ -224,7 +223,7 @@ export function AdvancedMetronomeWithCircle({
     if (registerTogglePlay) {
       registerTogglePlay(handlePlayPause);
     }
-  }, [registerTogglePlay]);
+  }, [registerTogglePlay, handlePlayPause]);
 
   const getContainerSize = () => {
     const w = window.innerWidth;
@@ -288,9 +287,12 @@ export function AdvancedMetronomeWithCircle({
     });
   }
 
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 1400);
+  // isMobile variable removed as it's unused
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    const handleResize = () => {
+      // Resize handler kept for potential future use 
+      // but without the unused state update
+    };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -302,7 +304,7 @@ export function AdvancedMetronomeWithCircle({
         window.metronomeDebug.audioContext = logic.audioCtx;
       }
     }
-  }, [logic.audioBuffers, logic.audioCtx]);
+  }, [logic]);
 
   // Listen for both soundSetReloadTrigger and soundSetChanged event
   useEffect(() => {
