@@ -1,17 +1,20 @@
 // src/components/metronome/MultiCircleMode/TempoControl.js
 import React from 'react';
+import EditableSliderInput from '../Controls/EditableSliderInput';
 
 export const TempoControl = ({ tempo, setTempo }) => {
   return (
     <div className="slider-item tempo-slider">
-      <label>Tempo: {tempo} BPM</label>
-      <input
-        type="range"
+      <EditableSliderInput
+        label="Tempo"
+        value={tempo}
+        setValue={setTempo}
         min={15}
         max={240}
         step={1}
-        value={tempo}
-        onChange={e => setTempo(parseFloat(e.target.value))}
+        className="tempo-slider"
+        formatter={(val) => `${val} BPM`}
+        parser={(val) => parseInt(val.replace(/\D/g, ''))}
       />
     </div>
   );
@@ -21,14 +24,16 @@ export const TempoControl = ({ tempo, setTempo }) => {
 export const VolumeControl = ({ volume, setVolume }) => {
   return (
     <div className="slider-item">
-      <label>Volume: {Math.round(volume * 100)}%</label>
-      <input
-        type="range"
+      <EditableSliderInput
+        label="Volume"
+        value={volume}
+        setValue={setVolume}
         min={0}
         max={1}
         step={0.01}
-        value={volume}
-        onChange={e => setVolume(parseFloat(e.target.value))}
+        className="volume-slider"
+        formatter={(val) => `${Math.round(val * 100)}%`}
+        parser={(val) => parseFloat(val.replace(/[^0-9.]/g, '')) / 100}
       />
     </div>
   );
@@ -38,14 +43,16 @@ export const VolumeControl = ({ volume, setVolume }) => {
 export const SwingControl = ({ swing, setSwing }) => {
   return (
     <div className="slider-item">
-      <label>Swing: {Math.round(swing * 200)}%</label>
-      <input
-        type="range"
+      <EditableSliderInput
+        label="Swing"
+        value={swing}
+        setValue={setSwing}
         min={0}
         max={0.5}
         step={0.01}
-        value={swing}
-        onChange={e => setSwing(parseFloat(e.target.value))}
+        className="swing-slider"
+        formatter={(val) => `${Math.round(val * 200)}%`}
+        parser={(val) => parseFloat(val.replace(/[^0-9.]/g, '')) / 200}
       />
     </div>
   );

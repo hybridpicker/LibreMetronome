@@ -2,6 +2,7 @@
 import React from 'react';
 import NoteSelector from '../Controls/NoteSelector';
 import SubdivisionSelector from '../Controls/SubdivisionSelector';
+import EditableSliderInput from '../Controls/EditableSliderInput';
 
 const CircleControls = ({
   currentSettings,
@@ -48,19 +49,42 @@ const CircleControls = ({
       
       {/* Sliders for tempo, volume, and swing */}
       <div className="sliders-container">
-        <label>
-          Tempo: {tempo} BPM
-          <input type="range" min={15} max={240} step={1} value={tempo} onChange={(e) => setTempo(Number(e.target.value))} />
-        </label>
-        <label>
-          Volume: {Math.round(volume * 100)}%
-          <input type="range" min={0} max={1} step={0.01} value={volume} onChange={(e) => setVolume(Number(e.target.value))} />
-        </label>
+        <EditableSliderInput
+          label="Tempo"
+          value={tempo}
+          setValue={setTempo}
+          min={15}
+          max={240}
+          step={1}
+          className="tempo-slider"
+          formatter={(val) => `${val} BPM`}
+          parser={(val) => parseInt(val.replace(/\D/g, ''))}
+        />
+        
+        <EditableSliderInput
+          label="Volume"
+          value={volume}
+          setValue={setVolume}
+          min={0}
+          max={1}
+          step={0.01}
+          className="volume-slider"
+          formatter={(val) => `${Math.round(val * 100)}%`}
+          parser={(val) => parseFloat(val.replace(/[^0-9.]/g, '')) / 100}
+        />
+        
         {currentSettings.subdivisions % 2 === 0 && (
-          <label>
-            Swing: {Math.round(swing * 200)}%
-            <input type="range" min={0} max={0.5} step={0.01} value={swing} onChange={(e) => setSwing(Number(e.target.value))} />
-          </label>
+          <EditableSliderInput
+            label="Swing"
+            value={swing}
+            setValue={setSwing}
+            min={0}
+            max={0.5}
+            step={0.01}
+            className="swing-slider"
+            formatter={(val) => `${Math.round(val * 200)}%`}
+            parser={(val) => parseFloat(val.replace(/[^0-9.]/g, '')) / 200}
+          />
         )}
       </div>
     </div>

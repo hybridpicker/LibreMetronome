@@ -11,7 +11,7 @@ import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
 import MetronomeControls from './components/metronome/Controls/MetronomeControls';
 import MainMenu from './components/Menu/mainMenu';
 import SettingsContent from './components/Menu/SettingsContent';
-import { Helmet } from 'react-helmet';
+import { Helmet, HelmetProvider } from 'react-helmet-async';
 import ModeSelector from './components/ModeSelector'; // Import the new ModeSelector component
 // StyleGuide component removed
 
@@ -63,7 +63,7 @@ function App() {
     // Auto-click the audio initialization button
     const triggerAudioContextInit = () => {
       if (audioButtonRef.current) {
-        console.log("Auto-triggering audio context initialization");
+        // Audio context initialization
         audioButtonRef.current.click();
       }
     };
@@ -113,7 +113,7 @@ function App() {
           // Set latencyHint to 'interactive' for better timing precision
           latencyHint: 'interactive'
         });
-        console.log("Audio context initialized: ", window._audioContextInit.state);
+        // Audio context initialized
         
         // Play a silent sound to ensure the audio context is fully activated
         const silentOscillator = window._audioContextInit.createOscillator();
@@ -126,7 +126,7 @@ function App() {
         
         // Try to resume it immediately
         window._audioContextInit.resume().then(() => {
-          console.log("Audio context resumed: ", window._audioContextInit.state);
+          // Audio context resumed
           
           // Play another silent sound after resume to ensure it's working
           setTimeout(() => {
@@ -139,7 +139,7 @@ function App() {
                 checkGain.connect(window._audioContextInit.destination);
                 checkOscillator.start();
                 checkOscillator.stop(window._audioContextInit.currentTime + 0.001);
-                console.log("Verification sound played successfully");
+                // Verification sound played successfully
               }
             } catch (e) {
               console.error("Error playing verification sound:", e);
@@ -150,7 +150,7 @@ function App() {
         });
       } else if (window._audioContextInit.state === 'suspended') {
         // If it exists but is suspended, try to resume it
-        console.log("Attempting to resume existing audio context");
+        // Attempting to resume existing audio context
         window._audioContextInit.resume().then(() => {
           console.log("Existing audio context resumed: ", window._audioContextInit.state);
         }).catch(err => {
@@ -401,6 +401,7 @@ function App() {
   };
 
   return (
+    <HelmetProvider>
     <div className="app-container">
       {/* Hidden button to initialize audio context */}
       <button 
@@ -484,6 +485,7 @@ function App() {
 
       <Footer />
     </div>
+    </HelmetProvider>
   );
 }
 
