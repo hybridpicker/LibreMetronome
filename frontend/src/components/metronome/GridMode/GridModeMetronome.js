@@ -57,72 +57,100 @@ const GridModeMetronome = (props) => {
     setIsPaused 
   } = props;
 
+  // Preload sounds when component mounts to avoid loading delay
+  useEffect(() => {
+    if (logic && logic.reloadSounds) {
+      logic.reloadSounds().catch(err => {
+        console.error("Error preloading sounds:", err);
+      });
+    }
+  }, [logic]);
+
   // Function to handle play/pause functionality
   const handlePlayPause = useCallback(async () => {
+    console.log("[GridMode] Play/pause toggle requested");
     if (isPaused) {
       try {
-        // Update UI first
-        setIsPaused(false);
+        // Ensure we have a valid audio context and sounds
+        console.log("[GridMode] Initializing audio system");
         
-        // Handle closed audio context
-        if (logic.audioCtx && logic.audioCtx.state === 'closed') {
-          console.log("Audio context is closed, need complete reinitialization");
-          
-          const loadSuccess = await logic.reloadSounds();
-          if (!loadSuccess) {
-            console.error("Failed to reinitialize audio after closed state");
-            setIsPaused(true);
-            
-            if (window.confirm("Audio system needs to be restarted. Refresh the page to fix this issue?")) {
-              window.location.reload();
-            }
-            return;
-          }
-          console.log("Successfully reinitialized audio after closed state");
-        }
-        // Handle missing or suspended audio context
-        else if (!logic.audioCtx || logic.audioCtx.state === 'suspended') {
-          console.log("Initializing or resuming audio context...");
-          
-          if (!logic.audioCtx) {
-            const loadSuccess = await logic.reloadSounds();
-            if (!loadSuccess) {
-              console.error("Failed to load sounds");
-              setIsPaused(true);
-              return;
-            }
-            console.log("Sounds loaded successfully");
-          }
-          
-          if (logic.audioCtx && logic.audioCtx.state === 'suspended') {
-            try {
-              await logic.audioCtx.resume();
-              console.log("Audio context resumed successfully, state:", logic.audioCtx.state);
-            } catch (resumeError) {
-              console.error("Failed to resume audio context:", resumeError);
-              setIsPaused(true);
-              return;
-            }
+        // First, try to reload the sound system
+        if (logic && logic.reloadSounds) {
+          try {
+            console.log("[GridMode] Reloading sounds");
+            await logic.reloadSounds();
+          } catch (soundErr) {
+            console.error("[GridMode] Error reloading sounds:", soundErr);
+            // Continue anyway, we'll try other approaches
           }
         }
         
-        // Final state check
-        if (!logic.audioCtx || logic.audioCtx.state !== 'running') {
-          console.error("Audio context still not ready after all attempts");
-          setIsPaused(true);
+        // If we still don't have an audio context, something is wrong
+        if (!logic.audioCtx) {
+          console.error("[GridMode] No audio context after reload attempt");
           alert("Unable to start audio system. Please try clicking the play button again or refresh the page.");
           return;
         }
         
+        // Try to resume the audio context if it's suspended
+        if (logic.audioCtx.state === 'suspended') {
+          console.log("[GridMode] Attempting to resume suspended audio context");
+          try {
+            await logic.audioCtx.resume();
+            console.log("[GridMode] Successfully resumed audio context");
+          } catch (resumeErr) {
+            console.error("[GridMode] Error resuming audio context:", resumeErr);
+            // Continue anyway - we might still be able to start
+          }
+        }
+        
+        // Final check before starting
+        if (logic.audioCtx.state !== 'running') {
+          console.warn(`[GridMode] Audio context still not running, state: ${logic.audioCtx.state}`);
+          // We'll try to play anyway - auto unlock might work
+        }
+        
+        // Update UI state and start metronome
+        // We'll attempt to play even if audio isn't perfect - mobile browsers might unlock on play
+        setIsPaused(false);
+        
+        // Try to play a silent sound to help unlock audio on iOS
+        try {
+          console.log("[GridMode] Playing silent sound to help unlock audio");
+          const silentBuffer = logic.audioCtx.createBuffer(1, 1, 22050);
+          const source = logic.audioCtx.createBufferSource();
+          source.buffer = silentBuffer;
+          source.connect(logic.audioCtx.destination);
+          source.start(0);
+        } catch (unlockErr) {
+          console.warn("[GridMode] Failed to play silent sound:", unlockErr);
+        }
+        
         // Start playing
-        console.log("Starting metronome with audio context state:", logic.audioCtx.state);
+        console.log("[GridMode] Starting metronome with audio context state:", logic.audioCtx.state);
         logic.startScheduler();
+        
+        // Wait a moment and check if audio is working
+        setTimeout(() => {
+          if (logic.audioCtx && logic.audioCtx.state !== 'running') {
+            console.warn("[GridMode] Audio context still not running after attempted start");
+            // We won't show an alert here - it might still work or the user might see the UI state
+          }
+        }, 100);
       } catch (err) {
-        console.error("Error starting metronome:", err);
-        setIsPaused(true);
+        console.error("[GridMode] Error starting metronome:", err);
+        // Even if we encounter an error, try to start anyway as a last resort
+        setIsPaused(false);
+        try {
+          logic.startScheduler();
+        } catch (startErr) {
+          console.error("[GridMode] Failed to start after error:", startErr);
+          setIsPaused(true);
+        }
       }
     } else {
       // Stop playing
+      console.log("[GridMode] Stopping metronome");
       setIsPaused(true);
       logic.stopScheduler();
     }
@@ -134,25 +162,48 @@ const GridModeMetronome = (props) => {
   // Register the toggle play and tap tempo handlers
   useEffect(() => {
     if (registerTogglePlay) {
+      console.log("[GridMode] Registering toggle play handler");
       registerTogglePlay(handlePlayPause);
     }
     
     if (registerTapTempo) {
       // Directly register the tapTempo handler from the metronome logic
       if (logic && typeof logic.tapTempo === 'function') {
+        console.log("[GridMode] Registering tap tempo handler");
         registerTapTempo(logic.tapTempo);
       } else {
-        console.warn("[GRID MODE] tapTempo function is not available");
+        console.warn("[GridMode] tapTempo function is not available");
         registerTapTempo(null);
       }
     }
     
+    // Listen for global play/pause events (from keyboard shortcuts)
+    const handleGlobalPlayPause = () => {
+      console.log("[GridMode] Received global play/pause event");
+      handlePlayPause().catch(err => {
+        console.error("[GridMode] Error in global play/pause handler:", err);
+      });
+    };
+    
+    window.addEventListener('metronome-toggle-play', handleGlobalPlayPause);
+    
+    // Make play/pause function globally available as backup
+    if (!window.handleGlobalPlayPauseGridMode) {
+      console.log("[GridMode] Setting global play/pause handler");
+      window.handleGlobalPlayPauseGridMode = handleGlobalPlayPause;
+    }
+    
     return () => {
+      // Clean up
       if (registerTogglePlay) {
         registerTogglePlay(null);
       }
       if (registerTapTempo) {
         registerTapTempo(null);
+      }
+      window.removeEventListener('metronome-toggle-play', handleGlobalPlayPause);
+      if (window.handleGlobalPlayPauseGridMode === handleGlobalPlayPause) {
+        window.handleGlobalPlayPauseGridMode = null;
       }
     };
   }, [registerTogglePlay, registerTapTempo, handlePlayPause, logic]);

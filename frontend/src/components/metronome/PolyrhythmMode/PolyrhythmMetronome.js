@@ -4,6 +4,7 @@ import playIcon from "../../../assets/svg/play.svg";
 import pauseIcon from "../../../assets/svg/pause.svg";
 import swapIcon from "../../../assets/svg/swap-icon.svg";
 import tapButtonIcon from "../../../assets/svg/tap-button.svg";
+import { getSubdivisionIcon } from "../../../assets/svg/subdivisionIcons";
 import CircleRenderer from "./CircleRenderer";
 // Removed unused import
 import "./PolyrhythmMetronome.css";
@@ -538,7 +539,6 @@ const PolyrhythmMetronome = (props) => {
           }}
           aria-label="Toggle play/pause"
           disabled={isTransitioning}
-          aria-label="Tap Tempo"
         >
           <img
             src={isPaused ? playIcon : pauseIcon}
@@ -599,40 +599,74 @@ const PolyrhythmMetronome = (props) => {
 
       <div className="polyrhythm-controls">
         <div className="polyrhythm-config">
-          <label className="polyrhythm-label">
-            Inner Circle: {innerBeats} beats
-          </label>
+          <div className="circle-header">
+            <div className="circle-badge inner-badge">Inner</div>
+            <div className="circle-beat-count">{innerBeats} Beats</div>
+          </div>
           <div className="polyrhythm-buttons">
             {[2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-              <button
+              <div
                 key={`inner-${num}`}
-                className={`polyrhythm-button ${
-                  innerBeats === num ? "active" : ""
-                }`}
-                onClick={() => debouncedSetSubdivisions(num, "inner")}
-                disabled={isTransitioning}
+                className={`subdivision-button-container ${innerBeats === num ? "active" : ""}`}
+                onClick={() => !isTransitioning && debouncedSetSubdivisions(num, "inner")}
+                style={{
+                  cursor: isTransitioning ? "not-allowed" : "pointer",
+                  opacity: isTransitioning ? 0.7 : 1
+                }}
               >
-                {num}
-              </button>
+                <img
+                  src={innerBeats === num 
+                    ? getSubdivisionIcon(num, true) 
+                    : getSubdivisionIcon(num, false)}
+                  alt={`${num} beats`}
+                  className="subdivision-button"
+                  style={{
+                    cursor: isTransitioning ? "not-allowed" : "pointer",
+                    width: "36px",
+                    height: "36px",
+                    margin: "0 3px",
+                    transition: "transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
+                    transform: innerBeats === num ? "scale(1.1)" : "scale(1)",
+                    filter: innerBeats === num ? "drop-shadow(0 0 5px rgba(0, 160, 160, 0.5))" : "none"
+                  }}
+                />
+              </div>
             ))}
           </div>
         </div>
         <div className="polyrhythm-config">
-          <label className="polyrhythm-label">
-            Outer Circle: {outerBeats} beats
-          </label>
+          <div className="circle-header">
+            <div className="circle-badge outer-badge">Outer</div>
+            <div className="circle-beat-count">{outerBeats} Beats</div>
+          </div>
           <div className="polyrhythm-buttons">
             {[2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-              <button
+              <div
                 key={`outer-${num}`}
-                className={`polyrhythm-button ${
-                  outerBeats === num ? "active" : ""
-                }`}
-                onClick={() => debouncedSetSubdivisions(num, "outer")}
-                disabled={isTransitioning}
+                className={`subdivision-button-container ${outerBeats === num ? "active" : ""}`}
+                onClick={() => !isTransitioning && debouncedSetSubdivisions(num, "outer")}
+                style={{
+                  cursor: isTransitioning ? "not-allowed" : "pointer",
+                  opacity: isTransitioning ? 0.7 : 1
+                }}
               >
-                {num}
-              </button>
+                <img
+                  src={outerBeats === num 
+                    ? getSubdivisionIcon(num, true) 
+                    : getSubdivisionIcon(num, false)}
+                  alt={`${num} beats`}
+                  className="subdivision-button"
+                  style={{
+                    cursor: isTransitioning ? "not-allowed" : "pointer",
+                    width: "36px",
+                    height: "36px",
+                    margin: "0 3px",
+                    transition: "transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
+                    transform: outerBeats === num ? "scale(1.1)" : "scale(1)",
+                    filter: outerBeats === num ? "drop-shadow(0 0 5px rgba(0, 160, 160, 0.5))" : "none"
+                  }}
+                />
+              </div>
             ))}
           </div>
         </div>
@@ -640,12 +674,12 @@ const PolyrhythmMetronome = (props) => {
 
       <div className="side-controls">
         <div className="polyrhythm-ratio">
-          <h3>
-            Polyrhythm:{" "}
-            <span className="ratio-value">
-              {innerBeats}:{outerBeats}
-            </span>
-          </h3>
+          <div className="ratio-label">Polyrhythm</div>
+          <div className="ratio-display">
+            <div className="ratio-number inner-number">{innerBeats}</div>
+            <div className="ratio-divider">:</div>
+            <div className="ratio-number outer-number">{outerBeats}</div>
+          </div>
         </div>
 
         <button

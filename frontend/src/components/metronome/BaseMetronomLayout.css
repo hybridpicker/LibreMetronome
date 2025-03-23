@@ -102,6 +102,11 @@
   cursor: pointer;
   padding: 10px;
   transition: transform 0.2s;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .tap-button:hover, .tap-tempo-button:hover {
@@ -119,7 +124,19 @@
     width: 90%;
   }
   
-  .tap-button img {
-    height: 36px;
+  .tap-button, .tap-tempo-button {
+    width: 70px;
+    height: 70px;
+    background-color: rgba(0, 160, 160, 0.1);
+    border: 1px solid rgba(0, 160, 160, 0.3);
+    border-radius: 50%;
+  }
+  
+  .tap-button:active, .tap-tempo-button:active {
+    background-color: rgba(0, 160, 160, 0.2);
+  }
+  
+  .tap-button img, .tap-tempo-button img {
+    height: 40px;
   }
 }

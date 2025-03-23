@@ -116,6 +116,17 @@ jest.mock('../../components/metronome/MultiCircleMode/hooks/useMultiCircleMetron
   }));
 });
 
+// Mock the actual MultiCircleMetronome component for tests
+jest.mock('../../components/metronome/MultiCircleMode/MultiCircleMetronome', () => {
+  return function MockMultiCircleMetronome() {
+    return (
+      <div data-testid="multi-circle-metronome">
+        <div>Tempo: 120 BPM</div>
+      </div>
+    );
+  };
+});
+
 // Skip other complex mocks for now since we're focusing on the slider tests
 jest.mock('../../components/metronome/MultiCircleMode/CircleRenderer', () => {
   return function MockCircleRenderer() {
@@ -126,6 +137,17 @@ jest.mock('../../components/metronome/MultiCircleMode/CircleRenderer', () => {
 jest.mock('../../components/metronome/PolyrhythmMode/CircleRenderer', () => {
   return function MockPolyrhythmRenderer() {
     return <div data-testid="polyrhythm-renderer">Polyrhythm Renderer</div>;
+  };
+});
+
+// Mock the PolyrhythmMetronome component too
+jest.mock('../../components/metronome/PolyrhythmMode/PolyrhythmMetronome', () => {
+  return function MockPolyrhythmMetronome() {
+    return (
+      <div data-testid="polyrhythm-metronome">
+        <div>Tempo: 120 BPM</div>
+      </div>
+    );
   };
 });
 

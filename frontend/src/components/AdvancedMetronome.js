@@ -178,27 +178,62 @@ export function AdvancedMetronomeWithCircle({
     };
   }, []);
 
-  const handlePlayPause = useCallback(() => {
+  const handlePlayPause = useCallback(async () => {
+    console.log("[AdvancedMetronome] Play/pause toggle requested");
     if (isPaused) {
-      if (!logic.audioCtx) {
+      try {
+        console.log("[AdvancedMetronome] Starting playback");
+        
+        // First, check if we need to initialize the audio system
+        if (!logic.audioCtx) {
+          console.log("[AdvancedMetronome] No audio context, initializing");
+          await logic.reloadSounds().catch(err => {
+            console.warn("[AdvancedMetronome] Error initializing sounds:", err);
+          });
+        }
+        
+        // If the context is suspended, try to resume it
+        if (logic.audioCtx && logic.audioCtx.state === "suspended") {
+          console.log("[AdvancedMetronome] Resuming suspended audio context");
+          try {
+            await logic.audioCtx.resume();
+            console.log("[AdvancedMetronome] Audio context resumed successfully");
+          } catch (err) {
+            console.warn("[AdvancedMetronome] Error resuming audio context:", err);
+          }
+        }
+        
+        // Ensure we have sound buffers ready
+        if (!logic.normalBufferRef?.current || !logic.accentBufferRef?.current || !logic.firstBufferRef?.current) {
+          console.log("[AdvancedMetronome] Sound buffers not ready, loading sounds");
+          await logic.reloadSounds().catch(err => {
+            console.warn("[AdvancedMetronome] Error loading sounds:", err);
+          });
+        }
+        
+        // Check audio context state one more time
+        if (logic.audioCtx && logic.audioCtx.state !== "running") {
+          console.log("[AdvancedMetronome] Audio context still not running, making final attempt to resume");
+          try {
+            await logic.audioCtx.resume();
+          } catch (err) {
+            console.warn("[AdvancedMetronome] Final resume attempt failed:", err);
+            // Continue anyway - the play button handler will show an error if needed
+          }
+        }
+        
+        // Start playback now that we've tried to initialize everything
         setIsPaused(false);
         logic.startScheduler();
-        return;
-      }
-
-      if (logic.audioCtx.state === "suspended") {
-        logic.audioCtx
-          .resume()
-          .then(() => {
-            setIsPaused(false);
-            logic.startScheduler();
-          })
-          .catch((err) => {});
-      } else {
+        console.log("[AdvancedMetronome] Playback started");
+      } catch (err) {
+        console.error("[AdvancedMetronome] Error starting playback:", err);
+        // Continue with playback attempt even if there were errors in initialization
         setIsPaused(false);
         logic.startScheduler();
       }
     } else {
+      console.log("[AdvancedMetronome] Stopping playback");
       setIsPaused(true);
       logic.stopScheduler();
     }
@@ -370,7 +405,7 @@ export function AdvancedMetronomeWithCircle({
     }
   }, [soundSetReloadTrigger, logic]);
 
-  // Add event listeners for sound set and settings changes
+  // Add event listeners for global events
   useEffect(() => {
     const handleSoundSetChanged = (event) => {
       // Only reload if we have the necessary logic methods
@@ -410,14 +445,35 @@ export function AdvancedMetronomeWithCircle({
       }
     };
     
+    // Listen for global play/pause toggle events (from keyboard shortcuts)
+    const handleGlobalPlayPause = (event) => {
+      console.log("[AdvancedMetronome] Received global play/pause event");
+      handlePlayPause().catch(err => {
+        console.error("[AdvancedMetronome] Error in global play/pause handler:", err);
+      });
+    };
+    
     window.addEventListener('soundSetChanged', handleSoundSetChanged);
     window.addEventListener('metronome-settings-applied', handleSettingsApplied);
+    window.addEventListener('metronome-toggle-play', handleGlobalPlayPause);
+    
+    // Make handlePlayPause globally available for other components
+    window.handleGlobalPlayPause = () => {
+      console.log("[AdvancedMetronome] Global play/pause function called");
+      handlePlayPause().catch(err => {
+        console.error("[AdvancedMetronome] Error in global play handler:", err);
+      });
+    };
     
     return () => {
       window.removeEventListener('soundSetChanged', handleSoundSetChanged);
       window.removeEventListener('metronome-settings-applied', handleSettingsApplied);
+      window.removeEventListener('metronome-toggle-play', handleGlobalPlayPause);
+      if (window.handleGlobalPlayPause === handlePlayPause) {
+        window.handleGlobalPlayPause = null;
+      }
     };
-  }, [logic, isPaused]);
+  }, [logic, isPaused, handlePlayPause]);
 
   useEffect(() => {
     const handlePreviewSound = (event) => {
