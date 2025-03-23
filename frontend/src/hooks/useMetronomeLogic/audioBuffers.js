@@ -69,13 +69,43 @@ export async function resumeAudioContext(audioCtx) {
   if (audioCtx.state === 'suspended') {
     try {
       console.log('Attempting to resume suspended audio context...');
+      
+      // First attempt with standard resume
       await audioCtx.resume();
-      console.log(`Audio context resumed, state is now: ${audioCtx.state}`);
+      
+      // If still not running, try alternative approaches
+      if (audioCtx.state !== 'running') {
+        console.log('Initial resume didn\'t work, trying additional methods...');
+        
+        // Create a silent audio buffer and play it to help unlock audio
+        const silentBuffer = audioCtx.createBuffer(1, 1, 22050);
+        const source = audioCtx.createBufferSource();
+        source.buffer = silentBuffer;
+        source.connect(audioCtx.destination);
+        source.start();
+        
+        // Try resume again after buffer play
+        await audioCtx.resume();
+        
+        // Final status check
+        if (audioCtx.state !== 'running') {
+          console.warn(`Audio context still not running after multiple resume attempts. Current state: ${audioCtx.state}`);
+        } else {
+          console.log('Audio context successfully resumed after additional methods');
+        }
+      } else {
+        console.log('Audio context resumed successfully on first attempt');
+      }
+      
+      console.log(`Audio context final state: ${audioCtx.state}`);
       return audioCtx.state === 'running';
     } catch (err) {
       console.error('Failed to resume audio context:', err);
       return false;
     }
+  } else if (audioCtx.state === 'closed') {
+    console.error('Cannot resume a closed audio context');
+    return false;
   }
   
   return audioCtx.state === 'running';

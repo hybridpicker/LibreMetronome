@@ -156,8 +156,29 @@ const useKeyboardShortcuts = ({
           return;
         }
         lastSpaceKeyTimeRef.current = now;
+        
+        // Enhanced spacebar handling with fallbacks
         if (togglePlayRef.current) {
-          togglePlayRef.current();
+          console.log("[KEYBOARD] Spacebar: Using provided callback");
+          
+          // Add a try-catch block to prevent errors
+          try {
+            togglePlayRef.current();
+          } catch (err) {
+            console.error("[KEYBOARD] Error in play/pause handler:", err);
+            
+            // Fallback: dispatch a global event
+            console.log("[KEYBOARD] Spacebar: Falling back to global event");
+            window.dispatchEvent(new CustomEvent('metronome-toggle-play', {
+              detail: { timestamp: performance.now() }
+            }));
+          }
+        } else {
+          // Fallback if no handler is provided
+          console.log("[KEYBOARD] Spacebar: No handler provided, using global event");
+          window.dispatchEvent(new CustomEvent('metronome-toggle-play', {
+            detail: { timestamp: performance.now() }
+          }));
         }
       }
 

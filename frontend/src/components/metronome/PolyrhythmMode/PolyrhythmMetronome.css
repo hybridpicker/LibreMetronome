@@ -105,12 +105,43 @@
   text-align: center;
 }
 
-.polyrhythm-label {
-  display: block;
-  margin-bottom: 10px;
-  font-weight: bold;
-  color: var(--primary-teal);
-  transition: all 0.3s ease;
+/* New styled circle headers */
+.circle-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.circle-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 16px;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-transform: uppercase;
+}
+
+.inner-badge {
+  background: var(--beat-inner);
+  background: linear-gradient(135deg, #f6cc7c 0%, #f5bb57 100%);
+}
+
+.outer-badge {
+  background: var(--beat-outer);
+  background: linear-gradient(135deg, #f5bb57 0%, #f0a82c 100%);
+}
+
+.circle-beat-count {
+  font-size: 15px;
+  color: #555;
+  font-weight: 500;
+  margin-top: 2px;
 }
 
 .polyrhythm-buttons {
@@ -389,73 +420,54 @@
 }
 /* Enhanced styling for PolyRhythm Mode buttons */
 
-/* Refined button grid layout for better spacing */
+/* Updated layout for subdivision buttons grid */
 .polyrhythm-buttons {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 8px;
   margin: 0 auto;
   max-width: 220px;
 }
 
-/* Improved circle button styling */
-.polyrhythm-button {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  border: 1px solid var(--beat-muted);
-  background-color: white;
-  color: var(--primary-teal);
-  cursor: pointer;
-  font-weight: normal;
-  font-size: 16px;
+/* Updated container for subdivision buttons */
+.subdivision-button-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
-  padding: 0;
+  cursor: pointer;
   transition: all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-/* Enhanced hover state */
-.polyrhythm-button:hover:not(:disabled):not(.active) {
-  border-color: #d5d5d5;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-  background-color: #fafafa;
+/* Match the styling from SubdivisionSelector component */
+.subdivision-button {
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  transition: transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1), filter 0.15s ease;
 }
 
-/* Enhanced active state for inner circle */
-.polyrhythm-button.active.inner-circle,
-.polyrhythm-button.active {
-  background-color: var(--primary-teal); /* Teal color consistent with app */
-  color: white;
-  border-color: var(--primary-teal);
+/* Hover state for the container */
+.subdivision-button-container:hover:not(.disabled) .subdivision-button:not(.active) {
   transform: scale(1.05);
-  box-shadow: 0 2px 5px rgba(0, 160, 160, 0.25);
+  filter: brightness(1.05);
 }
 
-/* Enhanced active state for outer circle - slightly different shade */
-.polyrhythm-button.active.outer-circle {
-  background-color: var(--primary-teal);
-  color: white;
-  border-color: var(--primary-teal);
-  transform: scale(1.05);
-  box-shadow: 0 2px 5px rgba(0, 160, 160, 0.25);
+/* Active state for the button */
+.subdivision-button-container.active .subdivision-button {
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 5px rgba(0, 160, 160, 0.5));
 }
 
-/* Pressed state */
-.polyrhythm-button:active:not(:disabled) {
+/* Pressed state for the container */
+.subdivision-button-container:active:not(.disabled) .subdivision-button {
   transform: scale(0.95);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 /* Disabled state */
-.polyrhythm-button:disabled {
+.subdivision-button-container.disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  background-color: #f8f8f8;
 }
 
 /* Ultra minimalistic swap button - exactly matching tap tempo button */
@@ -490,33 +502,60 @@
   cursor: not-allowed;
 }
 
-/* Improve polyrhythm ratio display */
+/* Enhanced polyrhythm ratio display */
 .polyrhythm-ratio {
-  padding: 10px;
-  margin: 10px auto 15px;
-  background-color: rgba(0, 160, 160, 0.05);
-  border-radius: 8px;
-  border: 1px solid rgba(0, 160, 160, 0.1);
+  padding: 12px 20px;
+  margin: 15px auto 20px;
+  background-color: rgba(245, 245, 245, 0.8);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   display: inline-block;
-  min-width: 120px;
+  min-width: 140px;
+  position: relative;
+  border: 1px solid rgba(0, 160, 160, 0.15);
 }
 
-.polyrhythm-ratio h3 {
-  margin: 0;
-  font-size: 15px;
+.ratio-label {
+  font-size: 13px;
   color: #666;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  text-align: center;
+  font-weight: 500;
+}
+
+.ratio-display {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: normal;
+  gap: 6px;
 }
 
-.ratio-value {
-  display: inline-block;
-  font-weight: 500;
-  color: var(--primary-teal);
-  margin-left: 8px;
-  font-size: 17px;
+.ratio-number {
+  font-size: 28px;
+  font-weight: 600;
+  color: #444;
+  line-height: 1;
+  min-width: 30px;
+  text-align: center;
+}
+
+.inner-number {
+  color: var(--beat-inner);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.outer-number {
+  color: var(--beat-outer);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.ratio-divider {
+  font-size: 24px;
+  color: #888;
+  margin: 0 2px;
+  line-height: 1;
 }
 
 /* Responsive adjustments */

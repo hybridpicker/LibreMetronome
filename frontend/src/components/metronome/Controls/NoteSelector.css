@@ -14,6 +14,11 @@
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .note-selector-button:hover {
@@ -28,12 +33,34 @@
 
 .note-icon.active {
   transform: scale(1.1);
-  filter: drop-shadow(0 0 5px rgba(0, 160, 160, 0.5));
+  filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.7));
 }
 
 @media (max-width: 768px) {
   .note-icon {
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
+  }
+  
+  .note-icon.active {
+    filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.7));
+    transform: scale(1.15);
+  }
+  
+  .note-selector-button {
+    padding: 12px;
+    width: 64px;
+    height: 64px;
+    background-color: rgba(248, 211, 141, 0.1);
+    border: 1px solid rgba(248, 211, 141, 0.3);
+  }
+  
+  .note-selector-button:active {
+    background-color: rgba(248, 211, 141, 0.2);
+  }
+  
+  .note-selector-container {
+    gap: 25px;
+    margin: 15px 0;
   }
 }

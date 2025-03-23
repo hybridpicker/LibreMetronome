@@ -1006,18 +1006,10 @@ export default function usePolyrhythmLogic({
   // Clean up on unmount
   useEffect(() => {
     return () => {
-      // Call stopScheduler directly instead of using it as a dependency
-      if (schedulerRunningRef.current) {
-        // Inline the necessary parts of stopScheduler to avoid the dependency
-        if (lookaheadIntervalRef.current) {
-          clearInterval(lookaheadIntervalRef.current);
-          lookaheadIntervalRef.current = null;
-        }
-        
-        schedulerRunningRef.current = false;
-      }
+      // Use stopScheduler to ensure proper cleanup
+      stopScheduler();
       
-      // Stop and disconnect all audio nodes
+      // Also manually clean up audio nodes
       activeNodesRef.current.forEach(({ source, gainNode }) => {
         try {
           source.stop();
@@ -1030,7 +1022,7 @@ export default function usePolyrhythmLogic({
       
       activeNodesRef.current = [];
     };
-  }, []); 
+  }, [stopScheduler]); 
 
   // When sound swapping state changes while playing, we need to restart
   useEffect(() => {
