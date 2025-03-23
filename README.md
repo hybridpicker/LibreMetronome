@@ -10,7 +10,8 @@ A modern, open-source metronome application that merges classic musical function
 
 [www.libremetronome.com](https://libremetronome.com/)
 
-https://github.com/user-attachments/assets/34eab434-1979-484e-96d4-d504b3c203db
+![LibreMetronome_Smartphone](https://github.com/user-attachments/assets/267a1257-96b0-4d99-b22b-c08a790860a0)
+![LibreMetronom_Laptop](https://github.com/user-attachments/assets/d1116cb1-53a4-4351-a6f2-3a81abe5f5e0)
 
 ## Key Features
 
