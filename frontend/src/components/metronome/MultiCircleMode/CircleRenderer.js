@@ -5,6 +5,7 @@ import normalBeat from "../../../assets/svg/normalBeat.svg";
 import normalBeatActive from "../../../assets/svg/normalBeatActive.svg";
 import accentedBeat from "../../../assets/svg/accentedBeat.svg";
 import accentedBeatActive from "../../../assets/svg/accentedBeatActive.svg";
+import { getSubdivisionIcon } from "../../../assets/svg/subdivisionIcons";
 
 const CircleRenderer = ({
   settings,
@@ -193,7 +194,7 @@ const CircleRenderer = ({
       </div>
     );
     
-    // Add a musical note symbol indicator for the beat mode
+    // Use subdivision icons for the beats per bar indicator
     const beatModeIndicator = (
       <div
         key="beat-mode-indicator"
@@ -202,20 +203,30 @@ const CircleRenderer = ({
           bottom: "-38px",
           left: "50%",
           transform: "translateX(-50%)",
-          fontSize: "20px",
-          fontWeight: "bold",
-          fontFamily: "Arial, 'Times New Roman', serif",
-          color: isPlaying ? "#FFD700" : "#00A0A0",
           backgroundColor: "rgba(255, 255, 255, 0.9)",
-          padding: "2px 14px",
+          padding: "5px 10px",
           borderRadius: "12px",
           zIndex: 5,
           border: "1px solid #eee",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
+          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center"
         }}
       >
-        {/* Unicode musical symbol: Quarter note (♩) or Eighth note (♪) */}
-        {settings.beatMode === "quarter" ? "♩" : "♪"}
+        <img 
+          src={isActiveUI || isPlaying 
+            ? getSubdivisionIcon(settings.subdivisions, true) 
+            : getSubdivisionIcon(settings.subdivisions, false)}
+          alt={`${settings.subdivisions} beats`}
+          style={{
+            width: "24px",
+            height: "24px",
+            transition: "transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
+            transform: (isActiveUI || isPlaying) ? "scale(1.1)" : "scale(1)",
+            filter: (isActiveUI || isPlaying) ? "drop-shadow(0 0 3px rgba(0, 160, 160, 0.5))" : "none"
+          }}
+        />
       </div>
     );
     
@@ -259,27 +270,37 @@ const CircleRenderer = ({
         overflow: "visible"
       }}
     >
-      {/* Musical note symbol for single circle as well */}
+      {/* Use subdivision icon for single circle too */}
       <div
         style={{
           position: "absolute",
           bottom: "-38px",
           left: "50%",
           transform: "translateX(-50%)",
-          fontSize: "20px",
-          fontWeight: "bold",
-          fontFamily: "Arial, 'Times New Roman', serif",
-          color: isPlaying ? "#FFD700" : "#00A0A0",
           backgroundColor: "rgba(255, 255, 255, 0.9)",
-          padding: "2px 14px",
+          padding: "5px 10px",
           borderRadius: "12px",
           zIndex: 5,
           border: "1px solid #eee",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
+          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center"
         }}
       >
-        {/* Unicode musical symbol: Quarter note (♩) or Eighth note (♪) */}
-        {settings.beatMode === "quarter" ? "♩" : "♪"}
+        <img 
+          src={isActiveUI || isPlaying 
+            ? getSubdivisionIcon(settings.subdivisions, true) 
+            : getSubdivisionIcon(settings.subdivisions, false)}
+          alt={`${settings.subdivisions} beats`}
+          style={{
+            width: "24px",
+            height: "24px",
+            transition: "transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
+            transform: (isActiveUI || isPlaying) ? "scale(1.1)" : "scale(1)",
+            filter: (isActiveUI || isPlaying) ? "drop-shadow(0 0 3px rgba(0, 160, 160, 0.5))" : "none"
+          }}
+        />
       </div>
       {beats}
     </div>

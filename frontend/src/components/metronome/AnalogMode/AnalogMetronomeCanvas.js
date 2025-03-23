@@ -9,6 +9,7 @@ export default function AnalogMetronomeCanvas({
   currentSubIndex,
   beatMultiplier = 1
 }) {
+  console.log("AnalogMetronomeCanvas rendered with tempo:", tempo); // Debug log
   const canvasRef = useRef(null);
   const startTimeRef = useRef(null);
 

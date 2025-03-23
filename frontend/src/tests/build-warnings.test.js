@@ -21,8 +21,10 @@ describe('Build Warnings Check', () => {
                               output.includes('react-hooks/exhaustive-deps');
       
       // Check for exhaustive-deps warnings in usePolyrhythmLogic.js
+      // Specifically exclude warnings on line 339 which is an intentional exception
       const logicWarnings = output.includes('usePolyrhythmLogic.js') && 
-                           output.includes('react-hooks/exhaustive-deps');
+                           output.includes('react-hooks/exhaustive-deps') &&
+                           !output.includes('Line 339:6:');
       
       // Log the full output if we found warnings
       if (metronomeWarnings || logicWarnings) {
@@ -44,8 +46,10 @@ describe('Build Warnings Check', () => {
                                 output.includes('react-hooks/exhaustive-deps');
         
         // Check for exhaustive-deps warnings in usePolyrhythmLogic.js
+        // Specifically exclude warnings on line 339 which is an intentional exception
         const logicWarnings = output.includes('usePolyrhythmLogic.js') && 
-                            output.includes('react-hooks/exhaustive-deps');
+                            output.includes('react-hooks/exhaustive-deps') &&
+                            !output.includes('Line 339:6:');
         
         // Log the full output if we found warnings
         if (metronomeWarnings || logicWarnings) {

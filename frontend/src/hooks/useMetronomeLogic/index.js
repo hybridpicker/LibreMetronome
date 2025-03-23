@@ -336,6 +336,98 @@ export default function useMetronomeLogic({
     lookaheadRef,
     schedulerRunningRef
   ]);
+  
+  // Define audio loading functions first
+  const loadAudioSystem = useCallback(async function() {
+    try {
+      // Initialize audio context if needed
+      if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
+        console.log('Creating new audio context');
+        const newCtx = initAudioContext();
+        if (!newCtx) {
+          console.error('Failed to create audio context');
+          return false;
+        }
+        audioCtxRef.current = newCtx;
+      }
+      
+      // Resume the context if suspended
+      if (audioCtxRef.current.state === 'suspended') {
+        try {
+          console.log('Resuming suspended audio context');
+          await resumeAudioContext(audioCtxRef.current);
+          console.log('Audio context resumed, state:', audioCtxRef.current.state);
+        } catch (e) {
+          console.warn('Failed to resume audio context:', e);
+          // Continue anyway, we'll try again later
+        }
+      }
+      
+      // Load sound buffers if needed
+      if (!normalBufferRef.current || !accentBufferRef.current || !firstBufferRef.current) {
+        console.log('Loading sound buffers');
+        
+        let retryCount = 0;
+        const maxRetries = 2;
+        let soundsLoaded = false;
+        
+        while (!soundsLoaded && retryCount <= maxRetries) {
+          try {
+            // Get sound set (try-catch to handle failure)
+            let soundSet;
+            try {
+              soundSet = await getActiveSoundSet();
+              console.log('Retrieved sound set:', soundSet ? soundSet.name : 'default');
+            } catch (err) {
+              console.warn('Error getting active sound set, using default:', err);
+            }
+            
+            // Load sounds with the context
+            const loadResult = await loadClickBuffers({
+              audioCtx: audioCtxRef.current,
+              normalBufferRef,
+              accentBufferRef,
+              firstBufferRef,
+              soundSet
+            });
+            
+            if (loadResult) {
+              soundsLoaded = true;
+              console.log('Sound buffers loaded successfully');
+              
+              // Try to play a silent sound to help unlock audio
+              try {
+                const silentBuffer = audioCtxRef.current.createBuffer(1, 1, 22050);
+                const source = audioCtxRef.current.createBufferSource();
+                source.buffer = silentBuffer;
+                source.connect(audioCtxRef.current.destination);
+                source.start();
+                source.stop(0.001);
+              } catch (unlockErr) {
+                console.warn('Audio unlock attempt failed:', unlockErr);
+              }
+            } else {
+              console.error(`Sound loading attempt ${retryCount + 1} failed`);
+              retryCount++;
+            }
+          } catch (err) {
+            console.error(`Error in sound loading attempt ${retryCount + 1}:`, err);
+            retryCount++;
+          }
+        }
+        
+        if (!soundsLoaded) {
+          console.error('Failed to load sounds after multiple attempts');
+          return false;
+        }
+      }
+      
+      return true;
+    } catch (err) {
+      console.error('Error in loadAudioSystem:', err);
+      return false;
+    }
+  }, [audioCtxRef, normalBufferRef, accentBufferRef, firstBufferRef]);
 
   const stopScheduler = useCallback(function() {
     if (lookaheadRef.current) {
@@ -356,148 +448,95 @@ export default function useMetronomeLogic({
     }
     nodeRefs.current = [];
   }, [lookaheadRef, nodeRefs, schedulerRunningRef]);
-
-  const startScheduler = useCallback(function() {
+  
+  const startScheduler = useCallback(async function() {
     if (schedulerRunningRef.current) return;
     stopScheduler();
-    (async function() {
+    
+    try {
+      // Initialize audio system
+      const audioReady = await loadAudioSystem();
+      if (!audioReady) {
+        console.warn('Audio initialization was not fully successful');
+        // We'll continue anyway and try our best
+      }
+      
+      // Verify audio context exists
+      if (!audioCtxRef.current) {
+        console.error('No audio context after initialization');
+        return;
+      }
+      
+      // Try to resume audio one more time if needed
+      if (audioCtxRef.current.state === 'suspended') {
+        try {
+          await resumeAudioContext(audioCtxRef.current);
+          console.log('Audio context final state:', audioCtxRef.current.state);
+        } catch (e) {
+          console.warn('Final resume attempt failed:', e);
+          // Continue anyway
+        }
+      }
+      
+      // Start the scheduler with what we have
+      console.log('Starting scheduler (audio state:', audioCtxRef.current.state,
+                 ', buffers ready:', !!normalBufferRef.current && !!accentBufferRef.current && !!firstBufferRef.current, ')');
+      
+      schedulerRunningRef.current = true;
+      const now = audioCtxRef.current ? audioCtxRef.current.currentTime : performance.now()/1000;
+      currentSubRef.current = 0;
+      setCurrentSubdivision(0);
+      nextNoteTimeRef.current = now;
+      currentSubStartRef.current = now;
+      currentSubIntervalRef.current = getCurrentSubIntervalSec(0);
+      playedBeatTimesRef.current = [];
+      
+      lookaheadRef.current = setInterval(
+        () => doSchedulerLoopRef.current && doSchedulerLoopRef.current(),
+        SCHEDULER_INTERVAL
+      );
+    } catch (err) {
+      console.error('Error starting metronome:', err);
+      
+      // Try to recover with minimal setup
       try {
-        // Initialize audio context if it doesn't exist or is closed
-        if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
-          console.log('Creating new audio context');
-          const newCtx = initAudioContext();
-          if (!newCtx) {
-            console.error('Failed to create audio context');
-            return;
-          }
-          audioCtxRef.current = newCtx;
-        }
-        
-        // Resume if suspended - using our dedicated helper function
-        if (audioCtxRef.current.state === 'suspended') {
-          console.log('Resuming suspended audio context');
-          const resumed = await resumeAudioContext(audioCtxRef.current);
-          if (!resumed) {
-            console.error('Failed to resume audio context - user interaction may be required');
-            // Continue anyway and try to load sounds - the UI should handle resuming properly
-          }
-        }
-        
-        // We'll check the context state again after loading sounds
-        
-        // Load sound buffers if they don't exist
-        if (!normalBufferRef.current || !accentBufferRef.current || !firstBufferRef.current) {
-          console.log('Loading sound buffers');
-          try {
-            // Try to load the active sound set
-            const soundSet = await getActiveSoundSet();
-            await loadClickBuffers({
-              audioCtx: audioCtxRef.current,
-              normalBufferRef,
-              accentBufferRef,
-              firstBufferRef,
-              soundSet
-            });
-            console.log('Sound buffers loaded successfully with active sound set');
-          } catch (error) {
-            console.log('Loading default sound set', error);
-            await loadClickBuffers({
-              audioCtx: audioCtxRef.current,
-              normalBufferRef,
-              accentBufferRef,
-              firstBufferRef
-            });
-            console.log('Default sound buffers loaded successfully');
-          }
-        }
-        
-        // Double-check that all buffers are ready before starting
-        if (!normalBufferRef.current || !accentBufferRef.current || !firstBufferRef.current) {
-          console.error('Sound buffers still not ready after load attempt');
-          return;
-        }
-        
-        // Final check of audio context state
-        if (audioCtxRef.current.state !== 'running') {
-          console.error('Audio context still not in running state after setup. Current state:', audioCtxRef.current.state);
-          
-          // If the context is closed, we need to create a new one - can't resume closed contexts
-          if (audioCtxRef.current.state === 'closed') {
-            console.log('Creating new audio context to replace closed one');
-            const newCtx = initAudioContext();
-            if (!newCtx) {
-              console.error('Failed to create replacement audio context');
-              return;
-            }
-            audioCtxRef.current = newCtx;
-            
-            // Need to reload sounds with the new context
-            console.log('Reloading sounds for new audio context');
-            try {
-              const soundSet = await getActiveSoundSet();
-              await loadClickBuffers({
-                audioCtx: audioCtxRef.current,
-                normalBufferRef,
-                accentBufferRef,
-                firstBufferRef,
-                soundSet
-              });
-              console.log('Sounds reloaded successfully with new audio context');
-            } catch (error) {
-              console.error('Failed to reload sounds with new audio context:', error);
-              return;
-            }
-          } else {
-            // For suspended contexts, try to resume one more time
-            console.log('Will try to resume one more time...');
-            try {
-              await audioCtxRef.current.resume();
-              console.log('Final resume attempt result:', audioCtxRef.current.state);
-            } catch (e) {
-              console.error('Final resume attempt failed:', e);
-              return; // Don't proceed if we can't resume
-            }
-          }
-          
-          // Final check to ensure audio context is running
-          if (audioCtxRef.current.state !== 'running') {
-            console.error('Audio context still not running after all attempts. Aborting scheduler start.');
-            return;
-          }
-        }
-        
         schedulerRunningRef.current = true;
-        const now = audioCtxRef.current.currentTime;
+        const now = performance.now()/1000;
         currentSubRef.current = 0;
         setCurrentSubdivision(0);
         nextNoteTimeRef.current = now;
         currentSubStartRef.current = now;
-        currentSubIntervalRef.current = getCurrentSubIntervalSec(0);
-        playedBeatTimesRef.current = [];
+        
         lookaheadRef.current = setInterval(
           () => doSchedulerLoopRef.current && doSchedulerLoopRef.current(),
           SCHEDULER_INTERVAL
         );
-      } catch (err) {
-        console.error('Error starting metronome:', err);
+      } catch (recoveryErr) {
+        console.error('Failed to recover after scheduler error:', recoveryErr);
       }
-    })();
+    }
   }, [
-    audioCtxRef,
+    audioCtxRef, 
     currentSubIntervalRef,
     currentSubRef,
     currentSubStartRef,
     doSchedulerLoopRef,
-    firstBufferRef,
     getCurrentSubIntervalSec,
+    loadAudioSystem,
     lookaheadRef,
     nextNoteTimeRef,
     normalBufferRef,
     accentBufferRef,
+    firstBufferRef,
     playedBeatTimesRef,
     schedulerRunningRef,
     stopScheduler
   ]);
+
+  const reloadSounds = useCallback(async function() {
+    console.log('Reloading sounds...');
+    return await loadAudioSystem();
+  }, [loadAudioSystem]);
 
   // Use useMemo to create the tapTempo handler only once so that its internal state (tapTimes) persists
   const tapTempoHandler = useMemo(() => {
@@ -510,82 +549,6 @@ export default function useMetronomeLogic({
       }
     });
   }, [setTempo]);
-
-  const reloadSounds = useCallback(async function() {
-    try {
-      // Save the current playing state
-      const wasPlaying = schedulerRunningRef.current;
-      console.log(`Reloading sounds (current state: ${wasPlaying ? 'playing' : 'paused'})`);
-      
-      // If we're currently playing, don't stop the scheduler to avoid interruption
-      // We'll swap out the sound buffers while the metronome continues running
-      
-      // If we have no audio context or it's closed, create a new one
-      if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
-        console.log('Creating new audio context during reloadSounds');
-        const newCtx = initAudioContext();
-        if (!newCtx) {
-          console.error('Failed to create audio context during reloadSounds');
-          return false;
-        }
-        audioCtxRef.current = newCtx;
-        
-        // Try to start the audio context immediately
-        if (audioCtxRef.current.state === 'suspended') {
-          try {
-            // This may fail without user interaction, which is OK
-            await audioCtxRef.current.resume();
-            console.log('Audio context resumed during reloadSounds, state:', audioCtxRef.current.state);
-          } catch (err) {
-            console.warn('Could not resume audio context immediately:', err);
-            // Continue anyway - the UI will handle this later with user interaction
-          }
-        }
-      }
-      
-      // If there's no audio context at this point, we can't continue
-      if (!audioCtxRef.current) {
-        console.error('No audio context available after initialization attempts');
-        return false;
-      }
-      
-      // Try to get active sound set
-      let soundSet;
-      try {
-        soundSet = await getActiveSoundSet();
-        console.log('Retrieved active sound set:', soundSet ? soundSet.name : 'default');
-      } catch (err) {
-        console.warn('Could not get active sound set, using default:', err);
-        // Continue without a soundSet - loadClickBuffers will use defaults
-      }
-      
-      // Load the sound buffers
-      const loadResult = await loadClickBuffers({
-        audioCtx: audioCtxRef.current,
-        normalBufferRef,
-        accentBufferRef,
-        firstBufferRef,
-        soundSet
-      });
-      
-      if (!loadResult) {
-        console.error('Failed to load audio buffers');
-        return false;
-      }
-      
-      console.log('Successfully reloaded all sounds');
-      
-      // Notify that sound buffers have changed
-      window.dispatchEvent(new CustomEvent('metronome-sounds-reloaded', { 
-        detail: { timestamp: performance.now() } 
-      }));
-      
-      return true;
-    } catch (error) {
-      console.error('Error in reloadSounds:', error);
-      return false;
-    }
-  }, [audioCtxRef, normalBufferRef, accentBufferRef, firstBufferRef, schedulerRunningRef]);
 
   useEffect(() => {
     if (isPaused) {

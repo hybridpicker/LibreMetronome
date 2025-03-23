@@ -2,6 +2,10 @@
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
+// Silence console.error before mocking AudioContext to avoid Web Audio API error
+const originalConsoleError = console.error;
+console.error = jest.fn();
+
 // Mock AudioContext
 const mockOscillator = {
   connect: jest.fn(),
@@ -31,7 +35,8 @@ window.AudioContext = jest.fn().mockImplementation(() => ({
     stop: jest.fn(),
     buffer: null
   }),
-  state: 'running'
+  state: 'running',
+  sampleRate: 48000
 }));
 
 // Also mock the webkitAudioContext for cross-browser compatibility
@@ -44,8 +49,12 @@ window._audioContextInit = {
   destination: {},
   currentTime: 0,
   resume: jest.fn().mockResolvedValue(undefined),
-  state: 'running'
+  state: 'running',
+  sampleRate: 48000
 };
+
+// Restore console.error after mocking
+console.error = originalConsoleError;
 
 // Mock all audio-related modules at once
 jest.mock('./hooks/useMetronomeLogic', () => ({
@@ -65,10 +74,9 @@ describe('App Component', () => {
     jest.clearAllMocks();
   });
 
-  test('renders header with correct text', async () => {
+  test('renders header with logo', async () => {
     render(<App />);
-    expect(screen.getByText('Libre')).toBeInTheDocument();
-    expect(screen.getByText('Metronome')).toBeInTheDocument();
+    expect(screen.getByAltText('LibreMetronome')).toBeInTheDocument();
   });
 
   test('renders mode selector buttons', async () => {
