@@ -304,16 +304,75 @@ export function AdvancedMetronomeWithCircle({
     }
   }, [logic.audioBuffers, logic.audioCtx]);
 
+  // Listen for both soundSetReloadTrigger and soundSetChanged event
   useEffect(() => {
     if (logic && logic.audioCtx && soundSetReloadTrigger > 0) {
       if (logic.reloadSounds) {
+        console.log("Reloading sounds due to soundSetReloadTrigger change");
         logic
           .reloadSounds()
-          .then((success) => {})
-          .catch((err) => {});
+          .then((success) => {
+            if (success) {
+              console.log("Successfully reloaded sound buffers");
+            } else {
+              console.error("Failed to reload sound buffers");
+            }
+          })
+          .catch((err) => {
+            console.error("Error reloading sounds:", err);
+          });
       }
     }
   }, [soundSetReloadTrigger, logic]);
+
+  // Add event listeners for sound set and settings changes
+  useEffect(() => {
+    const handleSoundSetChanged = (event) => {
+      // Only reload if we have the necessary logic methods
+      if (logic && logic.reloadSounds) {
+        const soundSetId = event.detail?.soundSetId;
+        console.log(`Sound set changed event received (ID: ${soundSetId}), reloading sounds immediately`);
+        
+        // Always reload sounds regardless of playing status
+        logic
+          .reloadSounds()
+          .then((success) => {
+            if (success) {
+              console.log("Successfully reloaded sound buffers after sound set change");
+            } else {
+              console.error("Failed to reload sound buffers after sound set change");
+            }
+          })
+          .catch((err) => {
+            console.error("Error reloading sounds after sound set change:", err);
+          });
+      }
+    };
+    
+    const handleSettingsApplied = (event) => {
+      // Force immediate sound reload if we're playing
+      if (!isPaused && logic && logic.reloadSounds) {
+        console.log("Settings applied while playing, forcing immediate sound reload");
+        logic.reloadSounds()
+          .then(success => {
+            if (success) {
+              console.log("Successfully reloaded sound buffers while playing");
+            }
+          })
+          .catch(err => {
+            console.error("Error reloading sounds while playing:", err);
+          });
+      }
+    };
+    
+    window.addEventListener('soundSetChanged', handleSoundSetChanged);
+    window.addEventListener('metronome-settings-applied', handleSettingsApplied);
+    
+    return () => {
+      window.removeEventListener('soundSetChanged', handleSoundSetChanged);
+      window.removeEventListener('metronome-settings-applied', handleSettingsApplied);
+    };
+  }, [logic, isPaused]);
 
   useEffect(() => {
     const handlePreviewSound = (event) => {

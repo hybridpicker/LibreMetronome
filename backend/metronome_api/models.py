@@ -27,7 +27,8 @@ class MetronomeSoundSet(models.Model):
 
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
-    is_active = models.BooleanField(default=False, help_text="Only one sound set can be active at a time.")
+    # Making is_active optional and not crucial - frontend will use cookies
+    is_active = models.BooleanField(default=False, blank=True, null=True, help_text="This field is kept for backwards compatibility but is not used anymore. Sound set preference is stored in cookies.")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -56,10 +57,8 @@ class MetronomeSoundSet(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
-        # Ensure only one sound set is active
-        if self.is_active:
-            MetronomeSoundSet.objects.exclude(pk=self.pk).update(is_active=False)
-
+        # No longer enforcing single active sound set - cookie-based selection instead
+        
         # Use template audio if sound file not provided
         if not self.first_beat_sound:
             self.first_beat_sound = "src/assets/audio/default_first_beat.wav"
@@ -72,13 +71,19 @@ class MetronomeSoundSet(models.Model):
 
     @classmethod
     def get_active_sound_set(cls):
-        active_set = cls.objects.filter(is_active=True).first()
-        if not active_set:
-            active_set = cls.objects.create(
+        """
+        This method no longer relies on the is_active flag since sound selection
+        is now cookie-based in the frontend. It returns the first sound set or creates
+        a default one if none exists.
+        """
+        # Just return the first sound set or create a default one
+        sound_set = cls.objects.first()
+        if not sound_set:
+            sound_set = cls.objects.create(
                 name="Default Sound Set",
                 first_beat_sound="src/assets/audio/default_first_beat.wav",
                 accent_sound="src/assets/audio/default_accent.wav",
                 normal_beat_sound="src/assets/audio/default_normal_beat.wav",
-                is_active=True,
+                # No longer setting is_active=True
             )
-        return active_set
+        return sound_set
