@@ -34,11 +34,7 @@ const MainMenu = ({
   currentTempo,
   
   // For sound reload
-  setSoundSetReloadTrigger,
-  
-  // For style guide
-  showStyleGuide,
-  setShowStyleGuide
+  setSoundSetReloadTrigger
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [activeTab, setActiveTab] = useState('info'); // 'info', 'training', 'settings'
@@ -118,22 +114,7 @@ const MainMenu = ({
             setSoundSetReloadTrigger={setSoundSetReloadTrigger}
           />
         );
-      case 'style-guide':
-        return (
-          <div className="style-guide-tab">
-            <h2>Style Guide</h2>
-            <p>View the complete color system and design guidelines for LibreMetronome.</p>
-            <button 
-              className="style-guide-open-button"
-              onClick={() => {
-                setShowStyleGuide(true);
-                handleClose();
-              }}
-            >
-              Open Style Guide
-            </button>
-          </div>
-        );
+
       default:
         return <InfoContent />;
     }
@@ -209,13 +190,7 @@ const MainMenu = ({
                 <span className="tab-icon">⚙️</span>
                 <span>Settings</span>
               </button>
-              <button 
-                className={`menu-tab ${activeTab === 'style-guide' ? 'active' : ''}`}
-                onClick={() => setActiveTab('style-guide')}
-              >
-                <span className="tab-icon">🎨</span>
-                <span>Style Guide</span>
-              </button>
+
             </div>
             
             {/* Content Area */}
