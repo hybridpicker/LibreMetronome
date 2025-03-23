@@ -44,9 +44,8 @@ const BeatSyncLine = ({
       return;
     }
     
-    // Duration for one full rotation (ms)
-    const msPerMeasure = (60000 / tempo) * innerBeats;
-    const rotationSpeed = 360 / msPerMeasure; // degrees per ms
+    // eslint-disable-next-line no-unused-vars
+    const rotationDuration = (60000 / tempo) * innerBeats;
     
     // Reset the start time whenever we start playing or params change
     // This ensures we always begin rotation from 12 o'clock

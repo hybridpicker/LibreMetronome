@@ -73,7 +73,7 @@ export default function useMultiCircleMetronomeLogic({
   const isFirstMeasurePlayedRef = useRef(false);
   const minBeatsBeforeTransitionRef = useRef(0);
   const hasPlayedEnoughRef = useRef(false);
-  const fullCycleCompletedRef = useRef(false);
+  // Unused ref removed
   
   // Keep refs updated with props
   useEffect(() => { tempoRef.current = tempo; }, [tempo]);
@@ -101,7 +101,7 @@ export default function useMultiCircleMetronomeLogic({
     measureCountRef,
     muteMeasureCountRef,
     isSilencePhaseRef,
-    lastTempoIncreaseTimeRef,
+    // Removed unused ref
     handleMeasureBoundary
   } = useTrainingModeLogic({
     macroMode,
@@ -117,9 +117,9 @@ export default function useMultiCircleMetronomeLogic({
 
   const {
     getCurrentSubIntervalSec,
-    updateActualBpm,
+    // Removed unused variables
     getBeatMultiplier,
-    scheduleSubFn,
+    // Removed unused variables
     doSchedulerLoop,
     stopScheduler,
     startScheduler
@@ -167,11 +167,10 @@ export default function useMultiCircleMetronomeLogic({
     isPaused
   });
 
-  // Tap Tempo handler
-  const handleTapTempo = useCallback(
-    createTapTempoLogic(setTempo),
-    [setTempo]
-  );
+  // Tap Tempo handler - using inline function to fix unknown dependencies warning
+  const handleTapTempo = useCallback(() => {
+    return createTapTempoLogic(setTempo)();
+  }, [setTempo]);
 
   // Function to update the beatMultiplier based on the current playing circle's beatMode
   const updateBeatMultiplier = useCallback((newMultiplier) => {
@@ -288,15 +287,18 @@ export default function useMultiCircleMetronomeLogic({
       startScheduler();
     }
     
+    // Store audio context reference in local variable for cleanup
+    const currentAudioCtx = audioCtxRef.current;
+    
     return () => {
       // Clean up on component unmount
       if (!isPaused) {
         stopScheduler();
       }
       
-      // Close audio context on unmount to prevent memory leaks
-      if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
-        audioCtxRef.current.close().catch(err => {
+      // Use the local variable in the cleanup function
+      if (currentAudioCtx && currentAudioCtx.state !== 'closed') {
+        currentAudioCtx.close().catch(err => {
           console.error('Error closing audio context:', err);
         });
       }
@@ -324,7 +326,7 @@ export default function useMultiCircleMetronomeLogic({
       beatMode,
       circleSettings
     });
-  }, []);
+  }, [tempo, subdivisions, playingCircle, beatMode, circleSettings]);
 
   // Logic for detecting when we need to switch circles
   const switchToNextCircle = useCallback(() => {

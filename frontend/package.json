@@ -1,6 +1,6 @@
 {
   "name": "frontend",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "private": true,
   "dependencies": {
     "cra-template": "1.2.0",
@@ -18,7 +18,15 @@
     "eject": "react-scripts eject",
     "test:colors": "react-scripts test ColorScheme.test.js",
     "test:components": "react-scripts test ComponentColorScheme.test.js",
-    "test:all-colors": "react-scripts test ColorScheme.test.js ComponentColorScheme.test.js"
+    "test:all-colors": "react-scripts test ColorScheme.test.js ComponentColorScheme.test.js",
+    "test:eslint-hooks": "react-scripts test eslint-hooks.test.js",
+    "test:eslint-cli": "react-scripts test eslint-cli.test.js",
+    "test:lint": "react-scripts test --testMatch=\"**/eslint*.test.js\"",
+    "test:build-warnings": "react-scripts test build-warnings.test.js",
+    "test:hooks-linting": "react-scripts test hooks-linting.test.js",
+    "test:clean-build": "react-scripts test clean-build.test.js",
+    "verify-hooks": "npm run test:clean-build",
+    "verify-hooks-fix": "./src/tests/verify-hooks-fix.sh"
   },
   "eslintConfig": {
     "extends": [

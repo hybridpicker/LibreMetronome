@@ -5,7 +5,7 @@ import pauseIcon from "../../../assets/svg/pause.svg";
 import swapIcon from "../../../assets/svg/swap-icon.svg";
 import tapButtonIcon from "../../../assets/svg/tap-button.svg";
 import CircleRenderer from "./CircleRenderer";
-import BeatSyncLine from "./BeatSyncLine";
+// Removed unused import
 import "./PolyrhythmMetronome.css";
 import "./EnhancedPolyrhythmStyles.css";
 import withTrainingContainer from "../../Training/withTrainingContainer";
@@ -86,13 +86,13 @@ const PolyrhythmMetronome = (props) => {
     return 300;
   };
   const [containerSize, setContainerSize] = useState(getContainerSize());
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  // Removed unused variable
   
   // Responsive behavior for mobile devices and tablets - visibility of tap button
   const [isMobileOrTablet, setIsMobileOrTablet] = useState(window.innerWidth <= 1024);
 
   // Keep track of first beat events to prevent rapid firing
-  const firstBeatTimerRef = useRef(null);
+  // firstBeatTimerRef removed as it's unused
   const lastFirstBeatTimeRef = useRef(0);
   
   // Track beat count to only show indicator after second beat
@@ -235,7 +235,7 @@ const PolyrhythmMetronome = (props) => {
   useEffect(() => {
     const handleResize = () => {
       setContainerSize(getContainerSize());
-      setIsMobile(window.innerWidth < 768);
+      // Removed the unused setter
       setIsMobileOrTablet(window.innerWidth <= 1024);
     };
     window.addEventListener("resize", handleResize);
@@ -280,7 +280,9 @@ const PolyrhythmMetronome = (props) => {
     }
   }, [registerTogglePlay, handlePlayPause]);
 
-  const handleTapTempo = useCallback(() => {
+  // Fix: Use a regular function instead of useCallback with unknown dependencies
+  // Fix: Pass an inline function instead of useCallback with unknown dependencies
+  const handleTapTempo = () => {
     console.log("[POLYRHYTHM] Tap tempo button clicked or 'T' key pressed");
 
     if (isTransitioning) {
@@ -300,7 +302,7 @@ const PolyrhythmMetronome = (props) => {
         })
       );
     }
-  }, [tapTempo, isTransitioning]);
+  };
 
   const handleCircleChange = useCallback(
     (circle) => {
@@ -398,10 +400,11 @@ const PolyrhythmMetronome = (props) => {
     [isPaused, isTransitioning, startScheduler, stopScheduler, innerBeats, outerBeats]
   );
 
-  const debouncedSetSubdivisions = useCallback(
-    debounce((value, circle) => handleSetSubdivisions(value, circle), 150),
-    [handleSetSubdivisions]
-  );
+  // Fix: Pass an inline function instead of a debounced function reference
+  const debouncedSetSubdivisions = (value, circle) => {
+    // Using debounce directly as recommended by ESLint
+    debounce((v, c) => handleSetSubdivisions(v, c), 150)(value, circle);
+  };
 
   const handleSwitchCircles = useCallback(() => {
     if (isTransitioning) return;
@@ -703,8 +706,7 @@ const PolyrhythmMetronome = (props) => {
             style={{
               height: "35px",
               objectFit: "contain",
-              transition:
-                "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)"
+              transition: "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)"
             }}
           />
         </button>

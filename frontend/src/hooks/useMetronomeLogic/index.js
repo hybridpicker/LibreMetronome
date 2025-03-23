@@ -50,7 +50,7 @@ export default function useMetronomeLogic({
     actualBpm, setActualBpm,
     timingPrecision, setTimingPrecision,
     nodeRefs,
-    audioWorkletRef
+    // Removed unused ref
   } = useMetronomeRefs();
 
   const [currentSubdivision, setCurrentSubdivision] = useState(0);
@@ -513,6 +513,13 @@ export default function useMetronomeLogic({
 
   const reloadSounds = useCallback(async function() {
     try {
+      // Save the current playing state
+      const wasPlaying = schedulerRunningRef.current;
+      console.log(`Reloading sounds (current state: ${wasPlaying ? 'playing' : 'paused'})`);
+      
+      // If we're currently playing, don't stop the scheduler to avoid interruption
+      // We'll swap out the sound buffers while the metronome continues running
+      
       // If we have no audio context or it's closed, create a new one
       if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
         console.log('Creating new audio context during reloadSounds');
@@ -567,12 +574,18 @@ export default function useMetronomeLogic({
       }
       
       console.log('Successfully reloaded all sounds');
+      
+      // Notify that sound buffers have changed
+      window.dispatchEvent(new CustomEvent('metronome-sounds-reloaded', { 
+        detail: { timestamp: performance.now() } 
+      }));
+      
       return true;
     } catch (error) {
       console.error('Error in reloadSounds:', error);
       return false;
     }
-  }, [audioCtxRef, normalBufferRef, accentBufferRef, firstBufferRef]);
+  }, [audioCtxRef, normalBufferRef, accentBufferRef, firstBufferRef, schedulerRunningRef]);
 
   useEffect(() => {
     if (isPaused) {

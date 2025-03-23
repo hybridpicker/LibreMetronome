@@ -25,7 +25,7 @@ export default function AnalogMetronomeCanvas({
     const drawPendulumArm = (ctx, w, h, angleRad) => {
       ctx.save();
       // Position the pivot point much lower in the canvas (closer to the bottom)
-      const pivotOffsetY = h * 0.1; // Reduced offset as we're positioning it directly
+      // Positioning is handled directly in the translate below
       // Translate to the pivot point - centered horizontally, much lower vertically
       ctx.translate(w / 2, h * 0.85); // Position at 85% of the height (very close to bottom)
       
