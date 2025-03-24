@@ -5,6 +5,7 @@ import InfoContent from './InfoContent';
 import TrainingContent from './TrainingContent';
 import SettingsContent from './SettingsContent';
 import { ReactComponent as MenuIcon } from '../../assets/svg/menu-icon.svg';
+import { SupportPage } from '../Support';
 
 /**
  * Unified MainMenu Component
@@ -37,7 +38,7 @@ const MainMenu = ({
   setSoundSetReloadTrigger
 }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const [activeTab, setActiveTab] = useState('info'); // 'info', 'training', 'settings'
+  const [activeTab, setActiveTab] = useState('info'); // 'info', 'training', 'settings', 'support'
   const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
   
   // State to track if training mode is active
@@ -72,6 +73,9 @@ const MainMenu = ({
       } else if (event.key === 'S' || event.key === 's') {
         setIsVisible(true);
         setActiveTab('settings');
+      } else if (event.key === 'D' || event.key === 'd') {
+        setIsVisible(true);
+        setActiveTab('support');
       }
     };
 
@@ -114,7 +118,8 @@ const MainMenu = ({
             setSoundSetReloadTrigger={setSoundSetReloadTrigger}
           />
         );
-
+      case 'support':
+        return <SupportPage />;
       default:
         return <InfoContent />;
     }
@@ -190,7 +195,13 @@ const MainMenu = ({
                 <span className="tab-icon">⚙️</span>
                 <span>Settings</span>
               </button>
-
+              <button 
+                className={`menu-tab support-tab ${activeTab === 'support' ? 'active' : ''}`}
+                onClick={() => setActiveTab('support')}
+              >
+                <span className="tab-icon">♥</span>
+                <span>Support</span>
+              </button>
             </div>
             
             {/* Content Area */}

@@ -13,6 +13,7 @@ import MainMenu from './components/Menu/mainMenu';
 import SettingsContent from './components/Menu/SettingsContent';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
 import ModeSelector from './components/ModeSelector'; // Import the new ModeSelector component
+import { SupportButton, SupportPage } from './components/Support'; // Import the Support components
 // StyleGuide component removed
 
 const TEMPO_MIN = 15;
@@ -163,6 +164,7 @@ function App() {
   };
   
   const [mode, setMode] = useState("circle"); // Options: "analog", "circle", "grid", "multi", "polyrhythm"
+  const [showSupportPage, setShowSupportPage] = useState(false);
   // Style guide toggle removed
   const [tempo, setTempo] = useState(120);
   const [isPaused, setIsPaused] = useState(true);
@@ -175,6 +177,9 @@ function App() {
 
   // Make tempo setter globally available (for tap tempo)
   window.setMetronomeTempo = setTempo;
+  
+  // Expose support page navigation function
+  window.setShowSupportPage = setShowSupportPage;
   
   // Create a universal tap tempo handler for direct access
   window.handleGlobalTapTempo = () => {
@@ -605,41 +610,90 @@ function App() {
 
       <Header />
 
-      <>
-        <ModeSelector mode={mode} setMode={setMode} />
+      {showSupportPage ? (
+        <div className="support-page-container">
+          <div style={{ 
+            position: 'sticky', 
+            top: '0',
+            zIndex: '10',
+            backgroundColor: 'var(--neutral-bg)',
+            padding: '15px',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+            display: 'flex',
+            justifyContent: 'flex-start',
+            alignItems: 'center'
+          }}>
+            <button 
+              className="back-button" 
+              onClick={() => setShowSupportPage(false)}
+              style={{
+                padding: '10px 18px',
+                backgroundColor: 'var(--secondary-gold)',
+                color: 'var(--text-primary)',
+                border: 'none',
+                borderRadius: '20px',
+                cursor: 'pointer',
+                fontFamily: 'Lato, sans-serif',
+                fontWeight: 'bold',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: '0 2px 6px rgba(0, 0, 0, 0.1)',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 4px 10px rgba(0, 0, 0, 0.12)';
+                e.currentTarget.style.backgroundColor = 'var(--secondary-gold-dark)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.1)';
+                e.currentTarget.style.backgroundColor = 'var(--secondary-gold)';
+              }}
+            >
+              <span style={{ fontSize: '1.2em', lineHeight: 1 }}>&larr;</span> Back to Metronome
+            </button>
+          </div>
+          <SupportPage />
+        </div>
+      ) : (
+        <>
+          <ModeSelector mode={mode} setMode={setMode} />
 
-        {renderMetronome()}
+          {renderMetronome()}
 
-        {mode !== "multi" && mode !== "polyrhythm" && (
-          <MetronomeControls
-            mode={mode}
-            beatMode={beatMode}
-            setBeatMode={setBeatMode}
-            subdivisions={subdivisions}
-            setSubdivisions={setSubdivisions}
-            swing={swing}
-            setSwing={setSwing}
-            volume={volume}
-            setVolume={setVolume}
-            tempo={tempo}
-            setTempo={setTempo}
-          />
-        )}
+          {mode !== "multi" && mode !== "polyrhythm" && (
+            <MetronomeControls
+              mode={mode}
+              beatMode={beatMode}
+              setBeatMode={setBeatMode}
+              subdivisions={subdivisions}
+              setSubdivisions={setSubdivisions}
+              swing={swing}
+              setSwing={setSwing}
+              volume={volume}
+              setVolume={setVolume}
+              tempo={tempo}
+              setTempo={setTempo}
+            />
+          )}
 
-        {settingsVisible && (
-          <SettingsContent
-            volume={volume}
-            setVolume={setVolume}
-            defaultTempo={tempo}
-            setDefaultTempo={setTempo}
-            defaultSubdivisions={subdivisions}
-            setDefaultSubdivisions={setSubdivisions}
-            currentMode={mode}
-            onClose={() => setSettingsVisible(false)}
-            setSoundSetReloadTrigger={setSoundSetReloadTrigger}
-          />
-        )}
-      </>
+          {settingsVisible && (
+            <SettingsContent
+              volume={volume}
+              setVolume={setVolume}
+              defaultTempo={tempo}
+              setDefaultTempo={setTempo}
+              defaultSubdivisions={subdivisions}
+              setDefaultSubdivisions={setSubdivisions}
+              currentMode={mode}
+              onClose={() => setSettingsVisible(false)}
+              setSoundSetReloadTrigger={setSoundSetReloadTrigger}
+            />
+          )}
+        </>
+      )}
 
       <Footer />
     </div>

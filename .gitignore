@@ -20,6 +20,8 @@ dist/
 *.pot
 local_settings.py
 db.sqlite3
+stripe_settings.py
+**/stripe_config.js
 
 # Ansible
 .env
