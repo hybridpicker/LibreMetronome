@@ -8,6 +8,7 @@ api_urlpatterns = [
     path('sound-sets/', views.all_sound_sets, name='all_sound_sets'),
     path('sound-sets/<int:id>/', views.sound_set_detail, name='sound_set_detail'),
     path('sound-sets/<int:id>/set-active/', views.set_active_sound_set_view, name='set_active_sound_set'),
+    path('support-info/', views.get_support_info, name='support_info'),
 ]
 
 urlpatterns = [

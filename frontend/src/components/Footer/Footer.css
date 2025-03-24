@@ -1,16 +1,50 @@
 /* File: src/components/Footer.css */
 
 /* Styling for the footer container */
-  .footer {
-    padding: 20px;
+.footer {
+  padding: 20px;
+  text-align: center;
+}
+
+/* Styling for the separator element */
+.separator {
+  margin-bottom: 20px;
+  border: 0;
+  border-top: 1px solid var(--primary-teal-light);
+}
+
+/* Styling for the footer content - new flex layout */
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.footer-left {
+  text-align: left;
+}
+
+.footer-right {
+  margin-left: auto;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .footer-content {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .footer-left, .footer-right {
+    width: 100%;
     text-align: center;
   }
   
-  /* Styling for the separator element */
-  /* The margin-bottom property provides the desired spacing between the separator and footer content */
-  .separator {
-    margin-bottom: 20px;
-    border: 0;
-    border-top: 1px solid var(--primary-teal-light);
+  .support-button {
+    margin: 0 auto;
+    padding: 10px 20px;
+    font-size: 15px;
   }
+}
   
