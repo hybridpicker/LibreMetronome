@@ -189,14 +189,27 @@ function MultiCircleMetronome(props) {
   // Listen for beat-mode-change events
   useEffect(() => {
     const handleBeatModeChange = (event) => {
-      const { beatMode, beatMultiplier } = event.detail;
-      // if needed, handle externally
+      const { beatMode, beatMultiplier, circleIndex } = event.detail;
+      
+      console.log(`[MultiCircle] Beat mode change detected: ${beatMode} (multiplier: ${beatMultiplier}) for circle ${circleIndex}`);
+      
+      // If we have logic and we're dealing with the currently playing circle,
+      // make sure the UI is updated to reflect the change
+      if (circleIndex === playingCircle) {
+        // We could update some UI state here if needed
+        window.currentTempo = tempo; // Update this global if being used
+        
+        // If needed, we could also force an update through setCircleSettings
+        // but this should already be handled by the original event handler
+      }
     };
+    
     window.addEventListener('beat-mode-change', handleBeatModeChange);
+    
     return () => {
       window.removeEventListener('beat-mode-change', handleBeatModeChange);
     };
-  }, []);
+  }, [playingCircle, tempo]);
 
   // Re-load sounds when soundSetReloadTrigger changes
   useEffect(() => {
