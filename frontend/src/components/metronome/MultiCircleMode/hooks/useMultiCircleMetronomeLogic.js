@@ -73,6 +73,7 @@ export default function useMultiCircleMetronomeLogic({
   const isFirstMeasurePlayedRef = useRef(false);
   const minBeatsBeforeTransitionRef = useRef(0);
   const hasPlayedEnoughRef = useRef(false);
+  const isPausedRef = useRef(isPaused); // Add isPausedRef to track paused state
   // Unused ref removed
   
   // Keep refs updated with props
@@ -82,6 +83,7 @@ export default function useMultiCircleMetronomeLogic({
   useEffect(() => { playingCircleRef.current = playingCircle; }, [playingCircle]);
   useEffect(() => { subdivisionsRef.current = subdivisions; }, [subdivisions]);
   useEffect(() => { accentsRef.current = accents; }, [accents]);
+  useEffect(() => { isPausedRef.current = isPaused; }, [isPaused]); // Keep isPausedRef in sync
 
   // Import custom hooks
   const { 
@@ -185,21 +187,56 @@ export default function useMultiCircleMetronomeLogic({
       circleSettings[currentCircleIndex].beatMode = newBeatMode;
     }
     
-    // Immediately update the current subdivision interval to respect the new beat multiplier
-    if (currentSubIntervalRef.current && currentSubRef.current !== undefined) {
-      // Calculate the new subdivision interval based on the new multiplier
-      const newInterval = getCurrentSubIntervalSec(currentSubRef.current);
-      currentSubIntervalRef.current = newInterval;
+    // CRITICAL FIX: We need to restart the scheduler for the beat mode change to take effect
+    if (schedulerRunningRef.current && !isPausedRef.current) {
+      // Store the current state
+      const wasRunning = schedulerRunningRef.current;
       
-      debugLog(`Updated currentSubIntervalRef with new timing: ${newInterval}s`);
+      // Stop current scheduler cleanly
+      debugLog(`Stopping scheduler to apply beat mode change to ${newBeatMode}`);
+      stopScheduler();
+      
+      // Immediately update the current subdivision interval to respect the new beat multiplier
+      if (currentSubIntervalRef.current && currentSubRef.current !== undefined) {
+        // Calculate the new subdivision interval based on the new multiplier
+        const newInterval = getCurrentSubIntervalSec(currentSubRef.current);
+        currentSubIntervalRef.current = newInterval;
+        
+        debugLog(`Updated currentSubIntervalRef with new timing: ${newInterval}s`);
+      }
+      
+      // Brief delay to ensure clean state
+      setTimeout(() => {
+        if (wasRunning && !isPausedRef.current) {
+          debugLog(`Restarting scheduler with new beat mode: ${newBeatMode}`);
+          startScheduler();
+        }
+      }, 50);
+    } else {
+      // If not currently running, just update the interval for next start
+      if (currentSubIntervalRef.current && currentSubRef.current !== undefined) {
+        const newInterval = getCurrentSubIntervalSec(currentSubRef.current);
+        currentSubIntervalRef.current = newInterval;
+        debugLog(`Updated timing for next start: ${newInterval}s`);
+      }
     }
     
     // Log the change for debugging
-    debugLog(`Updated beat mode to: ${newBeatMode} for circle ${currentCircleIndex}`);
+    debugLog(`Beat mode updated to: ${newBeatMode} for circle ${currentCircleIndex}`);
     
     // Return the new beat mode for any chaining operations
     return newBeatMode;
-  }, [playingCircleRef, circleSettings, getCurrentSubIntervalSec, currentSubRef, currentSubIntervalRef]);
+  }, [
+    playingCircleRef, 
+    circleSettings, 
+    getCurrentSubIntervalSec, 
+    currentSubRef, 
+    currentSubIntervalRef,
+    schedulerRunningRef,
+    isPausedRef,
+    stopScheduler,
+    startScheduler
+  ]);
 
   // Listen for beat-mode-change events directly in the hook
   useEffect(() => {
