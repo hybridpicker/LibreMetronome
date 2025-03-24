@@ -129,7 +129,7 @@
 
 .inner-badge {
   background: var(--beat-inner);
-  background: linear-gradient(135deg, #f6cc7c 0%, #f5bb57 100%);
+  background: linear-gradient(135deg, var(--beat-inner) 0%, var(--beat-outer) 100%);
 }
 
 .outer-badge {
