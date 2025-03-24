@@ -83,7 +83,23 @@ def serve_sound_file(request, filename):
 
 # API endpoints for sound sets
 from django.http import JsonResponse
+from django.conf import settings
 from .models import MetronomeSoundSet
+
+def get_support_info(request):
+    """Return Stripe payment information from settings"""
+    payment_link = getattr(settings, 'STRIPE_PAYMENT_LINK', '')
+    
+    # Add CORS headers to allow cross-origin requests
+    response = JsonResponse({'paymentLink': payment_link})
+    response['Access-Control-Allow-Origin'] = '*'
+    response['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
+    response['Access-Control-Allow-Headers'] = 'X-Requested-With, Content-Type'
+    
+    # Log to help with debugging
+    print(f"Support info requested. Returning payment link: {payment_link}")
+    
+    return response
 
 def sound_set_to_dict(sound_set):
     """Convert a MetronomeSoundSet instance to a dictionary for JSON serialization.

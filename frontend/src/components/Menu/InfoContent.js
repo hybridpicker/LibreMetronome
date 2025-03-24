@@ -68,6 +68,7 @@ const InfoContent = () => {
             <li><span className="key">I</span> Show Menu (Info tab)</li>
             <li><span className="key">R</span> Show Menu (Training tab)</li>
             <li><span className="key">S</span> Show Menu (Settings tab)</li>
+            <li><span className="key">D</span> Show Menu (Support tab)</li>
             <li><span className="key">Esc</span> Close the menu</li>
           </ul>
           
