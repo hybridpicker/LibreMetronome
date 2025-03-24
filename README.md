@@ -202,6 +202,21 @@ Contributions to Libre Metronome are welcome! Please feel free to:
 
 This project is licensed under the GNU General Public License v3.0. See the [LICENSE](LICENSE) file for details or visit [https://www.gnu.org/licenses/gpl-3.0.html](https://www.gnu.org/licenses/gpl-3.0.html).
 
+## Support Feature
+
+Libre Metronome includes a "Support Me" feature that allows users to contribute financially to the project while keeping the app completely free, ad-free, and without premium features. This is implemented using Stripe payment links.
+
+### Setup for Developers
+
+To enable the support feature, add the following to your `local_settings.py` file:
+
+```python
+# In backend/libremetronome_backend/local_settings.py
+STRIPE_PAYMENT_LINK = "your_stripe_payment_link_here"
+```
+
+The payment link is accessed via a Django API endpoint and is not stored in the frontend code, ensuring it remains secure and not exposed in your GitHub repository.
+
 ---
 
 © 2025 Libre Metronome | GPL v3 License

@@ -236,8 +236,13 @@
   }
   
   .menu-tab {
-    padding: 8px 5px;
-    font-size: 12px;
+    padding: 8px 3px;
+    font-size: 11px;
+  }
+  
+  .menu-tab .tab-icon {
+    display: block;
+    margin: 0 auto 3px;
   }
   
   .menu-tab.active::after {
@@ -456,15 +461,31 @@
 
 .menu-tab {
   flex: 1;
-  padding: 12px 8px;
+  padding: 12px 5px;
   background: transparent;
   border: none;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--text-secondary);
   cursor: pointer;
   position: relative;
   transition: all 0.2s ease;
+}
+
+.menu-tab.support-tab {
+  color: var(--primary-teal);
+  position: relative;
+}
+
+.menu-tab.support-tab .tab-icon {
+  animation: pulse 2s infinite;
+  color: var(--primary-teal);
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
 }
 
 .menu-tab:hover {
