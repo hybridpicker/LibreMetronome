@@ -29,7 +29,11 @@ export default function BaseMetronomeLayout({
       <div className="metronome-container" style={{ width: containerSize, height: containerSize }}>
         {typeof children === 'function' ? children(containerSize) : children}
         <button className="play-pause-button" onClick={onTogglePlay}>
-          <img src={isPaused ? '/assets/svg/play.svg' : '/assets/svg/pause.svg'} alt="Toggle Play" />
+          <img 
+            src={isPaused ? require('../../assets/svg/play.svg').default : require('../../assets/svg/pause.svg').default} 
+            alt="Toggle Play" 
+            className="play-pause-icon"
+          />
         </button>
       </div>
       
@@ -62,7 +66,11 @@ export default function BaseMetronomeLayout({
             }));
           }}
         >
-          <img src="/assets/svg/tap-button.svg" alt="Tap Tempo" />
+          <img 
+            src={require('../../assets/svg/tap-button.svg').default} 
+            alt="Tap Tempo" 
+            className="tap-icon"
+          />
         </button>
       </div>
       

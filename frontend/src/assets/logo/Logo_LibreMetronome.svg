@@ -3,24 +3,24 @@
   <defs>
     <style>
       .cls-1 {
-        fill: #ffd182;
+        fill: #F0B048;
       }
 
       .cls-2 {
-        fill: #f8d38d;
+        fill: #F8C668;
       }
 
       .cls-3 {
-        fill: #00a0a0;
+        fill: #00ADB5;
       }
 
       .cls-4 {
-        fill: #00a0a0;
+        fill: #00ADB5;
       }
 
       .cls-5 {
         fill: none;
-        stroke: #00a0a0;
+        stroke: #00ADB5;
         stroke-miterlimit: 10;
         stroke-width: 2px;
       }
