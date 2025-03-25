@@ -1,7 +1,7 @@
 // src/components/Menu/mainMenu.js
 import React, { useState, useEffect } from 'react';
 import './mainMenu.css';
-import InfoContent from './InfoContent';
+// InfoContent removed as it's no longer needed
 import TrainingContent from './TrainingContent';
 import SettingsContent from './SettingsContent';
 import { ReactComponent as MenuIcon } from '../../assets/svg/menu-icon.svg';
@@ -38,7 +38,7 @@ const MainMenu = ({
   setSoundSetReloadTrigger
 }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const [activeTab, setActiveTab] = useState('info'); // 'info', 'training', 'settings', 'support'
+  const [activeTab, setActiveTab] = useState('training'); // 'training', 'settings', 'support'
   const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
   
   // State to track if training mode is active
@@ -64,9 +64,7 @@ const MainMenu = ({
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
         handleClose();
-      } else if (event.key === 'I' || event.key === 'i') {
-        setIsVisible(true);
-        setActiveTab('info');
+      /* Info keyboard shortcut removed */
       } else if (event.key === 'R' || event.key === 'r') {
         setIsVisible(true);
         setActiveTab('training');
@@ -92,8 +90,6 @@ const MainMenu = ({
   // Render tab content based on active tab
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'info':
-        return <InfoContent />;
       case 'training':
         return (
           <TrainingContent
@@ -121,34 +117,19 @@ const MainMenu = ({
       case 'support':
         return <SupportPage />;
       default:
-        return <InfoContent />;
+        return <TrainingContent 
+          trainingSettings={trainingSettings}
+          setTrainingSettings={setTrainingSettings}
+          setMode={setMode}
+          setIsPaused={setIsPaused}
+          onClose={handleClose}
+        />;
     }
   };
 
   return (
     <>
-      {/* Quick Access Buttons */}
-      <div className="quick-access-buttons">
-        <button 
-          className={`quick-button info-button ${activeTab === 'info' && isVisible ? 'active' : ''}`}
-          onClick={() => openMenuWithTab('info')}
-          aria-label="Information"
-          title="Information (I)"
-        >
-          <span role="img" aria-hidden="true">ℹ️</span>
-          {!isMobile && <span>Info</span>}
-        </button>
-        
-        <button 
-          className={`quick-button training-button ${activeTab === 'training' && isVisible ? 'active' : ''} ${trainingActive ? 'training-active' : ''}`}
-          onClick={() => openMenuWithTab('training')}
-          aria-label="Training Settings"
-          title="Training Settings (R)"
-        >
-          <span role="img" aria-hidden="true">🎯</span>
-          {!isMobile && <span>{trainingActive ? 'Training On' : 'Training'}</span>}
-        </button>
-      </div>
+      {/* Quick Access Buttons removed */}
       
       {/* Main Menu Button */}
       <button 
@@ -168,19 +149,13 @@ const MainMenu = ({
               className="menu-close-button" 
               onClick={handleClose}
               aria-label="Close Menu"
+              title="Close menu (ESC)"
             >
-              &times;
+              ×
             </button>
             
             {/* Tabs */}
             <div className="menu-tabs">
-              <button 
-                className={`menu-tab ${activeTab === 'info' ? 'active' : ''}`}
-                onClick={() => setActiveTab('info')}
-              >
-                <span className="tab-icon">ℹ️</span>
-                <span>Info</span>
-              </button>
               <button 
                 className={`menu-tab ${activeTab === 'training' ? 'active' : ''}`}
                 onClick={() => setActiveTab('training')}
