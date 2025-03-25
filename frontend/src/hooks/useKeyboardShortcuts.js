@@ -98,6 +98,7 @@ const useKeyboardShortcuts = ({
   onSwitchToCircle,
   onSwitchToGrid,
   onSwitchToMulti,
+  onSwitchToPolyrhythm,
   onToggleInfoOverlay,
   onToggleTrainingOverlay,
   onManualTempoIncrease
@@ -283,7 +284,7 @@ const useKeyboardShortcuts = ({
         case 'ArrowLeft':
           if (onDecreaseTempo) onDecreaseTempo();
           break;
-        case 'KeyP':
+        case 'KeyA':
           if (onSwitchToAnalog) onSwitchToAnalog();
           break;
         case 'KeyC':
@@ -292,12 +293,17 @@ const useKeyboardShortcuts = ({
         case 'KeyG':
           if (onSwitchToGrid) onSwitchToGrid();
           break;
-        case 'KeyM':
-          if (onSwitchToMulti) onSwitchToMulti();
-          break;
         case 'KeyI':
           if (onToggleInfoOverlay) onToggleInfoOverlay();
           break;
+        case 'KeyM':
+          if (onSwitchToMulti) onSwitchToMulti();
+          break;
+        case 'KeyY':
+          // Y for polYrhythm mode
+          if (onSwitchToPolyrhythm) onSwitchToPolyrhythm();
+          break;
+        // KeyI case removed - now using G for guide
         default:
           break;
       }
@@ -313,6 +319,7 @@ const useKeyboardShortcuts = ({
     onSwitchToCircle,
     onSwitchToGrid,
     onSwitchToMulti,
+    onSwitchToPolyrhythm,
     onToggleInfoOverlay,
     onToggleTrainingOverlay,
     onManualTempoIncrease

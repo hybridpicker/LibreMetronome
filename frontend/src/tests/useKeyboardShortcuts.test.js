@@ -16,6 +16,7 @@ function TestComponent({
   onSwitchToCircle,
   onSwitchToGrid,
   onSwitchToMulti,
+  onSwitchToPolyrhythm,
   onToggleInfoOverlay,
   onToggleTrainingOverlay,
   onManualTempoIncrease
@@ -30,6 +31,7 @@ function TestComponent({
     onSwitchToCircle,
     onSwitchToGrid,
     onSwitchToMulti,
+    onSwitchToPolyrhythm,
     onToggleInfoOverlay,
     onToggleTrainingOverlay,
     onManualTempoIncrease
@@ -50,6 +52,7 @@ describe('useKeyboardShortcuts', () => {
     onSwitchToCircle: jest.fn(),
     onSwitchToGrid: jest.fn(),
     onSwitchToMulti: jest.fn(),
+    onSwitchToPolyrhythm: jest.fn(),
     onToggleInfoOverlay: jest.fn(),
     onToggleTrainingOverlay: jest.fn(),
     onManualTempoIncrease: jest.fn(),
@@ -143,11 +146,11 @@ describe('useKeyboardShortcuts', () => {
   });
   
   // Test mode switching keys
-  test('P key switches to analog mode', () => {
+  test('A key switches to analog/pendulum mode', () => {
     render(<TestComponent {...mockFunctions} />);
     const component = screen.getByTestId('test-component');
     
-    fireEvent.keyDown(component, { code: 'KeyP' });
+    fireEvent.keyDown(component, { code: 'KeyA' });
     
     expect(mockFunctions.onSwitchToAnalog).toHaveBeenCalledTimes(1);
   });
@@ -170,16 +173,6 @@ describe('useKeyboardShortcuts', () => {
     expect(mockFunctions.onSwitchToGrid).toHaveBeenCalledTimes(1);
   });
   
-  test('M key switches to multi circle mode', () => {
-    render(<TestComponent {...mockFunctions} />);
-    const component = screen.getByTestId('test-component');
-    
-    fireEvent.keyDown(component, { code: 'KeyM' });
-    
-    expect(mockFunctions.onSwitchToMulti).toHaveBeenCalledTimes(1);
-  });
-  
-  // Test other keys
   test('I key toggles info overlay', () => {
     render(<TestComponent {...mockFunctions} />);
     const component = screen.getByTestId('test-component');
@@ -189,6 +182,25 @@ describe('useKeyboardShortcuts', () => {
     expect(mockFunctions.onToggleInfoOverlay).toHaveBeenCalledTimes(1);
   });
   
+  test('M key switches to multi circle mode', () => {
+    render(<TestComponent {...mockFunctions} />);
+    const component = screen.getByTestId('test-component');
+    
+    fireEvent.keyDown(component, { code: 'KeyM' });
+    
+    expect(mockFunctions.onSwitchToMulti).toHaveBeenCalledTimes(1);
+  });
+  
+  test('Y key switches to polyrhythm mode', () => {
+    render(<TestComponent {...mockFunctions} />);
+    const component = screen.getByTestId('test-component');
+    
+    fireEvent.keyDown(component, { code: 'KeyY' });
+    
+    expect(mockFunctions.onSwitchToPolyrhythm).toHaveBeenCalledTimes(1);
+  });
+  
+  // Test other keys
   test('R key toggles training overlay', () => {
     render(<TestComponent {...mockFunctions} />);
     const component = screen.getByTestId('test-component');
