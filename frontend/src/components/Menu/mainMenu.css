@@ -86,28 +86,36 @@
 }
 
 .menu-close-button {
-  position: absolute;
+  position: fixed;
   top: 10px;
   right: 10px;
-  background: transparent;
+  background-color: var(--primary-teal);
+  color: white;
   border: none;
-  font-size: 1.8rem;
-  font-weight: bold;
-  color: var(--primary-teal);
+  font-size: 1.5rem;
+  line-height: 1;
   cursor: pointer;
-  transition: all 0.2s ease;
-  z-index: 10;
-  width: 30px;
-  height: 30px;
+  z-index: 2500; /* Increased z-index */
+  padding: 0;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
+  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
 }
 
 .menu-close-button:hover {
-  background-color: var(--primary-teal-light);
-  transform: scale(1.1);
+  background-color: var(--primary-teal-dark);
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.menu-close-button:focus {
+  outline: 2px solid var(--primary-teal-light);
+  outline-offset: 2px;
 }
 
 
@@ -273,12 +281,9 @@
   transform: scale(1.05);
 }
 
-/* Hide any quick access buttons that might be injected from other components */
-.quick-access-buttons,
-.info-button,
-.training-button,
-.quick-button {
-  display: none !important;
+/* Quick access buttons styling removed */
+.quick-access-buttons {
+  display: none;
 }
 
 /* Sound Sets styling */
@@ -433,10 +438,10 @@
     top: 10px;
     right: 10px;
     font-size: 1.6rem;
-    width: 28px;
-    height: 28px;
-    background-color: rgba(255, 255, 255, 0.7);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    width: 40px; /* Keep consistent size */
+    height: 40px; /* Keep consistent size */
+    background-color: var(--primary-teal); /* Keep teal background */
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
   }
   
   .menu-modal h2 {
@@ -447,7 +452,11 @@
 @media (max-width: 350px) {
   .menu-close-button {
     position: fixed;
-    z-index: 1010;
+    z-index: 2500;
+    top: 5px;
+    right: 5px;
+    background-color: var(--primary-teal); /* Explicitly set for small screens */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); /* Enhanced shadow for visibility */
   }
 }
 

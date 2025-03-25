@@ -14,6 +14,7 @@ import SettingsContent from './components/Menu/SettingsContent';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
 import ModeSelector from './components/ModeSelector'; // Import the new ModeSelector component
 import { SupportButton, SupportPage } from './components/Support'; // Import the Support components
+import { HelpButton, InfoModal } from './components/InfoSection'; // Import the Help components
 // StyleGuide component removed
 
 const TEMPO_MIN = 15;
@@ -347,6 +348,8 @@ function App() {
     };
   }, []);
 
+
+
   useEffect(() => {
     setAccents(Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1)));
   }, [subdivisions]);
@@ -404,6 +407,7 @@ function App() {
 
   const [soundSetReloadTrigger, setSoundSetReloadTrigger] = useState(0);
   const [settingsVisible, setSettingsVisible] = useState(false);
+  const [infoModalOpen, setInfoModalOpen] = useState(false);
 
   const togglePlayRef = useRef(null);
   const tapTempoRef = useRef(null);
@@ -422,25 +426,26 @@ function App() {
     onSwitchToCircle: () => { setMode("circle"); },
     onSwitchToGrid: () => { setMode("grid"); },
     onSwitchToMulti: () => { setMode("multi"); },
-    onToggleInfoOverlay: () => { },
+    onSwitchToPolyrhythm: () => { setMode("polyrhythm"); },
+    onToggleInfoOverlay: () => { setInfoModalOpen(prev => !prev); },
     // Style guide toggle removed
   });
 
   const version = '0.4.6';
 
   const getModeDescription = () => {
-    const baseDescription = "LibreMetronome – An advanced, modular metronome service featuring various visualizations and training effects.";
+    const baseDescription = "LibreMetronome – A free online metronome featuring tap tempo, custom time signatures, and advanced rhythm training tools.";
     switch (mode) {
       case "analog":
-        return `${baseDescription} Currently in Analog Mode with realistic pendulum animation.`;
+        return `${baseDescription} Currently in Analog Mode with realistic pendulum animation for traditional practice.`;
       case "circle":
-        return `${baseDescription} Currently in Circle Mode with interactive beat visualization.`;
+        return `${baseDescription} Currently in Circle Mode with interactive beat visualization for tempo precision.`;
       case "grid":
-        return `${baseDescription} Currently in Grid Mode with customizable beat patterns.`;
+        return `${baseDescription} Currently in Grid Mode with customizable beat patterns for complex time signatures.`;
       case "multi":
-        return `${baseDescription} Currently in Multi-Circle Mode for polyrhythm practice.`;
+        return `${baseDescription} Currently in Multi-Circle Mode for polyrhythm practice and advanced timing exercises.`;
       case "polyrhythm":
-        return `${baseDescription} Currently in Polyrhythm Mode for practicing complex rhythmic patterns.`;
+        return `${baseDescription} Currently in Polyrhythm Mode for practicing complex rhythmic patterns and improving coordination.`;
       default:
         return baseDescription;
     }
@@ -582,10 +587,12 @@ function App() {
       >
         Initialize Audio
       </button>
+      
+      <HelpButton onClick={() => setInfoModalOpen(true)} />
       <Helmet>
         <title>{`LibreMetronome - ${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode`}</title>
         <meta name="description" content={getModeDescription()} />
-        <meta name="keywords" content={`Metronome, Music, Timing, Training, React, Web Audio, ${mode} mode`} />
+        <meta name="keywords" content={`Free Online Metronome, Tap Tempo, Time Signatures, Beat Counter, ${mode} mode, Music Practice Tool, Rhythm Training`} />
         <meta name="application-version" content={version} />
         <meta property="og:title" content={`LibreMetronome - ${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode`} />
         <meta property="og:description" content={getModeDescription()} />
@@ -660,6 +667,7 @@ function App() {
       ) : (
         <>
           <ModeSelector mode={mode} setMode={setMode} />
+          
 
           {renderMetronome()}
 
@@ -696,6 +704,12 @@ function App() {
       )}
 
       <Footer />
+      
+      {/* Info Modal */}
+      <InfoModal 
+        isOpen={infoModalOpen} 
+        onClose={() => setInfoModalOpen(false)} 
+      />
     </div>
     </HelmetProvider>
   );
