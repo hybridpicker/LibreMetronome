@@ -29,6 +29,12 @@
   margin-left: auto;
 }
 
+.footer-buttons {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
 /* Responsive adjustments */
 @media (max-width: 600px) {
   .footer-content {

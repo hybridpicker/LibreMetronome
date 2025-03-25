@@ -37,6 +37,9 @@ const InfoContent = () => {
             <li>
               <strong>Multi Circle:</strong> Advanced mode with multiple patterns for practicing complex rhythm changes.
             </li>
+            <li>
+              <strong>Polyrhythm:</strong> Specialized mode for practicing multiple simultaneous rhythms.
+            </li>
           </ul>
           <h3>Beat Types</h3>
           <ul>
@@ -60,16 +63,17 @@ const InfoContent = () => {
             <li><span className="key">T</span> Tap tempo</li>
             <li><span className="key">1–9</span> Set Beats per Bar</li>
             <li><span className="key">←/→</span> +/- Tempo (5 BPM)</li>
-            <li><span className="key">P</span> Switch to Pendulum</li>
+            <li><span className="key">A</span> Switch to Analog/Pendulum</li>
             <li><span className="key">C</span> Switch to Circle</li>
             <li><span className="key">G</span> Switch to Grid</li>
             <li><span className="key">M</span> Switch to Multi Circle</li>
-            <li><span className="key">Enter</span> Accelerate (in Training Mode)</li>
-            <li><span className="key">I</span> Show Menu (Info tab)</li>
+            <li><span className="key">Y</span> Switch to Polyrhythm</li>
+            <li><span className="key">I</span> Open Guide</li>
             <li><span className="key">R</span> Show Menu (Training tab)</li>
             <li><span className="key">S</span> Show Menu (Settings tab)</li>
             <li><span className="key">D</span> Show Menu (Support tab)</li>
-            <li><span className="key">Esc</span> Close the menu</li>
+            <li><span className="key">Enter</span> Accelerate (in Training Mode)</li>
+            <li><span className="key">Esc</span> Close menus/dialogs</li>
           </ul>
           
           <h3>Beat Types</h3>
