@@ -9,7 +9,7 @@
       }
 
       .cls-1 {
-        fill: #f8d38d;
+        fill: #F8C668;
         stroke: #fcfcfc;
         stroke-miterlimit: 10;
         stroke-width: 2px;

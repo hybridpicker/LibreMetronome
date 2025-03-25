@@ -7,16 +7,16 @@
       }
 
       .cls-4 {
-        fill: #1d92a5;
+        fill: #00ADB5;
         fill-rule: evenodd;
       }
 
       .cls-5 {
-        fill: #ffd182;
+        fill: #F0B048;
       }
 
       .cls-2 {
-        stroke: #ffd182;
+        stroke: #F0B048;
       }
 
       .cls-2, .cls-3 {
@@ -25,11 +25,11 @@
       }
 
       .cls-3 {
-        stroke: #088296;
+        stroke: #00ADB5;
       }
 
       .cls-6 {
-        fill: #ffca72;
+        fill: #F8C668;
       }
     </style>
   </defs>
