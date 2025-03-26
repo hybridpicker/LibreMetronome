@@ -15,7 +15,20 @@ import { Helmet, HelmetProvider } from 'react-helmet-async';
 import ModeSelector from './components/ModeSelector'; // Import the new ModeSelector component
 import { SupportButton, SupportPage } from './components/Support'; // Import the Support components
 import { HelpButton, InfoModal } from './components/InfoSection'; // Import the Help components
-// StyleGuide component removed
+import { 
+  AccessibilityMenu, 
+  ScreenReaderAnnouncer,
+  SkipToContent,
+  FocusTrap 
+} from './components/accessibility'; // Import the Accessibility components
+import { 
+  loadAccessibilitySettings, 
+  announceToScreenReader,
+  triggerHapticFeedback,
+  playAudioFeedback
+} from './utils/accessibility/accessibilityUtils';
+import './styles/focus-indicators.css'; // Import focus indicator styles
+import './styles/color-blindness.css'; // Import color blindness styles
 
 const TEMPO_MIN = 15;
 const TEMPO_MAX = 240;
@@ -350,6 +363,177 @@ function App() {
 
 
 
+  // Initialize accessibility settings on app load and respond to system preference changes
+  useEffect(() => {
+    // Function to load settings
+    const initAccessibility = () => {
+      const settings = loadAccessibilitySettings();
+      console.log('App: Accessibility settings initialized:', settings);
+    };
+    
+    // Load settings initially
+    initAccessibility();
+    
+    // Listen for settings changes - rebuild accessibility state entirely
+    const handleAccessibilitySettingsChanged = (event) => {
+      console.log('App: Accessibility setting changed:', event.detail);
+      
+      // Provide haptic feedback when settings change
+      if (window.hapticFeedbackEnabled && event.detail && event.detail.setting) {
+        triggerHapticFeedback('short');
+      }
+      
+      // Announce the change to screen readers
+      if (window.screenReaderMessagesEnabled && event.detail && event.detail.setting) {
+        const settingName = event.detail.setting;
+        const value = event.detail.value;
+        
+        let message = '';
+        switch(settingName) {
+          case 'highContrast':
+            message = `High contrast mode ${value ? 'enabled' : 'disabled'}`;
+            break;
+          case 'largeText':
+            message = `Large text mode ${value ? 'enabled' : 'disabled'}`;
+            break;
+          case 'reducedMotion':
+            message = `Reduced motion ${value ? 'enabled' : 'disabled'}`;
+            break;
+          case 'audioFeedback':
+            message = `Audio feedback ${value ? 'enabled' : 'disabled'}`;
+            break;
+          case 'screenReaderMessages':
+            message = `Screen reader announcements ${value ? 'enabled' : 'disabled'}`;
+            break;
+          case 'focusIndicators':
+            message = `Enhanced focus indicators ${value ? 'enabled' : 'disabled'}`;
+            break;
+          case 'hapticFeedback':
+            message = `Haptic feedback ${value ? 'enabled' : 'disabled'}`;
+            break;
+          case 'colorBlindMode':
+            if (value === 'none') {
+              message = 'Color blind mode disabled';
+            } else {
+              message = `Color blind mode set to ${value}`;
+            }
+            break;
+          default:
+            message = `Accessibility setting updated`;
+        }
+        
+        announceToScreenReader(message, 'polite');
+      }
+      
+      // Reload all settings to ensure consistency
+      initAccessibility();
+    };
+    
+    // Listen for system preference changes for reduced motion
+    const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const highContrastQuery = window.matchMedia('(prefers-contrast: more)');
+    const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    const handleReducedMotionChange = (e) => {
+      console.log('App: System preference for reduced motion changed:', e.matches);
+      if (e.matches) {
+        // Only apply if not explicitly disabled
+        if (localStorage.getItem('accessibility-reduced-motion') !== 'false') {
+          document.body.classList.add('reduced-motion');
+          localStorage.setItem('accessibility-reduced-motion', 'true');
+          console.log('App: Applied reduced motion from system preference');
+          
+          // Announce change to screen readers
+          if (window.screenReaderMessagesEnabled) {
+            announceToScreenReader('Reduced motion enabled based on system preference', 'polite');
+          }
+        }
+      } else {
+        // If user hasn't explicitly enabled it, turn it off when system preference changes
+        if (localStorage.getItem('accessibility-reduced-motion') !== 'true') {
+          document.body.classList.remove('reduced-motion');
+          localStorage.setItem('accessibility-reduced-motion', 'false');
+          console.log('App: Removed reduced motion based on system preference');
+        }
+      }
+    };
+    
+    const handleHighContrastChange = (e) => {
+      console.log('App: System preference for high contrast changed:', e.matches);
+      if (e.matches) {
+        // Only apply if not explicitly disabled
+        if (localStorage.getItem('accessibility-high-contrast') !== 'false') {
+          document.body.classList.add('high-contrast');
+          localStorage.setItem('accessibility-high-contrast', 'true');
+          console.log('App: Applied high contrast from system preference');
+          
+          // Announce change to screen readers
+          if (window.screenReaderMessagesEnabled) {
+            announceToScreenReader('High contrast mode enabled based on system preference', 'polite');
+          }
+        }
+      } else {
+        // If user hasn't explicitly enabled it, turn it off when system preference changes
+        if (localStorage.getItem('accessibility-high-contrast') !== 'true') {
+          document.body.classList.remove('high-contrast');
+          localStorage.setItem('accessibility-high-contrast', 'false');
+          console.log('App: Removed high contrast based on system preference');
+        }
+      }
+    };
+    
+    // Set up event listeners
+    window.addEventListener('accessibility-settings-changed', handleAccessibilitySettingsChanged);
+    reducedMotionQuery.addEventListener('change', handleReducedMotionChange);
+    highContrastQuery.addEventListener('change', handleHighContrastChange);
+    
+    // Initial check for system preferences
+    handleReducedMotionChange(reducedMotionQuery);
+    handleHighContrastChange(highContrastQuery);
+    
+    // Check accessibility settings every time the app is focused
+    window.addEventListener('focus', initAccessibility);
+    
+    // For debugging: add a global method to check current accessibility state
+    window.checkAccessibilityState = () => {
+      const state = {
+        highContrast: document.body.classList.contains('high-contrast'),
+        largeText: document.body.classList.contains('large-text'),
+        reducedMotion: document.body.classList.contains('reduced-motion'),
+        focusIndicators: document.body.classList.contains('focus-visible-enabled'),
+        colorBlind: document.body.classList.contains('color-blind'),
+        colorBlindMode: document.body.className.match(/protanopia|deuteranopia|tritanopia|monochromacy/)?.[0] || 'none',
+        audioFeedback: window.audioFeedbackEnabled,
+        screenReaderMessages: window.screenReaderMessagesEnabled,
+        hapticFeedback: window.hapticFeedbackEnabled,
+        systemPreferences: {
+          reducedMotion: reducedMotionQuery.matches,
+          highContrast: highContrastQuery.matches,
+          darkMode: darkModeQuery.matches
+        },
+        localStorage: {
+          highContrast: localStorage.getItem('accessibility-high-contrast'),
+          largeText: localStorage.getItem('accessibility-large-text'),
+          reducedMotion: localStorage.getItem('accessibility-reduced-motion'),
+          audioFeedback: localStorage.getItem('accessibility-audio-feedback'),
+          screenReaderMessages: localStorage.getItem('accessibility-screen-reader-messages'),
+          focusIndicators: localStorage.getItem('accessibility-focus-indicators'),
+          hapticFeedback: localStorage.getItem('accessibility-haptic-feedback'),
+          colorBlindMode: localStorage.getItem('accessibility-color-blind-mode')
+        }
+      };
+      console.log('Current accessibility state:', state);
+      return state;
+    };
+    
+    return () => {
+      window.removeEventListener('accessibility-settings-changed', handleAccessibilitySettingsChanged);
+      reducedMotionQuery.removeEventListener('change', handleReducedMotionChange);
+      highContrastQuery.removeEventListener('change', handleHighContrastChange);
+      window.removeEventListener('focus', initAccessibility);
+    };
+  }, []);
+
   useEffect(() => {
     setAccents(Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1)));
   }, [subdivisions]);
@@ -367,6 +551,27 @@ function App() {
   useEffect(() => {
     if (prevMode !== mode) {
       const wasPlaying = !playStateRef.current;
+      
+      // Provide accessibility feedback for mode change
+      if (window.audioFeedbackEnabled) {
+        playAudioFeedback('click');
+      }
+      
+      if (window.hapticFeedbackEnabled && navigator.vibrate) {
+        triggerHapticFeedback('short');
+      }
+      
+      if (window.screenReaderMessagesEnabled) {
+        const modeNames = {
+          analog: "Analog Pendulum Mode",
+          circle: "Circle Mode",
+          grid: "Grid Mode",
+          multi: "Multi Circle Mode",
+          polyrhythm: "Polyrhythm Mode"
+        };
+        
+        announceToScreenReader(`Switched to ${modeNames[mode] || mode}`, 'polite');
+      }
       
       // Set a small delay to allow the new component to mount before trying to play
       if (wasPlaying) {
@@ -406,6 +611,7 @@ function App() {
   });
 
   const [soundSetReloadTrigger, setSoundSetReloadTrigger] = useState(0);
+  // Settings visibility (default to false, controlled by the main menu)
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [infoModalOpen, setInfoModalOpen] = useState(false);
 
@@ -571,6 +777,12 @@ function App() {
   return (
     <HelmetProvider>
     <div className="app-container">
+      {/* Skip to content link for keyboard users */}
+      <SkipToContent />
+      
+      {/* Screen reader announcer for dynamic content */}
+      <ScreenReaderAnnouncer message="" politeness="polite" />
+      
       {/* Hidden button to initialize audio context */}
       <button 
         ref={audioButtonRef}
@@ -666,10 +878,10 @@ function App() {
         </div>
       ) : (
         <>
-          <ModeSelector mode={mode} setMode={setMode} />
-          
-
-          {renderMetronome()}
+          <div id="main-content" tabIndex="-1">
+            <ModeSelector mode={mode} setMode={setMode} />
+            {renderMetronome()}
+          </div>
 
           {mode !== "multi" && mode !== "polyrhythm" && (
             <MetronomeControls

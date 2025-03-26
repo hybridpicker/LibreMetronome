@@ -1,0 +1,128 @@
+/**
+ * Focus Indicators
+ * 
+ * Enhanced visual indicators for keyboard focus
+ * Supports both standard and high contrast modes
+ */
+
+/* Base focus style for all interactive elements */
+:focus {
+  outline: 2px solid var(--primary-teal);
+  outline-offset: 2px;
+}
+
+/* Remove outline for mouse/touch interactions, but keep for keyboard */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Enhanced focus style for keyboard navigation */
+:focus-visible {
+  outline: 3px solid var(--primary-teal);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+}
+
+/* High contrast focus styles */
+body.high-contrast :focus-visible {
+  outline: 3px solid white;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 5px black, 0 0 0 8px white;
+}
+
+/* Focus styles for buttons */
+button:focus-visible,
+.button:focus-visible {
+  outline: 3px solid var(--primary-teal);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7);
+  position: relative;
+  z-index: 1;
+}
+
+body.high-contrast button:focus-visible,
+body.high-contrast .button:focus-visible {
+  outline: 3px solid white;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 5px black, 0 0 0 8px white;
+}
+
+/* Focus styles for inputs */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--primary-teal);
+  outline-offset: 1px;
+  border-color: var(--primary-teal);
+  box-shadow: 0 0 0 1px var(--primary-teal-light);
+}
+
+body.high-contrast input:focus-visible,
+body.high-contrast select:focus-visible,
+body.high-contrast textarea:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 1px;
+  border-color: white;
+  box-shadow: 0 0 0 1px white, 0 0 0 3px black;
+}
+
+/* Focus styles for sliders */
+input[type="range"]:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+input[type="range"]:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 3px var(--primary-teal);
+}
+
+input[type="range"]:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 3px var(--primary-teal);
+}
+
+body.high-contrast input[type="range"]:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 3px white, 0 0 0 5px black;
+}
+
+body.high-contrast input[type="range"]:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 3px white, 0 0 0 5px black;
+}
+
+/* Custom elements with tabindex */
+[tabindex]:focus-visible:not(input, select, textarea, button) {
+  outline: 3px solid var(--primary-teal);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+}
+
+body.high-contrast [tabindex]:focus-visible:not(input, select, textarea, button) {
+  outline: 3px solid white;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 5px black, 0 0 0 8px white;
+}
+
+/* Skip to content link */
+.skip-to-content {
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+  z-index: 9999;
+  padding: 1rem;
+  background: var(--background-main);
+  color: var(--text-primary);
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.skip-to-content:focus {
+  left: 0;
+  top: 0;
+  outline: 3px solid var(--primary-teal);
+  outline-offset: 0;
+}
+
+body.high-contrast .skip-to-content:focus {
+  background: black;
+  color: white;
+  outline: 3px solid white;
+}
