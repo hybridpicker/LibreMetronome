@@ -62,11 +62,87 @@
   transition: all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
-/* The circle’s beat icons */
+/* The circle's beat icons */
 .beat-icon {
   width: 24px;
   height: 24px;
   position: absolute;
   cursor: pointer;
   z-index: 1;
+}
+
+/* Color Blindness Mode Enhancements */
+.beat-container {
+  position: relative;
+  width: 24px;
+  height: 24px;
+}
+
+/* Hide colorblind indicators in normal mode */
+.color-blind-indicator {
+  opacity: 0;
+}
+
+/* Show colorblind indicators in colorblind mode */
+body.color-blind .color-blind-indicator {
+  opacity: 1;
+}
+
+/* Special treatment for first beats in colorblind mode */
+body.color-blind .beat-container[data-beat-type="first"] {
+  position: relative;
+}
+
+body.color-blind .beat-container[data-beat-type="first"]::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  border: 2px solid white;
+  border-radius: 50%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Special treatment for accent beats in colorblind mode */
+body.color-blind .beat-container[data-beat-type="accent"] {
+  position: relative;
+}
+
+body.color-blind .beat-container[data-beat-type="accent"]::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border: 1px dashed white;
+  border-radius: 50%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Make sure icons have proper contrast in different colorblind modes */
+body.protanopia .beat-icon {
+  filter: contrast(1.2) !important;
+}
+
+body.deuteranopia .beat-icon {
+  filter: contrast(1.2) !important;
+}
+
+body.tritanopia .beat-icon {
+  filter: contrast(1.2) !important;
+}
+
+body.monochromacy .beat-icon {
+  filter: contrast(1.3) grayscale(1) !important;
+}
+
+/* Ensure tap and play buttons are visible in colorblind mode */
+body.color-blind .play-pause-button img,
+body.color-blind .tap-button img {
+  filter: contrast(1.2) drop-shadow(0 0 2px rgba(255,255,255,0.5)) !important;
 }
