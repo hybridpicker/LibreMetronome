@@ -613,24 +613,66 @@ export function AdvancedMetronomeWithCircle({
                   icon = isActive ? normalBeatActive : normalBeat;
               }
 
+              // Determine beat type for special accessibility handling
+              const beatType = state === 3 ? "first" : state === 2 ? "accent" : "normal";
+              
               return (
-                <img
+                <div 
                   key={bd.i}
-                  src={icon}
-                  alt={`Beat ${bd.i}`}
-                  className="beat-icon"
+                  className={`beat-container beat-type-${beatType}`}
+                  data-beat-type={beatType}
                   onClick={() => effectiveToggleAccent(bd.i)}
                   style={{
+                    position: "absolute",
                     left: `calc(50% + ${bd.xPos}px - 12px)`,
                     top: `calc(50% + ${bd.yPos}px - 12px)`,
-                    transition: "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
-                    filter: isActive
-                      ? "drop-shadow(0 0 5px rgba(248, 211, 141, 0.8))"
-                      : "none",
-                    transform: isActive ? "scale(1.05)" : "scale(1)",
-                    animation: isPulsing ? "pulse-beat 0.2s ease-out" : "none"
+                    width: "24px",
+                    height: "24px",
+                    cursor: "pointer"
                   }}
-                />
+                >
+                  <img
+                    src={icon}
+                    alt={`Beat ${bd.i} (${beatType})`}
+                    className="beat-icon"
+                    data-beat-type={beatType}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      position: "relative",
+                      transition: "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
+                      filter: isActive
+                        ? "drop-shadow(0 0 5px rgba(248, 211, 141, 0.8))"
+                        : "none",
+                      transform: isActive ? "scale(1.05)" : "scale(1)",
+                      animation: isPulsing ? "pulse-beat 0.2s ease-out" : "none"
+                    }}
+                  />
+                  {/* Add visual indicators for color blind mode */}
+                  <div 
+                    className="color-blind-indicator"
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      pointerEvents: "none",
+                      zIndex: 2,
+                      // These indicators will only be visible in color blind mode
+                      // due to the CSS rules in color-blindness.css
+                      fontSize: beatType === "first" ? "12px" : "10px",
+                      fontWeight: "bold",
+                      color: "white",
+                      textShadow: "0 0 2px black"
+                    }}
+                  >
+                    {beatType === "first" ? "1" : beatType === "accent" ? "•" : ""}
+                  </div>
+                </div>
               );
             })}
           </>
