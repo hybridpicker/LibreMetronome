@@ -1,0 +1,55 @@
+/**
+ * Skip to Content link styles
+ */
+
+.skip-to-content {
+  position: absolute;
+  top: -9999px;
+  left: -9999px;
+  background: var(--background-main);
+  color: var(--text-primary);
+  padding: 15px 25px;
+  border: 2px solid var(--primary-teal);
+  border-radius: 5px;
+  text-decoration: none;
+  font-weight: bold;
+  font-family: 'Lato', sans-serif;
+  font-size: 1rem;
+  z-index: 9999;
+  transition: background-color 0.2s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.skip-to-content:focus {
+  top: 10px;
+  left: 10px;
+  outline: 3px solid var(--primary-teal);
+  outline-offset: 3px;
+}
+
+.skip-to-content:hover {
+  background-color: var(--primary-teal-light);
+  color: var(--text-primary);
+}
+
+/* High contrast mode */
+body.high-contrast .skip-to-content {
+  background-color: #000;
+  color: #fff;
+  border: 2px solid #fff;
+}
+
+body.high-contrast .skip-to-content:focus {
+  outline: 3px solid #fff;
+  box-shadow: 0 0 0 5px #000, 0 0 0 8px #fff;
+}
+
+body.high-contrast .skip-to-content:hover {
+  background-color: #333;
+}
+
+/* Large text mode */
+body.large-text .skip-to-content {
+  font-size: 1.2rem;
+  padding: 18px 30px;
+}
