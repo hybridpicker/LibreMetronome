@@ -9,7 +9,7 @@
   overflow-x: hidden;        /* Prevent horizontal scrolling */
   box-sizing: border-box;    /* Include padding in width calculation */
   min-height: 100vh;
-  background-color: var(--neutral-bg);
+  /* Removed background-color to allow high contrast mode to work properly */
   color: var(--text-primary);
   font-family: 'Lato', sans-serif;
 }
@@ -406,6 +406,30 @@ button[aria-label="Tap Tempo"]:active {
   left: 50%;
   top: 85%;
   transform: translate(-50%, -50%) !important;
+}
+
+/* Ensure play/pause button visibility and coloring in all modes */
+.metronome-container .play-pause-button {
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: block !important;
+}
+
+/* Ensure the SVG is properly sized and visible */
+.play-pause-icon {
+  width: 36px !important;
+  height: 36px !important;
+  object-fit: contain !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Support for mobile devices */
+@media (max-width: 600px) {
+  .play-pause-icon {
+    width: 32px !important;
+    height: 32px !important;
+  }
 }
 
 /* Style Guide Container Styles */

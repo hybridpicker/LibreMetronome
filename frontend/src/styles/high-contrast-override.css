@@ -1,0 +1,89 @@
+/**
+ * High Contrast Mode Final Overrides
+ * 
+ * This file contains the final CSS overrides to ensure that high contrast mode
+ * properly sets black backgrounds and golden highlights throughout the application.
+ */
+
+/* Main app container and all direct children in high contrast mode */
+body.high-contrast,
+body.high-contrast .app-container,
+body.high-contrast .app-container > div,
+body.high-contrast .metronome-container,
+body.high-contrast .metronome-visualization,
+body.high-contrast .mode-selector,
+body.high-contrast .sliders-container,
+body.high-contrast .controls-container {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+}
+
+/* Force all text to be white in high contrast mode */
+body.high-contrast h1, 
+body.high-contrast h2, 
+body.high-contrast h3, 
+body.high-contrast h4, 
+body.high-contrast h5, 
+body.high-contrast h6,
+body.high-contrast p,
+body.high-contrast span,
+body.high-contrast label,
+body.high-contrast div,
+body.high-contrast li,
+body.high-contrast a:not(:hover) {
+  color: #FFFFFF !important;
+}
+
+/* Use gold color (#D4AF37) as highlight color instead of yellow */
+body.high-contrast .active-element,
+body.high-contrast .highlight,
+body.high-contrast button:hover,
+body.high-contrast a:hover,
+body.high-contrast .active-tab,
+body.high-contrast input[type="range"]::-webkit-slider-thumb,
+body.high-contrast input[type="range"]::-moz-range-thumb {
+  background-color: #D4AF37 !important;
+  color: #000000 !important;
+}
+
+/* Make active elements stand out with gold background */
+body.high-contrast .menu-tab.active,
+body.high-contrast .settings-subtab.active,
+body.high-contrast .mode-button-active {
+  background-color: #D4AF37 !important;
+  color: #000000 !important;
+  border-color: #FFFFFF !important;
+}
+
+/* Ensure any elements with inline background colors are overridden */
+body.high-contrast [style*="background"] {
+  background-color: #000000 !important;
+  background-image: none !important;
+}
+
+/* Ensure every single background-related class is handled */
+body.high-contrast .neutral-bg,
+body.high-contrast .bg-light,
+body.high-contrast .bg-white,
+body.high-contrast .card,
+body.high-contrast .container,
+body.high-contrast .panel,
+body.high-contrast .background {
+  background-color: #000000 !important;
+}
+
+/* Force all new elements that might be added dynamically to follow high contrast rules */
+body.high-contrast * {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+}
+
+/* Preserve gold highlights for specific elements */
+body.high-contrast button:hover *,
+body.high-contrast .active-element *,
+body.high-contrast .highlight *,
+body.high-contrast .menu-tab.active *,
+body.high-contrast .settings-subtab.active *,
+body.high-contrast .mode-button-active * {
+  color: #000000 !important;
+}

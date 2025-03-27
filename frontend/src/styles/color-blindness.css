@@ -20,8 +20,11 @@ body.color-blind {
 
 /* Apply color transformations to all images, including SVG images */
 body.color-blind img {
-  transition: filter 0.3s ease;
+  transition: filter 0.15s ease;
+  will-change: filter; /* Optimization hint for browsers */
 }
+
+/* Immediate filter application without transform that causes scaling issues */
 
 /* Protanopia (red-blind) - images and SVGs */
 body.protanopia img {
@@ -94,6 +97,35 @@ body.color-blind .play-pause-icon,
 body.color-blind .tap-button img,
 body.color-blind .control-button img {
   transition: filter 0.3s ease;
+}
+
+/* Prevent viewport scaling issues in Color Blind mode */
+body.color-blind.preserve-viewport {
+  /* Ensure proper viewport size is maintained */
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+}
+
+/* Make sure the metronome container maintains its dimensions */
+body.color-blind .metronome-container {
+  width: calc(100vw - 40px) !important;
+  max-width: 300px !important;
+  height: calc(100vw - 40px) !important;
+  max-height: 300px !important;
+  transform: none !important;
+  position: relative !important;
+}
+
+/* Tablet adjustments */
+@media (min-width: 600px) and (max-width: 1024px) {
+  body.color-blind .metronome-container {
+    max-width: 400px !important;
+    max-height: 400px !important;
+  }
 }
 
 /* Protanopia (red-blind) - specific UI elements */
@@ -317,11 +349,42 @@ body.color-blind .metronome-container img[src*="accentedBeatActive.svg"] {
   box-shadow: 0 0 2px rgba(255,255,255,0.6) !important;
 }
 
-/* Ensure the play/pause and tap buttons have sufficient contrast */
+/* Ensure the play/pause and tap buttons have sufficient contrast and proper color application */
 body.color-blind .play-pause-button img,
 body.color-blind .tap-button img {
   filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));
   transform: scale(1.05);
+}
+
+/* Directly target the SVG within the play button for color blindness modes */
+body.color-blind .play-pause-icon {
+  /* Apply the appropriate color filter to ensure the SVG changes color */
+  filter: var(--svg-filter);
+}
+
+/* Specific color overrides for play/pause button in each color blind mode */
+body.protanopia .play-pause-icon {
+  filter: grayscale(0.5) sepia(0.4) hue-rotate(140deg) saturate(0.8);
+}
+
+body.deuteranopia .play-pause-icon {
+  filter: grayscale(0.4) sepia(0.6) hue-rotate(40deg) saturate(0.9);
+}
+
+body.tritanopia .play-pause-icon {
+  filter: grayscale(0.4) sepia(0.5) hue-rotate(200deg) saturate(0.7);
+}
+
+body.monochromacy .play-pause-icon {
+  filter: grayscale(1);
+}
+
+/* Play button visibility fixes - TODO: Improve styling */
+body.color-blind .play-pause-button {
+  position: relative !important;
+  z-index: 50 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 /* Add specific styles for the analog metronome in color blind mode */

@@ -135,10 +135,11 @@ const MainMenu = ({
       <button 
         className={`menu-button ${isVisible ? 'active' : ''}`}
         onClick={() => setIsVisible(prev => !prev)}
-        aria-label="Main Menu"
+        aria-label={isVisible ? "Close Main Menu" : "Open Main Menu"}
+        aria-expanded={isVisible}
         title="Settings (S)"
       >
-        <MenuIcon />
+        <MenuIcon className="menu-icon" />
       </button>
       
       {/* Menu Overlay */}

@@ -1,8 +1,8 @@
 // Updated src/components/Menu/SettingsContent.js
 import React, { useState, useEffect, useCallback } from 'react';
 import { getAllSoundSets, setActiveSoundSet, getActiveSoundSetIdFromCookie } from '../../services/soundSetService';
-import { loadAccessibilitySettings, playAudioFeedback } from '../../utils/accessibility/accessibilityUtils';
-// Unused import removed
+import { loadAccessibilitySettings, playAudioFeedback, announceToScreenReader, triggerHapticFeedback } from '../../utils/accessibility/accessibilityUtils';
+import './settings-accessibility.css';
 
 const SettingsContent = ({
   volume,
@@ -207,31 +207,192 @@ const SettingsContent = ({
       // Save to localStorage
       localStorage.setItem(localStorageKey, value.toString());
       
+      // Get all elements we need to update
+      const metronomeElements = document.querySelectorAll('.metronome-container, .metronome-canvas, .metronome-controls, .beat-grid, .circle-display, .analog-display, canvas, svg');
+      const controlElements = document.querySelectorAll('.control-section, .tempo-display, .beats-display, .volume-control');
+      const headerFooterElements = document.querySelectorAll('header, footer');
+      
       // Apply setting to DOM and window globals for immediate feedback
       switch(setting) {
         case 'highContrast':
+          // Apply to main elements
           document.body.classList.toggle('high-contrast', value);
+          
+          // Force refresh on specific metronome elements
+          metronomeElements.forEach(el => {
+            el.classList.toggle('high-contrast', value);
+            // Add a slight transform to force a repaint
+            el.style.transform = 'translateZ(0)';
+            setTimeout(() => { el.style.transform = ''; }, 0);
+          });
+          
+          // Handle SVGs and Canvas specifically for high contrast mode
+          const svgElements = document.querySelectorAll('svg');
+          const canvasElements = document.querySelectorAll('canvas');
+          
+          if (value) {
+            // Apply high contrast mode to SVGs
+            svgElements.forEach(svg => {
+              // Apply styles directly to SVG elements
+              svg.style.filter = 'brightness(2) contrast(1.5)';
+              
+              // For each individual SVG element
+              const paths = svg.querySelectorAll('path, circle, rect, line, polygon');
+              paths.forEach(path => {
+                path.setAttribute('stroke', '#FFFFFF');
+                path.setAttribute('stroke-width', '2');
+                if (!path.getAttribute('fill') || path.getAttribute('fill') === 'none') {
+                  path.setAttribute('fill', 'none');
+                } else {
+                  path.setAttribute('fill', '#000000');
+                }
+              });
+            });
+            
+            // Apply high contrast mode to Canvas
+            canvasElements.forEach(canvas => {
+              canvas.style.filter = 'brightness(2) contrast(1.5) invert(1)';
+            });
+          } else {
+            // Remove high contrast mode from SVGs
+            svgElements.forEach(svg => {
+              svg.style.filter = '';
+              
+              // Reset SVG element styles
+              const paths = svg.querySelectorAll('path, circle, rect, line, polygon');
+              paths.forEach(path => {
+                path.removeAttribute('stroke');
+                path.removeAttribute('stroke-width');
+                path.removeAttribute('fill');
+              });
+            });
+            
+            // Remove high contrast mode from Canvas
+            canvasElements.forEach(canvas => {
+              canvas.style.filter = '';
+            });
+          }
+          
+          // Update header/footer
+          headerFooterElements.forEach(el => {
+            el.classList.toggle('high-contrast', value);
+          });
+          
+          // Update controls
+          controlElements.forEach(el => {
+            el.classList.toggle('high-contrast', value);
+          });
+          
+          // Announce change
+          if (window.screenReaderMessagesEnabled) {
+            const message = value ? 'High contrast mode enabled' : 'High contrast mode disabled';
+            announceToScreenReader(message, 'polite');
+          }
           break;
+          
         case 'largeText':
+          // Apply to document
           document.body.classList.toggle('large-text', value);
+          
+          // Update controls and texts
+          controlElements.forEach(el => {
+            el.classList.toggle('large-text', value);
+          });
+          
+          // Update header/footer
+          headerFooterElements.forEach(el => {
+            el.classList.toggle('large-text', value);
+          });
+          
+          // Force layout refresh for elements that might not adjust automatically
+          setTimeout(() => {
+            window.dispatchEvent(new Event('resize'));
+            
+            // Force reflow of specific containers that may need adjustment
+            const containers = document.querySelectorAll('.metronome-container, .menu-modal, .settings-content');
+            containers.forEach(container => {
+              // This triggers a reflow
+              const height = container.offsetHeight;
+              container.style.transform = 'translateZ(0)';
+              setTimeout(() => {
+                container.style.transform = '';
+              }, 10);
+            });
+          }, 50);
+          
+          // Announce change
+          if (window.screenReaderMessagesEnabled) {
+            const message = value ? 'Large text mode enabled' : 'Large text mode disabled';
+            announceToScreenReader(message, 'polite');
+          }
           break;
+          
         case 'reducedMotion':
+          // Apply to document
           document.body.classList.toggle('reduced-motion', value);
+          
+          // Apply to metronome elements specifically
+          metronomeElements.forEach(el => {
+            el.classList.toggle('reduced-motion', value);
+          });
+          
+          // Announce change
+          if (window.screenReaderMessagesEnabled) {
+            const message = value ? 'Reduced motion enabled' : 'Reduced motion disabled';
+            announceToScreenReader(message, 'polite');
+          }
           break;
+          
         case 'focusIndicators':
+          // Apply to document
           document.body.classList.toggle('focus-visible-enabled', value);
           window.focusIndicatorsEnabled = value;
+          
+          // Announce change
+          if (window.screenReaderMessagesEnabled) {
+            const message = value ? 'Enhanced focus indicators enabled' : 'Enhanced focus indicators disabled';
+            announceToScreenReader(message, 'polite');
+          }
           break;
+          
         case 'audioFeedback':
           window.audioFeedbackEnabled = value;
+          
+          // Announce change but only if not disabling audio feedback itself
+          if (window.screenReaderMessagesEnabled) {
+            const message = value ? 'Audio feedback enabled' : 'Audio feedback disabled';
+            announceToScreenReader(message, 'polite');
+          }
+          
+          // Play a test sound when enabling
+          if (value) {
+            setTimeout(() => playAudioFeedback('click'), 100);
+          }
           break;
+          
         case 'screenReaderMessages':
           window.screenReaderMessagesEnabled = value;
+          
+          // We don't announce this change since it would be redundant
           break;
+          
         case 'hapticFeedback':
           window.hapticFeedbackEnabled = value;
+          
+          // Provide a test vibration when enabling
+          if (value && window.navigator && window.navigator.vibrate) {
+            window.navigator.vibrate([50, 50, 50]);
+          }
+          
+          // Announce change
+          if (window.screenReaderMessagesEnabled) {
+            const message = value ? 'Haptic feedback enabled' : 'Haptic feedback disabled';
+            announceToScreenReader(message, 'polite');
+          }
           break;
+          
         case 'colorBlindMode':
+          console.log(`🎨 Applying color blind mode: ${value}`);
           // Remove all color blind classes first
           document.body.classList.remove('color-blind', 'protanopia', 'deuteranopia', 'tritanopia', 'monochromacy');
           
@@ -240,8 +401,22 @@ const SettingsContent = ({
             document.body.classList.add('color-blind');
             document.body.classList.add(value);
             
-            // Force SVG elements to repaint with new filter
+            // Apply to specific elements
+            metronomeElements.forEach(el => {
+              el.classList.add('color-blind', value);
+            });
+            
+            headerFooterElements.forEach(el => {
+              el.classList.add('color-blind', value);
+            });
+            
+            controlElements.forEach(el => {
+              el.classList.add('color-blind', value);
+            });
+            
+            // Force SVG elements and images to repaint with new filter
             setTimeout(() => {
+              // Force SVG repaint
               const svgElements = document.querySelectorAll('svg');
               console.log(`Refreshing ${svgElements.length} SVG elements for color blind mode: ${value}`);
               
@@ -252,9 +427,82 @@ const SettingsContent = ({
                   svg.style.transform = '';
                 }, 0);
               });
+              
+              // Force canvas repaint for metronome visuals
+              const canvasElements = document.querySelectorAll('canvas');
+              canvasElements.forEach(canvas => {
+                canvas.style.transform = 'translateZ(0)';
+                setTimeout(() => {
+                  canvas.style.transform = '';
+                }, 0);
+              });
+              
+              // Force image repaint
+              const images = document.querySelectorAll('img');
+              console.log(`Refreshing ${images.length} images for color blind mode: ${value}`);
+              
+              images.forEach(img => {
+                // Force repaint by briefly changing opacity
+                const originalOpacity = img.style.opacity || '1';
+                img.style.transition = 'none';
+                img.style.opacity = '0.99';
+                
+                setTimeout(() => {
+                  img.style.opacity = originalOpacity;
+                  img.style.transition = '';
+                }, 10);
+              });
+              
+              // Force metronome container repaint
+              const metronomeContainer = document.querySelector('.metronome-container');
+              if (metronomeContainer) {
+                metronomeContainer.style.transform = 'translateZ(0)';
+                setTimeout(() => {
+                  metronomeContainer.style.transform = '';
+                }, 0);
+              }
+              
+              // Announce the change to screen readers
+              if (window.screenReaderMessagesEnabled) {
+                let message = value === 'none' 
+                  ? 'Color blind mode disabled' 
+                  : `Color blind mode set to ${value}`;
+                  
+                announceToScreenReader(message, 'polite');
+              }
+              
+              // Provide haptic feedback if enabled
+              if (window.hapticFeedbackEnabled && navigator.vibrate) {
+                triggerHapticFeedback('short');
+              }
             }, 50);
+          } else {
+            // Remove color blind classes from specific elements
+            metronomeElements.forEach(el => {
+              el.classList.remove('color-blind', 'protanopia', 'deuteranopia', 'tritanopia', 'monochromacy');
+            });
+            
+            headerFooterElements.forEach(el => {
+              el.classList.remove('color-blind', 'protanopia', 'deuteranopia', 'tritanopia', 'monochromacy');
+            });
+            
+            controlElements.forEach(el => {
+              el.classList.remove('color-blind', 'protanopia', 'deuteranopia', 'tritanopia', 'monochromacy');
+            });
+            
+            // Force repaint
+            document.body.style.transform = 'translateZ(0)';
+            setTimeout(() => {
+              document.body.style.transform = '';
+            }, 0);
+            
+            // Announce the change
+            if (window.screenReaderMessagesEnabled) {
+              announceToScreenReader('Color blind mode disabled', 'polite');
+            }
           }
           break;
+          
         default:
           console.warn(`Unknown accessibility setting: ${setting}`);
           break;
@@ -298,8 +546,6 @@ const SettingsContent = ({
     }
   };
   
-  // Pattern preview function removed as it's unused
-
   // Handler to change the active sound set
   const handleSoundSetChange = async (id) => {
     // Don't do anything if we're already using this sound set
@@ -343,6 +589,21 @@ const SettingsContent = ({
     setVolume(newVolume);
   };
 
+  // Helper function for screen reader announcements
+  const announceToScreenReader = (message, priority = 'polite') => {
+    if (!window.screenReaderMessagesEnabled) return;
+    
+    const announcer = document.getElementById('settings-change-announcement');
+    if (announcer) {
+      announcer.textContent = message;
+      
+      // Clear after a short delay to ensure it'll be announced again if the same message is sent
+      setTimeout(() => {
+        announcer.textContent = '';
+      }, 100);
+    }
+  };
+
   // Apply settings and close the overlay
   const handleApply = () => {
     console.log("Applying all settings");
@@ -351,54 +612,17 @@ const SettingsContent = ({
     setDefaultTempo(localTempo);
     setDefaultSubdivisions(localSubdivisions);
     
-    // Apply all accessibility settings explicitly based on current state
-    console.log("Applying accessibility settings:", accessibilitySettings);
-    
-    // Apply each setting explicitly using the values from state
-    for (const [key, value] of Object.entries(accessibilitySettings)) {
-      if (key === 'colorBlindMode') {
-        localStorage.setItem('accessibility-color-blind-mode', value);
-        
-        // Clear all color blind classes first
-        document.body.classList.remove('color-blind', 'protanopia', 'deuteranopia', 'tritanopia', 'monochromacy');
-        
-        // Apply appropriate classes based on selected mode
-        if (value !== 'none') {
-          document.body.classList.add('color-blind');
-          document.body.classList.add(value);
-        }
-      } else {
-        // Convert setting key to kebab-case for localStorage
-        const storageKey = `accessibility-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
-        localStorage.setItem(storageKey, value.toString());
-        
-        // Apply to DOM if it's a class-based setting
-        if (['highContrast', 'largeText', 'reducedMotion', 'focusIndicators'].includes(key)) {
-          const className = key === 'highContrast' ? 'high-contrast' : 
-                           key === 'largeText' ? 'large-text' :
-                           key === 'reducedMotion' ? 'reduced-motion' : 'focus-visible-enabled';
-          
-          if (value) {
-            document.body.classList.add(className);
-          } else {
-            document.body.classList.remove(className);
-          }
-        }
-        
-        // Apply to window globals if it's a non-class setting
-        if (key === 'audioFeedback') window.audioFeedbackEnabled = value;
-        if (key === 'screenReaderMessages') window.screenReaderMessagesEnabled = value;
-        if (key === 'hapticFeedback') window.hapticFeedbackEnabled = value;
-      }
-      
-      // Dispatch an event for each setting to notify the application
-      window.dispatchEvent(new CustomEvent('accessibility-settings-changed', {
-        detail: { setting: key, value: value }
-      }));
-    }
+    // No need to re-apply the accessibility settings here as they're already
+    // applied when the user interacts with the controls
+    console.log("Finalizing accessibility settings:", accessibilitySettings);
     
     // For extra safety, also run loadAccessibilitySettings to ensure consistency
     loadAccessibilitySettings();
+    
+    // Announce that settings have been applied (for screen readers)
+    if (window.screenReaderMessagesEnabled) {
+      announceToScreenReader("All settings applied and saved", "polite");
+    }
     
     // Apply sound set changes and ensure immediate reload
     if (activeSoundSetId) {
@@ -590,6 +814,8 @@ const SettingsContent = ({
       <div className={`settings-section ${activeSubTab === 'accessibility' ? 'active' : ''}`}>
         <div className="settings-group">
           <h3>Display Options</h3>
+          {/* Hidden announcement for screen readers when settings change */}
+          <div aria-live="polite" className="sr-only" id="settings-change-announcement"></div>
           <div className="settings-row checkbox-row">
             <label>
               <input 
@@ -670,39 +896,7 @@ const SettingsContent = ({
             <p className="setting-description">Plays sounds for actions and notifications</p>
           </div>
           
-          <div className="settings-row checkbox-row">
-            <label>
-              <input 
-                type="checkbox" 
-                checked={accessibilitySettings.screenReaderMessages !== false} 
-                onChange={e => updateAccessibilitySetting('screenReaderMessages', e.target.checked)} 
-              />
-              <span>Screen Reader Announcements</span>
-            </label>
-            <p className="setting-description">Provides detailed announcements for screen readers</p>
-          </div>
-          
-          <div className="settings-row checkbox-row">
-            <label>
-              <input 
-                type="checkbox" 
-                checked={accessibilitySettings.hapticFeedback} 
-                onChange={e => {
-                  updateAccessibilitySetting('hapticFeedback', e.target.checked);
-                  
-                  // Provide a test vibration when enabling
-                  if (e.target.checked && window.navigator && window.navigator.vibrate) {
-                    window.navigator.vibrate(100);
-                  }
-                }} 
-              />
-              <span>Haptic Feedback</span>
-            </label>
-            <p className="setting-description">
-              Provides vibration feedback on mobile devices
-              {!window.navigator.vibrate && <span className="note"> (Not supported in this browser)</span>}
-            </p>
-          </div>
+          {/* Screen Reader Announcements and Haptic Feedback options removed */}
         </div>
         
         <div className="settings-group">
@@ -740,9 +934,17 @@ const SettingsContent = ({
         </div>
       </div>
       
-      <button className="settings-save-button" onClick={handleApply}>
-        Apply Settings
-      </button>
+      <div className="settings-action-row">
+        <div className="settings-status">
+          {/* Show a message indicating settings are applied immediately */}
+          <span className="settings-status-text">
+            Settings are applied immediately upon change
+          </span>
+        </div>
+        <button className="settings-save-button" onClick={handleApply}>
+          Apply All & Close
+        </button>
+      </div>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { playAudioFeedback } from '../../utils/accessibility/accessibilityUtils';
+import { playAudioFeedback, announceToScreenReader } from '../../utils/accessibility/accessibilityUtils';
 
 /**
  * FocusTrap component for managing focus within modals, dialogs, and menus
@@ -26,6 +26,10 @@ const FocusTrap = ({ children, isActive, triggerRef, onEscape }) => {
     
     // Store current focused element to restore later
     previousFocusRef.current = triggerRef?.current || document.activeElement;
+    
+    if (window.screenReaderMessagesEnabled) {
+      announceToScreenReader('Dialog opened. Press Escape to close.', 'polite');
+    }
     
     // Get all focusable elements within the trap
     const focusableElements = Array.from(
@@ -85,6 +89,10 @@ const FocusTrap = ({ children, isActive, triggerRef, onEscape }) => {
           previousFocusRef.current.focus();
           if (window.audioFeedbackEnabled) {
             playAudioFeedback('click');
+          }
+          
+          if (window.screenReaderMessagesEnabled) {
+            announceToScreenReader('Dialog closed.', 'polite');
           }
         }, 0);
       }

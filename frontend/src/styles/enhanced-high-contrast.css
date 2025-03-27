@@ -1,0 +1,216 @@
+/**
+ * Enhanced High Contrast Mode
+ * 
+ * This stylesheet provides additional improvements to the high contrast mode
+ * with better visual cues and accessibility enhancements.
+ */
+
+/* Enhanced focus indicators for all interactive elements */
+body.high-contrast *:focus-visible {
+  outline: 4px solid #D4AF37 !important; /* Changed to gold */
+  outline-offset: 4px !important;
+}
+
+/* Enhanced play/pause button */
+body.high-contrast .play-pause-button {
+  background-color: #000000 !important;
+  border: 3px solid #FFFFFF !important;
+  box-shadow: 0 0 0 2px #000000 !important;
+}
+
+body.high-contrast .play-pause-button:hover,
+body.high-contrast .play-pause-button:focus {
+  background-color: #D4AF37 !important; /* Changed to gold */
+}
+
+body.high-contrast .play-pause-button:hover .play-pause-icon,
+body.high-contrast .play-pause-button:focus .play-pause-icon {
+  filter: invert(1) !important;
+}
+
+/* Enhanced menu button */
+body.high-contrast .menu-button {
+  background-color: #000000 !important;
+  border: 3px solid #FFFFFF !important;
+  box-shadow: 0 0 0 2px #000000 !important;
+}
+
+body.high-contrast .menu-button:hover,
+body.high-contrast .menu-button:focus {
+  background-color: #D4AF37 !important; /* Changed to gold */
+}
+
+body.high-contrast .menu-button:hover svg,
+body.high-contrast .menu-button:focus svg {
+  filter: invert(1) !important;
+}
+
+/* Make sure SVG icons are visible */
+body.high-contrast .menu-icon,
+body.high-contrast .play-pause-icon {
+  color: #FFFFFF !important;
+}
+
+body.high-contrast .menu-button:hover .menu-icon,
+body.high-contrast .menu-button:focus .menu-icon {
+  color: #000000 !important;
+}
+
+/* Enhanced tap button */
+body.high-contrast .tap-button {
+  background-color: #000000 !important;
+  border: 3px solid #FFFFFF !important;
+}
+
+body.high-contrast .tap-button:hover {
+  background-color: #D4AF37 !important; /* Changed to gold */
+}
+
+body.high-contrast .tap-button img {
+  filter: brightness(5) !important;
+}
+
+/* Ensure better contrast for all text */
+body.high-contrast * {
+  text-shadow: none !important;
+}
+
+/* Improved contrast for sliders */
+body.high-contrast input[type="range"] {
+  height: 12px !important;
+}
+
+body.high-contrast input[type="range"]::-webkit-slider-thumb {
+  width: 28px !important;
+  height: 28px !important;
+  background-color: #D4AF37 !important; /* Changed to gold */
+  border: 3px solid #000000 !important;
+  box-shadow: 0 0 0 2px #FFFFFF !important;
+}
+
+body.high-contrast input[type="range"]::-moz-range-thumb {
+  width: 28px !important;
+  height: 28px !important;
+  background-color: #D4AF37 !important; /* Changed to gold */
+  border: 3px solid #000000 !important;
+  box-shadow: 0 0 0 2px #FFFFFF !important;
+}
+
+/* Improved contrast for active beats in visualization */
+body.high-contrast .beat-indicator.active,
+body.high-contrast .beat-circle.active,
+body.high-contrast .beat-dot.active {
+  background-color: #D4AF37 !important; /* Changed to gold */
+  border-color: #000000 !important;
+  box-shadow: 0 0 0 3px #FFFFFF !important;
+}
+
+/* Improve contrast for menu overlay */
+body.high-contrast .menu-overlay {
+  background-color: #000000 !important;
+}
+
+body.high-contrast .menu-modal,
+body.high-contrast .settings-content,
+body.high-contrast .modal-content,
+body.high-contrast .dialog-content {
+  background-color: #000000 !important;
+  border: 3px solid #FFFFFF !important;
+  color: #FFFFFF !important;
+}
+
+/* Ensure all overlay content is readable */
+body.high-contrast .menu-overlay *,
+body.high-contrast .modal *,
+body.high-contrast .dialog *,
+body.high-contrast .app-container,
+body.high-contrast main,
+body.high-contrast .main-content,
+body.high-contrast #main-content,
+body.high-contrast .metronome-section,
+body.high-contrast .controls-section,
+body.high-contrast .mode-selector {
+  color: #FFFFFF !important;
+  background-color: #000000 !important;
+}
+
+/* Preserve highlight colors for specific UI elements in overlays */
+body.high-contrast .menu-tab.active,
+body.high-contrast .settings-subtab.active {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+}
+
+/* Ensure metronome visualization elements have black background and white text */
+body.high-contrast .metronome-visualization,
+body.high-contrast .metronome-container * {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+}
+
+/* Override any inline styles that might set background colors */
+body.high-contrast [style*="background-color"] {
+  background-color: #000000 !important;
+}
+
+/* Ensure all text is visible */
+body.high-contrast [style*="color"] {
+  color: #FFFFFF !important;
+}
+
+/* Fix for specific mode displays */
+body.high-contrast .circle-mode,
+body.high-contrast .analog-mode,
+body.high-contrast .grid-mode,
+body.high-contrast .multi-mode,
+body.high-contrast .polyrhythm-mode {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+  border-color: #FFFFFF !important;
+}
+
+/* Make sure .section-title and labels are visible */
+body.high-contrast .section-title,
+body.high-contrast label,
+body.high-contrast .settings-row span {
+  color: #FFFFFF !important;
+}
+
+/* Enhanced menu tabs */
+body.high-contrast .menu-tab {
+  border: 2px solid #FFFFFF !important;
+  margin: 0 2px !important;
+}
+
+body.high-contrast .menu-tab.active {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+}
+
+/* Specific override for elements that need high contrast treatment */
+body.high-contrast [data-high-contrast-element="true"] {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+  border: 3px solid #FFFFFF !important;
+}
+
+/* Force high contrast mode to override any other styles */
+@media (forced-colors: active) {
+  .play-pause-button, 
+  .menu-button,
+  .tap-button {
+    forced-color-adjust: none !important;
+  }
+  
+  svg.menu-icon,
+  img.play-pause-icon {
+    forced-color-adjust: none !important;
+  }
+  
+  [data-high-contrast-element="true"] {
+    forced-color-adjust: none !important;
+    background-color: #000000 !important;
+    color: ButtonText !important;
+    border-color: ButtonText !important;
+  }
+}
