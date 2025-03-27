@@ -93,8 +93,10 @@ const BaseMetronome = ({
             alignItems: 'center',
             borderRadius: mode === 'circle' ? '50%' : '0',
             backgroundColor: 'var(--neutral-bg, #f5f5f5)',
-            border: '2px solid var(--primary-teal, #00a0a0)'
+            border: '2px solid var(--primary-teal, #00a0a0)',
+            // High contrast mode will override these styles via CSS
           }}
+          data-high-contrast-element="true"
         >
           {mode.charAt(0).toUpperCase() + mode.slice(1)} Mode
         </div>

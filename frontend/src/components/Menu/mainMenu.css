@@ -65,10 +65,10 @@
   background: var(--neutral-bg-alt);
   padding: 25px;
   border-radius: 12px;
-  width: 90%;
-  max-width: 550px;
+  width: 95%;
+  max-width: 700px; /* Increased from 550px */
   position: relative;
-  max-height: 85vh;
+  max-height: 90vh; /* Increased from 85vh */
   overflow-y: auto;
   box-shadow: var(--modal-shadow);
   animation: menuModalFadeIn 0.3s ease-out;
@@ -401,10 +401,10 @@
   position: fixed;
   top: 10px;
   right: 10px;
-  width: 40px;
-  height: 40px;
+  width: 46px; /* Increased size for better tap target */
+  height: 46px; /* Increased size for better tap target */
   background-color: var(--primary-teal);
-  border: none;
+  border: 2px solid transparent; /* Border for high contrast mode */
   border-radius: 50%;
   cursor: pointer;
   display: flex;
@@ -413,6 +413,7 @@
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   z-index: 100;
   transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  outline: none; /* Remove default outline for custom focus state */
 }
 
 .menu-button:hover {
@@ -420,10 +421,27 @@
   background-color: var(--primary-teal-dark);
 }
 
+.menu-button:focus-visible {
+  outline: 3px solid var(--focus-outline, #4d90fe);
+  outline-offset: 3px;
+}
+
+.menu-button svg, 
 .menu-button img {
   width: 24px;
   height: 24px;
   color: white;
+}
+
+/* Active state when menu is open */
+.menu-button.active {
+  background-color: var(--primary-teal-dark);
+}
+
+/* Additional styles for pressed state */
+.menu-button:active {
+  transform: scale(0.95);
+  background-color: var(--primary-teal-darker, #008e8e);
 }
 
 /* Enhanced close button for better visibility */
@@ -826,23 +844,27 @@
   color: var(--primary-teal);
   margin-top: 0;
   margin-bottom: 20px;
+  font-size: 24px;
+  text-align: center;
 }
 
 .settings-subtabs {
   display: flex;
+  justify-content: center;
   border-bottom: 1px solid var(--neutral-border-light);
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 }
 
 .settings-subtab {
   background: transparent;
   border: none;
-  padding: 8px 15px;
-  font-size: 14px;
+  padding: 12px 25px; /* Increased padding */
+  font-size: 16px; /* Increased font size */
   color: var(--text-secondary);
   cursor: pointer;
   position: relative;
   transition: all 0.2s ease;
+  font-weight: 500;
 }
 
 .settings-subtab:hover {
@@ -873,9 +895,12 @@
 }
 
 .settings-group {
-  margin-bottom: 20px;
+  margin-bottom: 25px;
   padding-bottom: 20px;
   border-bottom: 1px solid var(--neutral-border-light);
+  max-width: 650px; /* Added max-width */
+  margin-left: auto; /* Center the group */
+  margin-right: auto; /* Center the group */
 }
 
 .settings-group:last-child {
@@ -886,11 +911,20 @@
 .settings-group h3 {
   color: var(--primary-teal-dark);
   margin: 0 0 15px 0;
-  font-size: 16px;
+  font-size: 18px; /* Larger font size */
+  border-bottom: 1px solid var(--neutral-border-light);
+  padding-bottom: 10px;
 }
 
 .settings-row {
-  margin-bottom: 15px;
+  margin-bottom: 20px; /* Increased from 15px */
+  padding: 8px; /* Add padding */
+  border-radius: 5px; /* Rounded corners */
+  transition: background-color 0.2s ease;
+}
+
+.settings-row:hover {
+  background-color: var(--background-lighter);
 }
 
 .settings-row:last-child {

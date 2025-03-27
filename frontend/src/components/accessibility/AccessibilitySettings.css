@@ -286,6 +286,7 @@ body.large-text .close-button {
   .accessibility-settings {
     padding: 15px;
     max-height: 80vh;
+    width: 90%;
   }
   
   .setting-description {
@@ -304,5 +305,21 @@ body.large-text .close-button {
   .setting-item.color-blind-mode select {
     max-width: 100%;
     margin-left: 0;
+  }
+  
+  .close-button {
+    padding: 12px 24px;
+    width: 100%;
+    margin-top: 15px;
+  }
+  
+  .accessibility-container {
+    top: 10px;
+    right: 10px;
+  }
+  
+  .accessibility-toggle {
+    width: 40px;
+    height: 40px;
   }
 }

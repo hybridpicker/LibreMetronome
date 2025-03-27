@@ -28,10 +28,10 @@ export default function BaseMetronomeLayout({
     <div className="metronome-layout">
       <div className="metronome-container" style={{ width: containerSize, height: containerSize }}>
         {typeof children === 'function' ? children(containerSize) : children}
-        <button className="play-pause-button" onClick={onTogglePlay}>
+        <button className="play-pause-button" onClick={onTogglePlay} aria-label={isPaused ? "Play metronome" : "Pause metronome"}>
           <img 
             src={isPaused ? require('../../assets/svg/play.svg').default : require('../../assets/svg/pause.svg').default} 
-            alt="Toggle Play" 
+            alt={isPaused ? "Play" : "Pause"} 
             className="play-pause-icon"
           />
         </button>

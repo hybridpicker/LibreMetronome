@@ -16,7 +16,6 @@ import ModeSelector from './components/ModeSelector'; // Import the new ModeSele
 import { SupportButton, SupportPage } from './components/Support'; // Import the Support components
 import { HelpButton, InfoModal } from './components/InfoSection'; // Import the Help components
 import { 
-  AccessibilityMenu, 
   ScreenReaderAnnouncer,
   SkipToContent,
   FocusTrap 
@@ -25,16 +24,22 @@ import {
   loadAccessibilitySettings, 
   announceToScreenReader,
   triggerHapticFeedback,
-  playAudioFeedback
+  playAudioFeedback,
+  detectSystemPreferences
 } from './utils/accessibility/accessibilityUtils';
 import './styles/focus-indicators.css'; // Import focus indicator styles
 import './styles/color-blindness.css'; // Import color blindness styles
+import './styles/high-contrast.css'; // Import high contrast styles
+import './styles/enhanced-high-contrast.css'; // Import enhanced high contrast styles
+import './styles/high-contrast-override.css'; // Import final high contrast overrides
+import './styles/large-text.css'; // Import large text styles
+import './styles/global-accessibility.css'; // Import global accessibility styles
 
 const TEMPO_MIN = 15;
 const TEMPO_MAX = 240;
 
 // Global debug helper for testing sound preview
-window.metronomeDebug = {
+window.metronomeDebug = window.metronomeDebug || {
   audioBuffers: null,
   audioContext: null,
   playSound: function(type, volume = 0.5) {
@@ -429,10 +434,19 @@ function App() {
       initAccessibility();
     };
     
-    // Listen for system preference changes for reduced motion
-    const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const highContrastQuery = window.matchMedia('(prefers-contrast: more)');
-    const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    // Try to create media queries with fallbacks for tests
+    let reducedMotionQuery, highContrastQuery, darkModeQuery;
+    
+    try {
+      // Only create these if matchMedia is available
+      if (window.matchMedia && typeof window.matchMedia === 'function') {
+        reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+        highContrastQuery = window.matchMedia('(prefers-contrast: more)');
+        darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      }
+    } catch (e) {
+      console.error('Error creating media queries:', e);
+    }
     
     const handleReducedMotionChange = (e) => {
       console.log('App: System preference for reduced motion changed:', e.matches);
@@ -484,12 +498,25 @@ function App() {
     
     // Set up event listeners
     window.addEventListener('accessibility-settings-changed', handleAccessibilitySettingsChanged);
-    reducedMotionQuery.addEventListener('change', handleReducedMotionChange);
-    highContrastQuery.addEventListener('change', handleHighContrastChange);
     
-    // Initial check for system preferences
-    handleReducedMotionChange(reducedMotionQuery);
-    handleHighContrastChange(highContrastQuery);
+    // Only add event listeners if the media queries are available
+    if (reducedMotionQuery && typeof reducedMotionQuery.addEventListener === 'function') {
+      reducedMotionQuery.addEventListener('change', handleReducedMotionChange);
+    }
+    
+    if (highContrastQuery && typeof highContrastQuery.addEventListener === 'function') {
+      highContrastQuery.addEventListener('change', handleHighContrastChange);
+    }
+    
+    // Initial check for system preferences using the utility function
+    const systemPreferences = detectSystemPreferences();
+    if (systemPreferences.reducedMotion) {
+      handleReducedMotionChange({ matches: true });
+    }
+    
+    if (systemPreferences.highContrast) {
+      handleHighContrastChange({ matches: true });
+    }
     
     // Check accessibility settings every time the app is focused
     window.addEventListener('focus', initAccessibility);
@@ -506,11 +533,7 @@ function App() {
         audioFeedback: window.audioFeedbackEnabled,
         screenReaderMessages: window.screenReaderMessagesEnabled,
         hapticFeedback: window.hapticFeedbackEnabled,
-        systemPreferences: {
-          reducedMotion: reducedMotionQuery.matches,
-          highContrast: highContrastQuery.matches,
-          darkMode: darkModeQuery.matches
-        },
+        systemPreferences: detectSystemPreferences(),
         localStorage: {
           highContrast: localStorage.getItem('accessibility-high-contrast'),
           largeText: localStorage.getItem('accessibility-large-text'),
@@ -528,8 +551,16 @@ function App() {
     
     return () => {
       window.removeEventListener('accessibility-settings-changed', handleAccessibilitySettingsChanged);
-      reducedMotionQuery.removeEventListener('change', handleReducedMotionChange);
-      highContrastQuery.removeEventListener('change', handleHighContrastChange);
+      
+      // Only remove event listeners if they were added
+      if (reducedMotionQuery && typeof reducedMotionQuery.removeEventListener === 'function') {
+        reducedMotionQuery.removeEventListener('change', handleReducedMotionChange);
+      }
+      
+      if (highContrastQuery && typeof highContrastQuery.removeEventListener === 'function') {
+        highContrastQuery.removeEventListener('change', handleHighContrastChange);
+      }
+      
       window.removeEventListener('focus', initAccessibility);
     };
   }, []);
@@ -656,8 +687,6 @@ function App() {
         return baseDescription;
     }
   };
-
-  // Function removed as it was unused
 
   const renderMetronome = () => {
     switch (mode) {

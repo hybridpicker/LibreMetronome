@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import AccessibilitySettings from './AccessibilitySettings';
-import { playAudioFeedback } from '../../utils/accessibility/accessibilityUtils';
+import { playAudioFeedback, announceToScreenReader } from '../../utils/accessibility/accessibilityUtils';
 import './AccessibilityMenu.css';
 
 const AccessibilityMenu = () => {
   const [showSettings, setShowSettings] = useState(false);
+  const buttonRef = useRef(null);
   
   // Close settings panel with Escape key
   useEffect(() => {
@@ -26,15 +27,26 @@ const AccessibilityMenu = () => {
     if (window.audioFeedbackEnabled) {
       playAudioFeedback('click');
     }
+    
+    // Announce to screen readers
+    if (window.screenReaderMessagesEnabled) {
+      if (showSettings) {
+        announceToScreenReader('Accessibility settings panel closed', 'polite');
+      } else {
+        announceToScreenReader('Accessibility settings panel opened', 'polite');
+      }
+    }
   };
   
   return (
     <div className="accessibility-container">
       <button 
+        ref={buttonRef}
         className="accessibility-toggle"
         onClick={handleButtonClick}
         aria-label="Accessibility settings"
         aria-expanded={showSettings}
+        aria-haspopup="dialog"
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="accessibility-icon" aria-hidden="true">
           <circle cx="12" cy="12" r="10"></circle>
@@ -48,9 +60,12 @@ const AccessibilityMenu = () => {
       </button>
       
       {showSettings && (
-        <div className="settings-overlay" role="dialog" aria-modal="true">
+        <div className="settings-overlay" role="dialog" aria-modal="true" aria-labelledby="a11y-title">
           <div className="settings-container">
-            <AccessibilitySettings onClose={() => setShowSettings(false)} />
+            <AccessibilitySettings 
+              onClose={() => setShowSettings(false)} 
+              triggerRef={buttonRef}
+            />
           </div>
         </div>
       )}

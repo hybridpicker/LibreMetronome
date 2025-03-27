@@ -52,12 +52,23 @@ const AccessibilitySettings = ({ onClose, triggerRef }) => {
     document.body.classList.remove('large-text');
     if (largeText) {
       document.body.classList.add('large-text');
+      
+      // Force refresh of layout for elements that might not automatically adjust
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+      }, 50);
     }
     
     // Dispatch event to notify other components
     window.dispatchEvent(new CustomEvent('accessibility-settings-changed', {
       detail: { setting: 'largeText', value: largeText }
     }));
+    
+    // Announce change to screen readers if enabled
+    if (window.screenReaderMessagesEnabled) {
+      const message = largeText ? 'Large text mode enabled' : 'Large text mode disabled';
+      announceToScreenReader(message, 'polite');
+    }
     
     console.log('Large text setting updated:', largeText);
   }, [largeText]);
@@ -157,9 +168,14 @@ const AccessibilitySettings = ({ onClose, triggerRef }) => {
       playAudioFeedback('click');
     }
     
+    // Provide haptic feedback if enabled
+    if (hapticFeedback && window.navigator && window.navigator.vibrate) {
+      window.navigator.vibrate(100);
+    }
+    
     // Announce settings have been saved
     if (screenReaderMessages) {
-      announceToScreenReader('Accessibility settings saved', 'polite');
+      announceToScreenReader('Accessibility settings saved and dialog closed', 'polite');
     }
     
     onClose();
@@ -210,8 +226,9 @@ const AccessibilitySettings = ({ onClose, triggerRef }) => {
                 setReducedMotion(e.target.checked);
                 if (audioFeedback) playAudioFeedback('click');
               }} 
+              disabled={true}
             />
-            <label htmlFor="reduced-motion">Reduced Motion</label>
+            <label htmlFor="reduced-motion">Reduced Motion (TODO)</label>
             <p className="setting-description">Minimizes animations and motion effects</p>
           </div>
           
@@ -224,8 +241,9 @@ const AccessibilitySettings = ({ onClose, triggerRef }) => {
                 setFocusIndicators(e.target.checked);
                 if (audioFeedback) playAudioFeedback('click');
               }} 
+              disabled={true}
             />
-            <label htmlFor="focus-indicators">Enhanced Focus Indicators</label>
+            <label htmlFor="focus-indicators">Enhanced Focus Indicators (TODO)</label>
             <p className="setting-description">Shows clear visual indicators for keyboard focus</p>
           </div>
           
@@ -268,41 +286,7 @@ const AccessibilitySettings = ({ onClose, triggerRef }) => {
             <p className="setting-description">Plays sounds for actions and notifications</p>
           </div>
           
-          <div className="setting-item">
-            <input 
-              type="checkbox" 
-              id="screen-reader-messages" 
-              checked={screenReaderMessages} 
-              onChange={e => {
-                setScreenReaderMessages(e.target.checked);
-                if (audioFeedback) playAudioFeedback('click');
-              }} 
-            />
-            <label htmlFor="screen-reader-messages">Screen Reader Announcements</label>
-            <p className="setting-description">Provides detailed announcements for screen readers</p>
-          </div>
-          
-          <div className="setting-item">
-            <input 
-              type="checkbox" 
-              id="haptic-feedback" 
-              checked={hapticFeedback} 
-              onChange={e => {
-                setHapticFeedback(e.target.checked);
-                if (audioFeedback) playAudioFeedback('click');
-                
-                // Provide a test vibration when enabling
-                if (e.target.checked && window.navigator && window.navigator.vibrate) {
-                  window.navigator.vibrate(100);
-                }
-              }} 
-            />
-            <label htmlFor="haptic-feedback">Haptic Feedback</label>
-            <p className="setting-description">
-              Provides vibration feedback on mobile devices
-              {!window.navigator.vibrate && <span className="note"> (Not supported in this browser)</span>}
-            </p>
-          </div>
+          {/* Screen Reader Announcements and Haptic Feedback options removed */}
         </div>
         
         <div className="keyboard-shortcuts">

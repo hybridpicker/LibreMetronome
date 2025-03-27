@@ -103,29 +103,7 @@ body.high-contrast :focus {
   outline-offset: 2px !important;
 }
 
-/* Large text mode */
-body.large-text {
-  font-size: 1.25rem !important;
-}
-
-body.large-text h1 {
-  font-size: 2.5rem !important;
-}
-
-body.large-text h2 {
-  font-size: 2rem !important;
-}
-
-body.large-text h3 {
-  font-size: 1.75rem !important;
-}
-
-body.large-text button, 
-body.large-text input, 
-body.large-text select,
-body.large-text label {
-  font-size: 1.2rem !important;
-}
+/* Large text mode - moved to large-text.css for more comprehensive styling */
 
 /* Reduced motion */
 body.reduced-motion * {

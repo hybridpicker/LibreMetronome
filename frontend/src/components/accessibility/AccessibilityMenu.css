@@ -1,5 +1,7 @@
 .accessibility-container {
   position: fixed;
+  top: 20px;
+  right: 20px;
   z-index: 1000;
 }
 
@@ -26,8 +28,15 @@
 }
 
 .accessibility-toggle:focus {
-  outline: 2px solid var(--primary-teal);
+  outline: 3px solid var(--primary-teal);
   outline-offset: 3px;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.2);
+}
+
+body.high-contrast .accessibility-toggle:focus {
+  outline: 3px solid white;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 5px black;
 }
 
 .accessibility-icon {
