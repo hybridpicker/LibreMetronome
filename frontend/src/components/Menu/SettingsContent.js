@@ -1,7 +1,6 @@
 // Updated src/components/Menu/SettingsContent.js
 import React, { useState, useEffect, useCallback } from 'react';
 import { getAllSoundSets, setActiveSoundSet, getActiveSoundSetIdFromCookie } from '../../services/soundSetService';
-import { loadAccessibilitySettings, playAudioFeedback } from '../../utils/accessibility/accessibilityUtils';
 // Unused import removed
 
 const SettingsContent = ({
@@ -148,133 +147,6 @@ const SettingsContent = ({
     }
   }, [activeSoundSetId, soundSets, getBackendUrl]);
 
-  // Initialize accessibility settings with correct values on component mount
-  const [accessibilitySettings, setAccessibilitySettings] = useState(() => {
-    // First ensure settings are properly loaded
-    const loadedSettings = loadAccessibilitySettings();
-    console.log('Initial settings loaded in SettingsContent:', loadedSettings);
-    
-    // Return object with current settings state
-    return {
-      highContrast: document.body.classList.contains('high-contrast'),
-      largeText: document.body.classList.contains('large-text'), 
-      reducedMotion: document.body.classList.contains('reduced-motion'),
-      audioFeedback: window.audioFeedbackEnabled === true,
-      screenReaderMessages: window.screenReaderMessagesEnabled !== false,
-      focusIndicators: document.body.classList.contains('focus-visible-enabled'),
-      hapticFeedback: window.hapticFeedbackEnabled === true,
-      colorBlindMode: (document.body.classList.contains('protanopia') ? 'protanopia' :
-                      document.body.classList.contains('deuteranopia') ? 'deuteranopia' :
-                      document.body.classList.contains('tritanopia') ? 'tritanopia' :
-                      document.body.classList.contains('monochromacy') ? 'monochromacy' : 'none'),
-    };
-  });
-  
-  // Listen for accessibility settings changes from other components
-  useEffect(() => {
-    const handleAccessibilitySettingsChanged = (event) => {
-      if (event.detail && event.detail.setting) {
-        console.log('Settings changed from outside, updating local state:', event.detail);
-        
-        // Update our local state to match
-        setAccessibilitySettings(prev => ({
-          ...prev,
-          [event.detail.setting]: event.detail.value
-        }));
-      }
-    };
-    
-    // Listen for settings changes
-    window.addEventListener('accessibility-settings-changed', handleAccessibilitySettingsChanged);
-    
-    return () => {
-      window.removeEventListener('accessibility-settings-changed', handleAccessibilitySettingsChanged);
-    };
-  }, []);
-  
-  // Function to update accessibility settings
-  const updateAccessibilitySetting = (setting, value) => {
-    console.log(`Updating accessibility setting: ${setting} to ${value}`);
-    
-    // Update the local state
-    setAccessibilitySettings(prev => {
-      const newSettings = { ...prev, [setting]: value };
-      
-      // Apply the setting immediately for better user feedback
-      const kebabSetting = setting.replace(/([A-Z])/g, '-$1').toLowerCase();
-      const localStorageKey = `accessibility-${kebabSetting}`;
-      
-      // Save to localStorage
-      localStorage.setItem(localStorageKey, value.toString());
-      
-      // Apply setting to DOM and window globals for immediate feedback
-      switch(setting) {
-        case 'highContrast':
-          document.body.classList.toggle('high-contrast', value);
-          break;
-        case 'largeText':
-          document.body.classList.toggle('large-text', value);
-          break;
-        case 'reducedMotion':
-          document.body.classList.toggle('reduced-motion', value);
-          break;
-        case 'focusIndicators':
-          document.body.classList.toggle('focus-visible-enabled', value);
-          window.focusIndicatorsEnabled = value;
-          break;
-        case 'audioFeedback':
-          window.audioFeedbackEnabled = value;
-          break;
-        case 'screenReaderMessages':
-          window.screenReaderMessagesEnabled = value;
-          break;
-        case 'hapticFeedback':
-          window.hapticFeedbackEnabled = value;
-          break;
-        case 'colorBlindMode':
-          // Remove all color blind classes first
-          document.body.classList.remove('color-blind', 'protanopia', 'deuteranopia', 'tritanopia', 'monochromacy');
-          
-          // Apply new color blind mode if not 'none'
-          if (value !== 'none') {
-            document.body.classList.add('color-blind');
-            document.body.classList.add(value);
-            
-            // Force SVG elements to repaint with new filter
-            setTimeout(() => {
-              const svgElements = document.querySelectorAll('svg');
-              console.log(`Refreshing ${svgElements.length} SVG elements for color blind mode: ${value}`);
-              
-              svgElements.forEach(svg => {
-                // This forces a repaint without changing visual appearance
-                svg.style.transform = 'translateZ(0)';
-                setTimeout(() => {
-                  svg.style.transform = '';
-                }, 0);
-              });
-            }, 50);
-          }
-          break;
-        default:
-          console.warn(`Unknown accessibility setting: ${setting}`);
-          break;
-      }
-      
-      // Dispatch event to notify the app about the change
-      console.log(`Dispatching accessibility-settings-changed event for ${setting}=${value}`);
-      window.dispatchEvent(new CustomEvent('accessibility-settings-changed', {
-        detail: { setting, value }
-      }));
-      
-      // Play audio feedback if enabled
-      if (setting !== 'audioFeedback' && (prev.audioFeedback || (setting === 'audioFeedback' && value))) {
-        playAudioFeedback('click');
-      }
-      
-      return newSettings;
-    });
-  };
-  
   // Sound preview functions
   const playSound = async (type) => {
     if (isPreviewPlaying) return;
@@ -345,60 +217,9 @@ const SettingsContent = ({
 
   // Apply settings and close the overlay
   const handleApply = () => {
-    console.log("Applying all settings");
-    
     // Update base metronome settings first - these take effect immediately
     setDefaultTempo(localTempo);
     setDefaultSubdivisions(localSubdivisions);
-    
-    // Apply all accessibility settings explicitly based on current state
-    console.log("Applying accessibility settings:", accessibilitySettings);
-    
-    // Apply each setting explicitly using the values from state
-    for (const [key, value] of Object.entries(accessibilitySettings)) {
-      if (key === 'colorBlindMode') {
-        localStorage.setItem('accessibility-color-blind-mode', value);
-        
-        // Clear all color blind classes first
-        document.body.classList.remove('color-blind', 'protanopia', 'deuteranopia', 'tritanopia', 'monochromacy');
-        
-        // Apply appropriate classes based on selected mode
-        if (value !== 'none') {
-          document.body.classList.add('color-blind');
-          document.body.classList.add(value);
-        }
-      } else {
-        // Convert setting key to kebab-case for localStorage
-        const storageKey = `accessibility-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
-        localStorage.setItem(storageKey, value.toString());
-        
-        // Apply to DOM if it's a class-based setting
-        if (['highContrast', 'largeText', 'reducedMotion', 'focusIndicators'].includes(key)) {
-          const className = key === 'highContrast' ? 'high-contrast' : 
-                           key === 'largeText' ? 'large-text' :
-                           key === 'reducedMotion' ? 'reduced-motion' : 'focus-visible-enabled';
-          
-          if (value) {
-            document.body.classList.add(className);
-          } else {
-            document.body.classList.remove(className);
-          }
-        }
-        
-        // Apply to window globals if it's a non-class setting
-        if (key === 'audioFeedback') window.audioFeedbackEnabled = value;
-        if (key === 'screenReaderMessages') window.screenReaderMessagesEnabled = value;
-        if (key === 'hapticFeedback') window.hapticFeedbackEnabled = value;
-      }
-      
-      // Dispatch an event for each setting to notify the application
-      window.dispatchEvent(new CustomEvent('accessibility-settings-changed', {
-        detail: { setting: key, value: value }
-      }));
-    }
-    
-    // For extra safety, also run loadAccessibilitySettings to ensure consistency
-    loadAccessibilitySettings();
     
     // Apply sound set changes and ensure immediate reload
     if (activeSoundSetId) {
@@ -461,12 +282,6 @@ const SettingsContent = ({
           onClick={() => setActiveSubTab('audio')}
         >
           Audio
-        </button>
-        <button
-          className={`settings-subtab ${activeSubTab === 'accessibility' ? 'active' : ''}`}
-          onClick={() => setActiveSubTab('accessibility')}
-        >
-          Accessibility
         </button>
       </div>
       
@@ -582,160 +397,6 @@ const SettingsContent = ({
             >
               Normal
             </button>
-          </div>
-        </div>
-      </div>
-      
-      {/* Accessibility settings */}
-      <div className={`settings-section ${activeSubTab === 'accessibility' ? 'active' : ''}`}>
-        <div className="settings-group">
-          <h3>Display Options</h3>
-          <div className="settings-row checkbox-row">
-            <label>
-              <input 
-                type="checkbox" 
-                checked={accessibilitySettings.highContrast} 
-                onChange={e => updateAccessibilitySetting('highContrast', e.target.checked)} 
-              />
-              <span>High Contrast Mode</span>
-            </label>
-            <p className="setting-description">Increases contrast for better visibility</p>
-          </div>
-          
-          <div className="settings-row checkbox-row">
-            <label>
-              <input 
-                type="checkbox" 
-                checked={accessibilitySettings.largeText} 
-                onChange={e => updateAccessibilitySetting('largeText', e.target.checked)} 
-              />
-              <span>Large Text</span>
-            </label>
-            <p className="setting-description">Increases text size throughout the app</p>
-          </div>
-          
-          <div className="settings-row checkbox-row">
-            <label>
-              <input 
-                type="checkbox" 
-                checked={accessibilitySettings.reducedMotion} 
-                onChange={e => updateAccessibilitySetting('reducedMotion', e.target.checked)} 
-              />
-              <span>Reduced Motion</span>
-            </label>
-            <p className="setting-description">Minimizes animations and motion effects</p>
-          </div>
-          
-          <div className="settings-row checkbox-row">
-            <label>
-              <input 
-                type="checkbox" 
-                checked={accessibilitySettings.focusIndicators !== false} 
-                onChange={e => updateAccessibilitySetting('focusIndicators', e.target.checked)} 
-              />
-              <span>Enhanced Focus Indicators</span>
-            </label>
-            <p className="setting-description">Shows clear visual indicators for keyboard focus</p>
-          </div>
-          
-          <div className="settings-row color-blind-mode">
-            <label htmlFor="color-blind-mode">Color Blind Mode</label>
-            <select 
-              id="color-blind-mode" 
-              value={accessibilitySettings.colorBlindMode || 'none'} 
-              onChange={e => updateAccessibilitySetting('colorBlindMode', e.target.value)}
-              aria-describedby="color-blind-desc"
-            >
-              <option value="none">None</option>
-              <option value="protanopia">Protanopia (Red-Blind)</option>
-              <option value="deuteranopia">Deuteranopia (Green-Blind)</option>
-              <option value="tritanopia">Tritanopia (Blue-Blind)</option>
-              <option value="monochromacy">Monochromacy (Full Color Blindness)</option>
-            </select>
-            <p id="color-blind-desc" className="setting-description">Adjusts colors for different types of color vision deficiency</p>
-          </div>
-        </div>
-        
-        <div className="settings-group">
-          <h3>Feedback Options</h3>
-          <div className="settings-row checkbox-row">
-            <label>
-              <input 
-                type="checkbox" 
-                checked={accessibilitySettings.audioFeedback} 
-                onChange={e => updateAccessibilitySetting('audioFeedback', e.target.checked)} 
-              />
-              <span>Audio Feedback</span>
-            </label>
-            <p className="setting-description">Plays sounds for actions and notifications</p>
-          </div>
-          
-          <div className="settings-row checkbox-row">
-            <label>
-              <input 
-                type="checkbox" 
-                checked={accessibilitySettings.screenReaderMessages !== false} 
-                onChange={e => updateAccessibilitySetting('screenReaderMessages', e.target.checked)} 
-              />
-              <span>Screen Reader Announcements</span>
-            </label>
-            <p className="setting-description">Provides detailed announcements for screen readers</p>
-          </div>
-          
-          <div className="settings-row checkbox-row">
-            <label>
-              <input 
-                type="checkbox" 
-                checked={accessibilitySettings.hapticFeedback} 
-                onChange={e => {
-                  updateAccessibilitySetting('hapticFeedback', e.target.checked);
-                  
-                  // Provide a test vibration when enabling
-                  if (e.target.checked && window.navigator && window.navigator.vibrate) {
-                    window.navigator.vibrate(100);
-                  }
-                }} 
-              />
-              <span>Haptic Feedback</span>
-            </label>
-            <p className="setting-description">
-              Provides vibration feedback on mobile devices
-              {!window.navigator.vibrate && <span className="note"> (Not supported in this browser)</span>}
-            </p>
-          </div>
-        </div>
-        
-        <div className="settings-group">
-          <h3>Keyboard Shortcuts</h3>
-          <div className="keyboard-shortcuts-list">
-            <div className="shortcut-item">
-              <kbd>Space</kbd>
-              <span>Play/Pause metronome</span>
-            </div>
-            <div className="shortcut-item">
-              <kbd>T</kbd>
-              <span>Tap tempo</span>
-            </div>
-            <div className="shortcut-item">
-              <kbd>↑</kbd><kbd>↓</kbd>
-              <span>Adjust tempo by 1 BPM</span>
-            </div>
-            <div className="shortcut-item">
-              <kbd>←</kbd><kbd>→</kbd>
-              <span>Adjust tempo by 5 BPM</span>
-            </div>
-            <div className="shortcut-item">
-              <kbd>1</kbd> - <kbd>9</kbd>
-              <span>Set beats per measure</span>
-            </div>
-            <div className="shortcut-item">
-              <kbd>+</kbd><kbd>-</kbd>
-              <span>Adjust volume</span>
-            </div>
-            <div className="shortcut-item">
-              <kbd>ESC</kbd>
-              <span>Close dialogs</span>
-            </div>
           </div>
         </div>
       </div>
