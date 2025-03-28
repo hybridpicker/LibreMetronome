@@ -1,0 +1,121 @@
+/* Global accessibility styles that affect all components */
+
+/* High contrast mode */
+body.high-contrast {
+  background-color: #000;
+  color: #fff;
+}
+
+body.high-contrast button {
+  background-color: #333;
+  color: #fff;
+  border: 2px solid #fff;
+}
+
+body.high-contrast button:hover,
+body.high-contrast button:focus {
+  background-color: #00c8c8;
+  color: #000;
+}
+
+body.high-contrast .metronome-container {
+  background-color: #000;
+  border: 2px solid #fff;
+}
+
+body.high-contrast .circle-display,
+body.high-contrast .analog-display,
+body.high-contrast .metronome-canvas {
+  background-color: #000;
+  border: 1px solid #fff;
+}
+
+body.high-contrast canvas {
+  filter: invert(1);
+}
+
+body.high-contrast svg {
+  filter: invert(1) brightness(2) contrast(1.5);
+}
+
+body.high-contrast svg path,
+body.high-contrast svg circle,
+body.high-contrast svg rect,
+body.high-contrast svg line,
+body.high-contrast svg polygon {
+  stroke: #fff !important;
+  stroke-width: 2px !important;
+  fill: none !important;
+}
+
+body.high-contrast svg.icon path,
+body.high-contrast svg.play-pause-icon path,
+body.high-contrast svg.tap-icon path,
+body.high-contrast button svg path {
+  fill: #fff !important;
+}
+
+/* Apply to all images in buttons for better contrast */
+body.high-contrast button img,
+body.high-contrast .play-pause-button img,
+body.high-contrast .tap-button img {
+  filter: invert(1) brightness(2) contrast(1.5);
+}
+
+body.high-contrast .beat-indicator {
+  background-color: #fff;
+  border: 2px solid #00c8c8;
+}
+
+body.high-contrast .tempo-display,
+body.high-contrast .beats-display {
+  color: #fff;
+  background-color: #333;
+  border: 1px solid #fff;
+}
+
+body.high-contrast input[type="range"] {
+  background-color: #333;
+  border: 1px solid #fff;
+}
+
+body.high-contrast input[type="range"]::-webkit-slider-thumb {
+  background-color: #fff;
+  border: 1px solid #000;
+}
+
+body.high-contrast input[type="range"]::-moz-range-thumb {
+  background-color: #fff;
+  border: 1px solid #000;
+}
+
+/* Color blind mode */
+body.color-blind {
+  filter: contrast(110%);
+}
+
+body.protanopia svg,
+body.protanopia canvas,
+body.protanopia .metronome-container {
+  filter: url('#protanopia-filter');
+}
+
+body.deuteranopia svg,
+body.deuteranopia canvas,
+body.deuteranopia .metronome-container {
+  filter: url('#deuteranopia-filter');
+}
+
+body.tritanopia svg,
+body.tritanopia canvas,
+body.tritanopia .metronome-container {
+  filter: url('#tritanopia-filter');
+}
+
+body.monochromacy svg,
+body.monochromacy canvas,
+body.monochromacy .metronome-container {
+  filter: grayscale(100%);
+}
+
+/* Add SVG filters for color blindness */

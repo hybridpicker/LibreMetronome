@@ -1,0 +1,93 @@
+/* 
+ * play-button-colorblind-fix.css
+ * Fixes for play/pause button in colorblind mode 
+ */
+
+/* Direct color application for the play/pause button icon */
+body.color-blind .play-pause-icon {
+  /* Use direct color manipulation instead of filters */
+  filter: none !important;
+}
+
+/* Keep SVG colors consistent with app scheme */
+body.color-blind .play-pause-icon path,
+body.color-blind .play-pause-icon polygon,
+body.color-blind .play-pause-icon rect,
+body.color-blind .play-pause-icon circle {
+  fill: #00ADB5 !important; /* Use the standard teal color */
+}
+
+/* Specific coloring for each colorblind mode */
+body.protanopia .play-pause-icon path,
+body.protanopia .play-pause-icon polygon,
+body.protanopia .play-pause-icon rect,
+body.protanopia .play-pause-icon circle {
+  fill: #0072B2 !important; /* Blue for protanopia */
+}
+
+body.deuteranopia .play-pause-icon path,
+body.deuteranopia .play-pause-icon polygon,
+body.deuteranopia .play-pause-icon rect,
+body.deuteranopia .play-pause-icon circle {
+  fill: #3F51B5 !important; /* Blue-purple for deuteranopia */
+}
+
+body.tritanopia .play-pause-icon path,
+body.tritanopia .play-pause-icon polygon,
+body.tritanopia .play-pause-icon rect,
+body.tritanopia .play-pause-icon circle {
+  fill: #D32F2F !important; /* Red for tritanopia */
+}
+
+body.monochromacy .play-pause-icon path,
+body.monochromacy .play-pause-icon polygon,
+body.monochromacy .play-pause-icon rect,
+body.monochromacy .play-pause-icon circle {
+  fill: #000000 !important; /* Black for monochromacy */
+}
+
+/* Use currentColor for SVGs in colorblind mode */
+body.color-blind .color-blind-adaptive {
+  fill: currentColor !important;
+}
+
+/* Set appropriate currentColor values for each mode */
+body.protanopia .play-pause-button {
+  color: var(--primary-teal, #0072B2) !important;
+}
+
+body.deuteranopia .play-pause-button {
+  color: var(--primary-teal, #3F51B5) !important;
+}
+
+body.tritanopia .play-pause-button {
+  color: var(--primary-teal, #D32F2F) !important;
+}
+
+body.monochromacy .play-pause-button {
+  color: var(--primary-teal, #000000) !important;
+}
+
+/* Force the play button to maintain proper dimensions */
+body.color-blind .play-pause-button {
+  width: auto !important;
+  height: auto !important;
+  transform: none !important;
+}
+
+/* Ensure the colorblind button stays positioned correctly */
+.metronome-container .play-pause-button.color-blind-button {
+  position: absolute !important;
+  left: 50% !important;
+  bottom: 10% !important;
+  transform: translateX(-50%) !important;
+  z-index: 100 !important;
+}
+
+/* Styles for mobile/tablet devices */
+@media (max-width: 600px) {
+  body.color-blind .play-pause-icon {
+    width: 32px !important;
+    height: 32px !important;
+  }
+}

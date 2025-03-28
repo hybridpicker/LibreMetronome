@@ -1,0 +1,252 @@
+/* Global Accessibility Styles for LibreMetronome */
+
+/* Screen reader only class */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Make screen reader content visible when focused */
+.sr-only-focusable:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* Skip link for keyboard users */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #fff;
+  color: #000;
+  padding: 8px;
+  z-index: 100;
+  transition: top 0.2s;
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: 3px solid var(--focus-color, #4d90fe);
+}
+
+/* High contrast mode */
+body.high-contrast {
+  --primary-teal: #00ffff;
+  --bg-color: #000000;
+  --text-color: #ffffff;
+  --heading-color: #ffffff;
+  --secondary-bg: #333333;
+  --border-color: #ffffff;
+  --hover-color: #ffff00;
+  --slider-bg: #666666;
+  --button-bg: #00ffff;
+  --button-text: #000000;
+  --focus-color: #ffff00;
+  
+  background-color: var(--bg-color) !important;
+  color: var(--text-color) !important;
+}
+
+body.high-contrast h1,
+body.high-contrast h2,
+body.high-contrast h3,
+body.high-contrast h4,
+body.high-contrast h5,
+body.high-contrast h6 {
+  color: var(--heading-color) !important;
+}
+
+body.high-contrast a {
+  color: var(--primary-teal) !important;
+  text-decoration: underline !important;
+}
+
+body.high-contrast button,
+body.high-contrast input[type="button"],
+body.high-contrast input[type="submit"] {
+  background-color: var(--button-bg) !important;
+  color: var(--button-text) !important;
+  border: 2px solid var(--border-color) !important;
+}
+
+body.high-contrast button:hover,
+body.high-contrast input[type="button"]:hover,
+body.high-contrast input[type="submit"]:hover {
+  background-color: var(--hover-color) !important;
+}
+
+body.high-contrast input[type="range"] {
+  background-color: var(--slider-bg) !important;
+}
+
+body.high-contrast input[type="range"]::-webkit-slider-thumb {
+  background-color: var(--button-bg) !important;
+}
+
+body.high-contrast input[type="range"]::-moz-range-thumb {
+  background-color: var(--button-bg) !important;
+}
+
+body.high-contrast :focus {
+  outline: 3px solid var(--focus-color) !important;
+  outline-offset: 2px !important;
+}
+
+/* Large text mode - moved to large-text.css for more comprehensive styling */
+
+/* Reduced motion */
+body.reduced-motion * {
+  animation-duration: 0.001s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001s !important;
+  scroll-behavior: auto !important;
+}
+
+/* Focus outline styles */
+:focus {
+  outline: 3px solid var(--focus-color, #4d90fe);
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus-color, #4d90fe);
+  outline-offset: 2px;
+}
+
+/* Improved form controls for accessibility */
+input, button, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+/* Make sure all interactive elements have proper size for touch targets */
+button, 
+input[type="button"], 
+input[type="submit"],
+input[type="reset"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Support for prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001s !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Specific metronome component accessibility styles */
+.metronome-container {
+  /* Ensure contrast ratio for colors */
+  border: 2px solid var(--border-color, #333);
+}
+
+.play-pause-button,
+.tap-button {
+  /* Ensure buttons meet WCAG touch target size requirements */
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.play-pause-button:focus,
+.tap-button:focus {
+  outline: 3px solid var(--focus-color, #4d90fe);
+  outline-offset: 2px;
+}
+
+/* Slider accessibility improvements */
+input[type="range"] {
+  height: 30px; /* Larger target for sliders */
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  width: 24px;
+  height: 24px;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+}
+
+/* Keyboard focus indicators */
+.keyboard-focus-indicator {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  border: 3px solid var(--focus-color, #4d90fe);
+  border-radius: 4px;
+  box-shadow: 0 0 8px rgba(77, 144, 254, 0.5);
+  transition: all 0.15s ease;
+  display: none;
+}
+
+/* Visible beat indicator for users who can't see animations */
+.current-beat-indicator {
+  font-weight: bold;
+  font-size: 1.2em;
+  padding: 10px;
+  background-color: var(--secondary-bg, #f5f5f5);
+  border-radius: 4px;
+  margin-top: 10px;
+  text-align: center;
+}
+
+/* Keyboard shortcut tooltip */
+.keyboard-shortcut-hint {
+  display: inline-block;
+  background-color: var(--secondary-bg, #f5f5f5);
+  padding: 2px 5px;
+  border-radius: 3px;
+  margin-left: 5px;
+  font-size: 0.85em;
+  color: var(--text-secondary, #666);
+}
+
+/* Accessibility dialog styles */
+.a11y-dialog {
+  background-color: var(--bg-color, #fff);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-width: 90%;
+  max-height: 90%;
+  overflow-y: auto;
+}
+
+.a11y-dialog h2 {
+  margin-top: 0;
+  color: var(--heading-color, #333);
+}
+
+.a11y-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+}
