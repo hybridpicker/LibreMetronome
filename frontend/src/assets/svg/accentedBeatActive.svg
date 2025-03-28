@@ -3,8 +3,8 @@
   <defs>
     <style>
       .cls-1 {
-        fill: #E09C38;
-        stroke: #fcfcfc;
+        fill: var(--beat-accent, var(--beat-outer, #F8D38D));
+        stroke: var(--text-light, #fcfcfc);
         stroke-miterlimit: 10;
         stroke-width: 2px;
       }
