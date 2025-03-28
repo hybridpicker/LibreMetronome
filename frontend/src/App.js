@@ -15,7 +15,8 @@ import { Helmet, HelmetProvider } from 'react-helmet-async';
 import ModeSelector from './components/ModeSelector'; // Import the new ModeSelector component
 import { SupportButton, SupportPage } from './components/Support'; // Import the Support components
 import { HelpButton, InfoModal } from './components/InfoSection'; // Import the Help components
-// StyleGuide component removed
+import { loadAccessibilitySettings } from './utils/accessibility/accessibilityUtils'; // Import accessibility utilities
+import AccessibilityMenu from './components/accessibility/AccessibilityMenu'; // Import AccessibilityMenu component
 
 const TEMPO_MIN = 15;
 const TEMPO_MAX = 240;
@@ -354,6 +355,22 @@ function App() {
     setAccents(Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1)));
   }, [subdivisions]);
 
+  // Initialize accessibility settings
+  useEffect(() => {
+    loadAccessibilitySettings();
+    
+    // Listen for accessibility settings changes
+    const handleAccessibilitySettingsChanged = () => {
+      loadAccessibilitySettings();
+    };
+    
+    window.addEventListener('accessibility-settings-changed', handleAccessibilitySettingsChanged);
+    
+    return () => {
+      window.removeEventListener('accessibility-settings-changed', handleAccessibilitySettingsChanged);
+    };
+  }, []);
+
   // Track when mode is changed
   const [prevMode, setPrevMode] = useState(mode);
   const playStateRef = useRef(isPaused);
@@ -589,6 +606,7 @@ function App() {
       </button>
       
       <HelpButton onClick={() => setInfoModalOpen(true)} />
+      <AccessibilityMenu />
       <Helmet>
         <title>{`LibreMetronome - ${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode`}</title>
         <meta name="description" content={getModeDescription()} />
