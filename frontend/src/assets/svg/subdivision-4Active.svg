@@ -8,8 +8,8 @@
           font-weight: bold;
       }
       .cls-1 {
-        fill: #00ADB5;
-        stroke: #fcfcfc;
+        fill: var(--beat-first, #00A0A0);
+        stroke: var(--text-light, #fcfcfc);
         stroke-miterlimit: 10;
         stroke-width: 2px;
       }

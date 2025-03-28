@@ -3,7 +3,7 @@
   <defs>
     <style>
       .cls-1 {
-        fill: #00a0a0;
+        fill: var(--beat-first, var(--beat-first, #00A0A0));
         stroke: #fff;
         stroke-miterlimit: 10;
       }

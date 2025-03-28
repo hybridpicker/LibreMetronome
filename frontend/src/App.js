@@ -164,7 +164,7 @@ function App() {
     }
   };
   
-  const [mode, setMode] = useState("circle"); // Options: "analog", "circle", "grid", "multi", "polyrhythm"
+  const [mode, setMode] = useState("analog"); // Options: "analog", "circle", "grid", "multi", "polyrhythm"
   const [showSupportPage, setShowSupportPage] = useState(false);
   // Style guide toggle removed
   const [tempo, setTempo] = useState(120);
@@ -588,6 +588,7 @@ function App() {
         Initialize Audio
       </button>
       
+      {/* Help button positioned at bottom-left corner */}
       <HelpButton onClick={() => setInfoModalOpen(true)} />
       <Helmet>
         <title>{`LibreMetronome - ${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode`}</title>
@@ -600,6 +601,7 @@ function App() {
         <meta name="twitter:description" content={getModeDescription()} />
       </Helmet>
 
+      {/* Main menu button positioned at top-right corner */}
       <MainMenu
         trainingSettings={trainingSettings}
         setTrainingSettings={setTrainingSettings}
