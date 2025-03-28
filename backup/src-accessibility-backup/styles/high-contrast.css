@@ -1,0 +1,227 @@
+/**
+ * High Contrast Mode Styles
+ * These styles are applied to ensure maximum readability for users with visual impairments
+ * Enhanced to meet WCAG 2.1 Level AAA requirements
+ */
+
+/* Base document styles */
+body.high-contrast {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+}
+
+/* Typography */
+body.high-contrast h1,
+body.high-contrast h2,
+body.high-contrast h3,
+body.high-contrast h4,
+body.high-contrast h5,
+body.high-contrast h6,
+body.high-contrast p,
+body.high-contrast span,
+body.high-contrast label,
+body.high-contrast div {
+  color: #FFFFFF !important;
+}
+
+/* Container elements */
+body.high-contrast .metronome-container,
+body.high-contrast .menu-container,
+body.high-contrast .settings-container,
+body.high-contrast .control-container,
+body.high-contrast header,
+body.high-contrast footer,
+body.high-contrast .modal,
+body.high-contrast .dialog,
+body.high-contrast .metronome-visualization,
+body.high-contrast .sliders-container,
+body.high-contrast .sliders-container label,
+body.high-contrast .metronome-controls,
+body.high-contrast .mode-selector,
+body.high-contrast .menu-content,
+body.high-contrast .menu-modal {
+  background-color: #000000 !important;
+  border: 2px solid #FFFFFF !important;
+  color: #FFFFFF !important;
+}
+
+/* Interactive elements */
+body.high-contrast button,
+body.high-contrast .button,
+body.high-contrast input[type="button"],
+body.high-contrast input[type="submit"] {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+  border: 2px solid #FFFFFF !important;
+  outline: none !important;
+}
+
+body.high-contrast button:hover,
+body.high-contrast .button:hover,
+body.high-contrast input[type="button"]:hover,
+body.high-contrast input[type="submit"]:hover {
+  background-color: #D4AF37 !important; /* Changed to a nicer gold color */
+  color: #000000 !important;
+}
+
+body.high-contrast button:focus,
+body.high-contrast .button:focus,
+body.high-contrast input[type="button"]:focus,
+body.high-contrast input[type="submit"]:focus {
+  outline: 3px solid #D4AF37 !important;
+  outline-offset: 2px !important;
+}
+
+/* Form controls */
+body.high-contrast input[type="text"],
+body.high-contrast input[type="number"],
+body.high-contrast input[type="email"],
+body.high-contrast input[type="password"],
+body.high-contrast textarea,
+body.high-contrast select,
+body.high-contrast .settings-input,
+body.high-contrast .settings-select,
+body.high-contrast .settings-value {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+  border: 2px solid #FFFFFF !important;
+}
+
+/* Additional settings for menu content to ensure readability */
+body.high-contrast .settings-section,
+body.high-contrast .settings-group h3,
+body.high-contrast .settings-row,
+body.high-contrast .setting-description,
+body.high-contrast .shortcut-item,
+body.high-contrast .keyboard-shortcuts-list,
+body.high-contrast .settings-subtab {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+}
+
+body.high-contrast input[type="checkbox"],
+body.high-contrast input[type="radio"] {
+  border: 2px solid #FFFFFF !important;
+  background-color: #000000 !important;
+}
+
+body.high-contrast input[type="checkbox"]:checked,
+body.high-contrast input[type="radio"]:checked {
+  background-color: #FFFFFF !important;
+  border: 2px solid #FFFFFF !important;
+}
+
+/* Range sliders - enhanced for better visibility */
+body.high-contrast input[type="range"] {
+  background-color: #333333 !important;
+  border: 2px solid #FFFFFF !important; /* Increased border width */
+  height: 10px !important; /* Increased height for better visibility */
+}
+
+body.high-contrast input[type="range"]::-webkit-slider-thumb {
+  background-color: #D4AF37 !important; /* Changed to gold for better visibility */
+  border: 2px solid #000000 !important;
+  width: 24px !important; /* Increased size */
+  height: 24px !important; /* Increased size */
+}
+
+body.high-contrast input[type="range"]::-moz-range-thumb {
+  background-color: #D4AF37 !important; /* Changed to gold for better visibility */
+  border: 2px solid #000000 !important;
+  width: 24px !important; /* Increased size */
+  height: 24px !important; /* Increased size */
+}
+
+/* Metronome specific elements - enhanced contrast */
+body.high-contrast .beat-indicator,
+body.high-contrast .beat-circle,
+body.high-contrast .beat-dot {
+  background-color: #000000 !important;
+  border: 3px solid #FFFFFF !important; /* Increased border width */
+}
+
+body.high-contrast .active-beat,
+body.high-contrast .current-beat {
+  background-color: #D4AF37 !important; /* Changed to gold for better visibility */
+  color: #000000 !important;
+  border: 3px solid #FFFFFF !important;
+}
+
+body.high-contrast .first-beat {
+  background-color: #FF0000 !important; /* Bright red for first beat */
+  color: #FFFFFF !important;
+  border: 3px solid #FFFFFF !important;
+}
+
+body.high-contrast .tempo-display,
+body.high-contrast .subdivision-display,
+body.high-contrast .beat-count {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+  border: 2px solid #FFFFFF !important;
+  font-weight: bold !important; /* Added bold for better readability */
+}
+
+/* Focus indicators - enhanced */
+body.high-contrast *:focus {
+  outline: 4px solid #D4AF37 !important; /* Changed to gold */
+  outline-offset: 3px !important; /* Increased offset */
+}
+
+/* Canvas and SVG elements */
+body.high-contrast canvas {
+  filter: brightness(2) contrast(1.5) invert(1) !important;
+  border: 3px solid #FFFFFF !important; /* Increased border width */
+}
+
+/* Updated SVG filter to ensure icon visibility */
+body.high-contrast svg:not(.play-pause-icon):not(.menu-icon) {
+  filter: brightness(2) contrast(1.5) invert(1) !important;
+}
+
+/* Play/pause button specific enhancements */
+body.high-contrast .play-pause-button {
+  background-color: #000000 !important;
+  border: 3px solid #FFFFFF !important;
+  padding: 12px !important; /* Increased padding */
+}
+
+body.high-contrast .play-pause-button:hover {
+  background-color: #FFFF00 !important;
+}
+
+body.high-contrast .play-pause-icon {
+  filter: none !important; /* Remove filter to prevent double inversion */
+  color: #FFFFFF !important; /* For SVG using currentColor */
+}
+
+/* Menu button specific enhancements */
+body.high-contrast .menu-button {
+  background-color: #000000 !important;
+  border: 3px solid #FFFFFF !important;
+}
+
+body.high-contrast .menu-button:hover {
+  background-color: #FFFF00 !important;
+}
+
+body.high-contrast .menu-button svg {
+  filter: none !important; /* Remove filter to prevent double inversion */
+}
+
+/* Links - enhanced contrast */
+body.high-contrast a,
+body.high-contrast a:visited {
+  color: #D4AF37 !important; /* Changed to gold for better appearance */
+  text-decoration: underline !important;
+  text-decoration-thickness: 2px !important; /* Thicker underline */
+}
+
+body.high-contrast a:hover,
+body.high-contrast a:focus {
+  color: #FFFFFF !important;
+  background-color: #0000FF !important; /* Adding blue background for hover state */
+  text-decoration: underline !important;
+  outline: 3px solid #D4AF37 !important;
+  outline-offset: 2px !important;
+}

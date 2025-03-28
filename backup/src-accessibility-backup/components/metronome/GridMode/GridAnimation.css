@@ -1,0 +1,55 @@
+/* Minimalistic animations for grid mode metronome */
+
+/* Base transition for all grid squares */
+.grid-square {
+  transition: all 0.18s ease-out;
+  transform-origin: center center;
+  will-change: transform, box-shadow;
+}
+
+/* Playing state with minimal animation */
+.grid-square-playing {
+  transform: scale(1.03);
+  box-shadow: 0 2px 4px rgba(245, 194, 109, 0.2);
+}
+
+/* First beat animation (subtle emphasis) */
+.grid-square-first-beat.grid-square-playing {
+  transform: scale(1.04);
+  box-shadow: 0 2px 6px rgba(245, 194, 109, 0.25);
+}
+
+/* Accent beat animation */
+.grid-square-accent.grid-square-playing {
+  transform: scale(1.035);
+  box-shadow: 0 2px 5px rgba(245, 194, 109, 0.22);
+}
+
+/* Normal beat animation */
+.grid-square-normal.grid-square-playing {
+  transform: scale(1.025);
+  box-shadow: 0 1px 3px rgba(245, 194, 109, 0.18);
+}
+
+/* Refined color palette for squares */
+.grid-square-first-beat {
+  background-color: #f5bc5e !important;
+}
+
+.grid-square-accent {
+  background-color: #f8c978 !important;
+}
+
+.grid-square-normal {
+  background-color: var(--secondary-gold-light) !important;
+}
+
+/* Ensure edges are clean */
+.grid-square {
+  border-radius: 4px;
+}
+
+/* Add subtle border for definition instead of shadows when not playing */
+.grid-square-active:not(.grid-square-playing) {
+  box-shadow: inset 0 0 0 1px rgba(245, 194, 109, 0.3);
+}

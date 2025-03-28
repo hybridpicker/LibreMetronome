@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Ebene_2" data-name="Ebene 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 57.15 57.15">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: var(--beat-outer, #F8D38D);
+      }
+
+      .cls-2 {
+        fill: none;
+        stroke: var(--beat-outer, #F8D38D);
+        stroke-miterlimit: 10;
+        stroke-width: 2px;
+      }
+    </style>
+  </defs>
+  <g id="Icons">
+    <g id="Grid">
+      <rect class="cls-2" x="1" y="1" width="55.15" height="55.15" rx="6.65" ry="6.65"/>
+      <rect class="cls-1" x="5.82" y="11.81" width="10.19" height="10.19"/>
+      <rect class="cls-1" x="5.82" y="22.92" width="10.19" height="10.19"/>
+      <rect class="cls-1" x="5.82" y="34.03" width="10.19" height="10.19"/>
+      <rect class="cls-1" x="17.32" y="34.03" width="10.19" height="10.19"/>
+      <rect class="cls-1" x="29.49" y="22.92" width="10.19" height="10.19"/>
+      <rect class="cls-1" x="29.49" y="34.03" width="10.19" height="10.19"/>
+      <rect class="cls-1" x="40.99" y="34.03" width="10.19" height="10.19"/>
+      <ellipse class="cls-1" cx="11.2" cy="47.73" rx="1.01" ry="1"/>
+      <ellipse class="cls-1" cx="22.42" cy="47.73" rx="1.01" ry="1"/>
+      <ellipse class="cls-1" cx="34.58" cy="47.73" rx="1.01" ry="1"/>
+      <ellipse class="cls-1" cx="46.09" cy="47.73" rx="1.01" ry="1"/>
+    </g>
+  </g>
+</svg>

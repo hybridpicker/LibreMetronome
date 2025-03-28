@@ -1,0 +1,282 @@
+/* src/components/metronome/MultiCircleMode/MultiCircleMetronome.css */
+
+.circles-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+  width: 100%;
+  flex-wrap: wrap;
+  position: relative;
+}
+
+.metronome-circle {
+  position: relative;
+  border-radius: 50%;
+  margin: 15px;
+  border: 2px solid transparent;
+  box-sizing: border-box;
+  overflow: visible;
+  cursor: pointer;
+  transition: box-shadow 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), border 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.metronome-circle-inactive {
+  border: 2px dashed var(--neutral-border);
+}
+
+.metronome-circle-active {
+  box-shadow: 0 0 0 3px var(--primary-teal), 0 0 10px rgba(0, 160, 160, 0.6);
+  border: 2px solid transparent;
+}
+
+.metronome-circle-playing {
+  box-shadow: 0 0 0 3px var(--primary-teal), 0 0 15px rgba(0, 160, 160, 0.8) !important;
+  border: 2px solid transparent !important;
+  animation: circle-pulse 2s infinite ease-in-out;
+}
+
+.metronome-circle-silent {
+  box-shadow: 0 0 0 3px var(--error), 0 0 10px rgba(255, 87, 34, 0.6);
+  border: 2px solid transparent;
+}
+
+.beat-icon {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.beat-icon.transitioning {
+  animation: pulse 1s infinite;
+}
+
+.beat-icon-active {
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.7)) !important;
+}
+
+.remove-circle-button {
+  position: absolute;
+  top: -15px;
+  right: -15px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: var(--error);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--text-light);
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+}
+
+.add-circle-button {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 15px;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.plus-button {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: var(--primary-teal);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--text-light);
+  font-size: 36px;
+  font-weight: bold;
+  box-shadow: 0 0 8px rgba(0, 160, 160, 0.5);
+}
+
+.training-status {
+  margin-top: 10px;
+  padding: 8px;
+  border-radius: 5px;
+  background-color: var(--neutral-bg-alt);
+  border: 1px solid var(--neutral-border);
+  max-width: 300px;
+  margin: 10px auto;
+}
+
+.training-status h4 {
+  margin: 0 0 8px 0;
+  color: var(--primary-teal);
+}
+
+.silent-label {
+  color: var(--error);
+  font-weight: bold;
+}
+
+.play-pause-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 10px;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.play-pause-icon {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  transition: transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.tap-tempo-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  margin-top: 20px;
+  padding: 10px;
+  outline: none;
+}
+
+.tap-icon {
+  height: 35px;
+  object-fit: contain;
+  transition: all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.controls-section {
+  margin-top: 20px;
+}
+
+.section-title {
+  margin-bottom: 10px;
+}
+
+.sliders-container {
+  margin-top: 20px;
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.slider-item {
+  margin-bottom: 15px;
+  max-width: 300px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.tempo-slider {
+  margin-bottom: 15px;
+}
+
+.slider-item label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.slider-item input[type="range"] {
+  width: 100%;
+  display: block;
+  margin: 5px auto;
+}
+
+/* Transition animation for beat icons */
+@keyframes pulse {
+  0% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+}
+
+/* Animation for playing circle */
+@keyframes circle-pulse {
+  0% {
+    box-shadow: 0 0 0 3px var(--primary-teal), 0 0 8px rgba(0, 160, 160, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 0 4px var(--primary-teal), 0 0 15px rgba(0, 160, 160, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 0 3px var(--primary-teal), 0 0 8px rgba(0, 160, 160, 0.6);
+  }
+}
+
+/* Animation for playing indicator */
+@keyframes fade-pulse {
+  0% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.8;
+  }
+}
+
+@media (max-width: 768px) {
+  .metronome-circle,
+  .add-circle-button {
+    margin: 15px 0;
+  }
+  
+  .beat-icon {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .plus-button {
+    width: 50px;
+    height: 50px;
+    font-size: 28px;
+  }
+}
+
+.playing-indicator {
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--primary-teal);
+  color: var(--text-light);
+  padding: 3px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  z-index: 10;
+  animation: fade-pulse 1.5s infinite;
+}
+
+.circle-number {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: var(--text-light);
+  font-size: 14px;
+  font-weight: bold;
+  z-index: 5;
+}

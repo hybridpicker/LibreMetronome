@@ -1,0 +1,229 @@
+/* src/components/ModeSelector.css */
+
+.mode-selector-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin: 15px 0 25px;
+}
+
+.mode-selector {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  padding: 15px 10px;
+  border-radius: 12px;
+  max-width: 600px;
+  width: 100%;
+}
+
+.mode-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  padding: 10px;
+  border-radius: 8px;
+  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  min-width: 70px;
+}
+
+.mode-option:hover {
+  transform: translateY(-2px);
+}
+
+.mode-option.active {
+  border: 1px solid rgb(255, 209, 130);
+}
+
+.mode-icon-container {
+  position: relative;
+  margin-bottom: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 60px;
+  height: 60px;
+}
+
+.mode-icon {
+  width: 40px;
+  height: 40px;
+  transition: transform 0.2s ease;
+}
+
+.active-indicator {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  top: 0;
+  left: 0;
+  z-index: -1;
+}
+
+.mode-name {
+  font-size: 13px;
+  color: #333;
+  transition: color 0.2s ease;
+}
+
+.mode-option.active .mode-name {
+  color: var(--primary-teal);
+  font-weight: 500;
+}
+
+.mode-option.active .mode-icon {
+  transform: scale(1.1);
+}
+
+.mode-tooltip {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 160, 160, 0.9);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 100;
+  margin-top: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  width: max-content;
+  max-width: 200px;
+  pointer-events: none;
+  opacity: 0;
+  animation: fadeIn 0.2s forwards;
+}
+
+.mode-tooltip::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent rgba(0, 160, 160, 0.9) transparent;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 160, 160, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(0, 160, 160, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 160, 160, 0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -5px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* Media queries for responsiveness */
+@media (max-width: 600px) {
+  .mode-selector {
+    gap: 10px;
+    padding: 10px;
+  }
+  
+  .mode-option {
+    padding: 8px;
+    min-width: 65px;
+  }
+  
+  .mode-icon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .mode-name {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mode-selector {
+    gap: 8px;
+    padding: 8px;
+  }
+  
+  .mode-option {
+    padding: 6px;
+    min-width: 55px;
+  }
+  
+  .mode-icon-container {
+    width: 55px;
+    height: 55px;
+  }
+  
+  .mode-icon {
+    width: 42px;
+    height: 42px;
+  }
+  
+  .mode-name {
+    font-size: 12px;
+    font-weight: 500;
+  }
+  
+  .mode-tooltip {
+    max-width: 180px;
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+}
+
+/* Styles for the "More" button */
+.more-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 35px;
+  height: 35px;
+  font-size: 20px;
+  color: var(--primary-teal);
+  font-weight: bold;
+}
+
+/* Tiny screens - optimize for very small displays */
+@media (max-width: 350px) {
+  .mode-selector {
+    gap: 4px;
+    padding: 5px;
+  }
+  
+  .mode-option {
+    padding: 5px;
+    min-width: 50px;
+  }
+  
+  .mode-icon-container {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .mode-icon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .mode-name {
+    font-size: 11px;
+    font-weight: 500;
+  }
+}

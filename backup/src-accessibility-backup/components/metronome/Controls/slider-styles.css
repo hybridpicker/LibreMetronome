@@ -1,0 +1,210 @@
+/* src/components/metronome/Controls/slider-styles.css */
+
+/* Global slider styling for all metronome modes */
+.sliders-container {
+    margin: 0 auto;
+    width: 100%;
+    max-width: 300px;
+    background-color: var(--neutral-bg);
+  }
+  
+  .sliders-container label {
+    display: block;
+    margin-bottom: 15px;
+    width: 100%;
+    text-align: center;
+    font-family: 'Lato', sans-serif;
+    color: var(--text-primary);
+    background-color: var(--neutral-bg);
+    padding: 10px 0;
+    border-radius: 5px;
+  }
+  
+  .sliders-container input[type="range"] {
+    width: 100%;
+    display: block;
+    margin: 10px 0 5px 0;
+    height: 10px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: var(--neutral-bg);
+    outline: none;
+    border-radius: 5px;
+    transition: background 0.2s;
+  }
+  
+  /* Thumb styling for different browsers */
+  .sliders-container input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary-teal);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+    transition: background 0.2s, transform 0.1s;
+  }
+  
+  .sliders-container input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary-teal);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+    transition: background 0.2s, transform 0.1s;
+  }
+  
+  /* Hover effects */
+  .sliders-container input[type="range"]:hover {
+    background: var(--neutral-border);
+  }
+  
+  .sliders-container input[type="range"]:hover::-webkit-slider-thumb {
+    background: var(--primary-teal-dark);
+    transform: scale(1.1);
+  }
+  
+  .sliders-container input[type="range"]:hover::-moz-range-thumb {
+    background: var(--primary-teal-dark);
+    transform: scale(1.1);
+  }
+  
+  /* Active slider styling */
+  .sliders-container input[type="range"]:active::-webkit-slider-thumb {
+    background: var(--primary-teal-dark);
+    transform: scale(1.15);
+  }
+  
+  .sliders-container input[type="range"]:active::-moz-range-thumb {
+    background: var(--primary-teal-dark);
+    transform: scale(1.15);
+  }
+  
+  /* Specific slider customizations */
+  .tempo-slider {
+    background: var(--neutral-bg);
+  }
+  
+  .volume-slider {
+    background: var(--neutral-bg);
+  }
+  
+  .swing-slider {
+    background: var(--neutral-bg);
+  }
+  
+  /* Disabled swing slider styling */
+  .disabled-swing-label {
+    color: var(--text-tertiary) !important;
+    font-style: italic;
+  }
+  
+  .swing-slider.disabled {
+    background: var(--neutral-bg);
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+  
+  .swing-slider.disabled::-webkit-slider-thumb {
+    background: var(--text-tertiary);
+    cursor: not-allowed;
+    transform: none !important;
+  }
+  
+  .swing-slider.disabled::-moz-range-thumb {
+    background: var(--text-tertiary);
+    cursor: not-allowed;
+    transform: none !important;
+  }
+  
+  .swing-slider.disabled:hover::-webkit-slider-thumb,
+  .swing-slider.disabled:active::-webkit-slider-thumb {
+    background: var(--text-tertiary);
+    transform: none !important;
+  }
+  
+  .swing-slider.disabled:hover::-moz-range-thumb,
+  .swing-slider.disabled:active::-moz-range-thumb {
+    background: var(--text-tertiary);
+    transform: none !important;
+  }
+  
+  /* Editable input styles */
+.editable-label {
+  cursor: text;
+  transition: all 0.2s;
+  padding: 2px 4px;
+  border-radius: 4px;
+  position: relative;
+  z-index: 10;
+  display: inline-block;
+  pointer-events: auto;
+}
+
+.editable-label:hover {
+  background-color: rgba(0, 139, 139, 0.1);
+  border-radius: 4px;
+  cursor: text;
+}
+
+.editable-input {
+  font-family: 'Lato', sans-serif;
+  border: 1px solid var(--primary-teal);
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: inherit;
+  color: var(--text-primary);
+  background-color: transparent !important;
+  background: transparent !important;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  box-shadow: none;
+}
+
+.editable-input:focus {
+  box-shadow: 0 0 0 2px rgba(0, 139, 139, 0.3);
+}
+
+.disabled-label .editable-label {
+  cursor: default;
+}
+
+.disabled-label .editable-label:hover {
+  background-color: transparent;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .sliders-container {
+    width: 90%;
+  }
+  
+  .sliders-container label {
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+  
+  .sliders-container input[type="range"] {
+    height: 8px;
+  }
+  
+  .sliders-container input[type="range"]::-webkit-slider-thumb {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .sliders-container input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .editable-input {
+    width: 50px !important;
+    font-size: 14px;
+  }
+}

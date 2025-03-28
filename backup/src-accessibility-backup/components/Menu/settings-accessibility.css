@@ -1,0 +1,301 @@
+/* Accessibility settings styles for SettingsContent */
+
+/* Make the tabs more noticeable when active */
+.settings-subtabs {
+  display: flex;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--neutral-border);
+  width: 100%;
+}
+
+.settings-subtab {
+  padding: 12px 20px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  transition: all 0.3s ease;
+  flex: 1;
+  text-align: center;
+}
+
+.settings-subtab.active {
+  color: var(--primary-teal);
+  border-bottom-color: var(--primary-teal);
+  font-weight: bold;
+}
+
+.settings-subtab:hover:not(.active) {
+  color: var(--text-primary);
+  background-color: var(--background-lighter);
+}
+
+/* Make the settings sections show/hide based on active tab */
+.settings-section {
+  display: none;
+  width: 100%;
+}
+
+.settings-section.active {
+  display: block;
+}
+
+/* Improve settings content container */
+.settings-content {
+  width: 100%;
+  max-width: 800px; /* Increased from any previous narrow width */
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
+/* Improve group headings */
+.settings-group h3 {
+  font-size: 1.2rem;
+  margin-top: 20px;
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--neutral-border-light);
+}
+
+/* High contrast overrides for tabs */
+body.high-contrast .settings-subtabs {
+  border-bottom: 1px solid #fff;
+}
+
+body.high-contrast .settings-subtab {
+  color: #ccc;
+}
+
+body.high-contrast .settings-subtab.active {
+  color: #00c8c8;
+  border-bottom-color: #00c8c8;
+  background-color: #333;
+}
+
+body.high-contrast .settings-subtab:hover:not(.active) {
+  color: #fff;
+  background-color: #333;
+}
+
+/* Color blind mode selector */
+.settings-row.color-blind-mode {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+  padding: 12px;
+  border-radius: 5px;
+  background-color: var(--background-lighter);
+  width: 100%;
+  max-width: 100%;
+}
+
+.settings-row.color-blind-mode label {
+  margin-bottom: 10px;
+  font-weight: bold;
+  font-size: 1.1rem;
+  display: block;
+  width: 100%;
+}
+
+.settings-row.color-blind-mode select {
+  padding: 12px;
+  border-radius: 5px;
+  border: 1px solid var(--neutral-border);
+  background-color: var(--background-lighter);
+  color: var(--text-primary);
+  font-size: 1.05rem;
+  width: 100%;
+  max-width: 100%;
+}
+
+.settings-row.color-blind-mode select:focus {
+  outline: 2px solid var(--primary-teal);
+  outline-offset: 2px;
+}
+
+/* Checkbox row styling */
+.settings-row.checkbox-row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+  padding: 10px;
+  border-radius: 5px;
+  transition: background-color 0.2s ease;
+}
+
+.settings-row.checkbox-row:hover {
+  background-color: var(--background-lighter);
+}
+
+.settings-row.checkbox-row label {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.settings-row.checkbox-row input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--primary-teal);
+}
+
+.setting-description {
+  margin: 8px 0 0 37px;
+  font-size: 1rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  max-width: 600px;
+}
+
+/* Note for haptic feedback */
+.note {
+  font-style: italic;
+  color: var(--text-secondary);
+  margin-left: 5px;
+}
+
+/* Keyboard shortcuts styling */
+.keyboard-shortcuts-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.shortcut-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+kbd {
+  background-color: var(--background-lighter);
+  border: 1px solid var(--neutral-border);
+  border-radius: 3px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+  color: var(--text-primary);
+  display: inline-block;
+  font-size: 0.85em;
+  font-family: monospace;
+  line-height: 1;
+  padding: 4px 8px;
+  min-width: 16px;
+  text-align: center;
+}
+
+/* High contrast overrides */
+body.high-contrast .settings-row.checkbox-row input[type="checkbox"] {
+  accent-color: #00c8c8;
+  border: 2px solid #fff;
+}
+
+body.high-contrast .settings-row.color-blind-mode select {
+  background-color: #000;
+  color: #fff;
+  border: 1px solid #fff;
+}
+
+body.high-contrast .settings-row.color-blind-mode select:focus {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+body.high-contrast kbd {
+  background-color: #333;
+  border-color: #fff;
+  color: #fff;
+  box-shadow: 0 1px 1px rgba(255, 255, 255, 0.2);
+}
+
+body.high-contrast .setting-description {
+  color: #ccc;
+}
+
+/* Settings action row */
+.settings-action-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid var(--neutral-border);
+}
+
+.settings-status-text {
+  font-size: 0.9em;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.settings-save-button {
+  background-color: var(--primary-teal);
+  color: var(--text-light);
+  border: none;
+  border-radius: 4px;
+  padding: 10px 20px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.settings-save-button:hover {
+  background-color: var(--primary-teal-dark);
+  transform: translateY(-2px);
+}
+
+/* High contrast overrides for action row */
+body.high-contrast .settings-action-row {
+  border-top: 1px solid #fff;
+}
+
+body.high-contrast .settings-status-text {
+  color: #ccc;
+}
+
+body.high-contrast .settings-save-button {
+  background-color: #00c8c8;
+  color: #000;
+  border: 2px solid #fff;
+}
+
+body.high-contrast .settings-save-button:hover {
+  background-color: #fff;
+  color: #000;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .keyboard-shortcuts-list {
+    grid-template-columns: 1fr;
+  }
+  
+  .settings-row.color-blind-mode select {
+    max-width: 100%;
+  }
+  
+  .settings-action-row {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .settings-save-button {
+    width: 100%;
+    padding: 15px;
+  }
+  
+  .settings-subtabs {
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 5px;
+  }
+  
+  .settings-subtab {
+    padding: 8px 15px;
+  }
+}

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Ebene_2" data-name="Ebene 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52.2 52.2">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #f8d38d;
+        stroke: var(--text-light, #fcfcfc);
+        stroke-miterlimit: 10;
+        stroke-width: 2px;
+      }
+
+      .cls-2 {
+        fill: #fff;
+      }
+    </style>
+  </defs>
+  <g id="Ebene_10" data-name="Ebene 10">
+    <g id="quarter-Notes-active">
+      <g id="eightNotes-actibe">
+        <rect class="cls-1" x="1" y="1" width="50.2" height="50.2" rx="6.65" ry="6.65"/>
+      </g>
+      <path class="cls-2" d="M26.66,8.36h1.87l.14,30.37s-.38,5.11-8.07,5.11c-4.01,0-7.14-2.12-7.31-5.11-.19-3.39,4.02-6.46,7.76-6.33s6.01,1.6,6.01,1.6l-.4-25.64Z"/>
+    </g>
+  </g>
+</svg>

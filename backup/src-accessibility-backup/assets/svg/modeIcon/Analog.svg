@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Ebene_2" data-name="Ebene 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 57.15 57.15">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: var(--beat-outer, #F8D38D);
+      }
+
+      .cls-2 {
+        stroke: var(--beat-outer, #F8D38D);
+      }
+
+      .cls-2, .cls-3 {
+        fill: none;
+        stroke-miterlimit: 10;
+        stroke-width: 2px;
+      }
+
+      .cls-4 {
+        fill: var(--beat-first, #00A0A0);
+      }
+
+      .cls-3 {
+        stroke: var(--beat-first, #00A0A0);
+      }
+    </style>
+  </defs>
+  <g id="Icons">
+    <g id="Analog">
+      <rect class="cls-2" x="1" y="1" width="55.15" height="55.15" rx="6.65" ry="6.65"/>
+      <g>
+        <line class="cls-3" x1="31.25" y1="48.64" x2="14.02" y2="9.51"/>
+        <ellipse class="cls-4" cx="31.36" cy="48.32" rx="3.09" ry="3.08"/>
+        <ellipse class="cls-1" cx="13.67" cy="8.69" rx="2.95" ry="2.94"/>
+      </g>
+    </g>
+  </g>
+</svg>

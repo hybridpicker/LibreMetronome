@@ -1,0 +1,463 @@
+/* File: src/App.css */
+/* Global light mode styles and layout */
+
+/* Main container */
+.app-container {
+  text-align: center;
+  padding: 20px;
+  max-width: 100vw;          /* Maximum width equals the viewport width */
+  overflow-x: hidden;        /* Prevent horizontal scrolling */
+  box-sizing: border-box;    /* Include padding in width calculation */
+  min-height: 100vh;
+  /* Removed background-color to allow high contrast mode to work properly */
+  color: var(--text-primary);
+  font-family: 'Lato', sans-serif;
+}
+
+/* Metronome container (canvas) */
+.metronome-container {
+  position: relative;
+  width: calc(100vw - 40px);   /* Account for 20px padding on each side */
+  max-width: 300px;
+  height: calc(100vw - 40px);
+  max-height: 300px;
+  margin: 0 auto;
+}
+
+/* Tablet: Increase canvas size */
+@media (min-width: 600px) and (max-width: 1024px) {
+  .metronome-container {
+    max-width: 400px;
+    max-height: 400px;
+  }
+}
+
+/* The circle fills the container */
+.metronome-circle {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Beat icons: 24x24, absolutely positioned */
+.beat-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  position: absolute;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.line-connection {
+  height: 1px;
+  background: var(--primary-teal);
+  position: absolute;
+  pointer-events: none;
+  transform-origin: center center;
+  box-shadow: 0 0 3px rgba(0, 160, 160, 0.6);
+  transition: all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* Subdivision buttons: 36x36 each */
+.subdivision-button {
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  object-fit: contain;
+  margin: 0 3px;
+  transition: filter 0.15s ease;
+}
+
+/* Active subdivision button style */
+.subdivision-button.active {
+  filter: none;
+}
+
+/* Container for sliders (Swing, Volume, Tempo) */
+.sliders-container {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+.slider-item {
+  width: 100%;
+  text-align: center;
+}
+
+/* Default styling for range inputs */
+input[type="range"] {
+  accent-color: var(--primary-teal);
+  display: block;
+  margin: 0 auto;
+}
+
+/* Tempo controls */
+/* For Desktop/Tablet: show the tempo slider */
+.tempo-slider {
+  display: block;
+}
+/* For Smartphones: show BPM adjustment buttons */
+.tempo-buttons {
+  display: none;
+}
+
+/* Tap tempo button styling */
+.tap-tempo-button {
+  background: var(--primary-teal);
+  color: var(--text-light);
+  border: none;
+  border-radius: 5px;
+  padding: 12px 20px;   
+  cursor: pointer;
+  font-size: 18px; 
+}
+
+/* Info button styling (top left) */
+.info-button {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 100;
+  text-decoration: none;
+}
+.info-button img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+/* Smartphone adjustments (max-width: 600px) */
+@media (max-width: 600px) {
+  .info-button {
+    display: none;
+  }
+  /* Keep the tempo slider visible on smartphones */
+  .tempo-slider {
+    display: block;
+  }
+  /* Display BPM adjustment buttons on smartphones */
+  .tempo-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+  }
+  /* Enlarge sliders for touch handling */
+  .slider-item input[type="range"] {
+    height: 40px;
+    width: 100%;
+  }
+}
+
+/* Tablet adjustments (between 601px and 1024px) */
+@media (min-width: 601px) and (max-width: 1024px) {
+  /* Show the info button on tablets */
+  .info-button {
+    display: block;
+  }
+  /* Keep tempo slider visible */
+  .tempo-slider {
+    display: block;
+  }
+  /* Adjust tempo buttons for tablet size */
+  .tempo-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+  }
+  /* Tablet-optimized slider size */
+  .slider-item input[type="range"] {
+    height: 30px;
+    width: 100%;
+  }
+}
+
+/* Browser detection for tablets */
+@media (min-width: 601px) and (max-width: 1024px) and (orientation: landscape) {
+  /* Additional adjustments for tablets in landscape mode (likely browser) */
+  .info-button {
+    display: block;
+    /* Make more prominent in browser mode */
+    font-size: 1.1em;
+  }
+  /* Additional browser-specific elements can be shown here */
+  .browser-only-elements {
+    display: block;
+  }
+}
+
+/* Button styling to ensure Lato font is used */
+button {
+  font-family: 'Lato', sans-serif;
+}
+
+/* Tablet-specific adjustments (600px to 1024px) */
+@media (min-width: 600px) and (max-width: 1024px) {
+  .slider-item input[type="range"] {
+    width: 100%;
+  }
+}
+
+/* Info overlay styling */
+.info-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.info-modal {
+  background: var(--text-light);
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 400px;
+  width: 90%;
+  position: relative;
+  text-align: left;
+}
+
+.info-modal h2 {
+  margin-top: 0;
+}
+
+.info-modal ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.info-modal li {
+  margin-bottom: 8px;
+}
+
+/* Info close button styling */
+.info-close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--primary-teal);
+  cursor: pointer;
+}
+
+.play-pause-button-overlay,
+button[aria-label="Toggle play/pause"] {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Better tap buttons for mobile */
+button[aria-label="Tap Tempo"] {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  transition: transform 0.2s ease;
+}
+
+button[aria-label="Tap Tempo"]:active {
+  transform: scale(0.95);
+}
+
+/* Make buttons more responsive on mobile */
+@media (max-width: 600px) {
+  .subdivision-button {
+    width: 32px !important; 
+    height: 32px !important;
+    margin: 0 2px !important;
+  }
+  
+  /* Adjust main container spacing */
+  .app-container {
+    padding: 15px 10px;
+  }
+  
+  /* Make mode buttons more compact */
+  .app-container > div > button {
+    padding: 8px 12px !important;
+    font-size: 14px !important;
+  }
+  
+  /* Float controls to fit smaller screens */
+  .control-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+/* Mode selection buttons styling */
+.mode-selector {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.mode-button {
+  padding: 10px 16px;
+  font-size: 15px;
+  border-radius: 8px;
+  border: none;
+  background-color: var(--beat-muted);
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  font-family: 'Lato', sans-serif;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.mode-button:hover {
+  background-color: var(--secondary-gold);
+  color: var(--text-light);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.mode-button-active {
+  background-color: var(--primary-teal);
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 160, 160, 0.3);
+}
+
+.mode-button-active:hover {
+  background-color: #008e8e;
+  color: white;
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 600px) {
+  .mode-selector {
+    gap: 6px;
+  }
+  
+  .mode-button {
+    padding: 8px 12px;
+    font-size: 14px;
+    flex: 1 0 calc(50% - 6px);
+    max-width: calc(50% - 6px);
+    text-align: center;
+  }
+}
+/* Play/Pause button styling */
+/* Play/Pause button styling - Fixed version */
+.play-pause-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  outline: none;
+  z-index: 10;
+  transform: none !important; /* Prevent unwanted transformations */
+}
+
+.play-pause-icon {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+.play-pause-button:hover .play-pause-icon {
+  transform: scale(1.15);
+  filter: drop-shadow(0 2px 4px rgba(0, 160, 160, 0.3));
+}
+
+.play-pause-button:active .play-pause-icon {
+  transform: scale(1.05);
+}
+
+/* Center-positioned play/pause button */
+.metronome-container .play-pause-button {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) !important; /* Use !important to override any competing styles */
+}
+
+/* Analog mode play button positioned at bottom */
+.metronome-container .play-pause-button[data-mode="analog"] {
+  position: absolute;
+  left: 50%;
+  top: 85%;
+  transform: translate(-50%, -50%) !important;
+}
+
+/* Ensure play/pause button visibility and coloring in all modes */
+.metronome-container .play-pause-button {
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: block !important;
+}
+
+/* Ensure the SVG is properly sized and visible */
+.play-pause-icon {
+  width: 36px !important;
+  height: 36px !important;
+  object-fit: contain !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Support for mobile devices */
+@media (max-width: 600px) {
+  .play-pause-icon {
+    width: 32px !important;
+    height: 32px !important;
+  }
+}
+
+/* Style Guide Container Styles */
+.style-guide-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: var(--neutral-bg);
+}
+
+.style-guide-header-controls {
+  margin-bottom: 30px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.style-guide-header-controls button {
+  background-color: var(--primary-teal);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  font-family: 'Lato', sans-serif;
+}
+
+.style-guide-header-controls button:hover {
+  background-color: var(--primary-teal-dark);
+}
+

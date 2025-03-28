@@ -1,0 +1,353 @@
+.support-page {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 30px 25px;
+  font-family: 'Lato', sans-serif;
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.minimalist-heading {
+  color: var(--primary-teal);
+  font-size: 20px;
+  font-weight: normal;
+  text-align: center;
+  margin-bottom: 40px;
+  letter-spacing: 0.5px;
+  position: relative;
+  padding-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.minimalist-heading:after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 1px;
+  background-color: var(--secondary-gold-light);
+}
+
+.support-message {
+  margin-bottom: 40px;
+  line-height: 1.7;
+  padding: 0;
+  position: relative;
+  text-align: center;
+  max-width: 580px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.support-message p {
+  margin-bottom: 20px;
+  position: relative;
+  font-size: 16px;
+}
+
+.support-message p:last-child {
+  margin-bottom: 0;
+}
+
+.support-message strong {
+  color: var(--primary-teal);
+  font-weight: 500;
+}
+
+.support-options {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 35px 0;
+  width: 100%;
+}
+
+.support-button-large {
+  background-color: var(--primary-teal);
+  color: var(--text-light);
+  border: none;
+  border-radius: 4px;
+  padding: 14px 30px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: none;
+  font-family: 'Lato', sans-serif;
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.5px;
+  margin: 0 auto;
+}
+
+.support-button-large:hover {
+  background-color: var(--primary-teal-dark);
+  transform: translateY(-1px);
+}
+
+.support-button-large:active {
+  transform: translateY(0);
+}
+
+.support-button-large .heart-icon {
+  color: var(--text-light);
+  font-size: 18px;
+}
+
+.support-button-large:disabled {
+  opacity: 0.8;
+  cursor: not-allowed;
+  background-color: var(--neutral-border);
+  box-shadow: none;
+  transform: none !important;
+}
+
+.support-button-large:disabled:before {
+  display: none;
+}
+
+.support-button-large:disabled .heart-icon {
+  color: var(--text-secondary);
+  animation: none;
+  text-shadow: none;
+}
+
+.support-button-large.loading {
+  background-color: var(--neutral-border-light);
+  color: var(--text-secondary);
+  position: relative;
+  overflow: hidden;
+}
+
+.support-button-large.loading:after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  animation: loading-shimmer 1.5s infinite;
+}
+
+@keyframes loading-shimmer {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(200%); }
+}
+
+.support-info {
+  margin: 50px 0 40px;
+  padding: 0;
+  position: relative;
+  max-width: 580px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.support-info h2 {
+  color: var(--primary-teal);
+  margin-bottom: 20px;
+  font-size: 16px;
+  text-align: center;
+  font-weight: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.support-info ul {
+  list-style-type: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 25px;
+}
+
+.support-info li {
+  padding: 8px 15px;
+  position: relative;
+  transition: all 0.2s ease;
+  background-color: var(--neutral-bg);
+  border-radius: 4px;
+  font-size: 14px;
+  flex: 0 0 calc(50% - 10px);
+  text-align: center;
+}
+
+.support-info li:hover {
+  color: var(--primary-teal);
+}
+
+.support-features-coming {
+  margin: 40px 0;
+  padding: 0;
+  position: relative;
+  max-width: 580px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.support-features-coming h3 {
+  color: var(--primary-teal);
+  margin: 0 0 20px 0;
+  text-align: center;
+  font-size: 16px;
+  font-weight: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.feature-cards {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.feature-card {
+  background-color: var(--neutral-bg);
+  padding: 20px;
+  border-radius: 4px;
+  text-align: center;
+  flex: 0 0 calc(33.333% - 10px);
+  transition: all 0.2s ease;
+  border-top: 2px solid transparent;
+}
+
+.feature-card:hover {
+  border-top-color: var(--primary-teal-light);
+}
+
+.feature-icon {
+  font-size: 24px;
+  margin-bottom: 10px;
+  display: inline-block;
+  color: var(--primary-teal);
+}
+
+.feature-card h4 {
+  margin: 8px 0;
+  color: var(--primary-teal);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.feature-card p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.support-thanks {
+  margin-top: 50px;
+  text-align: center;
+  font-style: italic;
+  padding: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.5;
+  position: relative;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+  border-top: 1px solid var(--neutral-border-light);
+  padding-top: 30px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .support-page {
+    padding: 15px 12px;
+  }
+  
+  .minimalist-heading {
+    font-size: 16px;
+    margin-bottom: 25px;
+  }
+  
+  .support-button-large {
+    width: 100%;
+    justify-content: center;
+    font-size: 15px;
+    padding: 12px 20px;
+  }
+  
+  .support-message p {
+    font-size: 15px;
+  }
+  
+  .support-info {
+    margin: 40px 0 30px;
+  }
+  
+  .support-info h2 {
+    font-size: 14px;
+    margin-bottom: 15px;
+  }
+  
+  .support-info ul {
+    gap: 10px;
+  }
+  
+  .support-info li {
+    flex: 0 0 100%;
+    font-size: 13px;
+    padding: 8px 10px;
+  }
+  
+  .support-features-coming {
+    margin: 30px 0;
+  }
+  
+  .support-features-coming h3 {
+    font-size: 14px;
+    margin-bottom: 15px;
+  }
+  
+  .feature-cards {
+    gap: 10px;
+  }
+  
+  .feature-card {
+    flex: 0 0 100%;
+    padding: 15px;
+    margin-bottom: 5px;
+  }
+  
+  .feature-icon {
+    font-size: 20px;
+  }
+  
+  .feature-card h4 {
+    font-size: 14px;
+    margin: 6px 0;
+  }
+  
+  .feature-card p {
+    font-size: 12px;
+  }
+  
+  .support-thanks {
+    margin-top: 40px;
+    font-size: 13px;
+    padding-top: 25px;
+  }
+  
+  /* Within menu modal context - adjust for the tab view */
+  .menu-content .support-page {
+    padding: 0;
+  }
+}
