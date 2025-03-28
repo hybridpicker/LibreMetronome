@@ -1,0 +1,15 @@
+/* File: src/components/Header.css */
+
+/* Styling for the header container */
+.header {
+  padding: 20px;
+  text-align: center;
+}
+
+/* Styling for the logo image */
+.header-logo {
+  height: auto;
+  width: 250px; /* Adjust width as needed */
+  max-width: 100%;
+}
+  

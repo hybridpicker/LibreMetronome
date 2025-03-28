@@ -1,0 +1,84 @@
+/* play-pause-button-fix.css */
+/* Fixed Play/Pause button styling to prevent unwanted transformations */
+
+.play-pause-button {
+    background: transparent !important;
+    border: none !important;
+    cursor: pointer !important;
+    padding: 0 !important;
+    position: relative !important;
+    outline: none !important;
+    z-index: 10 !important;
+    transform: none !important; /* Reset any transforms */
+  }
+  
+  /* When positioned within metronome container */
+  .metronome-container .play-pause-button {
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    will-change: transform !important;
+  }
+  
+  /* Special positioning for analog mode */
+  .metronome-container .play-pause-button[data-mode="analog"] {
+    position: absolute !important;
+    left: 50% !important;
+    top: 85% !important;
+    transform: translate(-50%, -50%) !important;
+    will-change: transform !important;
+  }
+  
+  /* Style for the icon inside the button */
+  .play-pause-icon {
+    width: 36px !important;
+    height: 36px !important;
+    object-fit: contain !important;
+    transition: transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1)) !important;
+  }
+  
+  /* Apply hover effect to the icon, not the button */
+  .play-pause-button:hover .play-pause-icon {
+    transform: scale(1.15) !important;
+    filter: drop-shadow(0 2px 4px rgba(0, 173, 181, 0.3)) !important;
+  }
+  
+  .play-pause-button:active .play-pause-icon {
+    transform: scale(1.05) !important;
+  }
+  
+  /* Ensure the play/pause button itself doesn't get transformed */
+  div > div > .play-pause-button {
+    transform: none !important;
+  }
+  
+  div > div > .play-pause-button:hover {
+    transform: none !important;
+  }
+  
+  /* Style for the tap tempo icon */
+  .tap-icon {
+    width: 36px !important;
+    height: 36px !important;
+    object-fit: contain !important;
+    transition: transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1)) !important;
+  }
+  
+  /* Apply hover effect to the tap icon */
+  .tap-button:hover .tap-icon {
+    transform: scale(1.15) !important;
+    filter: drop-shadow(0 2px 4px rgba(0, 173, 181, 0.3)) !important;
+  }
+  
+  .tap-button:active .tap-icon {
+    transform: scale(1.05) !important;
+  }
+
+  /* Prevent grid mode animation from becoming too large */
+  rect[style*="transform"] {
+    transform: scale(1.03) !important; /* Limit the scale */
+    transition: all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
+  }

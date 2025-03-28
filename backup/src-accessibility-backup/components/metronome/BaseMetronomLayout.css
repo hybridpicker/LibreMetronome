@@ -1,0 +1,156 @@
+/* src/components/metronome/BaseMetronomLayout.css */
+
+.metronome-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 600px;
+}
+
+.metronome-container {
+  position: relative;
+  border-radius: 50%;
+  background-color: var(--neutral-bg);
+  border: 3px solid var(--neutral-border);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.play-pause-button {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 56px; /* Larger for better tap target */
+  height: 56px; /* Larger for better tap target */
+  border-radius: 50%;
+  background-color: var(--primary-teal);
+  border: 2px solid transparent; /* Adding border for high contrast mode */
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s ease;
+  z-index: 5;
+  /* Improved focus state for keyboard accessibility */
+  outline: none;
+}
+
+.play-pause-button:hover {
+  background-color: var(--primary-teal-dark);
+  transform: translateX(-50%) scale(1.05);
+}
+
+.play-pause-button:focus-visible {
+  outline: 3px solid var(--focus-outline, #4d90fe);
+  outline-offset: 3px;
+}
+
+.play-pause-button img {
+  width: 28px; /* Larger for better visibility */
+  height: 28px; /* Larger for better visibility */
+}
+
+/* Additional styles for when the button is active/pressed */
+.play-pause-button:active {
+  transform: translateX(-50%) scale(0.95);
+  background-color: var(--primary-teal-darker, #008e8e);
+}
+
+.sliders-container {
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.sliders-container label {
+  display: block;
+  margin-bottom: 15px;
+  width: 100%;
+  text-align: center;
+  color: var(--text-primary);
+  background-color: var(--neutral-bg);
+  padding: 10px 0;
+  border-radius: 5px;
+}
+
+.sliders-container input[type="range"] {
+  width: 100%;
+  display: block;
+  margin: 10px 0;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 8px;
+  background: var(--neutral-border);
+  outline: none;
+  border-radius: 5px;
+}
+
+.sliders-container input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary-teal);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+}
+
+.sliders-container input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary-teal);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+}
+
+.tap-button, .tap-tempo-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 10px;
+  transition: transform 0.2s;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.tap-button:hover, .tap-tempo-button:hover {
+  transform: scale(1.1);
+}
+
+.tap-button img, .tap-tempo-button img {
+  height: 35px;
+  width: auto;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+  .sliders-container {
+    width: 90%;
+  }
+  
+  .tap-button, .tap-tempo-button {
+    width: 70px;
+    height: 70px;
+    background-color: rgba(0, 160, 160, 0.1);
+    border: 1px solid rgba(0, 160, 160, 0.3);
+    border-radius: 50%;
+  }
+  
+  .tap-button:active, .tap-tempo-button:active {
+    background-color: rgba(0, 160, 160, 0.2);
+  }
+  
+  .tap-button img, .tap-tempo-button img {
+    height: 40px;
+  }
+}

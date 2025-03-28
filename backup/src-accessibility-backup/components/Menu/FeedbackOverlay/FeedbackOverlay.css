@@ -1,0 +1,215 @@
+.feedback-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.feedback-modal {
+  background: white;
+  padding: 25px;
+  border-radius: 8px;
+  max-width: 450px;
+  width: 90%;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.feedback-close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--primary-teal);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.feedback-close-button:hover {
+  background-color: rgba(0, 160, 160, 0.1);
+}
+
+@media (max-width: 600px) {
+  .feedback-close-button {
+    top: 5px;
+    right: 5px;
+    font-size: 1.6rem;
+    width: 28px;
+    height: 28px;
+    background-color: rgba(255, 255, 255, 0.7);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+  }
+  
+  .feedback-modal h2 {
+    margin-right: 30px;
+  }
+}
+
+@media (max-width: 350px) {
+  .feedback-close-button {
+    position: fixed;
+    z-index: 1010;
+  }
+}
+.feedback-form {
+  margin-top: 15px;
+}
+
+.feedback-form .input-group {
+  margin-bottom: 15px;
+}
+
+.feedback-form label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #333;
+}
+
+.feedback-form input,
+.feedback-form textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: 'Lato', sans-serif;
+  resize: none;
+  transition: border-color 0.2s;
+}
+
+.feedback-form input:focus,
+.feedback-form textarea:focus {
+  outline: none;
+  border-color: var(--primary-teal);
+  box-shadow: 0 0 0 2px rgba(0, 160, 160, 0.1);
+}
+
+.feedback-submit-button {
+  background: var(--primary-teal);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.feedback-submit-button:hover {
+  background: var(--primary-teal-dark);
+}
+
+.feedback-submit-button:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+}
+
+.feedback-button {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  background: var(--primary-teal);
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 600;
+  z-index: 900;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s;
+}
+
+.feedback-button:hover {
+  background: var(--primary-teal-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.feedback-button-active {
+  background: var(--primary-teal-dark);
+}
+
+.feedback-button-disabled {
+  background: #b3b3b3;
+  cursor: not-allowed;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.feedback-button-disabled:hover {
+  background: #b3b3b3;
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.rating-container {
+  margin-bottom: 15px;
+}
+
+.stars-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.star {
+  font-size: 28px;
+  color: #ddd;
+  cursor: pointer;
+  transition: color 0.2s;
+  margin: 0 5px;
+}
+
+.star:hover,
+.star-filled {
+  color: #FFD700;
+}
+
+.feedback-success {
+  text-align: center;
+  padding: 30px;
+}
+
+.feedback-success h2 {
+  color: var(--primary-teal);
+  margin-bottom: 15px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .feedback-modal {
+    width: 85%;
+    padding: 20px;
+  }
+  
+  .star {
+    font-size: 24px;
+    margin: 0 3px;
+  }
+  
+  .feedback-button {
+    bottom: 15px;
+    left: 15px;
+    padding: 6px 12px;
+    font-size: 14px;
+  }
+}

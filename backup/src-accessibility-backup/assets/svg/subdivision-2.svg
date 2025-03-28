@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Ebene_2" data-name="Ebene 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52.2 52.2">
+  <defs>
+    <style>
+      @font-face {
+        font-family: 'Lato-Bold';
+        src: url('../fonts/Lato-Bold.ttf') format('truetype');
+        font-weight: bold;
+      }
+
+      .cls-1 {
+        fill: var(--beat-inner, #FAE0AD);
+        stroke: var(--text-light, #fcfcfc);
+        stroke-miterlimit: 10;
+        stroke-width: 2px;
+      }
+
+      .cls-2 {
+        font-family: 'Lato-Bold', sans-serif;
+        font-size: 36px;
+        font-weight: 700;
+        fill: #fff;
+      }
+    
+</style>
+  </defs>
+  <g id="Export">
+    <g id="subdivision-2">
+      <rect class="cls-1" x="1" y="1" width="50.2" height="50.2" rx="6.65" ry="6.65"/>
+      <text class="cls-2" transform="translate(15.6 39.5)"><tspan x="0" y="0">2</tspan></text>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,30 @@
+/* Enhanced styles for beat indicator and visualization */
+
+/* Beat indicator pointer styles */
+.beat-indicator-line {
+  filter: drop-shadow(0 0 3px rgba(0, 160, 160, 0.6));
+  transition: stroke 0.2s ease;
+}
+
+.beat-indicator-dot {
+  filter: drop-shadow(0 0 2px rgba(0, 160, 160, 0.4));
+  transition: fill 0.2s ease;
+}
+
+/* Ensure smooth animations with hardware acceleration */
+.polyrhythm-container svg {
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Container for the beat visualization */
+.beat-visualization-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 100;
+}

@@ -1,0 +1,182 @@
+/**
+ * Large Text Mode Stylesheet
+ * 
+ * This stylesheet provides comprehensive text size increases for all UI elements
+ * to improve readability for users with visual impairments.
+ */
+
+/* Base font size increase for the entire app */
+body.large-text {
+  font-size: 125% !important;
+}
+
+/* Headings */
+body.large-text h1 {
+  font-size: 2.5rem !important;
+}
+
+body.large-text h2 {
+  font-size: 2.2rem !important;
+}
+
+body.large-text h3 {
+  font-size: 1.75rem !important;
+}
+
+body.large-text h4 {
+  font-size: 1.5rem !important;
+}
+
+body.large-text p,
+body.large-text li,
+body.large-text span:not(.icon),
+body.large-text div:not(.icon) {
+  font-size: 1.25rem !important;
+}
+
+/* Form controls */
+body.large-text button, 
+body.large-text input, 
+body.large-text select,
+body.large-text label,
+body.large-text textarea,
+body.large-text .settings-value {
+  font-size: 1.25rem !important;
+}
+
+/* Metronome specific elements */
+body.large-text .tempo-display,
+body.large-text .subdivision-display,
+body.large-text .beat-count,
+body.large-text .metronome-visualization,
+body.large-text .sliders-container label,
+body.large-text .section-title {
+  font-size: 1.3rem !important;
+}
+
+/* Menu and modal content */
+body.large-text .menu-tab,
+body.large-text .settings-subtab,
+body.large-text .training-subtab {
+  font-size: 1.2rem !important;
+}
+
+body.large-text .settings-group h3 {
+  font-size: 1.6rem !important;
+}
+
+body.large-text .settings-row span,
+body.large-text .setting-description,
+body.large-text .settings-status-text {
+  font-size: 1.15rem !important;
+}
+
+/* Keyboard shortcuts */
+body.large-text .keyboard-shortcuts-list,
+body.large-text .shortcut-item,
+body.large-text kbd {
+  font-size: 1.15rem !important;
+}
+
+/* Buttons with larger targets */
+body.large-text .play-pause-button,
+body.large-text .tap-button {
+  width: 60px !important;
+  height: 60px !important;
+}
+
+body.large-text .play-pause-button img,
+body.large-text .tap-button img {
+  width: 32px !important;
+  height: 32px !important;
+}
+
+body.large-text .menu-button {
+  width: 52px !important;
+  height: 52px !important;
+}
+
+body.large-text .menu-button svg,
+body.large-text .menu-button img {
+  width: 28px !important;
+  height: 28px !important;
+}
+
+/* Mode selector buttons */
+body.large-text .mode-selector button {
+  font-size: 1.2rem !important;
+  padding: 12px 16px !important;
+}
+
+/* Controls and sliders */
+body.large-text .sliders-container input[type="range"] {
+  height: 12px !important;
+}
+
+body.large-text .sliders-container input[type="range"]::-webkit-slider-thumb {
+  width: 28px !important;
+  height: 28px !important;
+}
+
+body.large-text .sliders-container input[type="range"]::-moz-range-thumb {
+  width: 28px !important;
+  height: 28px !important;
+}
+
+/* Checkbox and radio buttons */
+body.large-text input[type="checkbox"],
+body.large-text input[type="radio"] {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+/* Spacing adjustments for better readability */
+body.large-text .settings-row,
+body.large-text .shortcut-item {
+  margin-bottom: 16px !important;
+}
+
+body.large-text .settings-group {
+  margin-bottom: 32px !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  body.large-text {
+    font-size: 120% !important;
+  }
+  
+  body.large-text h1 {
+    font-size: 2.2rem !important;
+  }
+  
+  body.large-text h2 {
+    font-size: 1.9rem !important;
+  }
+  
+  body.large-text .play-pause-button,
+  body.large-text .tap-button {
+    width: 56px !important;
+    height: 56px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  body.large-text {
+    font-size: 115% !important;
+  }
+  
+  body.large-text h1 {
+    font-size: 2rem !important;
+  }
+  
+  body.large-text h2 {
+    font-size: 1.7rem !important;
+  }
+  
+  body.large-text .menu-tab,
+  body.large-text .settings-subtab,
+  body.large-text .training-subtab {
+    font-size: 1.1rem !important;
+  }
+}
