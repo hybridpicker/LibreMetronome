@@ -16,7 +16,6 @@ import ModeSelector from './components/ModeSelector'; // Import the new ModeSele
 import { SupportButton, SupportPage } from './components/Support'; // Import the Support components
 import { HelpButton, InfoModal } from './components/InfoSection'; // Import the Help components
 import { loadAccessibilitySettings } from './utils/accessibility/accessibilityUtils'; // Import accessibility utilities
-import AccessibilityMenu from './components/accessibility/AccessibilityMenu'; // Import AccessibilityMenu component
 
 const TEMPO_MIN = 15;
 const TEMPO_MAX = 240;
@@ -606,7 +605,6 @@ function App() {
       </button>
       
       <HelpButton onClick={() => setInfoModalOpen(true)} />
-      <AccessibilityMenu />
       <Helmet>
         <title>{`LibreMetronome - ${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode`}</title>
         <meta name="description" content={getModeDescription()} />

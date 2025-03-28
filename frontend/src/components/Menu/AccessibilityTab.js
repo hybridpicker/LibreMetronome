@@ -15,18 +15,11 @@ const AccessibilityTab = ({ onClose }) => {
   const [largeText, setLargeText] = useState(
     localStorage.getItem('accessibility-large-text') === 'true'
   );
-  const [reducedMotion, setReducedMotion] = useState(
-    localStorage.getItem('accessibility-reduced-motion') === 'true' || 
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  );
   const [audioFeedback, setAudioFeedback] = useState(
     localStorage.getItem('accessibility-audio-feedback') === 'true'
   );
   const [screenReaderMessages, setScreenReaderMessages] = useState(
     localStorage.getItem('accessibility-screen-reader-messages') !== 'false'
-  );
-  const [focusIndicators, setFocusIndicators] = useState(
-    localStorage.getItem('accessibility-focus-indicators') !== 'false'
   );
   const [colorBlindMode, setColorBlindMode] = useState(
     localStorage.getItem('accessibility-color-blind-mode') || 'none'
@@ -64,17 +57,6 @@ const AccessibilityTab = ({ onClose }) => {
   }, [largeText]);
 
   // Effect for reduced motion
-  useEffect(() => {
-    localStorage.setItem('accessibility-reduced-motion', reducedMotion.toString());
-    document.body.classList.remove('reduced-motion');
-    if (reducedMotion) {
-      document.body.classList.add('reduced-motion');
-    }
-    
-    window.dispatchEvent(new CustomEvent('accessibility-settings-changed', {
-      detail: { setting: 'reducedMotion', value: reducedMotion }
-    }));
-  }, [reducedMotion]);
 
   // Effect for audio feedback
   useEffect(() => {
@@ -97,20 +79,7 @@ const AccessibilityTab = ({ onClose }) => {
   }, [screenReaderMessages]);
   
   // Effect for focus indicators
-  useEffect(() => {
-    localStorage.setItem('accessibility-focus-indicators', focusIndicators.toString());
-    window.focusIndicatorsEnabled = focusIndicators;
-    
-    document.body.classList.remove('focus-visible-enabled');
-    if (focusIndicators) {
-      document.body.classList.add('focus-visible-enabled');
-    }
-    
-    window.dispatchEvent(new CustomEvent('accessibility-settings-changed', {
-      detail: { setting: 'focusIndicators', value: focusIndicators }
-    }));
-  }, [focusIndicators]);
-  
+
   // Effect for color blind mode
   useEffect(() => {
     localStorage.setItem('accessibility-color-blind-mode', colorBlindMode);
@@ -178,27 +147,7 @@ const AccessibilityTab = ({ onClose }) => {
           <p className="setting-description">Increases text size throughout the app</p>
         </div>
         
-        <div className="setting-item">
-          <input 
-            type="checkbox" 
-            id="reduced-motion" 
-            checked={reducedMotion} 
-            onChange={e => handleToggle(setReducedMotion, e.target.checked)} 
-          />
-          <label htmlFor="reduced-motion">Reduced Motion</label>
-          <p className="setting-description">Minimizes animations and motion effects</p>
-        </div>
-        
-        <div className="setting-item">
-          <input 
-            type="checkbox" 
-            id="focus-indicators" 
-            checked={focusIndicators} 
-            onChange={e => handleToggle(setFocusIndicators, e.target.checked)} 
-          />
-          <label htmlFor="focus-indicators">Enhanced Focus Indicators</label>
-          <p className="setting-description">Shows clear visual indicators for keyboard focus</p>
-        </div>
+=======
       </div>
       
       <div className="settings-group">
