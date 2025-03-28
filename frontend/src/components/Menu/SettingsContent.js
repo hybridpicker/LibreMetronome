@@ -1,7 +1,7 @@
 // Updated src/components/Menu/SettingsContent.js
 import React, { useState, useEffect, useCallback } from 'react';
 import { getAllSoundSets, setActiveSoundSet, getActiveSoundSetIdFromCookie } from '../../services/soundSetService';
-// Unused import removed
+import AccessibilityTab from './AccessibilityTab';
 
 const SettingsContent = ({
   volume,
@@ -283,6 +283,12 @@ const SettingsContent = ({
         >
           Audio
         </button>
+        <button
+          className={`settings-subtab ${activeSubTab === 'accessibility' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('accessibility')}
+        >
+          Accessibility
+        </button>
       </div>
       
       {/* General settings */}
@@ -399,6 +405,11 @@ const SettingsContent = ({
             </button>
           </div>
         </div>
+      </div>
+      
+      {/* Accessibility settings */}
+      <div className={`settings-section ${activeSubTab === 'accessibility' ? 'active' : ''}`}>
+        <AccessibilityTab onClose={onClose} />
       </div>
       
       <button className="settings-save-button" onClick={handleApply}>
