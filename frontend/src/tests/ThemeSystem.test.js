@@ -58,7 +58,14 @@ const getAllFiles = (dirPath, arrayOfFiles = []) => {
  * @returns {Array} - Array of SVG file paths
  */
 const getAllSvgFiles = () => {
-  return getAllFiles(ASSETS_SVG_PATH).filter(file => file.endsWith('.svg'));
+  const svgFiles = getAllFiles(ASSETS_SVG_PATH).filter(file => file.endsWith('.svg'));
+  // Also check the logo directory
+  const logoPath = path.join(SRC_PATH, 'assets/logo');
+  if (fs.existsSync(logoPath)) {
+    const logoFiles = getAllFiles(logoPath).filter(file => file.endsWith('.svg'));
+    return [...svgFiles, ...logoFiles];
+  }
+  return svgFiles;
 };
 
 /**
