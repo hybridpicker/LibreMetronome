@@ -3,12 +3,12 @@
   <defs>
     <style>
       .cls-1 {
-        fill: #F0B048;
+        fill: var(--beat-outer, #F8D38D);
       }
 
       .cls-2 {
         fill: none;
-        stroke: #F0B048;
+        stroke: var(--beat-outer, #F8D38D);
         stroke-miterlimit: 10;
         stroke-width: 2px;
       }

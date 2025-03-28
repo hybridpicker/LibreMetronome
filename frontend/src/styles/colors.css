@@ -6,15 +6,15 @@
 
 :root {
   /* Primary Colors */
-  --primary-teal: #00ADB5;       /* Main brand color - vibrant teal adjusted for harmony with gold */
-  --primary-teal-dark: #008F96;  /* Darker variant for hover states */
+  --primary-teal: #00A0A0;       /* Main brand color - vibrant teal specified */
+  --primary-teal-dark: #008585;  /* Darker variant for hover states */
   --primary-teal-light: #B3E0E0; /* Lighter variant for backgrounds, borders */
   --primary-teal-ultra-light: #E6F5F5; /* Very light teal for subtle backgrounds */
 
   /* Secondary Colors */
-  --secondary-gold: #F0B048;     /* Secondary brand color - warm gold with slight orange tone for harmony */
-  --secondary-gold-dark: #E09C38; /* Darker gold for first beats, important elements */
-  --secondary-gold-light: #F8C668; /* Lighter gold for normal beats, subtle highlights */
+  --secondary-gold: #F8D38D;     /* Secondary brand color - golden color specified */
+  --secondary-gold-dark: #EABF70; /* Darker gold for first beats, important elements */
+  --secondary-gold-light: #FAE0AD; /* Lighter gold for normal beats, subtle highlights */
   --secondary-gold-ultra-light: #FFF8E6; /* Very light gold for subtle backgrounds */
 
   /* Neutral Colors */
@@ -34,15 +34,15 @@
   --beat-normal: var(--secondary-gold-light); /* Normal beat color */
   --beat-accent: var(--secondary-gold); /* Accented beat color */
   --beat-first: var(--primary-teal); /* First beat color */
-  --beat-inner: #F8C668;         /* Inner beat color for polyrhythm (aligned with secondary-gold-light) */
-  --beat-outer: #F0B048;         /* Outer beat color for polyrhythm (aligned with secondary-gold) */
+  --beat-inner: #FAE0AD;         /* Inner beat color for polyrhythm (aligned with secondary-gold-light) */
+  --beat-outer: #F8D38D;         /* Outer beat color for polyrhythm (aligned with secondary-gold) */
 
   /* Semantic Colors */
-  --success: #3DADB3;            /* Success color - aligned with teal palette */
-  --warning: #F0B048;            /* Warning color - aligned with gold palette */
+  --success: #00A0A0;            /* Success color - aligned with teal palette */
+  --warning: #F8D38D;            /* Warning color - aligned with gold palette */
   --error: #E67B73;              /* Error color */
   --info: #73B5E6;               /* Info color */
-  --highlight: #00BFC8;          /* Highlight color for beat sync line */
+  --highlight: #00B3B3;          /* Highlight color for beat sync line */
 
   /* Overlay Colors */
   --overlay-bg: rgba(0, 0, 0, 0.7); /* Dark overlay background */

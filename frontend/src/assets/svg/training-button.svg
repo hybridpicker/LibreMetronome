@@ -3,7 +3,7 @@
   <defs>
     <style>
       .cls-1 {
-        fill: #F0B048;
+        fill: var(--primary-teal, var(--beat-first, #00A0A0));
       }
 
       .cls-2 {
@@ -15,7 +15,7 @@
       }
 
       .cls-4 {
-        fill: #fff;
+        fill: var(--primary-teal, var(--beat-first, #00A0A0));
         font-family: Lato-Bold, Lato;
         font-size: 36px;
         font-weight: 700;

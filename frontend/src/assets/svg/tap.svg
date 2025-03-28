@@ -9,7 +9,7 @@
       }
 
       .cls-1 {
-        fill: #00ADB5;
+        fill: var(--beat-first, #00A0A0);
       }
 
       .cls-2 {
