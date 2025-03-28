@@ -7,16 +7,16 @@
       }
 
       .cls-4 {
-        fill: #00ADB5;
+        fill: var(--beat-first, #00A0A0);
         fill-rule: evenodd;
       }
 
       .cls-5 {
-        fill: #F0B048;
+        fill: var(--beat-outer, #F8D38D);
       }
 
       .cls-2 {
-        stroke: #F0B048;
+        stroke: var(--beat-outer, #F8D38D);
       }
 
       .cls-2, .cls-3 {
@@ -25,11 +25,11 @@
       }
 
       .cls-3 {
-        stroke: #00ADB5;
+        stroke: var(--beat-first, #00A0A0);
       }
 
       .cls-6 {
-        fill: #F8C668;
+        fill: var(--beat-inner, #FAE0AD);
       }
     </style>
   </defs>
