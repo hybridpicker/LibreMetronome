@@ -7,40 +7,7 @@
   --button-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-/* Main Menu Button */
-.menu-button {
-  position: fixed;
-  top: 10px;
-  right: 10px;
-  width: 40px;
-  height: 40px;
-  background-color: var(--primary-teal);
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  box-shadow: var(--button-shadow);
-  z-index: 100;
-  transition: var(--transition-standard);
-}
-
-.menu-button:hover {
-  transform: scale(1.05);
-  background-color: var(--primary-teal-dark);
-}
-
-.menu-button.active {
-  background-color: var(--primary-teal-dark);
-  transform: rotate(180deg);
-}
-
-.menu-button svg {
-  width: 22px;
-  height: 22px;
-  color: white;
-}
+/* Main Menu Button styles moved to single definition below */
 
 /* Menu Overlay & Modal */
 .menu-overlay {
@@ -396,7 +363,7 @@
   color: white;
 }
 
-/* Menu Button (Entry Point) */
+/* Menu Button (Entry Point) - this is the single definition that should be used */
 .menu-button {
   position: fixed;
   top: 10px;
@@ -410,9 +377,31 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--button-shadow);
   z-index: 100;
-  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transition: var(--transition-standard);
+}
+
+.menu-button:hover {
+  transform: scale(1.05);
+  background-color: var(--primary-teal-dark);
+}
+
+.menu-button.active {
+  background-color: var(--primary-teal-dark);
+  transform: rotate(180deg);
+}
+
+.menu-button svg {
+  width: 22px;
+  height: 22px;
+  color: white;
+}
+
+.menu-button img {
+  width: 24px;
+  height: 24px;
+  color: white;
 }
 
 .menu-button:hover {

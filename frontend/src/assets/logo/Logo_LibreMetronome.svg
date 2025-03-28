@@ -3,24 +3,24 @@
   <defs>
     <style>
       .cls-1 {
-        fill: #F0B048;
+        fill: var(--secondary-gold, #F8D38D);
       }
 
       .cls-2 {
-        fill: #F8C668;
+        fill: var(--secondary-gold-light, #FAE0AD);
       }
 
       .cls-3 {
-        fill: #00ADB5;
+        fill: var(--primary-teal, #00A0A0);
       }
 
       .cls-4 {
-        fill: #00ADB5;
+        fill: var(--primary-teal, #00A0A0);
       }
 
       .cls-5 {
         fill: none;
-        stroke: #00ADB5;
+        stroke: var(--primary-teal, #00A0A0);
         stroke-miterlimit: 10;
         stroke-width: 2px;
       }
