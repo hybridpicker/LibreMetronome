@@ -128,8 +128,8 @@ class SoundSetAPITests(TestCase):
     
     def test_all_sound_sets_endpoint(self):
         """Test that the API returns all sound sets"""
-        # Get the URL for the all_sound_sets view using reverse
-        url = reverse('all_sound_sets')
+        # Get the URL for the soundset-list view using reverse
+        url = reverse('soundset-list')
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, 200)
@@ -147,8 +147,8 @@ class SoundSetAPITests(TestCase):
     
     def test_sound_set_detail_endpoint(self):
         """Test that the API returns a specific sound set"""
-        # Get the URL for the sound_set_detail view using reverse
-        url = reverse('sound_set_detail', args=[self.sound_set1.id])
+        # Get the URL for the soundset-detail view using reverse
+        url = reverse('soundset-detail', args=[self.sound_set1.id])
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, 200)
@@ -163,21 +163,14 @@ class SoundSetAPITests(TestCase):
     def test_set_active_sound_set_endpoint(self):
         """Test that the set_active endpoint works without changing database values"""
         # Use POST to activate a sound set using reverse
-        url = reverse('set_active_sound_set', args=[self.sound_set1.id])
+        url = reverse('soundset-set-default', args=[self.sound_set1.id])
         response = self.client.post(
             url,
             content_type='application/json'
         )
         
-        self.assertEqual(response.status_code, 200)
-        
-        # Parse JSON response
-        data = response.json()
-        
-        # Response should include the sound set
-        self.assertEqual(data['id'], self.sound_set1.id)
-        
-        # Both sound sets should still be active in the database
+        # Since we're not authenticated as staff, it should fail with 403
+        self.assertEqual(response.status_code, 403)
         self.sound_set1.refresh_from_db()
         self.sound_set2.refresh_from_db()
         self.assertTrue(self.sound_set1.is_default)

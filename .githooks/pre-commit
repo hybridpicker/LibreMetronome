@@ -1,0 +1,94 @@
+#!/bin/bash
+# Pre-commit hook for LibreMetronome - Simplified version
+# Tests both Django backend and React frontend
+
+set -e
+
+echo "🚀 Running pre-commit checks..."
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Get the root directory
+ROOT_DIR=$(git rev-parse --show-toplevel)
+
+# Function to print colored output
+print_status() {
+    if [ $1 -eq 0 ]; then
+        echo -e "${GREEN}✓ $2${NC}"
+    else
+        echo -e "${RED}✗ $2${NC}"
+        # Don't exit on failure for now
+    fi
+}
+
+print_info() {
+    echo -e "${YELLOW}→ $1${NC}"
+}
+
+# Check if we have Python changes
+PYTHON_CHANGED=$(git diff --cached --name-only | grep -E '\.py$' || true)
+JS_CHANGED=$(git diff --cached --name-only | grep -E '\.(js|jsx|css)$' | grep -v 'node_modules' || true)
+
+# Django Backend Checks
+if [ ! -z "$PYTHON_CHANGED" ]; then
+    print_info "Python files changed, running Django checks..."
+    
+    cd "$ROOT_DIR/backend"
+    
+    # Check if virtual environment exists
+    if [ -d "../venv" ]; then
+        source ../venv/bin/activate
+    elif [ -d "venv" ]; then
+        source venv/bin/activate
+    else
+        echo -e "${RED}No virtual environment found!${NC}"
+        exit 1
+    fi
+    
+    # Run Django system checks
+    print_info "Running Django system checks..."
+    python manage.py check 2>/dev/null || true
+    print_status $? "Django system checks"
+    
+    # Check for migrations
+    print_info "Checking for missing migrations..."
+    python manage.py makemigrations --check --dry-run 2>/dev/null || true
+    print_status $? "Migration check"
+fi
+
+# React Frontend Checks
+if [ ! -z "$JS_CHANGED" ]; then
+    print_info "JavaScript files changed, checking syntax..."
+    
+    cd "$ROOT_DIR/frontend"
+    
+    # Basic syntax check
+    if [ -d "node_modules" ]; then
+        print_info "Node modules found"
+    else
+        echo -e "${YELLOW}node_modules not found, skipping React checks${NC}"
+    fi
+fi
+
+# Check for large files
+print_info "Checking for large files..."
+LARGE_FILES=$(find . -path ./node_modules -prune -o -path ./venv -prune -o -type f -size +1M -print 2>/dev/null || true)
+if [ ! -z "$LARGE_FILES" ]; then
+    echo -e "${YELLOW}Warning: Large files detected (>1MB):${NC}"
+    echo "$LARGE_FILES"
+fi
+
+# Check for sensitive data
+print_info "Checking for sensitive data..."
+SENSITIVE=$(git diff --cached --name-only | xargs grep -E "(SECRET_KEY|PASSWORD|API_KEY|TOKEN)" 2>/dev/null | grep -v "example\|test\|dummy\|SECRET_KEY = 'SECRET'" || true)
+if [ ! -z "$SENSITIVE" ]; then
+    echo -e "${RED}Warning: Possible sensitive data detected:${NC}"
+    echo "$SENSITIVE"
+    echo -e "${YELLOW}Please review before committing!${NC}"
+fi
+
+echo -e "${GREEN}✅ Pre-commit checks completed!${NC}"

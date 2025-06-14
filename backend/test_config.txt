@@ -1,0 +1,2 @@
+# Simple test configuration file
+# Run tests with: python manage.py test metronome_api -v 2

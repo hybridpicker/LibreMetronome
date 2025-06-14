@@ -15,6 +15,7 @@ import { Helmet, HelmetProvider } from 'react-helmet-async';
 import ModeSelector from './components/ModeSelector'; // Import the new ModeSelector component
 import { SupportButton, SupportPage } from './components/Support'; // Import the Support components
 import { HelpButton, InfoModal } from './components/InfoSection'; // Import the Help components
+import AdminPanel from './components/Admin/AdminPanel'; // Import Admin Panel
 // StyleGuide component removed
 
 const TEMPO_MIN = 15;
@@ -166,6 +167,7 @@ function App() {
   
   const [mode, setMode] = useState("analog"); // Options: "analog", "circle", "grid", "multi", "polyrhythm"
   const [showSupportPage, setShowSupportPage] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false); // Add admin panel state
   // Style guide toggle removed
   const [tempo, setTempo] = useState(120);
   const [isPaused, setIsPaused] = useState(true);
@@ -617,7 +619,7 @@ function App() {
         setSoundSetReloadTrigger={setSoundSetReloadTrigger}
       />
 
-      <Header />
+      <Header onAdminClick={() => setShowAdminPanel(true)} />
 
       {showSupportPage ? (
         <div className="support-page-container">
@@ -712,6 +714,11 @@ function App() {
         isOpen={infoModalOpen} 
         onClose={() => setInfoModalOpen(false)} 
       />
+      
+      {/* Admin Panel */}
+      {showAdminPanel && (
+        <AdminPanel onClose={() => setShowAdminPanel(false)} />
+      )}
     </div>
     </HelmetProvider>
   );
