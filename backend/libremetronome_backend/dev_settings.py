@@ -1,40 +1,26 @@
-"""
-Development settings for LibreMetronome backend
-"""
-
-# Override production settings for development
+# Development settings override
 DEBUG = True
 
-# Allow all hosts in development
-ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'devel.libremetronome.com']
 
 # CORS settings for development
-CORS_ALLOW_ALL_ORIGINS = True  # This enables CORS for all origins in development
-
-# More permissive CORS settings for development
-CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_METHODS = [
-    'DELETE',
-    'GET',
-    'OPTIONS',
-    'PATCH',
-    'POST',
-    'PUT',
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:8000",
+    "https://devel.libremetronome.com",
 ]
-CORS_ALLOW_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
-]
-CORS_EXPOSE_HEADERS = ['content-disposition']
 
-# Disable security settings for local development
-SECURE_SSL_REDIRECT = False
-SESSION_COOKIE_SECURE = False
+# Disable CSRF for API endpoints in development
 CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False
+
+# REST Framework settings
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+}
