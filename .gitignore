@@ -61,3 +61,6 @@ ADMIN_IMPLEMENTATION.md
 ADMIN_README.md
 IMPLEMENTATION_SUMMARY.md
 TESTING.md
+
+# GitHub workflows (development only)
+.github/
