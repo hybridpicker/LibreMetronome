@@ -55,3 +55,9 @@ backend/metronome_sounds/test*
 # Django static files
 staticfiles/
 backend/staticfiles/
+
+# Documentation files (development only)
+ADMIN_IMPLEMENTATION.md
+ADMIN_README.md
+IMPLEMENTATION_SUMMARY.md
+TESTING.md
