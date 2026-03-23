@@ -1,6 +1,6 @@
 asgiref
 cffi
-Django==4.2.21
+Django==4.2.29
 django-cors-headers        
 djangorestframework
 npm
