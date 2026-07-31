@@ -4,7 +4,11 @@
 /* Main container */
 .app-container {
   text-align: center;
-  padding: 20px;
+  padding:
+    max(20px, env(safe-area-inset-top))
+    max(20px, env(safe-area-inset-right))
+    max(20px, env(safe-area-inset-bottom))
+    max(20px, env(safe-area-inset-left));
   max-width: 100vw;          /* Maximum width equals the viewport width */
   overflow-x: hidden;        /* Prevent horizontal scrolling */
   box-sizing: border-box;    /* Include padding in width calculation */
@@ -30,6 +34,39 @@
     max-width: 400px;
     max-height: 400px;
   }
+}
+
+/* Large touch screens such as the 13-inch iPad in landscape. */
+@media (min-width: 1024px) and (pointer: coarse) {
+  .metronome-container {
+    max-width: 500px;
+    max-height: 500px;
+  }
+
+  .header {
+    padding-top: 8px;
+  }
+
+  .header-logo {
+    width: 300px;
+  }
+
+  .sliders-container {
+    max-width: 520px;
+  }
+
+  input[type="range"] {
+    min-height: 36px;
+  }
+}
+
+html.capacitor-native .app-container {
+  min-height: 100dvh;
+  touch-action: manipulation;
+}
+
+html.capacitor-native .footer {
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
 }
 
 /* The circle fills the container */
@@ -436,4 +473,3 @@ button[aria-label="Tap Tempo"]:active {
 .style-guide-header-controls button:hover {
   background-color: var(--primary-teal-dark);
 }
-

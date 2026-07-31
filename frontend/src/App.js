@@ -19,6 +19,17 @@ import { HelpButton, InfoModal } from './components/InfoSection'; // Import the 
 
 const TEMPO_MIN = 15;
 const TEMPO_MAX = 240;
+const DEFAULT_VOLUME = 0.85;
+const VOLUME_STORAGE_KEY = 'libreMetronome.volume';
+
+const getInitialVolume = () => {
+  const storedVolume = Number.parseFloat(
+    window.localStorage?.getItem(VOLUME_STORAGE_KEY)
+  );
+  return Number.isFinite(storedVolume)
+    ? Math.max(0, Math.min(1, storedVolume))
+    : DEFAULT_VOLUME;
+};
 
 // Global debug helper for testing sound preview
 window.metronomeDebug = {
@@ -171,10 +182,14 @@ function App() {
   const [isPaused, setIsPaused] = useState(true);
   const [subdivisions, setSubdivisions] = useState(4);
   const [swing, setSwing] = useState(0);
-  const [volume, setVolume] = useState(0.5);
+  const [volume, setVolume] = useState(getInitialVolume);
   const [accents, setAccents] = useState(
     Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1))
   );
+
+  useEffect(() => {
+    window.localStorage?.setItem(VOLUME_STORAGE_KEY, volume.toString());
+  }, [volume]);
 
   // Make tempo setter globally available (for tap tempo)
   window.setMetronomeTempo = setTempo;

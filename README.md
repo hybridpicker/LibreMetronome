@@ -63,6 +63,7 @@ A modern, open-source metronome application that merges classic musical function
 - JavaScript/ES6+
 - HTML5/CSS3
 - Web Audio API
+- Capacitor 8 for native iOS and Android apps
 
 ### Backend
 - Django
@@ -101,6 +102,41 @@ npm start
 ```
 
 The frontend will be accessible at http://localhost:3000
+
+#### Mobile Setup
+
+The iOS and Android apps share the React and Web Audio implementation in
+`frontend/`. Build the web bundle and sync both native projects with:
+
+```bash
+cd frontend
+npm install
+npm run mobile:sync
+```
+
+For iOS, use Xcode 26 or later:
+
+```bash
+npm run ios:open
+```
+
+Select your Apple development team and a connected iPhone or iPad, then run the
+`App` scheme. The native app configures a playback audio session and a low
+latency I/O buffer for metronome use.
+
+For Android, use JDK 21 and Android Studio or Gradle:
+
+```bash
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home
+cd android
+./gradlew assembleDebug
+```
+
+The debug APK is generated at
+`frontend/android/app/build/outputs/apk/debug/app-debug.apk`.
+
+See [`docs/mobile-deployment.md`](docs/mobile-deployment.md) for native build,
+signing, device installation, and the current iPad deployment plan.
 
 #### Backend Setup
 
@@ -194,7 +230,8 @@ Contributions to Libre Metronome are welcome! Please feel free to:
 ## Roadmap
 
 - User accounts for saving metronome presets
-- Mobile app versions
+- Complete iPad device installation and validation
+- Prepare Android device installation and validation
 - Advanced polyrhythm training features
 - Integration with recording capabilities
 - MIDI/hardware metronome sync options
