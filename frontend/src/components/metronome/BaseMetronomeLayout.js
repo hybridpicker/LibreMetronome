@@ -17,7 +17,16 @@ export default function BaseMetronomeLayout({
   useEffect(() => {
     function handleResize() {
       const w = window.innerWidth;
-      setContainerSize(w < 600 ? Math.min(w - 40, 300) : w < 1024 ? Math.min(w - 40, 400) : 300);
+      const h = window.innerHeight;
+      const hasCoarsePointer = window.matchMedia?.('(pointer: coarse)').matches;
+
+      if (w < 600) {
+        setContainerSize(Math.min(w - 40, 320));
+      } else if (hasCoarsePointer || w <= 1180) {
+        setContainerSize(Math.min(w - 72, h * 0.48, 500));
+      } else {
+        setContainerSize(Math.min(w * 0.34, h * 0.48, 440));
+      }
     }
     handleResize();
     window.addEventListener('resize', handleResize);

@@ -3,6 +3,9 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
+import { initializeMobileRuntime } from './mobile';
+
+initializeMobileRuntime();
 
 // Suppress UNSAFE_componentWillMount warning from react-helmet
 const originalConsoleError = console.error;
