@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import useMetronomeLogic from '../../../hooks/useMetronomeLogic';
 import playIcon from '../../../assets/svg/play.svg';
 import pauseIcon from '../../../assets/svg/pause.svg';
-import tapButtonIcon from '../../../assets/svg/tap-button.svg';
+import tapButtonIcon from '../../../assets/svg/tap.svg';
 import TransportButton from '../Controls/TransportButton';
 import './GridAnimation.css';
 import withTrainingContainer from '../../Training/withTrainingContainer';
@@ -278,23 +278,23 @@ const GridModeMetronome = (props) => {
   const gapSize = 8;
   
   const colors = {
-    inactive: "#f0f0f0",
-    level1: "#fae8c1",
-    level2: "#f8d38d",
-    level3: "#f5c26d",
-    muted: "#f5f5f5",
-    teal: "#4db6ac",
-    tealDark: "#26a69a"
+    inactive: "var(--muted-wash)",
+    level1: "var(--secondary-gold-light)",
+    level2: "var(--secondary-gold)",
+    level3: "var(--secondary-gold-dark)",
+    muted: "var(--beat-muted)",
+    teal: "var(--primary-teal-light)",
+    tealDark: "var(--primary-teal)"
   };
   
   const firstBeatColors = {
-    inactive: "#f0f0f0",
-    level1: "#fae3ad",
-    level2: "#f8c978",
-    level3: "#f5bc5e",
-    muted: "#f5f5f5",
-    teal: "#4db6ac",
-    tealDark: "#26a69a"
+    inactive: "var(--muted-wash)",
+    level1: "var(--secondary-gold-light)",
+    level2: "var(--secondary-gold)",
+    level3: "var(--primary-teal)",
+    muted: "var(--beat-muted)",
+    teal: "var(--primary-teal-light)",
+    tealDark: "var(--primary-teal)"
   };
   
   // Responsive behavior for mobile devices and tablets (modified threshold)

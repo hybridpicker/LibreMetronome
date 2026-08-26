@@ -47,12 +47,12 @@
   position: absolute;
   pointer-events: none;
   transform-origin: center center;
-  box-shadow: 0 0 3px rgba(0, 160, 160, 0.6);
+  box-shadow: none;
   transition: all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 /* The circle’s beat icons */
 .beat-control.is-current img {
-  filter: drop-shadow(0 0 4px rgba(248, 211, 141, 0.82));
+  filter: none;
   transform: scale(1.08);
 }

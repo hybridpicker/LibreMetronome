@@ -121,6 +121,13 @@
   display: flex;
   border-radius: 8px;
   align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.menu-tab .interface-icon {
+  width: 20px;
+  height: 20px;
 }
 
 .menu-tab .tab-label {
@@ -220,6 +227,8 @@
   .menu-tab {
     padding: 8px 3px;
     font-size: 11px;
+    flex-direction: column;
+    gap: 2px;
   }
   
   .menu-tab .tab-icon {
@@ -1099,6 +1108,53 @@
 .training-subtab.active::after,
 .settings-subtab.active::after {
   content: none;
+}
+
+/* Normalize icon-and-label controls after legacy menu declarations. */
+.training-subtab,
+.settings-subtab,
+.preview-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.training-subtab .interface-icon,
+.settings-subtab .interface-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.preview-button img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+.preview-button.first-beat,
+.preview-button.accent-beat,
+.preview-button.normal-beat {
+  color: var(--text-primary);
+  background: var(--surface-raised);
+}
+
+.preview-button.first-beat {
+  border: 1px solid var(--primary-teal);
+}
+
+.preview-button.accent-beat {
+  border: 1px solid var(--secondary-gold-dark);
+}
+
+.preview-button.normal-beat {
+  border: 1px solid var(--secondary-gold-light);
+}
+
+.tip-icon .interface-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--secondary-gold-dark);
 }
 
 .training-overview,

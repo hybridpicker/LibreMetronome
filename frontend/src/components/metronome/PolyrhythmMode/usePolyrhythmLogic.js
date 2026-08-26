@@ -830,7 +830,11 @@ export default function usePolyrhythmLogic({
     return () => {
       stopScheduler();
 
-      if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
+      if (
+        audioCtxRef.current &&
+        audioCtxRef.current.state !== 'closed' &&
+        typeof audioCtxRef.current.close === 'function'
+      ) {
         audioCtxRef.current.close().catch(() => {});
       }
     };

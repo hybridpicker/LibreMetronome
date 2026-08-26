@@ -6,6 +6,7 @@ import TrainingContent from './TrainingContent';
 import SettingsContent from './SettingsContent';
 import { ReactComponent as MenuIcon } from '../../assets/svg/menu-icon.svg';
 import { SupportPage } from '../Support';
+import InterfaceIcon from '../common/InterfaceIcon';
 
 /**
  * Unified MainMenu Component
@@ -143,7 +144,7 @@ const MainMenu = ({
               aria-label="Close Menu"
               title="Close menu (ESC)"
             >
-              ×
+              <InterfaceIcon name="close" size={22} />
             </button>
             
             {/* Tabs */}
@@ -154,6 +155,7 @@ const MainMenu = ({
                 role="tab"
                 aria-selected={activeTab === 'training'}
               >
+                <InterfaceIcon name="training" />
                 <span>Training</span>
               </button>
               <button 
@@ -162,6 +164,7 @@ const MainMenu = ({
                 role="tab"
                 aria-selected={activeTab === 'settings'}
               >
+                <InterfaceIcon name="settings" />
                 <span>Settings</span>
               </button>
               <button 
@@ -170,6 +173,7 @@ const MainMenu = ({
                 role="tab"
                 aria-selected={activeTab === 'support'}
               >
+                <InterfaceIcon name="support" />
                 <span>Support</span>
               </button>
             </div>

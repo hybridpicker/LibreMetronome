@@ -5,7 +5,7 @@ import normalBeat from '../../assets/svg/normalBeat.svg';
 import normalBeatActive from '../../assets/svg/normalBeatActive.svg';
 import accentedBeat from '../../assets/svg/accentedBeat.svg';
 import accentedBeatActive from '../../assets/svg/accentedBeatActive.svg';
-import tapButtonIcon from '../../assets/svg/tap-button.svg';
+import tapButtonIcon from '../../assets/svg/tap.svg';
 
 // Subdivision Icons (inactive)
 import subdivision1 from '../../assets/svg/subdivision-1.svg';

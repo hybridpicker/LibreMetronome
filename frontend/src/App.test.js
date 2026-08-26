@@ -28,6 +28,7 @@ window.AudioContext = jest.fn().mockImplementation(() => ({
   destination: {},
   currentTime: 0,
   resume: jest.fn().mockResolvedValue(undefined),
+  close: jest.fn().mockResolvedValue(undefined),
   decodeAudioData: jest.fn().mockResolvedValue({}),
   createBufferSource: jest.fn().mockReturnValue({
     connect: jest.fn(),
@@ -49,6 +50,7 @@ window._audioContextInit = {
   destination: {},
   currentTime: 0,
   resume: jest.fn().mockResolvedValue(undefined),
+  close: jest.fn().mockResolvedValue(undefined),
   state: 'running',
   sampleRate: 48000
 };
@@ -103,6 +105,21 @@ describe('App Component', () => {
     ['Analog', 'Circle', 'Grid', 'Multi', 'Polyrhythm'].forEach((mode) => {
       fireEvent.click(screen.getByRole('button', { name: `${mode} mode` }));
       expect(screen.getByRole('button', { name: 'Tap Tempo' })).toHaveTextContent('Tap Tempo');
+    });
+  });
+
+  test('keeps transport SVGs visible and paired with their labels in every mode', () => {
+    render(<App />);
+
+    ['Analog', 'Circle', 'Grid', 'Multi', 'Polyrhythm'].forEach((mode) => {
+      fireEvent.click(screen.getByRole('button', { name: `${mode} mode` }));
+
+      const startButton = screen.getByRole('button', { name: 'Start' });
+      const tapButton = screen.getByRole('button', { name: 'Tap Tempo' });
+      expect(startButton.querySelector('img')).toHaveAttribute('src', expect.stringContaining('play'));
+      expect(tapButton.querySelector('img')).toHaveAttribute('src', expect.stringContaining('tap'));
+      expect(startButton).toHaveTextContent('Start');
+      expect(tapButton).toHaveTextContent('Tap Tempo');
     });
   });
 

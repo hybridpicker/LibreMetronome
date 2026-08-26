@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './TrainingOverlay.css';
 import trainingButtonIcon from '../../../assets/svg/training-button.svg';
 import trainingButtonOnIcon from '../../../assets/svg/training-button-on.svg';
+import InterfaceIcon from '../../common/InterfaceIcon';
 
 /**
  * TrainingModal displays the training mode settings.
@@ -55,7 +56,7 @@ const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings, setMode
           }} 
           aria-label="Close Training Overlay"
         >
-          &times;
+          <InterfaceIcon name="close" />
         </button>
         <h2>Training Mode</h2>
         
@@ -214,7 +215,7 @@ const TrainingModal = ({ onClose, trainingSettings, setTrainingSettings, setMode
               </label>
               
               <div className="training-tip">
-                <div className="tip-icon">💡</div>
+                <div className="tip-icon"><InterfaceIcon name="tip" /></div>
                 <div className="tip-content">
                   <strong>Practice Tip:</strong> Start at a comfortable tempo where you can play with perfect technique. Small, incremental increases (3-5%) are most effective for building speed safely.
                 </div>

@@ -1,25 +1,25 @@
 // File: src/components/AdvancedMetronome.js
 
 import React, { useState, useEffect, useRef } from 'react';
-import useMetronomeLogic from '../hooks/useMetronomeLogic';
-import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts';
+import useMetronomeLogic from '../../../hooks/useMetronomeLogic';
+import useKeyboardShortcuts from '../../../hooks/useKeyboardShortcuts';
 
-import firstBeat from '../assets/svg/firstBeat.svg';
-import firstBeatActive from '../assets/svg/firstBeatActive.svg';
-import normalBeat from '../assets/svg/normalBeat.svg';
-import normalBeatActive from '../assets/svg/normalBeatActive.svg';
-import accentedBeat from '../assets/svg/accentedBeat.svg';
-import accentedBeatActive from '../assets/svg/accentedBeatActive.svg';
+import firstBeat from '../../../assets/svg/firstBeat.svg';
+import firstBeatActive from '../../../assets/svg/firstBeatActive.svg';
+import normalBeat from '../../../assets/svg/normalBeat.svg';
+import normalBeatActive from '../../../assets/svg/normalBeatActive.svg';
+import accentedBeat from '../../../assets/svg/accentedBeat.svg';
+import accentedBeatActive from '../../../assets/svg/accentedBeatActive.svg';
 
-import playIcon from '../assets/svg/play.svg';
-import pauseIcon from '../assets/svg/pause.svg';
-import tapButtonIcon from '../assets/svg/tap-button.svg';
-import lineConnectionSvg from '../assets/svg/lineConnection.svg'; // if you are using a separate line-graphic
+import playIcon from '../../../assets/svg/play.svg';
+import pauseIcon from '../../../assets/svg/pause.svg';
+import tapButtonIcon from '../../../assets/svg/tap.svg';
+import lineConnectionSvg from '../../../assets/svg/lineConnection.svg';
 
-import AnalogMetronomeCanvas from './metronome/AnalogMode/AnalogMetronomeCanvas';
-import withTrainingContainer from './Training/withTrainingContainer';
+import AnalogMetronomeCanvas from '../AnalogMode/AnalogMetronomeCanvas';
+import withTrainingContainer from '../../Training/withTrainingContainer';
 
-import './AdvancedMetronome.css';  // We'll put the @keyframes here (see bottom)
+import '../../AdvancedMetronome.css';
 
 /**
  * A reusable advanced metronome component with circle UI and optional training container.

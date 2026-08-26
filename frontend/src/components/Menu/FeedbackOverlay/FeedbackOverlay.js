@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import feedbackButtonIcon from '../../../assets/svg/feedback-button.svg';
 import './FeedbackOverlay.css';
+import InterfaceIcon from '../../common/InterfaceIcon';
 
 // Feedback modal component with rating, comments, and submission functionality
 const FeedbackModal = ({ onClose, onSubmit, currentMode, currentTempo }) => {
@@ -104,7 +105,7 @@ const FeedbackModal = ({ onClose, onSubmit, currentMode, currentTempo }) => {
           onClick={onClose} 
           aria-label="Close Feedback"
         >
-          &times;
+          <InterfaceIcon name="close" />
         </button>
         
         <h2>Share Your Feedback</h2>

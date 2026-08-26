@@ -2,6 +2,7 @@
 // A utility component to help debug training container issues
 
 import React, { useEffect, useState } from 'react';
+import InterfaceIcon from '../common/InterfaceIcon';
 
 /**
  * This component adds a floating debug panel to help diagnose 
@@ -166,7 +167,7 @@ const TrainingDebugLogger = () => {
       
       <div style={{ marginBottom: '10px' }}>
         <div><strong>Mode:</strong> {state.activeMode}</div>
-        <div><strong>Silence:</strong> {state.isSilencePhase ? '🔇 ON' : '🔊 OFF'}</div>
+        <div className="debug-icon-label"><strong>Silence:</strong> <InterfaceIcon name={state.isSilencePhase ? 'silence' : 'sound'} /> {state.isSilencePhase ? 'ON' : 'OFF'}</div>
         <div><strong>Training:</strong> Macro={state.macroMode}, Speed={state.speedMode}</div>
         <div><strong>Containers:</strong> {state.containerCount || 0}</div>
       </div>
@@ -185,7 +186,7 @@ const TrainingDebugLogger = () => {
               {log.type === 'event' ? (
                 <span> Event: <strong>{log.name}</strong></span>
               ) : (
-                <span> {log.isSilencePhase ? '🔇' : '🔊'} Mode: {log.activeMode}</span>
+                <span className="debug-icon-label"><InterfaceIcon name={log.isSilencePhase ? 'silence' : 'sound'} /> Mode: {log.activeMode}</span>
               )}
             </div>
           ))}

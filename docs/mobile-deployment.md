@@ -43,8 +43,9 @@ provisioning profile is stored in this repository.
 
 Automated tests verify audio-clock scheduling, output-latency-compensated UI
 delivery, cancellation of queued display beats, and audio-timeline BPM
-measurement. The full React suite currently contains 163 passing tests. The
-production web build and signed arm64 device build both complete successfully.
+measurement. The full React suite currently contains 165 passing tests. The
+production web build and signed arm64 device build both complete successfully
+without warnings.
 
 This verifies deterministic scheduling in software. It does not replace an
 external microphone or wired loopback measurement of the iPad speaker/output,

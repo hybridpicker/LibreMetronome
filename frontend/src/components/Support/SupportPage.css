@@ -99,6 +99,16 @@
   font-size: 18px;
 }
 
+.support-button-large .heart-icon .interface-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.feature-icon .interface-icon {
+  margin: 0 auto;
+  color: var(--primary-teal);
+}
+
 .support-button-large:disabled {
   opacity: 0.8;
   cursor: not-allowed;

@@ -125,6 +125,15 @@
   position: relative;
   font-weight: 500;
   flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.info-modal-tab .interface-icon {
+  width: 19px;
+  height: 19px;
 }
 
 .info-modal-tab:hover {
@@ -249,6 +258,12 @@
 .info-tip-icon {
   font-size: 1.2rem;
   margin-right: 0.8rem;
+}
+
+.info-tip-icon .interface-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--secondary-gold-dark);
 }
 
 .info-tip p {

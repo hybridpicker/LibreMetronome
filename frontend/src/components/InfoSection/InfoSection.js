@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './InfoSection.css';
+import InterfaceIcon from '../common/InterfaceIcon';
 
 const InfoSection = () => {
   const [activeTab, setActiveTab] = useState('about');
@@ -94,7 +95,7 @@ const InfoSection = () => {
         </div>
         
         <div className="info-tip">
-          <span className="info-tip-icon">💡</span>
+          <span className="info-tip-icon"><InterfaceIcon name="tip" /></span>
           <p>Press spacebar to start/stop. Use up/down arrow keys to adjust tempo by 5 BPM.</p>
         </div>
       </div>
