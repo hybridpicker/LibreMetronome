@@ -6,6 +6,7 @@ import normalBeatActive from "../../../assets/svg/normalBeatActive.svg";
 import accentedBeat from "../../../assets/svg/accentedBeat.svg";
 import accentedBeatActive from "../../../assets/svg/accentedBeatActive.svg";
 import { getSubdivisionIcon } from "../../../assets/svg/subdivisionIcons";
+import InterfaceIcon from "../../common/InterfaceIcon";
 
 const CircleRenderer = ({
   settings,
@@ -26,7 +27,7 @@ const CircleRenderer = ({
   isMobile
 }) => {
   // Add visual indicators for different states
-  let activeBoxShadow = "none"; // Default - no highlight
+  let activeBorderColor = "var(--line-subtle)";
   
   // Calculate actual circle size - make it smaller
   // When in multi-circle mode (circleSettings?.length > 1), use a smaller circle
@@ -37,19 +38,17 @@ const CircleRenderer = ({
   
   if (isActiveUI) {
     // Circle is selected for editing - teal highlight
-    activeBoxShadow = "0 0 0 3px #00A0A0, 0 0 10px rgba(0, 160, 160, 0.6)";
+    activeBorderColor = "var(--primary-teal)";
   }
   
   if (isPlaying) {
     // Circle is currently playing - teal highlight (takes precedence)
-    activeBoxShadow = isTransitioning 
-      ? "0 0 0 3px #00A0A0, 0 0 15px rgba(0, 160, 160, 0.7)" // Teal with glow for transition
-      : "0 0 0 4px #00A0A0, 0 0 15px rgba(0, 160, 160, 0.8)"; // Bolder teal for playing
+    activeBorderColor = "var(--primary-teal)";
   }
   
   // Add visual indicator for silence phase
   if (isPlaying && macroMode !== 0 && isSilencePhaseRef?.current) {
-    activeBoxShadow = "0 0 0 3px #ff5722, 0 0 10px rgba(255, 87, 34, 0.6)";
+    activeBorderColor = "var(--error)";
   }
   
   // Determine border style - dashed for inactive, non-playing circles
@@ -63,7 +62,7 @@ const CircleRenderer = ({
         width: "100%",
         height: "100%",
         borderRadius: "50%",
-        border: "1px dashed rgba(0, 160, 160, 0.3)",
+        border: "1px dashed var(--line-strong)",
         left: 0,
         top: 0,
         pointerEvents: "none",
@@ -142,7 +141,8 @@ const CircleRenderer = ({
         style={{
           left: `calc(50% + ${xPos}px - 22px)`,
           top: `calc(50% + ${yPos}px - 22px)`,
-          filter: isActive ? "drop-shadow(0 0 5px rgba(255, 255, 255, 0.7))" : "none",
+          filter: "none",
+          transform: isActive ? "scale(1.08)" : "none",
           transition: "filter 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
           ...transitionStyle
         }}
@@ -171,19 +171,19 @@ const CircleRenderer = ({
           width: "30px",
           height: "30px",
           borderRadius: "50%",
-          backgroundColor: "#ff4d4d",
+          backgroundColor: "var(--error)",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          color: "#fff",
+          color: "var(--text-light)",
           fontSize: "20px",
           fontWeight: "bold",
           cursor: "pointer",
-          boxShadow: "0 0 5px rgba(0, 0, 0, 0.3)",
+          boxShadow: "none",
           zIndex: 10
         }}
       >
-        -
+        <InterfaceIcon name="remove" size={18} />
       </button>
     );
     
@@ -217,7 +217,7 @@ const CircleRenderer = ({
             height: "24px",
             transition: "transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
             transform: (isActiveUI || isPlaying) ? "scale(1.1)" : "scale(1)",
-            filter: (isActiveUI || isPlaying) ? "drop-shadow(0 0 3px rgba(0, 160, 160, 0.5))" : "none"
+            filter: "none"
           }}
         />
       </div>
@@ -231,8 +231,8 @@ const CircleRenderer = ({
           width: actualContainerSize,
           height: actualContainerSize,
           borderRadius: "50%",
-          border: `2px ${borderStyle} ${(!isActiveUI && !isPlaying) ? "#ccc" : "transparent"}`,
-          boxShadow: activeBoxShadow,
+          border: `2px ${borderStyle} ${activeBorderColor}`,
+          boxShadow: "none",
           margin: isMobile ? "15px 0 38px 0" : "15px 15px 38px 15px",
           transition: "box-shadow 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), border 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)",
           cursor: "pointer",
@@ -262,8 +262,8 @@ const CircleRenderer = ({
         width: containerSize, // Keep original size for single circle
         height: containerSize,
         borderRadius: "50%",
-        border: `2px ${borderStyle} ${(!isActiveUI && !isPlaying) ? "#ccc" : "transparent"}`,
-        boxShadow: activeBoxShadow,
+        border: `2px ${borderStyle} ${activeBorderColor}`,
+        boxShadow: "none",
         margin: isMobile ? "15px 0 38px 0" : "15px 15px 38px 15px",
         transition: "box-shadow 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), border 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)",
         cursor: "pointer",
@@ -284,12 +284,12 @@ const CircleRenderer = ({
           bottom: "-38px",
           left: "50%",
           transform: "translateX(-50%)",
-          backgroundColor: "rgba(255, 255, 255, 0.9)",
+          backgroundColor: "var(--surface-raised)",
           padding: "5px 10px",
           borderRadius: "12px",
           zIndex: 5,
-          border: "1px solid #eee",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+          border: "1px solid var(--line-subtle)",
+          boxShadow: "none",
           display: "flex",
           alignItems: "center",
           justifyContent: "center"
@@ -305,7 +305,7 @@ const CircleRenderer = ({
             height: "24px",
             transition: "transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
             transform: (isActiveUI || isPlaying) ? "scale(1.1)" : "scale(1)",
-            filter: (isActiveUI || isPlaying) ? "drop-shadow(0 0 3px rgba(0, 160, 160, 0.5))" : "none"
+            filter: "none"
           }}
         />
       </div>

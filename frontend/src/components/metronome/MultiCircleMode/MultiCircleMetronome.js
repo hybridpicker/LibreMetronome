@@ -2,7 +2,8 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import useMultiCircleMetronomeLogic from "./hooks/useMultiCircleMetronomeLogic";
 import CircleRenderer from "./CircleRenderer";
-import tapButtonIcon from "../../../assets/svg/tap-button.svg";
+import tapButtonIcon from "../../../assets/svg/tap.svg";
+import InterfaceIcon from "../../common/InterfaceIcon";
 import playIcon from "../../../assets/svg/play.svg";
 import pauseIcon from "../../../assets/svg/pause.svg";
 import "./MultiCircleMetronome.css";
@@ -50,7 +51,7 @@ const AddCircleButton = ({ addCircle, containerSize, isMobile }) => (
         boxShadow: "0 0 8px rgba(0, 160, 160, 0.5)"
       }}
     >
-      +
+      <InterfaceIcon name="add" size={30} />
     </div>
   </button>
 );

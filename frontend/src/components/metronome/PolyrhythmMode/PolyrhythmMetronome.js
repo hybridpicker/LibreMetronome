@@ -3,7 +3,7 @@ import usePolyrhythmLogic from "./usePolyrhythmLogic";
 import playIcon from "../../../assets/svg/play.svg";
 import pauseIcon from "../../../assets/svg/pause.svg";
 import swapIcon from "../../../assets/svg/swap-icon.svg";
-import tapButtonIcon from "../../../assets/svg/tap-button.svg";
+import tapButtonIcon from "../../../assets/svg/tap.svg";
 import { getSubdivisionIcon } from "../../../assets/svg/subdivisionIcons";
 import CircleRenderer from "./CircleRenderer";
 // Removed unused import
@@ -629,7 +629,7 @@ const PolyrhythmMetronome = (props) => {
                     margin: "0 3px",
                     transition: "transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
                     transform: innerBeats === num ? "scale(1.1)" : "scale(1)",
-                    filter: innerBeats === num ? "drop-shadow(0 0 5px rgba(0, 160, 160, 0.5))" : "none"
+                    filter: "none"
                   }}
                 />
               </button>
@@ -670,7 +670,7 @@ const PolyrhythmMetronome = (props) => {
                     margin: "0 3px",
                     transition: "transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
                     transform: outerBeats === num ? "scale(1.1)" : "scale(1)",
-                    filter: outerBeats === num ? "drop-shadow(0 0 5px rgba(0, 160, 160, 0.5))" : "none"
+                    filter: "none"
                   }}
                 />
               </button>

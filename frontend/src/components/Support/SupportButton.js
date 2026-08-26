@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getPaymentLink } from '../../utils/supportUtils';
 import './SupportButton.css';
+import InterfaceIcon from '../common/InterfaceIcon';
 
 const SupportButton = ({ useInternalPage }) => {
   const [paymentLink, setPaymentLink] = useState('');
@@ -38,7 +39,7 @@ const SupportButton = ({ useInternalPage }) => {
       aria-label="Support this project"
       disabled={(!paymentLink && !useInternalPage) || isLoading}
     >
-      <span className="heart-icon">♥</span>
+      <span className="heart-icon"><InterfaceIcon name="support" /></span>
       {isLoading ? <span className="loading-dots">Loading</span> : 'Donate'}
     </button>
   );

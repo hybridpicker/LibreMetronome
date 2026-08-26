@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import './TrainingActiveContainer.css';
 import useWindowDimensions from '../../hooks/useWindowDimensions';
+import InterfaceIcon from '../common/InterfaceIcon';
 
 const TrainingActiveContainer = ({
   macroMode,
@@ -184,7 +185,7 @@ const TrainingActiveContainer = ({
           </div>
           
           <div className="training-active-status-box training">
-            <div className="status-icon" aria-hidden="true">♪</div>
+            <div className="status-icon"><InterfaceIcon name="training" /></div>
             <div className="status-info">
               <span className="status-label">Training Active</span>
               {editingParam === 'measuresUntilMute' ? (
@@ -344,7 +345,7 @@ const TrainingActiveContainer = ({
           </div>
           
           <div className="training-active-status-box speed">
-            <div className="status-icon" aria-hidden="true">↗</div>
+            <div className="status-icon"><InterfaceIcon name="speed" /></div>
             <div className="status-info">
               {editingParam === 'measuresUntilSpeedUp' ? (
                 <div className="parameter-edit">

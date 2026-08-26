@@ -120,7 +120,8 @@ const ModeSelector = ({ mode, setMode }) => {
             <div className="mode-icon-container">
               <img 
                 src={modeConfig.icon} 
-                alt={`${modeConfig.name} Mode`} 
+                alt=""
+                aria-hidden="true"
                 className="mode-icon"
               />
               {mode === modeConfig.id && (

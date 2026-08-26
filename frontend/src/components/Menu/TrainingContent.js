@@ -1,5 +1,6 @@
 // src/components/Menu/TrainingContent.js
 import React, { useState, useEffect } from 'react';
+import InterfaceIcon from '../common/InterfaceIcon';
 
 const TrainingContent = ({ 
   trainingSettings, 
@@ -56,6 +57,7 @@ const TrainingContent = ({
           role="tab"
           aria-selected={activeSubTab === 'macro'}
         >
+          <InterfaceIcon name="silence" />
           Macro-Timing
         </button>
         <button 
@@ -65,6 +67,7 @@ const TrainingContent = ({
           role="tab"
           aria-selected={activeSubTab === 'speed'}
         >
+          <InterfaceIcon name="speed" />
           Speed Training
         </button>
       </div>
@@ -209,7 +212,7 @@ const TrainingContent = ({
             </label>
             
             <div className="training-tip">
-              <div className="tip-icon">💡</div>
+              <div className="tip-icon"><InterfaceIcon name="tip" /></div>
               <div className="tip-content">
                 <strong>Practice Tip:</strong> Start at a comfortable tempo where you can play with perfect technique. Small, incremental increases (3-5%) are most effective for building speed safely.
               </div>

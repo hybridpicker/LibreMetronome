@@ -1,6 +1,10 @@
 // Updated src/components/Menu/SettingsContent.js
 import React, { useState, useEffect, useCallback } from 'react';
 import { getAllSoundSets, setActiveSoundSet, getActiveSoundSetIdFromCookie } from '../../services/soundSetService';
+import InterfaceIcon from '../common/InterfaceIcon';
+import firstBeatIcon from '../../assets/svg/firstBeat.svg';
+import accentedBeatIcon from '../../assets/svg/accentedBeat.svg';
+import normalBeatIcon from '../../assets/svg/normalBeat.svg';
 // Unused import removed
 
 const SettingsContent = ({
@@ -278,6 +282,7 @@ const SettingsContent = ({
           role="tab"
           aria-selected={activeSubTab === 'general'}
         >
+          <InterfaceIcon name="general" />
           General
         </button>
         <button
@@ -287,6 +292,7 @@ const SettingsContent = ({
           role="tab"
           aria-selected={activeSubTab === 'audio'}
         >
+          <InterfaceIcon name="sound" />
           Audio
         </button>
       </div>
@@ -387,6 +393,7 @@ const SettingsContent = ({
               onClick={() => playSound('first')}
               disabled={isPreviewPlaying}
             >
+              <img src={firstBeatIcon} alt="" aria-hidden="true" />
               First Beat
             </button>
             <button 
@@ -394,6 +401,7 @@ const SettingsContent = ({
               onClick={() => playSound('accent')}
               disabled={isPreviewPlaying}
             >
+              <img src={accentedBeatIcon} alt="" aria-hidden="true" />
               Accent
             </button>
             <button 
@@ -401,6 +409,7 @@ const SettingsContent = ({
               onClick={() => playSound('normal')}
               disabled={isPreviewPlaying}
             >
+              <img src={normalBeatIcon} alt="" aria-hidden="true" />
               Normal
             </button>
           </div>

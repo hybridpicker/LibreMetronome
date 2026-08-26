@@ -103,6 +103,16 @@ select:disabled {
   object-fit: contain;
 }
 
+.transport-play:not(.is-playing) .transport-icon {
+  filter: brightness(0) invert(1);
+}
+
+.transport-tap .transport-icon {
+  width: 34px;
+  height: 20px;
+  flex-basis: 34px;
+}
+
 .transport-play {
   color: var(--text-light);
   background: var(--primary-teal);
@@ -136,6 +146,11 @@ select:disabled {
   opacity: 0.48;
   background: var(--muted-wash);
   border-color: var(--line-subtle);
+}
+
+.interface-icon {
+  display: block;
+  flex: 0 0 auto;
 }
 
 .beat-state-legend {

@@ -172,24 +172,8 @@
   color: var(--primary-teal-dark);
 }
 
-.editable-param:after {
-  content: "✏️";
-  font-size: 10px;
-  position: absolute;
-  top: -5px;
-  right: -3px;
-  transition: opacity 0.2s ease;
-}
-
 /* Desktop styles */
 @media (min-width: 1025px) {
-  .editable-param:after {
-    opacity: 0;
-  }
-  
-  .editable-param:hover:after {
-    opacity: 1;
-  }
 }
 
 /* Tablet styles */
@@ -360,6 +344,12 @@
   min-width: 24px;
 }
 
+.status-icon .interface-icon {
+  width: 22px;
+  height: 22px;
+  color: currentColor;
+}
+
 .status-info {
   flex: 1;
 }
@@ -421,6 +411,12 @@
 .tip-icon {
   margin-right: 10px;
   font-size: 16px;
+}
+
+.tip-icon .interface-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--secondary-gold-dark);
 }
 
 .tip-text {

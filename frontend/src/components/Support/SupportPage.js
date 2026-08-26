@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getPaymentLink } from '../../utils/supportUtils';
 import './SupportPage.css';
+import InterfaceIcon from '../common/InterfaceIcon';
 
 const SupportPage = () => {
   const [paymentLink, setPaymentLink] = useState('');
@@ -47,7 +48,7 @@ const SupportPage = () => {
           onClick={handleSupportClick}
           disabled={!paymentLink || isLoading}
         >
-          <span className="heart-icon">♥</span> 
+          <span className="heart-icon"><InterfaceIcon name="support" /></span>
           {isLoading ? <span className="loading-dots">Loading</span> : 'Support'}
         </button>
       </div>
@@ -66,17 +67,17 @@ const SupportPage = () => {
         <h3>Future Development</h3>
         <div className="feature-cards">
           <div className="feature-card">
-            <div className="feature-icon">🎵</div>
+            <div className="feature-icon"><InterfaceIcon name="music" size={28} /></div>
             <h4>Premium Sounds</h4>
             <p>High-quality metronome samples</p>
           </div>
           <div className="feature-card">
-            <div className="feature-icon">📱</div>
+            <div className="feature-icon"><InterfaceIcon name="mobile" size={28} /></div>
             <h4>Mobile Apps</h4>
             <p>iOS and Android with offline use</p>
           </div>
           <div className="feature-card">
-            <div className="feature-icon">🔄</div>
+            <div className="feature-icon"><InterfaceIcon name="sync" size={28} /></div>
             <h4>Advanced Training</h4>
             <p>Adaptive rhythm exercises</p>
           </div>

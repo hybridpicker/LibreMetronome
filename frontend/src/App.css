@@ -170,7 +170,7 @@ html.capacitor-native .footer {
   position: absolute;
   pointer-events: none;
   transform-origin: center center;
-  box-shadow: 0 0 3px rgba(0, 160, 160, 0.6);
+  box-shadow: none;
   transition: all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
@@ -271,6 +271,102 @@ input[type="range"] {
   }
 }
 
+/* Intentional tablet compositions. Portrait stays compact; landscape keeps
+   the complete performance surface above the fold. */
+@media (min-width: 768px) and (orientation: portrait) {
+  .header {
+    padding-block: var(--space-2) var(--space-1);
+  }
+
+  .header-logo {
+    width: 208px;
+  }
+
+  .mode-selector-container {
+    margin: var(--space-1) 0 var(--space-3);
+  }
+
+  .practice-workspace {
+    max-width: 920px;
+    gap: var(--space-3);
+  }
+
+  .metronome-stage {
+    padding: var(--space-3);
+  }
+
+  .practice-controls {
+    padding: var(--space-4);
+  }
+
+  .practice-controls > div {
+    padding-bottom: var(--space-3);
+    margin-bottom: var(--space-3) !important;
+  }
+}
+
+@media (min-width: 1000px) and (orientation: landscape) {
+  .app-container {
+    padding-top: max(var(--space-2), env(safe-area-inset-top));
+  }
+
+  .header {
+    padding: 0 var(--space-5) var(--space-1);
+  }
+
+  .header-logo {
+    width: 184px;
+  }
+
+  .header-kicker {
+    font-size: 0.62rem;
+  }
+
+  .mode-selector-container {
+    margin: 0 0 var(--space-2);
+  }
+
+  .mode-option {
+    min-height: 56px;
+    height: 56px;
+  }
+
+  .mode-icon-container {
+    width: 32px;
+    height: 32px;
+  }
+
+  .mode-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .practice-workspace:not(.mode-multi):not(.mode-polyrhythm) {
+    grid-template-columns: minmax(450px, 1.18fr) minmax(340px, 0.82fr);
+    gap: var(--space-4);
+  }
+
+  .practice-workspace:not(.mode-multi):not(.mode-polyrhythm) .metronome-stage,
+  .practice-workspace:not(.mode-multi):not(.mode-polyrhythm) .practice-controls {
+    min-height: 0;
+    height: calc(100dvh - 174px);
+    max-height: 680px;
+  }
+
+  .practice-workspace:not(.mode-multi):not(.mode-polyrhythm) .metronome-stage {
+    padding: var(--space-3);
+  }
+
+  .practice-workspace:not(.mode-multi):not(.mode-polyrhythm) .practice-controls {
+    padding: var(--space-4);
+  }
+
+  .practice-controls > div {
+    padding-bottom: var(--space-3);
+    margin-bottom: var(--space-3) !important;
+  }
+}
+
 /* Mode styles historically declared transparent icon buttons. These final
    selectors keep the shared text-first transport visually authoritative. */
 .app-container .transport-button.transport-play {
@@ -289,6 +385,13 @@ input[type="range"] {
   color: var(--primary-teal-dark) !important;
   background: var(--surface-raised) !important;
   border: 2px solid var(--primary-teal) !important;
+}
+
+.app-container .transport-button {
+  height: 52px;
+  min-height: 52px;
+  padding: 10px 18px;
+  font-size: var(--text-md);
 }
 
 /* Tablet adjustments (between 601px and 1024px) */
@@ -620,6 +723,8 @@ button {
 .metronome-container {
   background: transparent;
   border: 0;
+  max-width: none;
+  max-height: none;
   overflow: visible;
 }
 
