@@ -13,8 +13,15 @@ import MainMenu from './components/Menu/mainMenu';
 import SettingsContent from './components/Menu/SettingsContent';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
 import ModeSelector from './components/ModeSelector'; // Import the new ModeSelector component
-import { SupportButton, SupportPage } from './components/Support'; // Import the Support components
+import { SupportPage } from './components/Support';
 import { HelpButton, InfoModal } from './components/InfoSection'; // Import the Help components
+import { initAudioContext, resumeAudioContext } from './hooks/useMetronomeLogic/audioBuffers';
+import { manualTempoAcceleration } from './hooks/useMetronomeLogic/trainingLogic';
+import AccessibilityMenu from './components/accessibility/AccessibilityMenu';
+import './styles/accessibility.css';
+import './styles/high-contrast.css';
+import './styles/large-text.css';
+import './styles/color-blindness.css';
 // StyleGuide component removed
 
 const TEMPO_MIN = 15;
@@ -105,71 +112,14 @@ function App() {
   
   const handleAudioContextInit = () => {
     try {
-      // Create a silent audio context
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContext) {
-        console.error("Web Audio API not supported in this browser");
-        return;
-      }
-      
-      // If there's already an audio context but it's closed, remove it
-      if (window._audioContextInit && window._audioContextInit.state === 'closed') {
-        console.log("Removing closed audio context");
-        window._audioContextInit = null;
-      }
-      
-      // Create and store in window for debugging/access
-      if (!window._audioContextInit) {
-        window._audioContextInit = new AudioContext({
-          // Use 48kHz sample rate for professional audio quality
-          sampleRate: 48000,
-          // Set latencyHint to 'interactive' for better timing precision
-          latencyHint: 'interactive'
-        });
-        // Audio context initialized
-        
-        // Play a silent sound to ensure the audio context is fully activated
-        const silentOscillator = window._audioContextInit.createOscillator();
-        const silentGain = window._audioContextInit.createGain();
-        silentGain.gain.value = 0.001; // Nearly silent
-        silentOscillator.connect(silentGain);
-        silentGain.connect(window._audioContextInit.destination);
-        silentOscillator.start();
-        silentOscillator.stop(window._audioContextInit.currentTime + 0.001);
-        
-        // Try to resume it immediately
-        window._audioContextInit.resume().then(() => {
-          // Audio context resumed
-          
-          // Play another silent sound after resume to ensure it's working
-          setTimeout(() => {
-            try {
-              if (window._audioContextInit && window._audioContextInit.state === 'running') {
-                const checkOscillator = window._audioContextInit.createOscillator();
-                const checkGain = window._audioContextInit.createGain();
-                checkGain.gain.value = 0.001;
-                checkOscillator.connect(checkGain);
-                checkGain.connect(window._audioContextInit.destination);
-                checkOscillator.start();
-                checkOscillator.stop(window._audioContextInit.currentTime + 0.001);
-                // Verification sound played successfully
-              }
-            } catch (e) {
-              console.error("Error playing verification sound:", e);
-            }
-          }, 500);
-        }).catch(err => {
-          console.error("Failed to resume audio context:", err);
-        });
-      } else if (window._audioContextInit.state === 'suspended') {
-        // If it exists but is suspended, try to resume it
-        // Attempting to resume existing audio context
-        window._audioContextInit.resume().then(() => {
-          console.log("Existing audio context resumed: ", window._audioContextInit.state);
-        }).catch(err => {
-          console.error("Failed to resume existing audio context:", err);
-        });
-      }
+      const context = initAudioContext();
+      if (!context) return;
+
+      // Invoke resume while the pointer/touch gesture is still active. Every
+      // mode subsequently reuses this exact context.
+      resumeAudioContext(context).catch((error) => {
+        console.error("Failed to unlock audio output:", error);
+      });
     } catch (err) {
       console.error("Error initializing audio context:", err);
     }
@@ -180,6 +130,7 @@ function App() {
   // Style guide toggle removed
   const [tempo, setTempo] = useState(120);
   const [isPaused, setIsPaused] = useState(true);
+  const [audioError, setAudioError] = useState('');
   const [subdivisions, setSubdivisions] = useState(4);
   const [swing, setSwing] = useState(0);
   const [volume, setVolume] = useState(getInitialVolume);
@@ -190,6 +141,21 @@ function App() {
   useEffect(() => {
     window.localStorage?.setItem(VOLUME_STORAGE_KEY, volume.toString());
   }, [volume]);
+
+  useEffect(() => {
+    if (isPaused) return undefined;
+
+    setAudioError('');
+    const healthTimer = window.setTimeout(() => {
+      const context = window._audioContextInit || window._audioContext;
+      if (!context || context.state !== 'running') {
+        setIsPaused(true);
+        setAudioError('Audio could not start. Tap Start again to restore the audio session.');
+      }
+    }, 800);
+
+    return () => window.clearTimeout(healthTimer);
+  }, [isPaused]);
 
   // Make tempo setter globally available (for tap tempo)
   window.setMetronomeTempo = setTempo;
@@ -443,6 +409,15 @@ function App() {
     onSwitchToMulti: () => { setMode("multi"); },
     onSwitchToPolyrhythm: () => { setMode("polyrhythm"); },
     onToggleInfoOverlay: () => { setInfoModalOpen(prev => !prev); },
+    onManualTempoIncrease: () => {
+      if (!isPaused) {
+        manualTempoAcceleration({
+          tempoIncreasePercent: trainingSettings.tempoIncreasePercent,
+          tempoRef: { current: tempo },
+          setTempo
+        });
+      }
+    },
     // Style guide toggle removed
   });
 
@@ -585,7 +560,8 @@ function App() {
 
   return (
     <HelmetProvider>
-    <div className="app-container">
+    <div className={`app-container mode-${mode} ${isPaused ? 'is-paused' : 'is-playing'}`}>
+      <a className="skip-link" href="#metronome-workspace">Skip to metronome</a>
       {/* Hidden button to initialize audio context */}
       <button 
         ref={audioButtonRef}
@@ -599,12 +575,14 @@ function App() {
           overflow: 'hidden'
         }}
         aria-hidden="true"
+        tabIndex="-1"
       >
         Initialize Audio
       </button>
       
       {/* Help button positioned at bottom-left corner */}
       <HelpButton onClick={() => setInfoModalOpen(true)} />
+      <AccessibilityMenu />
       <Helmet>
         <title>{`LibreMetronome - ${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode`}</title>
         <meta name="description" content={getModeDescription()} />
@@ -633,6 +611,15 @@ function App() {
       />
 
       <Header />
+
+      <div className="sr-status" role="status" aria-live="polite" aria-atomic="true">
+        {isPaused ? 'Metronome paused' : 'Metronome playing'}
+      </div>
+      {audioError && (
+        <div className="audio-error" role="alert">
+          {audioError}
+        </div>
+      )}
 
       {showSupportPage ? (
         <div className="support-page-container">
@@ -684,25 +671,30 @@ function App() {
       ) : (
         <>
           <ModeSelector mode={mode} setMode={setMode} />
-          
 
-          {renderMetronome()}
+          <main id="metronome-workspace" className={`practice-workspace mode-${mode}`} tabIndex="-1">
+            <section className="metronome-stage" aria-label={`${mode} metronome`}>
+              {renderMetronome()}
+            </section>
 
-          {mode !== "multi" && mode !== "polyrhythm" && (
-            <MetronomeControls
-              mode={mode}
-              beatMode={beatMode}
-              setBeatMode={setBeatMode}
-              subdivisions={subdivisions}
-              setSubdivisions={setSubdivisions}
-              swing={swing}
-              setSwing={setSwing}
-              volume={volume}
-              setVolume={setVolume}
-              tempo={tempo}
-              setTempo={setTempo}
-            />
-          )}
+            {mode !== "multi" && mode !== "polyrhythm" && (
+              <aside className="practice-controls" aria-label="Metronome controls">
+                <MetronomeControls
+                  mode={mode}
+                  beatMode={beatMode}
+                  setBeatMode={setBeatMode}
+                  subdivisions={subdivisions}
+                  setSubdivisions={setSubdivisions}
+                  swing={swing}
+                  setSwing={setSwing}
+                  volume={volume}
+                  setVolume={setVolume}
+                  tempo={tempo}
+                  setTempo={setTempo}
+                />
+              </aside>
+            )}
+          </main>
 
           {settingsVisible && (
             <SettingsContent

@@ -2,7 +2,6 @@
 import { useCallback } from 'react';
 import { initAudioContext, loadClickBuffers } from '../../../../hooks/useMetronomeLogic/audioBuffers';
 import { getActiveSoundSet } from '../../../../services/soundSetService';
-import { debugLog } from '../utils/debugUtils';
 
 /**
  * Hook to manage audio context initialization and sound loading
@@ -129,17 +128,17 @@ export function useAudioContext(audioCtxRef, normalBufferRef, accentBufferRef, f
           
           if (!normalBufferRef.current) {
             console.log("[MultiCircle] Loading normal click directly");
-            normalBufferRef.current = await loadDirectSound('/assets/audio/click_new.mp3');
+            normalBufferRef.current = await loadDirectSound('/assets/audio/click_new.wav');
           }
           
           if (!accentBufferRef.current) {
             console.log("[MultiCircle] Loading accent click directly");
-            accentBufferRef.current = await loadDirectSound('/assets/audio/click_new_accent.mp3');
+            accentBufferRef.current = await loadDirectSound('/assets/audio/click_new_accent.wav');
           }
           
           if (!firstBufferRef.current) {
             console.log("[MultiCircle] Loading first click directly");
-            firstBufferRef.current = await loadDirectSound('/assets/audio/click_new_first.mp3');
+            firstBufferRef.current = await loadDirectSound('/assets/audio/click_new_first.wav');
           }
         }
       } catch (error) {
@@ -270,17 +269,17 @@ export function useAudioContext(audioCtxRef, normalBufferRef, accentBufferRef, f
       try {
         if (!normalBufferRef.current) {
           console.log("[MultiCircle] Loading normal click directly");
-          normalBufferRef.current = await loadDirectSound('/assets/audio/click_new.mp3');
+          normalBufferRef.current = await loadDirectSound('/assets/audio/click_new.wav');
         }
         
         if (!accentBufferRef.current) {
           console.log("[MultiCircle] Loading accent click directly");
-          accentBufferRef.current = await loadDirectSound('/assets/audio/click_new_accent.mp3');
+          accentBufferRef.current = await loadDirectSound('/assets/audio/click_new_accent.wav');
         }
         
         if (!firstBufferRef.current) {
           console.log("[MultiCircle] Loading first click directly");
-          firstBufferRef.current = await loadDirectSound('/assets/audio/click_new_first.mp3');
+          firstBufferRef.current = await loadDirectSound('/assets/audio/click_new_first.wav');
         }
         
         // Check if we have all required buffers now

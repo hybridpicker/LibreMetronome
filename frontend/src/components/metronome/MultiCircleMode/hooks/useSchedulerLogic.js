@@ -8,6 +8,7 @@ import { shouldMuteThisBeat } from '../../../../hooks/useMetronomeLogic/training
 import { initAudioContext, loadClickBuffers } from '../../../../hooks/useMetronomeLogic/audioBuffers';
 import { getActiveSoundSet } from '../../../../services/soundSetService';
 import { debugLog } from '../utils/debugUtils';
+import { STARTUP_LEAD_TIME } from '../../../../hooks/useMetronomeLogic/constants';
 
 /**
  * Hook to manage audio scheduling and beat timing logic
@@ -367,7 +368,10 @@ export function useSchedulerLogic({
       gridMode,
       multiCircleMode: true,
       volumeRef,
-      onAnySubTrigger,
+      onAnySubTrigger: (dueSubIndex) => {
+        setCurrentSubdivision(dueSubIndex);
+        if (onAnySubTrigger) onAnySubTrigger(dueSubIndex);
+      },
       normalBufferRef,
       accentBufferRef,
       firstBufferRef,
@@ -376,6 +380,7 @@ export function useSchedulerLogic({
       shouldMute: muteThisBeat,
       playedBeatTimesRef,
       updateActualBpm,
+      nodeRefs,
       // Pass additional metadata for logging
       debugInfo: {
         currentCircle: currentCircleIndex,
@@ -411,7 +416,9 @@ export function useSchedulerLogic({
     onAnySubTrigger,
     accentsRef,
     playedBeatTimesRef,
-    updateActualBpm
+    updateActualBpm,
+    nodeRefs,
+    setCurrentSubdivision
   ]);
 
   /**
@@ -444,7 +451,6 @@ export function useSchedulerLogic({
       audioCtxRef,
       nextNoteTimeRef,
       currentSubRef,
-      currentSubdivisionSetter: setCurrentSubdivision,
       getCurrentSubIntervalSec,
       // Using a simpler measure boundary handler
       handleMeasureBoundary: () => true, // Always continue scheduler
@@ -461,7 +467,6 @@ export function useSchedulerLogic({
     currentSubIntervalRef,
     getCurrentSubIntervalSec,
     nextNoteTimeRef,
-    setCurrentSubdivision,
     scheduleSubFn,
     subdivisionsRef,
     nodeRefs
@@ -487,7 +492,8 @@ export function useSchedulerLogic({
       
       nodesToCleanup.forEach(node => {
         try {
-          if (node.stop) node.stop(0);
+          if (node.cancel) node.cancel();
+          else if (node.stop) node.stop(0);
           if (node.disconnect) node.disconnect();
         } catch (e) {
           // Silently ignore errors when cleaning up nodes
@@ -632,8 +638,8 @@ export function useSchedulerLogic({
         // Reset scheduling state
         currentSubRef.current = 0;
         setCurrentSubdivision(0);
-        nextNoteTimeRef.current = now;
-        currentSubStartRef.current = now;
+        nextNoteTimeRef.current = now + STARTUP_LEAD_TIME;
+        currentSubStartRef.current = now + STARTUP_LEAD_TIME;
         currentSubIntervalRef.current = getCurrentSubIntervalSec(0);
         playedBeatTimesRef.current = [];
         

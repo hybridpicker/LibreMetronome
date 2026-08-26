@@ -48,23 +48,29 @@ const TrainingContent = ({
       <h2>Training Mode</h2>
       
       {/* Training Tabs */}
-      <div className="training-subtabs">
+      <div className="training-subtabs" role="tablist" aria-label="Training sections">
         <button 
+          type="button"
           className={`training-subtab ${activeSubTab === 'macro' ? 'active' : ''}`}
           onClick={() => setActiveSubTab('macro')}
+          role="tab"
+          aria-selected={activeSubTab === 'macro'}
         >
           Macro-Timing
         </button>
         <button 
+          type="button"
           className={`training-subtab ${activeSubTab === 'speed' ? 'active' : ''}`}
           onClick={() => setActiveSubTab('speed')}
+          role="tab"
+          aria-selected={activeSubTab === 'speed'}
         >
           Speed Training
         </button>
       </div>
 
       {/* Macro-Timing Section */}
-      <div className={`training-section ${activeSubTab === 'macro' ? 'active' : ''}`}>
+      <div className={`training-section ${activeSubTab === 'macro' ? 'active' : ''}`} role="tabpanel">
         <div className="training-overview">
           <p>
             Macro-timing training helps develop your internal sense of rhythm by temporarily muting the metronome, 
@@ -141,7 +147,7 @@ const TrainingContent = ({
       </div>
 
       {/* Speed Training Section */}
-      <div className={`training-section ${activeSubTab === 'speed' ? 'active' : ''}`}>
+      <div className={`training-section ${activeSubTab === 'speed' ? 'active' : ''}`} role="tabpanel">
         <div className="training-overview">
           <p>
             Speed training gradually increases the tempo to help you build speed and technical facility in a controlled, 

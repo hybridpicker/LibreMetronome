@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import useMetronomeLogic from "../hooks/useMetronomeLogic";
-import useKeyboardShortcuts from "../hooks/useKeyboardShortcuts";
 
 import firstBeat from "../assets/svg/firstBeat.svg";
 import firstBeatActive from "../assets/svg/firstBeatActive.svg";
@@ -12,6 +11,7 @@ import accentedBeatActive from "../assets/svg/accentedBeatActive.svg";
 import playIcon from "../assets/svg/play.svg";
 import pauseIcon from "../assets/svg/pause.svg";
 import tapButtonIcon from "../assets/svg/tap-button.svg";
+import TransportButton from "./metronome/Controls/TransportButton";
 
 import AnalogMetronomeCanvas from "./metronome/AnalogMode/AnalogMetronomeCanvas";
 import withTrainingContainer from "./Training/withTrainingContainer";
@@ -249,17 +249,6 @@ export function AdvancedMetronomeWithCircle({
     }
   }, [isPaused, tempo, tempoIncreasePercent, setTempo]);
 
-  useKeyboardShortcuts({
-    onTogglePlayPause: () => handlePlayPause(),
-    onTapTempo: () => {
-      if (logic && logic.tapTempo) {
-        console.log("[AdvancedMetronome] Using logic.tapTempo from keyboard shortcut");
-        logic.tapTempo();
-      }
-    },
-    onManualTempoIncrease: handleAccelerate
-  });
-
   useEffect(() => {
     if (registerTogglePlay) {
       registerTogglePlay(handlePlayPause);
@@ -305,9 +294,11 @@ export function AdvancedMetronomeWithCircle({
 
   const getContainerSize = () => {
     const w = window.innerWidth;
+    const h = window.innerHeight;
+    const hasCoarsePointer = window.matchMedia?.('(pointer: coarse)').matches;
     if (w < 600) return Math.min(w - 40, 300);
-    if (w < 1024) return Math.min(w - 40, 400);
-    return 300;
+    if (hasCoarsePointer || w < 1024) return Math.min(w - 72, h * 0.48, 500);
+    return Math.min(w * 0.30, h * 0.48, 400);
   };
 
   const [containerSize, setContainerSize] = useState(getContainerSize());
@@ -542,6 +533,8 @@ export function AdvancedMetronomeWithCircle({
     };
   }, [logic]);
 
+  const beatStateLabels = ["Muted", "Normal", "Accent", "First beat"];
+
   return (
     <div style={{ position: "relative", textAlign: "center" }}>
       <div
@@ -573,28 +566,17 @@ export function AdvancedMetronomeWithCircle({
 
               if (state === 0) {
                 return (
-                  <div
+                  <button
+                    type="button"
                     key={bd.i}
                     onClick={() => effectiveToggleAccent(bd.i)}
+                    className="beat-control is-muted"
+                    aria-label={`Beat ${bd.i + 1}: muted. Activate to change accent.`}
                     style={{
-                      position: "absolute",
-                      left: `calc(50% + ${bd.xPos}px - 12px)`,
-                      top: `calc(50% + ${bd.yPos}px - 12px)`,
-                      width: "24px",
-                      height: "24px",
-                      borderRadius: "50%",
-                      border: "2px dashed #ccc",
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      color: "#ccc",
-                      fontSize: "14px",
-                      cursor: "pointer",
-                      transition: "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)"
+                      left: `calc(50% + ${bd.xPos}px - 22px)`,
+                      top: `calc(50% + ${bd.yPos}px - 22px)`
                     }}
-                  >
-                    +
-                  </div>
+                  />
                 );
               }
 
@@ -614,23 +596,21 @@ export function AdvancedMetronomeWithCircle({
               }
 
               return (
-                <img
+                <button
+                  type="button"
                   key={bd.i}
-                  src={icon}
-                  alt={`Beat ${bd.i}`}
-                  className="beat-icon"
+                  className={`beat-control ${isActive ? 'is-current' : ''}`}
                   onClick={() => effectiveToggleAccent(bd.i)}
+                  aria-label={`Beat ${bd.i + 1}: ${beatStateLabels[state]}. Activate to change accent.`}
+                  aria-pressed={state === 2 || state === 3}
                   style={{
-                    left: `calc(50% + ${bd.xPos}px - 12px)`,
-                    top: `calc(50% + ${bd.yPos}px - 12px)`,
-                    transition: "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
-                    filter: isActive
-                      ? "drop-shadow(0 0 5px rgba(248, 211, 141, 0.8))"
-                      : "none",
-                    transform: isActive ? "scale(1.05)" : "scale(1)",
+                    left: `calc(50% + ${bd.xPos}px - 22px)`,
+                    top: `calc(50% + ${bd.yPos}px - 22px)`,
                     animation: isPulsing ? "pulse-beat 0.2s ease-out" : "none"
                   }}
-                />
+                >
+                  <img src={icon} alt="" aria-hidden="true" />
+                </button>
               );
             })}
           </>
@@ -640,31 +620,21 @@ export function AdvancedMetronomeWithCircle({
       {/* Accelerate Button positioned directly after the metronome canvas */}
       <AccelerateButton onClick={handleAccelerate} speedMode={speedMode} />
 
-      {/* Play/Pause Button */}
-      <div style={{ marginTop: 20 }}>
-        <button
+      <div className="transport-row">
+        <TransportButton
+          kind="play"
+          icon={isPaused ? playIcon : pauseIcon}
+          label={isPaused ? "Start" : "Pause"}
           onClick={handlePlayPause}
+          pressed={!isPaused}
           className="play-pause-button"
-          style={{
-            background: "transparent",
-            border: "none",
-            cursor: "pointer",
-            padding: "10px"
-          }}
-          aria-label="Toggle play/pause"
-        >
-          <img
-            src={isPaused ? playIcon : pauseIcon}
-            alt={isPaused ? "Play" : "Pause"}
-            className="play-pause-icon"
-            style={{ width: 40, height: 40 }}
-          />
-        </button>
-      </div>
-
-      {/* Tap Tempo button */}
-      <button
-        onClick={() => {
+        />
+        <TransportButton
+          kind="tap"
+          icon={tapButtonIcon}
+          label="Tap Tempo"
+          className="tap-button"
+          onClick={() => {
           console.log("[AdvancedMetronome] Tap button clicked");
           
           // Try multiple approaches to handle tap tempo
@@ -688,12 +658,9 @@ export function AdvancedMetronomeWithCircle({
               })
             );
           }
-        }}
-        aria-label="Tap Tempo"
-        className="tap-button"
-      >
-        <img src={tapButtonIcon} alt="Tap Tempo" />
-      </button>
+          }}
+        />
+      </div>
 
       {!analogMode && (
         <div

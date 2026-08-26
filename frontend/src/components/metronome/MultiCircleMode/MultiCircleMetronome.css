@@ -10,6 +10,54 @@
   position: relative;
 }
 
+.multi-mode-shell {
+  width: 100%;
+}
+
+.multi-controls-panel {
+  padding: var(--space-4);
+  border: 1px solid var(--line-subtle);
+  border-radius: var(--radius-panel);
+  background: var(--surface-canvas);
+}
+
+.multi-controls-panel .control-group {
+  padding-bottom: var(--space-3);
+  margin-bottom: var(--space-3) !important;
+  border-bottom: 1px solid var(--line-subtle);
+}
+
+@media (min-width: 1000px) and (orientation: landscape) {
+  .multi-mode-shell {
+    display: grid;
+    grid-template-columns: minmax(520px, 1.2fr) minmax(400px, 0.8fr);
+    grid-template-areas:
+      "visual controls"
+      "transport controls";
+    column-gap: var(--space-5);
+    align-items: center;
+  }
+
+  .multi-mode-shell > .circles-container {
+    grid-area: visual;
+    margin-top: 0 !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .multi-mode-shell > .multi-transport-row {
+    grid-area: transport;
+  }
+
+  .multi-mode-shell > .multi-controls-panel {
+    grid-area: controls;
+    margin-top: 0 !important;
+  }
+
+  .multi-controls-panel .sliders-container {
+    max-width: 100%;
+  }
+}
+
 .metronome-circle {
   position: relative;
   border-radius: 50%;
@@ -76,6 +124,22 @@
   z-index: 10;
 }
 
+.circle-select-button {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.circle-select-button[aria-pressed="true"] {
+  box-shadow: inset 0 0 0 2px var(--primary-teal);
+}
+
 .add-circle-button {
   position: relative;
   display: flex;
@@ -84,6 +148,8 @@
   margin: 15px;
   cursor: pointer;
   transition: all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1);
+  border: 0;
+  background: transparent;
 }
 
 .plus-button {

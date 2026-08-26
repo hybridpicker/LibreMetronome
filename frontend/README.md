@@ -76,5 +76,5 @@ Place the following audio files in **frontend/public/assets/audio/**:
 We welcome contributions! If you encounter issues or have feature suggestions, feel free to open an issue or submit a pull request. Originally a **Pygame** prototype, Libre Metronome has evolved into a **Django + React** application for improved scalability and UX.
 
 ## License
-This project is licensed under the **MIT License**. See the `LICENSE` file for details.
-
+This project is licensed under the **GNU General Public License v3.0**. See the
+repository-level `LICENSE` file for details.

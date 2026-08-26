@@ -3,6 +3,7 @@ import useMetronomeLogic from '../../../hooks/useMetronomeLogic';
 import playIcon from '../../../assets/svg/play.svg';
 import pauseIcon from '../../../assets/svg/pause.svg';
 import tapButtonIcon from '../../../assets/svg/tap-button.svg';
+import TransportButton from '../Controls/TransportButton';
 import './GridAnimation.css';
 import withTrainingContainer from '../../Training/withTrainingContainer';
 import AccelerateButton from '../Controls/AccelerateButton';
@@ -297,14 +298,6 @@ const GridModeMetronome = (props) => {
   };
   
   // Responsive behavior for mobile devices and tablets (modified threshold)
-  // Changed to show tap button only on tablets and mobile (≤ 1024px)
-  const [isMobileOrTablet, setIsMobileOrTablet] = useState(window.innerWidth <= 1024);
-  useEffect(() => {
-    const handleResize = () => setIsMobileOrTablet(window.innerWidth <= 1024);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   // Handler for manual tempo acceleration
   const handleAccelerate = useCallback(() => {
     if (!props.isPaused) {
@@ -326,16 +319,22 @@ const GridModeMetronome = (props) => {
       
       if (columnLevel === 0) {
         return (
-          <div 
+          <button
+            type="button"
             key={colIndex}
             onClick={() => handleColumnClick(colIndex)}
+            className="grid-beat-control"
+            aria-label={`Beat ${colIndex + 1}: muted. Activate to change accent.`}
             style={{
               display: 'inline-block',
               verticalAlign: 'top',
               marginRight: `${gapSize}px`,
               cursor: 'pointer',
               width: `${squareSize}px`,
-              textAlign: 'center'
+              textAlign: 'center',
+              border: 0,
+              padding: 0,
+              background: 'transparent'
             }}
           >
             <div style={{ 
@@ -367,7 +366,7 @@ const GridModeMetronome = (props) => {
             }}>
               {colIndex + 1}
             </div>
-          </div>
+          </button>
         );
       }
       
@@ -377,16 +376,23 @@ const GridModeMetronome = (props) => {
                           [0, 1, 2];
       
       return (
-        <div 
+        <button
+          type="button"
           key={colIndex}
           onClick={() => handleColumnClick(colIndex)}
+          className="grid-beat-control"
+          aria-label={`Beat ${colIndex + 1}: ${columnLevel === 3 ? 'first beat' : columnLevel === 2 ? 'accent' : 'normal'}. Activate to change accent.`}
+          aria-pressed={columnLevel > 1}
           style={{
             display: 'inline-block',
             verticalAlign: 'top',
             marginRight: `${gapSize}px`,
             cursor: 'pointer',
             width: `${squareSize}px`,
-            textAlign: 'center'
+            textAlign: 'center',
+            border: 0,
+            padding: 0,
+            background: 'transparent'
           }}
         >
           {Array.from({ length: 3 }, (_, rowIndex) => {
@@ -444,7 +450,7 @@ const GridModeMetronome = (props) => {
           }}>
             {colIndex + 1}
           </div>
-        </div>
+        </button>
       );
     });
   };
@@ -470,30 +476,29 @@ const GridModeMetronome = (props) => {
         speedMode={props.speedMode}
       />
       
-      <div style={{ marginTop: '20px' }}>
-        <button
+      <div className="transport-row">
+        <TransportButton
+          kind="play"
+          icon={props.isPaused ? playIcon : pauseIcon}
+          label={props.isPaused ? 'Start' : 'Pause'}
           onClick={handlePlayPause}
-          style={{ 
-            background: 'transparent', 
-            border: 'none', 
-            cursor: 'pointer',
-            padding: '10px',
-            transition: 'all 0.2s ease',
-            outline: 'none'
+          pressed={!props.isPaused}
+          className="play-button play-pause-button"
+        />
+        <TransportButton
+          kind="tap"
+          icon={tapButtonIcon}
+          label="Tap Tempo"
+          className="tap-button"
+          onClick={() => {
+            console.log("[GRID MODE] Tap tempo button clicked");
+            if (logic && typeof logic.tapTempo === 'function') {
+              logic.tapTempo();
+            } else {
+              console.warn("[GRID MODE] tapTempo function is not available");
+            }
           }}
-          className="play-button"
-          aria-label="Toggle play/pause"
-        >
-          <img
-            src={props.isPaused ? playIcon : pauseIcon}
-            alt={props.isPaused ? 'Play' : 'Pause'}
-            style={{
-              width: '40px',
-              height: '40px',
-              transition: 'transform 0.2s ease-out'
-            }}
-          />
-        </button>
+        />
       </div>
 
       <div style={{ 
@@ -553,41 +558,6 @@ const GridModeMetronome = (props) => {
 
       </div>
 
-      {/* Only show tap tempo button on mobile and tablet devices */}
-      {isMobileOrTablet && (
-        <button
-          onClick={() => {
-            console.log("[GRID MODE] Tap tempo button clicked");
-            if (logic && typeof logic.tapTempo === 'function') {
-              console.log("[GRID MODE] Using metronome logic's tapTempo function");
-              logic.tapTempo();
-            } else {
-              console.warn("[GRID MODE] tapTempo function is not available");
-            }
-          }}
-          aria-label="Tap Tempo"
-          style={{ 
-            background: 'transparent', 
-            border: 'none', 
-            cursor: 'pointer', 
-            marginTop: '20px',
-            padding: '10px',
-            outline: 'none',
-            display: 'block',
-            margin: '10px auto'
-          }}
-        >
-          <img
-            src={tapButtonIcon}
-            alt="Tap Tempo"
-            style={{
-              height: '35px',
-              objectFit: 'contain',
-              transition: 'all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)'
-            }}
-          />
-        </button>
-      )}
     </div>
   );
 };

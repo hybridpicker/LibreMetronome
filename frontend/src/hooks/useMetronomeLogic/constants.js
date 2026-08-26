@@ -1,5 +1,9 @@
 // src/hooks/useMetronomeLogic/constants.js
 export const TEMPO_MIN = 15;
 export const TEMPO_MAX = 240;
-export const SCHEDULE_AHEAD_TIME = 0.007; // ~7 ms
-export const SCHEDULER_INTERVAL = 4;     // check scheduler ~every 4 ms
+// Audio is scheduled on the AudioContext timeline. A generous look-ahead keeps
+// the click sample-accurate even when WebKit briefly delays the JavaScript
+// thread for layout, touch handling, or garbage collection.
+export const SCHEDULE_AHEAD_TIME = 0.1;
+export const SCHEDULER_INTERVAL = 20;
+export const STARTUP_LEAD_TIME = 0.025;

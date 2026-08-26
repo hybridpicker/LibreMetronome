@@ -54,6 +54,8 @@ const EditableSliderInput = ({
     if (disabled) return;
     setValue(parseFloat(e.target.value));
   };
+
+  const progress = max === min ? 0 : ((value - min) / (max - min)) * 100;
   
   return (
     <div className={`editable-slider ${className || ''} ${disabled ? 'disabled' : ''}`}>
@@ -70,9 +72,15 @@ const EditableSliderInput = ({
           disabled={disabled}
         />
       ) : (
-        <div className="slider-label" onClick={handleClick}>
+        <button
+          type="button"
+          className="slider-label"
+          onClick={handleClick}
+          aria-label={`Edit ${label}`}
+          disabled={disabled}
+        >
           {label}: {formatter(value)}
-        </div>
+        </button>
       )}
       
       <input
@@ -83,6 +91,8 @@ const EditableSliderInput = ({
         value={value}
         onChange={handleSliderChange}
         className={`slider ${disabled ? 'disabled' : ''}`}
+        aria-label={label}
+        style={{ '--slider-progress': `${Math.max(0, Math.min(100, progress))}%` }}
         disabled={disabled}
       />
     </div>

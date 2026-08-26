@@ -270,23 +270,29 @@ const SettingsContent = ({
       <h2>Settings</h2>
       
       {/* Tabs for settings */}
-      <div className="settings-subtabs">
+      <div className="settings-subtabs" role="tablist" aria-label="Settings sections">
         <button
+          type="button"
           className={`settings-subtab ${activeSubTab === 'general' ? 'active' : ''}`}
           onClick={() => setActiveSubTab('general')}
+          role="tab"
+          aria-selected={activeSubTab === 'general'}
         >
           General
         </button>
         <button
+          type="button"
           className={`settings-subtab ${activeSubTab === 'audio' ? 'active' : ''}`}
           onClick={() => setActiveSubTab('audio')}
+          role="tab"
+          aria-selected={activeSubTab === 'audio'}
         >
           Audio
         </button>
       </div>
       
       {/* General settings */}
-      <div className={`settings-section ${activeSubTab === 'general' ? 'active' : ''}`}>
+      <div className={`settings-section ${activeSubTab === 'general' ? 'active' : ''}`} role="tabpanel">
         <div className="settings-group">
           <h3>Values</h3>
           <div className="settings-row">
@@ -330,7 +336,7 @@ const SettingsContent = ({
       </div>
       
       {/* Audio settings */}
-      <div className={`settings-section ${activeSubTab === 'audio' ? 'active' : ''}`}>
+      <div className={`settings-section ${activeSubTab === 'audio' ? 'active' : ''}`} role="tabpanel">
         <div className="settings-group">
           <h3>Volume Control</h3>
           <div className="settings-row">

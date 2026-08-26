@@ -1,6 +1,7 @@
 /* src/index.css */
 @import './styles/colors.css';
 @import './styles/utilities.css';
+@import './styles/instrument-system.css';
 
 @font-face {
   font-family: 'Lato';
@@ -37,6 +38,7 @@ body {
   background-color: var(--neutral-bg);
   color: var(--text-primary);
   -webkit-tap-highlight-color: transparent;
+  min-width: 320px;
 }
 
 #root {

@@ -10,34 +10,46 @@ share the React application and Web Audio implementation in `frontend/`.
 - The Android debug app builds with JDK 21.
 - Louder normalized click samples are included in the mobile and web bundles.
 - The iOS app configures a playback audio session and a low-latency I/O buffer.
+- The default clicks are onset-trimmed, mono 48 kHz PCM WAV files, avoiding MP3
+  decoder delay in the timing-critical fallback path.
+- Every mode reuses the same user-unlocked AudioContext on iOS, including
+  recovery from WebKit's interrupted state. A deterministic procedural click
+  remains available if a bundled or custom sample cannot be decoded.
+- Audio is scheduled 100 ms ahead on the Web Audio clock; display events are
+  deferred to the audible output time instead of firing when JavaScript merely
+  queues the beat.
+- The iPad landscape layout keeps the visualization, transport, tap tempo, and
+  primary controls on one performance surface.
+- The native iOS asset catalog contains a dedicated opaque 1024 px
+  LibreMetronome icon designed for iOS masking.
+- On August 26, 2026, the signed Debug build was installed and launched on the
+  connected 13-inch iPad Air (iPadOS 26.6). The running device UI was captured
+  through Xcode and visually verified.
 
-## iPad Installation Plan
+## iPad Installation
 
-Decision recorded on July 31, 2026:
+The July 31, 2026 installation blocker is resolved. The previously protected
+Wedding controller is no longer installed, and the Personal Team now has a
+free-provisioning slot for LibreMetronome. Home Media and Nex Note were left
+installed.
 
-- Do not renew the paid Apple Developer Program membership.
-- Do not remove any existing app from the iPad before August 9, 2026.
-- Keep the Wedding controller installed through August 9, 2026.
-- On or after August 9, remove the Wedding controller when it is no longer
-  needed, then rebuild and install LibreMetronome with the free Apple Personal
-  Team.
-- Do not remove Home Media or Nex Note as part of this installation.
+The app uses free provisioning for direct development-device installation.
+These profiles expire regularly and do not provide TestFlight or App Store
+distribution, so rebuild and reinstall the app when the development profile
+expires. No Apple account, team identifier, device identifier, certificate, or
+provisioning profile is stored in this repository.
 
-The installation remains pending because the connected iPad already has the
-maximum number of apps signed with free provisioning. The expired paid
-developer team cannot create new signing profiles unless its membership is
-renewed.
+## Timing Verification Scope
 
-Deleting an unrelated App Store Connect record does not free a Personal Team
-device-installation slot. A removal attempt for the legacy FretMap record was
-blocked by Apple because the paid developer membership is expired. FretMap is
-already unavailable for download while the membership remains expired, but its
-record remains visible in App Store Connect. No paid renewal is planned.
+Automated tests verify audio-clock scheduling, output-latency-compensated UI
+delivery, cancellation of queued display beats, and audio-timeline BPM
+measurement. The full React suite currently contains 163 passing tests. The
+production web build and signed arm64 device build both complete successfully.
 
-Free provisioning is suitable for direct development-device installation, but
-its profiles expire regularly and it does not provide TestFlight or App Store
-distribution. Rebuild and reinstall the app when the development profile
-expires.
+This verifies deterministic scheduling in software. It does not replace an
+external microphone or wired loopback measurement of the iPad speaker/output,
+which is required to quantify the final digital-to-analog and transducer
+latency of a particular hardware route.
 
 ## Build and Sync
 

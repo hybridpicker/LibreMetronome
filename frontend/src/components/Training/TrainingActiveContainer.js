@@ -165,7 +165,8 @@ const TrainingActiveContainer = ({
         <div className="training-active-section">
           <div className="training-active-section-header">
             <span className="training-active-section-title">Macro-Timing</span>
-            <span 
+            <button
+              type="button"
               className="training-active-section-type clickable"
               onClick={() => {
                 // Toggle between macroMode 1 (Fixed) and 2 (Random)
@@ -179,11 +180,11 @@ const TrainingActiveContainer = ({
               }}
             >
               {macroMode === 1 ? 'Fixed Silence' : 'Random Silence'}
-            </span>
+            </button>
           </div>
           
           <div className="training-active-status-box training">
-            <div className="status-icon">🎵</div>
+            <div className="status-icon" aria-hidden="true">♪</div>
             <div className="status-info">
               <span className="status-label">Training Active</span>
               {editingParam === 'measuresUntilMute' ? (
@@ -292,7 +293,8 @@ const TrainingActiveContainer = ({
                 </div>
               ) : (
                 <span className="counter-text">
-                  <span 
+                  <button
+                    type="button"
                     className="editable-param" 
                     onClick={() => {
                       setEditingParam('measuresUntilMute');
@@ -300,8 +302,9 @@ const TrainingActiveContainer = ({
                     }}
                   >
                     Play: {measuresUntilMute} measures
-                  </span>, 
-                  <span 
+                  </button>,
+                  <button
+                    type="button"
                     className="editable-param"
                     onClick={() => {
                       setEditingParam('muteDurationMeasures');
@@ -309,7 +312,7 @@ const TrainingActiveContainer = ({
                     }}
                   >
                     Silent: {muteDurationMeasures} measures
-                  </span>
+                  </button>
                 </span>
               )}
             </div>
@@ -322,7 +325,8 @@ const TrainingActiveContainer = ({
         <div className="training-active-section">
           <div className="training-active-section-header">
             <span className="training-active-section-title">Speed Training</span>
-            <span 
+            <button
+              type="button"
               className="training-active-section-type clickable"
               onClick={() => {
                 // Toggle between speedMode 1 (Auto) and 2 (Manual)
@@ -336,11 +340,11 @@ const TrainingActiveContainer = ({
               }}
             >
               {speedMode === 1 ? 'Auto Increase' : 'Manual Increase'}
-            </span>
+            </button>
           </div>
           
           <div className="training-active-status-box speed">
-            <div className="status-icon">⏱️</div>
+            <div className="status-icon" aria-hidden="true">↗</div>
             <div className="status-info">
               {editingParam === 'measuresUntilSpeedUp' ? (
                 <div className="parameter-edit">
@@ -451,7 +455,8 @@ const TrainingActiveContainer = ({
                 <>
                   <span className="status-label">Auto Speed Increase</span>
                   <span className="counter-text">
-                    <span 
+                    <button
+                      type="button"
                       className="editable-param" 
                       onClick={() => {
                         setEditingParam('measuresUntilSpeedUp');
@@ -459,8 +464,9 @@ const TrainingActiveContainer = ({
                       }}
                     >
                       Every {measuresUntilSpeedUp} measures
-                    </span>, tempo increases by 
-                    <span 
+                    </button>, tempo increases by
+                    <button
+                      type="button"
                       className="editable-param"
                       onClick={() => {
                         setEditingParam('tempoIncreasePercent');
@@ -468,7 +474,7 @@ const TrainingActiveContainer = ({
                       }}
                     >
                       {tempoIncreasePercent}%
-                    </span>
+                    </button>
                   </span>
                 </>
               ) : (
@@ -476,7 +482,8 @@ const TrainingActiveContainer = ({
                   <span className="status-label">Manual Speed Increase</span>
                   <span className="counter-text">
                     Press "Accelerate" to increase tempo by 
-                    <span 
+                    <button
+                      type="button"
                       className="editable-param"
                       onClick={() => {
                         setEditingParam('tempoIncreasePercent');
@@ -484,7 +491,7 @@ const TrainingActiveContainer = ({
                       }}
                     >
                       {" " + tempoIncreasePercent}%
-                    </span>
+                    </button>
                   </span>
                 </>
               )}

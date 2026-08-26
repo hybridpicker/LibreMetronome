@@ -2,14 +2,32 @@
 
 /* Styling for the header container */
 .header {
-  padding: 20px;
+  padding: var(--space-3) var(--space-5) var(--space-2);
   text-align: center;
 }
 
 /* Styling for the logo image */
 .header-logo {
   height: auto;
-  width: 250px; /* Adjust width as needed */
+  width: 224px;
   max-width: 100%;
 }
-  
+
+.header-kicker {
+  margin: 1px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 600px) {
+  .header {
+    padding: var(--space-2) var(--space-4) var(--space-1);
+  }
+
+  .header-logo {
+    width: 188px;
+  }
+}

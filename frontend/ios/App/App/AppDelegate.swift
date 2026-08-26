@@ -21,7 +21,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 mode: .default,
                 options: [.mixWithOthers]
             )
-            try session.setPreferredIOBufferDuration(0.005)
+            try session.setPreferredSampleRate(48_000)
+            try session.setPreferredIOBufferDuration(128.0 / 48_000.0)
             try session.setActive(true)
         } catch {
             print("Unable to configure the metronome audio session: \(error)")
@@ -43,7 +44,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
-        // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+        // Route changes and interruptions can reset Web Audio's underlying
+        // session. Reassert the low-latency playback configuration on return.
+        configureAudioSession()
     }
 
     func applicationWillTerminate(_ application: UIApplication) {

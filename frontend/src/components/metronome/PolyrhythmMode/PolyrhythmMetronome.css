@@ -17,7 +17,9 @@
 .inner-circle, .outer-circle {
   position: absolute;
   border-radius: 50%;
-  border: 2px dashed #ccc;
+  border: 2px dashed var(--neutral-border);
+  padding: 0;
+  background: transparent;
   transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
   box-sizing: border-box;
 }
@@ -128,13 +130,12 @@
 }
 
 .inner-badge {
-  background: var(--beat-inner);
-  background: linear-gradient(135deg, var(--beat-inner) 0%, var(--beat-outer) 100%);
+  background: var(--primary-teal);
 }
 
 .outer-badge {
-  background: var(--beat-outer);
-  background: linear-gradient(135deg, #f5bb57 0%, #f0a82c 100%);
+  background: var(--secondary-gold-dark);
+  color: var(--text-primary);
 }
 
 .circle-beat-count {
@@ -437,6 +438,8 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1);
+  border: 0;
+  background: transparent;
 }
 
 /* Match the styling from SubdivisionSelector component */
@@ -513,6 +516,72 @@
   min-width: 140px;
   position: relative;
   border: 1px solid rgba(0, 160, 160, 0.15);
+}
+
+.polyrhythm-mode-shell {
+  width: 100%;
+}
+
+@media (min-width: 1000px) and (orientation: landscape) {
+  .polyrhythm-mode-shell {
+    display: grid;
+    grid-template-columns: minmax(420px, 1fr) minmax(440px, 1fr);
+    grid-template-areas:
+      "visual choices"
+      "transport choices"
+      "legend ratio"
+      "legend sliders";
+    column-gap: var(--space-6);
+    align-items: center;
+  }
+
+  .polyrhythm-mode-shell > .polyrhythm-container {
+    grid-area: visual;
+    margin-bottom: 0;
+  }
+
+  .polyrhythm-mode-shell > .polyrhythm-transport-row {
+    grid-area: transport;
+  }
+
+  .polyrhythm-mode-shell > .polyrhythm-state-legend {
+    grid-area: legend;
+    margin: var(--space-3) 0 0 !important;
+  }
+
+  .polyrhythm-mode-shell > .polyrhythm-controls {
+    grid-area: choices;
+    padding: var(--space-4);
+    margin: 0;
+    border: 1px solid var(--line-subtle);
+    border-radius: var(--radius-panel);
+    background: var(--surface-canvas);
+  }
+
+  .polyrhythm-mode-shell > .side-controls {
+    grid-area: ratio;
+    flex-direction: row;
+    gap: var(--space-3);
+    margin: var(--space-3) 0 0;
+  }
+
+  .polyrhythm-mode-shell > .side-controls .polyrhythm-ratio {
+    width: auto;
+    margin: 0;
+  }
+
+  .polyrhythm-mode-shell > .sliders-container {
+    grid-area: sliders;
+    max-width: 100%;
+    margin-top: var(--space-3) !important;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
+  }
+
+  .polyrhythm-mode-shell > .sliders-container label {
+    margin-bottom: 0;
+  }
 }
 
 .ratio-label {

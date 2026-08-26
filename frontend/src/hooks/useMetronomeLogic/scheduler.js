@@ -3,6 +3,42 @@
 import { SCHEDULE_AHEAD_TIME } from './constants';
 
 /**
+ * Run visual/state work when a scheduled sound reaches the output device.
+ * Audio remains driven solely by the AudioContext clock; this callback is only
+ * for UI state and events. The returned handle is tracked with audio nodes so
+ * pausing the metronome also cancels pending visual beats.
+ */
+export function scheduleAtAudioTime({ audioCtx, when, callback, nodeRefs }) {
+  if (!audioCtx || typeof callback !== 'function') return null;
+
+  const outputLatency = Number.isFinite(audioCtx.outputLatency)
+    ? audioCtx.outputLatency
+    : (Number.isFinite(audioCtx.baseLatency) ? audioCtx.baseLatency : 0);
+  const delayMs = Math.max(0, (when - audioCtx.currentTime + outputLatency) * 1000);
+  let timerId;
+
+  const handle = {
+    cancel() {
+      if (timerId !== undefined) clearTimeout(timerId);
+    }
+  };
+
+  timerId = setTimeout(() => {
+    if (nodeRefs && Array.isArray(nodeRefs.current)) {
+      const index = nodeRefs.current.indexOf(handle);
+      if (index !== -1) nodeRefs.current.splice(index, 1);
+    }
+    callback();
+  }, delayMs);
+
+  if (nodeRefs && Array.isArray(nodeRefs.current)) {
+    nodeRefs.current.push(handle);
+  }
+
+  return handle;
+}
+
+/**
  * schedulePlay: Actually schedules an audio buffer to play in the future
  */
 function schedulePlay({
@@ -78,27 +114,38 @@ export function scheduleSubdivision({
   shouldMute,
   playedBeatTimesRef,
   updateActualBpm,
+  onBeatDue,
   debugInfo = {},
   nodeRefs
 }) {
-  // Fire user callback to animate each beat
-  if (onAnySubTrigger) {
-    onAnySubTrigger(subIndex);
-  }
+  const scheduledWhen = when <= audioCtx.currentTime
+    ? audioCtx.currentTime + 0.001
+    : when;
 
-  // If we are muting, skip playback but still fire event for UI sync
-  if (shouldMute) {
-    window.dispatchEvent(new CustomEvent('silent-beat-played', {
-      detail: {
-        timestamp: performance.now(),
-        subIndex: subIndex,
-        when: when
+  scheduleAtAudioTime({
+    audioCtx,
+    when: scheduledWhen,
+    nodeRefs,
+    callback: () => {
+      if (onAnySubTrigger) onAnySubTrigger(subIndex);
+      if (onBeatDue) onBeatDue({ subIndex, when: scheduledWhen, isMuted: shouldMute });
+
+      if (shouldMute) {
+        window.dispatchEvent(new CustomEvent('silent-beat-played', {
+          detail: { timestamp: performance.now(), subIndex, when: scheduledWhen }
+        }));
       }
-    }));
+    }
+  });
+
+  // If we are muting, skip playback. Visual state is still delivered above at
+  // the exact due time.
+  if (shouldMute) {
     return;
   } else {
     if (playedBeatTimesRef) {
-      playedBeatTimesRef.current.push(performance.now());
+      // Measure the audio timeline, not the JavaScript scheduler invocation.
+      playedBeatTimesRef.current.push(scheduledWhen * 1000);
     }
     if (typeof updateActualBpm === 'function') {
       updateActualBpm();
@@ -145,7 +192,7 @@ export function scheduleSubdivision({
       buffer,
       audioCtx,
       volumeRef,
-      when,
+      when: scheduledWhen,
       nodeRefs,
       debugInfo: {
         ...debugInfo,
@@ -163,7 +210,6 @@ export function runScheduler({
   audioCtxRef,
   nextNoteTimeRef,
   currentSubRef,
-  currentSubdivisionSetter,
   getCurrentSubIntervalSec,
   tempo,
   handleMeasureBoundary,
@@ -188,9 +234,6 @@ export function runScheduler({
 
     scheduleSubFn(subIndex, nextNoteTimeRef.current, nodeRefs);
 
-    // Update UI
-    currentSubdivisionSetter(subIndex);
-
     // Next subdivision
     const intervalSec = getCurrentSubIntervalSec(subIndex);
     nextNoteTimeRef.current += intervalSec;
@@ -199,8 +242,12 @@ export function runScheduler({
     // If we've hit the start of a new measure
     if (currentSubRef.current === 0) {
       handleMeasureBoundary();
-      // Dispatch a custom event for measure completion
-      window.dispatchEvent(new CustomEvent('measure-complete'));
+      scheduleAtAudioTime({
+        audioCtx,
+        when: nextNoteTimeRef.current,
+        nodeRefs,
+        callback: () => window.dispatchEvent(new CustomEvent('measure-complete'))
+      });
     }
   }
 }

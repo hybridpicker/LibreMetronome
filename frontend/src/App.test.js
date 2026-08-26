@@ -1,5 +1,5 @@
 // App.test.js
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import App from './App';
 
 // Silence console.error before mocking AudioContext to avoid Web Audio API error
@@ -65,9 +65,18 @@ jest.mock('./hooks/useMetronomeLogic', () => ({
     togglePlay: jest.fn(),
     setTempo: jest.fn(),
     setBeatCount: jest.fn(),
-    setSubdivision: jest.fn()
+    setSubdivision: jest.fn(),
+    audioCtx: globalThis._audioContextInit,
+    normalBufferRef: { current: {} },
+    accentBufferRef: { current: {} },
+    firstBufferRef: { current: {} },
+    reloadSounds: jest.fn().mockResolvedValue(true),
+    startScheduler: jest.fn(),
+    stopScheduler: jest.fn()
   })
 }));
+
+jest.mock('./components/metronome/AnalogMode/AnalogMetronomeCanvas', () => () => null);
 
 describe('App Component', () => {
   beforeEach(() => {
@@ -86,5 +95,28 @@ describe('App Component', () => {
     expect(screen.getByText('Grid')).toBeInTheDocument();
     expect(screen.getByText('Multi')).toBeInTheDocument();
     expect(screen.getByText('Polyrhythm')).toBeInTheDocument();
+  });
+
+  test('keeps a visible Tap Tempo label in every mode', () => {
+    render(<App />);
+
+    ['Analog', 'Circle', 'Grid', 'Multi', 'Polyrhythm'].forEach((mode) => {
+      fireEvent.click(screen.getByRole('button', { name: `${mode} mode` }));
+      expect(screen.getByRole('button', { name: 'Tap Tempo' })).toHaveTextContent('Tap Tempo');
+    });
+  });
+
+  test('handles each Space shortcut as one playback transition', async () => {
+    const dateNow = jest.spyOn(Date, 'now')
+      .mockReturnValueOnce(1000)
+      .mockReturnValueOnce(1400);
+    render(<App />);
+
+    fireEvent.keyDown(window, { code: 'Space' });
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Metronome playing'));
+
+    fireEvent.keyDown(window, { code: 'Space' });
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Metronome paused'));
+    dateNow.mockRestore();
   });
 });

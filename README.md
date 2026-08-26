@@ -21,6 +21,7 @@ A modern, open-source metronome application that merges classic musical function
 - **Analog Mode** - Classic metronome with realistic pendulum animation
 - **Grid Mode** - Visual grid pattern layout for complex rhythms and beat patterns
 - **Multi Circle Mode** - Advanced polyrhythm practice with multiple independent circles and synchronized beat line visualization
+- **Polyrhythm Mode** - Simultaneous inner and outer beat patterns with a unified timing view
 
 ### Beat Customization
 
@@ -206,7 +207,10 @@ Libre Metronome bridges traditional musical pedagogy with modern technology, com
 
 ### Style Guide
 
-For developers: A comprehensive style guide reference is available at `frontend/src/docs/style-guide-reference.html`. This document contains the color palette, typography, component styles, and CSS variables used throughout the application. The style guide is for developer reference only and is not displayed in the user interface.
+The binding product design tokens, responsive rules, interaction states, and
+audio boundary are documented in [`docs/design-system.md`](docs/design-system.md).
+The earlier visual reference remains available at
+`frontend/src/docs/style-guide-reference.html` for historical comparison.
 
 ## Contributing
 
@@ -230,7 +234,7 @@ Contributions to Libre Metronome are welcome! Please feel free to:
 ## Roadmap
 
 - User accounts for saving metronome presets
-- Complete iPad device installation and validation
+- Add repeatable external loopback latency measurements for supported audio routes
 - Prepare Android device installation and validation
 - Advanced polyrhythm training features
 - Integration with recording capabilities

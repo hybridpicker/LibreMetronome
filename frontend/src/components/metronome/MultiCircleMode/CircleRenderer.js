@@ -72,6 +72,7 @@ const CircleRenderer = ({
   );
 
   const iconSize = 24;
+  const beatStateLabels = ['muted', 'normal', 'accent', 'first beat'];
   const beats = Array.from({ length: settings.subdivisions || 4 }, (_, i) => {
     const angle = (2 * Math.PI * i) / (settings.subdivisions || 4) - Math.PI / 2;
     
@@ -92,31 +93,21 @@ const CircleRenderer = ({
     // For muted beats (state 0), render a placeholder that can be clicked
     if (beatState === 0) {
       return (
-        <div
+        <button
+          type="button"
           key={i}
           onClick={() => { 
             if (isActiveUI) updateAccent(i); 
           }}
+          className="beat-control is-muted"
+          aria-label={`Circle ${idx + 1}, beat ${i + 1}: muted. Activate to change accent.`}
+          disabled={!isActiveUI}
           style={{
-            position: "absolute",
-            left: `calc(50% + ${xPos}px - 12px)`,
-            top: `calc(50% + ${yPos}px - 12px)`,
-            width: "24px",
-            height: "24px",
-            borderRadius: "50%",
-            border: "2px dashed rgb(0, 160, 160)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            color: "rgb(204, 204, 204)",
-            fontSize: "14px",
-            cursor: isActiveUI ? "pointer" : "default",
-            transition: "0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
-            zIndex: 5 // Ensure it's visible above other elements
+            left: `calc(50% + ${xPos}px - 22px)`,
+            top: `calc(50% + ${yPos}px - 22px)`,
+            zIndex: 5
           }}
-        >
-          +
-        </div>
+        />
       );
     }
     
@@ -140,37 +131,39 @@ const CircleRenderer = ({
     } : {};
     
     return (
-      <img
+      <button
+        type="button"
         key={i}
-        src={icon}
-        alt={`Beat ${i}`}
         onClick={() => { if (isActiveUI) updateAccent(i); }}
-        className={`beat-icon ${isActive ? 'beat-icon-active' : ''} ${isTransitioning && isPlaying ? 'transitioning' : ''}`}
+        className={`beat-control ${isActive ? 'beat-icon-active' : ''} ${isTransitioning && isPlaying ? 'transitioning' : ''}`}
+        aria-label={`Circle ${idx + 1}, beat ${i + 1}: ${beatStateLabels[beatState]}. Activate to change accent.`}
+        aria-pressed={beatState > 1}
+        disabled={!isActiveUI}
         style={{
-          position: "absolute",
-          left: `calc(50% + ${xPos}px - ${iconSize / 2}px)`,
-          top: `calc(50% + ${yPos}px - ${iconSize / 2}px)`,
-          width: `${iconSize}px`,
-          height: `${iconSize}px`,
-          cursor: isActiveUI ? "pointer" : "default",
+          left: `calc(50% + ${xPos}px - 22px)`,
+          top: `calc(50% + ${yPos}px - 22px)`,
           filter: isActive ? "drop-shadow(0 0 5px rgba(255, 255, 255, 0.7))" : "none",
           transition: "filter 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
           ...transitionStyle
         }}
-      />
+      >
+        <img src={icon} alt="" aria-hidden="true" style={{ width: iconSize, height: iconSize }} />
+      </button>
     );
   });
   
   // Add a remove button if there's more than one circle
   if (circleSettings?.length > 1) {
     const removeButton = (
-      <div
+      <button
+        type="button"
         key="remove-button"
         onClick={(e) => {
           e.stopPropagation();
           updateAccent('remove', idx);
         }}
         className="remove-circle-button"
+        aria-label={`Remove circle ${idx + 1}`}
         style={{
           position: "absolute",
           top: "-15px",
@@ -191,7 +184,7 @@ const CircleRenderer = ({
         }}
       >
         -
-      </div>
+      </button>
     );
     
     // Use subdivision icons for the beats per bar indicator
@@ -232,7 +225,7 @@ const CircleRenderer = ({
     
     return (
       <div
-        onClick={() => setActiveCircle(idx)}
+        className="multi-circle-surface"
         style={{
           position: "relative",
           width: actualContainerSize,
@@ -246,6 +239,13 @@ const CircleRenderer = ({
           overflow: "visible"
         }}
       >
+        <button
+          type="button"
+          className="circle-select-button"
+          onClick={() => setActiveCircle(idx)}
+          aria-label={`Select circle ${idx + 1} for editing`}
+          aria-pressed={isActiveUI}
+        />
         {circleGuide}
         {removeButton}
         {beatModeIndicator}
@@ -256,7 +256,7 @@ const CircleRenderer = ({
 
   return (
     <div
-      onClick={() => setActiveCircle(idx)}
+      className="multi-circle-surface"
       style={{
         position: "relative",
         width: containerSize, // Keep original size for single circle
@@ -270,6 +270,13 @@ const CircleRenderer = ({
         overflow: "visible"
       }}
     >
+      <button
+        type="button"
+        className="circle-select-button"
+        onClick={() => setActiveCircle(idx)}
+        aria-label={`Select circle ${idx + 1} for editing`}
+        aria-pressed={isActiveUI}
+      />
       {/* Use subdivision icon for single circle too */}
       <div
         style={{

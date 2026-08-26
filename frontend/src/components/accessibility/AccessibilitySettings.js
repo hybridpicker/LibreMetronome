@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import './AccessibilitySettings.css';
 import { playAudioFeedback, announceToScreenReader } from '../../utils/accessibility/accessibilityUtils';
 import FocusTrap from './FocusTrap';
@@ -17,13 +17,13 @@ const AccessibilitySettings = ({ onClose, triggerRef }) => {
   const [audioFeedback, setAudioFeedback] = useState(
     localStorage.getItem('accessibility-audio-feedback') === 'true'
   );
-  const [screenReaderMessages, setScreenReaderMessages] = useState(
+  const [screenReaderMessages] = useState(
     localStorage.getItem('accessibility-screen-reader-messages') !== 'false'
   );
   const [focusIndicators, setFocusIndicators] = useState(
     localStorage.getItem('accessibility-focus-indicators') !== 'false'
   );
-  const [hapticFeedback, setHapticFeedback] = useState(
+  const [hapticFeedback] = useState(
     localStorage.getItem('accessibility-haptic-feedback') === 'true'
   );
   const [colorBlindMode, setColorBlindMode] = useState(
@@ -183,7 +183,7 @@ const AccessibilitySettings = ({ onClose, triggerRef }) => {
   
   return (
     <FocusTrap isActive={true} triggerRef={triggerRef} onEscape={onClose}>
-      <div className="accessibility-settings" role="dialog" aria-labelledby="a11y-title">
+      <div className="accessibility-settings" role="dialog" aria-modal="true" aria-labelledby="a11y-title">
         <h2 id="a11y-title">Accessibility Settings</h2>
         
         <div className="settings-group">
@@ -226,9 +226,8 @@ const AccessibilitySettings = ({ onClose, triggerRef }) => {
                 setReducedMotion(e.target.checked);
                 if (audioFeedback) playAudioFeedback('click');
               }} 
-              disabled={true}
             />
-            <label htmlFor="reduced-motion">Reduced Motion (TODO)</label>
+            <label htmlFor="reduced-motion">Reduced Motion</label>
             <p className="setting-description">Minimizes animations and motion effects</p>
           </div>
           
@@ -241,9 +240,8 @@ const AccessibilitySettings = ({ onClose, triggerRef }) => {
                 setFocusIndicators(e.target.checked);
                 if (audioFeedback) playAudioFeedback('click');
               }} 
-              disabled={true}
             />
-            <label htmlFor="focus-indicators">Enhanced Focus Indicators (TODO)</label>
+            <label htmlFor="focus-indicators">Enhanced Focus Indicators</label>
             <p className="setting-description">Shows clear visual indicators for keyboard focus</p>
           </div>
           
