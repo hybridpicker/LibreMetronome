@@ -43,7 +43,7 @@ provisioning profile is stored in this repository.
 
 Automated tests verify audio-clock scheduling, output-latency-compensated UI
 delivery, cancellation of queued display beats, and audio-timeline BPM
-measurement. The full React suite currently contains 165 passing tests. The
+measurement. The full React suite currently contains 167 passing tests. The
 production web build and signed arm64 device build both complete successfully
 without warnings.
 

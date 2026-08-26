@@ -637,6 +637,7 @@ export function AdvancedMetronomeWithCircle({
           kind="tap"
           icon={tapButtonIcon}
           label="Tap Tempo"
+          feedbackVolume={volume}
           className="tap-button"
           onClick={() => {
           console.log("[AdvancedMetronome] Tap button clicked");

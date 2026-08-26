@@ -489,6 +489,7 @@ const GridModeMetronome = (props) => {
           kind="tap"
           icon={tapButtonIcon}
           label="Tap Tempo"
+          feedbackVolume={props.volume}
           className="tap-button"
           onClick={() => {
             console.log("[GRID MODE] Tap tempo button clicked");
