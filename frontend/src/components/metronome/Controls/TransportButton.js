@@ -1,4 +1,7 @@
-import React from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { playTapFeedback } from '../../../hooks/useMetronomeLogic/tapFeedback';
+
+const TAP_FEEDBACK_DURATION_MS = 150;
 
 /**
  * Shared, text-first transport control used by every metronome mode.
@@ -12,17 +15,40 @@ const TransportButton = ({
   onClick,
   disabled = false,
   pressed,
+  feedbackVolume = 0.5,
   className = ''
 }) => {
+  const [isTapFeedbackActive, setIsTapFeedbackActive] = useState(false);
+  const feedbackTimeoutRef = useRef(null);
   const pressedProps = typeof pressed === 'boolean'
     ? { 'aria-pressed': pressed }
     : {};
 
+  const showTapFeedback = useCallback(() => {
+    window.clearTimeout(feedbackTimeoutRef.current);
+    setIsTapFeedbackActive(true);
+    feedbackTimeoutRef.current = window.setTimeout(() => {
+      setIsTapFeedbackActive(false);
+    }, TAP_FEEDBACK_DURATION_MS);
+  }, []);
+
+  useEffect(() => () => {
+    window.clearTimeout(feedbackTimeoutRef.current);
+  }, []);
+
+  const handleClick = (event) => {
+    if (kind === 'tap') {
+      showTapFeedback();
+      playTapFeedback(feedbackVolume);
+    }
+    if (onClick) onClick(event);
+  };
+
   return (
     <button
       type="button"
-      className={`transport-button transport-${kind} ${pressed ? 'is-playing' : ''} ${className}`.trim()}
-      onClick={onClick}
+      className={`transport-button transport-${kind} ${pressed ? 'is-playing' : ''} ${isTapFeedbackActive ? 'is-tapping' : ''} ${className}`.trim()}
+      onClick={handleClick}
       disabled={disabled}
       aria-label={label}
       {...pressedProps}

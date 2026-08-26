@@ -419,6 +419,7 @@ function MultiCircleMetronome(props) {
           kind="tap"
           icon={tapButtonIcon}
           label="Tap Tempo"
+          feedbackVolume={volume}
           className="tap-button"
           onClick={() => {
             if (logic && typeof logic.tapTempo === 'function') {

@@ -1,5 +1,5 @@
 // src/components/metronome/MultiCircleMode/hooks/useMultiCircleMetronomeLogic.js
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useMetronomeRefs } from '../../../../hooks/useMetronomeLogic/references';
 import { createTapTempoLogic } from '../../../../hooks/useMetronomeLogic/tapTempo';
 
@@ -169,10 +169,12 @@ export default function useMultiCircleMetronomeLogic({
     isPaused
   });
 
-  // Tap Tempo handler - using inline function to fix unknown dependencies warning
-  const handleTapTempo = useCallback(() => {
-    return createTapTempoLogic(setTempo)();
-  }, [setTempo]);
+  // Keep one tap history for the lifetime of the current tempo setter. Creating
+  // the tap-tempo closure on every press would discard all previous intervals.
+  const handleTapTempo = useMemo(
+    () => createTapTempoLogic(setTempo),
+    [setTempo]
+  );
 
   // Function to update the beatMultiplier based on the current playing circle's beatMode
   const updateBeatMultiplier = useCallback((newMultiplier) => {

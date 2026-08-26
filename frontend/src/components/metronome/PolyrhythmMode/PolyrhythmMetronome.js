@@ -540,6 +540,7 @@ const PolyrhythmMetronome = (props) => {
           kind="tap"
           icon={tapButtonIcon}
           label="Tap Tempo"
+          feedbackVolume={volume}
           onClick={handleTapTempo}
           disabled={isTransitioning}
           className="tap-tempo-button tap-button"
