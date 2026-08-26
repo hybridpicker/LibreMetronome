@@ -72,9 +72,9 @@ const MultiCircleControls = ({
   };
 
   return (
-    <div className="controls-section" style={{ marginTop: "20px" }}>
+    <div className="controls-section multi-controls-panel" style={{ marginTop: "20px" }}>
       {/* Notes section */}
-      <div style={{ marginBottom: "20px", textAlign: "center" }}>
+      <div className="control-group" style={{ marginBottom: "20px", textAlign: "center" }}>
         <h3 className="section-title">Notes (Circle {activeCircle + 1})</h3>
         <NoteSelector 
           beatMode={currentSettings.beatMode}
@@ -83,7 +83,7 @@ const MultiCircleControls = ({
       </div>
       
       {/* Beats per Bar section */}
-      <div style={{ marginBottom: "20px", textAlign: "center" }}>
+      <div className="control-group" style={{ marginBottom: "20px", textAlign: "center" }}>
         <h3 className="section-title">Beats per Bar (Circle {activeCircle + 1})</h3>
         <SubdivisionSelector
           subdivisions={currentSettings.subdivisions}

@@ -117,15 +117,15 @@ describe('Help System Integration', () => {
     expect(screen.getByText('What is a Metronome?')).toBeInTheDocument();
     
     // Switch to How to Use tab
-    fireEvent.click(screen.getByRole('button', { name: /how to use/i }));
+    fireEvent.click(screen.getByRole('tab', { name: /how to use/i }));
     expect(screen.getByText('How to Use LibreMetronome')).toBeInTheDocument();
     
     // Switch to Features tab
-    fireEvent.click(screen.getByRole('button', { name: /features/i }));
+    fireEvent.click(screen.getByRole('tab', { name: /features/i }));
     expect(screen.getByText('Key Metronome Features')).toBeInTheDocument();
     
     // Switch to Shortcuts tab
-    fireEvent.click(screen.getByRole('button', { name: /shortcuts/i }));
+    fireEvent.click(screen.getByRole('tab', { name: /shortcuts/i }));
     expect(screen.getByText('Keyboard Shortcuts')).toBeInTheDocument();
     
     // Close the modal

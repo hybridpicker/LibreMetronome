@@ -456,6 +456,26 @@
   font-family: monospace;
 }
 
+button.training-active-section-type,
+button.editable-param {
+  border: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+button.training-active-section-type {
+  min-height: 44px;
+}
+
+button.editable-param {
+  padding: 3px 5px;
+  border-radius: 5px;
+  background: var(--teal-wash);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 /* Status indicators */
 .beat-indicator {
   display: inline-block;

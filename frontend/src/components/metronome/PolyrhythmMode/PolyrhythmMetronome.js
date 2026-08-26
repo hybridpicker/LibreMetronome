@@ -12,6 +12,7 @@ import "./EnhancedPolyrhythmStyles.css";
 import withTrainingContainer from "../../Training/withTrainingContainer";
 import AccelerateButton from "../Controls/AccelerateButton";
 import { manualTempoAcceleration } from "../../../hooks/useMetronomeLogic/trainingLogic";
+import TransportButton from "../Controls/TransportButton";
 
 import DirectBeatIndicator from "./DirectBeatIndicator";
 
@@ -494,7 +495,7 @@ const PolyrhythmMetronome = (props) => {
   }, []);
 
   return (
-    <div style={{ textAlign: "center", position: "relative" }}>
+    <div className="polyrhythm-mode-shell" style={{ textAlign: "center", position: "relative" }}>
       <div className="polyrhythm-container">
         <CircleRenderer
           innerBeats={innerBeats}
@@ -525,34 +526,30 @@ const PolyrhythmMetronome = (props) => {
         />
       </div>
 
-      {/* Play/Pause button positioned immediately after the metronome canvas */}
-      <div style={{ marginTop: 20 }}>
-        <button
+      <div className="transport-row polyrhythm-transport-row">
+        <TransportButton
+          kind="play"
+          icon={isPaused ? playIcon : pauseIcon}
+          label={isPaused ? "Start" : "Pause"}
           onClick={handlePlayPause}
-          className="play-pause-button"
-          style={{
-            background: "transparent",
-            border: "none",
-            cursor: isTransitioning ? "not-allowed" : "pointer",
-            padding: "10px",
-            opacity: isTransitioning ? 0.7 : 1
-          }}
-          aria-label="Toggle play/pause"
+          pressed={!isPaused}
           disabled={isTransitioning}
-        >
-          <img
-            src={isPaused ? playIcon : pauseIcon}
-            alt={isPaused ? "Play" : "Pause"}
-            className="play-pause-icon"
-            style={{ width: 40, height: 40 }}
-          />
-        </button>
+          className="play-pause-button"
+        />
+        <TransportButton
+          kind="tap"
+          icon={tapButtonIcon}
+          label="Tap Tempo"
+          onClick={handleTapTempo}
+          disabled={isTransitioning}
+          className="tap-tempo-button tap-button"
+        />
       </div>
 
       {/* Accelerate Button positioned after the play button */}
       <AccelerateButton onClick={handleAccelerate} speedMode={speedMode} />
 
-      <div style={{ 
+      <div className="beat-state-legend polyrhythm-state-legend" style={{
         marginTop: '20px', 
         marginBottom: '20px',
         display: 'flex', 
@@ -605,10 +602,14 @@ const PolyrhythmMetronome = (props) => {
           </div>
           <div className="polyrhythm-buttons">
             {[2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-              <div
+              <button
+                type="button"
                 key={`inner-${num}`}
-                className={`subdivision-button-container ${innerBeats === num ? "active" : ""}`}
+                className={`subdivision-button-container polyrhythm-choice ${innerBeats === num ? "active" : ""}`}
                 onClick={() => !isTransitioning && debouncedSetSubdivisions(num, "inner")}
+                disabled={isTransitioning}
+                aria-label={`Set inner rhythm to ${num} beats`}
+                aria-pressed={innerBeats === num}
                 style={{
                   cursor: isTransitioning ? "not-allowed" : "pointer",
                   opacity: isTransitioning ? 0.7 : 1
@@ -618,7 +619,8 @@ const PolyrhythmMetronome = (props) => {
                   src={innerBeats === num 
                     ? getSubdivisionIcon(num, true) 
                     : getSubdivisionIcon(num, false)}
-                  alt={`${num} beats`}
+                  alt=""
+                  aria-hidden="true"
                   className="subdivision-button"
                   style={{
                     cursor: isTransitioning ? "not-allowed" : "pointer",
@@ -630,7 +632,7 @@ const PolyrhythmMetronome = (props) => {
                     filter: innerBeats === num ? "drop-shadow(0 0 5px rgba(0, 160, 160, 0.5))" : "none"
                   }}
                 />
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -641,10 +643,14 @@ const PolyrhythmMetronome = (props) => {
           </div>
           <div className="polyrhythm-buttons">
             {[2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-              <div
+              <button
+                type="button"
                 key={`outer-${num}`}
-                className={`subdivision-button-container ${outerBeats === num ? "active" : ""}`}
+                className={`subdivision-button-container polyrhythm-choice ${outerBeats === num ? "active" : ""}`}
                 onClick={() => !isTransitioning && debouncedSetSubdivisions(num, "outer")}
+                disabled={isTransitioning}
+                aria-label={`Set outer rhythm to ${num} beats`}
+                aria-pressed={outerBeats === num}
                 style={{
                   cursor: isTransitioning ? "not-allowed" : "pointer",
                   opacity: isTransitioning ? 0.7 : 1
@@ -654,7 +660,8 @@ const PolyrhythmMetronome = (props) => {
                   src={outerBeats === num 
                     ? getSubdivisionIcon(num, true) 
                     : getSubdivisionIcon(num, false)}
-                  alt={`${num} beats`}
+                  alt=""
+                  aria-hidden="true"
                   className="subdivision-button"
                   style={{
                     cursor: isTransitioning ? "not-allowed" : "pointer",
@@ -666,7 +673,7 @@ const PolyrhythmMetronome = (props) => {
                     filter: outerBeats === num ? "drop-shadow(0 0 5px rgba(0, 160, 160, 0.5))" : "none"
                   }}
                 />
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -723,34 +730,6 @@ const PolyrhythmMetronome = (props) => {
         </label>
       </div>
       
-      {/* Tap Tempo Button - Always visible, positioned under the play/pause button */}
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '5px' }}>
-        <button
-          onClick={handleTapTempo}
-          className="tap-tempo-button"
-          style={{
-            background: "transparent",
-            border: "none",
-            cursor: isTransitioning ? "not-allowed" : "pointer",
-            padding: "10px",
-            outline: "none",
-            opacity: isTransitioning ? 0.7 : 1
-          }}
-          aria-label="Tap Tempo"
-          disabled={isTransitioning}
-        >
-          <img
-            src={tapButtonIcon}
-            alt="Tap Tempo"
-            style={{
-              height: "35px",
-              objectFit: "contain",
-              transition: "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)"
-            }}
-          />
-        </button>
-      </div>
-
     </div>
   );
 };

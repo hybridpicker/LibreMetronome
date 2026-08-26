@@ -1,15 +1,12 @@
 import { App as NativeApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
+import { resumeSharedAudioContexts } from './hooks/useMetronomeLogic/audioBuffers';
 
 const resumeAudio = () => {
-  [window._audioContext, window._audioContextInit]
-    .filter((context) => context?.state === 'suspended')
-    .forEach((context) => {
-      context.resume().catch(() => {
-        // A later user gesture will retry audio activation.
-      });
-    });
+  resumeSharedAudioContexts().catch(() => {
+    // A later user gesture will retry audio activation.
+  });
 };
 
 export const initializeMobileRuntime = () => {

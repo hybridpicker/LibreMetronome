@@ -16,6 +16,7 @@
   background-color: var(--neutral-bg);
   color: var(--text-primary);
   font-family: 'Lato', sans-serif;
+  width: 100%;
 }
 
 /* Metronome container (canvas) */
@@ -67,6 +68,78 @@ html.capacitor-native .app-container {
 
 html.capacitor-native .footer {
   padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+
+.practice-workspace {
+  width: 100%;
+}
+
+.metronome-stage,
+.practice-controls {
+  min-width: 0;
+}
+
+/* Keep the complete performance surface visible on a landscape iPad. */
+@media (min-width: 1024px) and (orientation: landscape) {
+  .app-container {
+    padding-top: max(8px, env(safe-area-inset-top));
+  }
+
+  .header {
+    padding: 4px 20px;
+  }
+
+  .header-logo {
+    width: 220px;
+  }
+
+  .mode-selector-container {
+    margin: 2px 0 8px;
+  }
+
+  .mode-selector {
+    padding: 4px 10px;
+  }
+
+  .mode-option {
+    padding: 6px 10px;
+  }
+
+  .mode-icon-container {
+    width: 48px;
+    height: 48px;
+  }
+
+  .mode-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .practice-workspace:not(.mode-multi):not(.mode-polyrhythm) {
+    display: grid;
+    grid-template-columns: minmax(420px, 540px) minmax(300px, 380px);
+    align-items: start;
+    justify-content: center;
+    gap: clamp(28px, 5vw, 72px);
+    max-width: 1080px;
+    margin: 0 auto;
+  }
+
+  .practice-controls {
+    padding-top: 18px;
+  }
+
+  .practice-controls .sliders-container {
+    max-width: 360px;
+  }
+
+  .practice-controls h3 {
+    margin: 8px 0;
+  }
+
+  .footer {
+    margin-top: 20px;
+  }
 }
 
 /* The circle fills the container */
@@ -198,6 +271,26 @@ input[type="range"] {
   }
 }
 
+/* Mode styles historically declared transparent icon buttons. These final
+   selectors keep the shared text-first transport visually authoritative. */
+.app-container .transport-button.transport-play {
+  color: var(--text-light) !important;
+  background: var(--primary-teal) !important;
+  border: 2px solid var(--primary-teal) !important;
+}
+
+.app-container .transport-button.transport-play.is-playing {
+  color: var(--primary-teal-dark) !important;
+  background: var(--surface-raised) !important;
+  border-color: var(--primary-teal-dark) !important;
+}
+
+.app-container .transport-button.transport-tap {
+  color: var(--primary-teal-dark) !important;
+  background: var(--surface-raised) !important;
+  border: 2px solid var(--primary-teal) !important;
+}
+
 /* Tablet adjustments (between 601px and 1024px) */
 @media (min-width: 601px) and (max-width: 1024px) {
   /* Show the info button on tablets */
@@ -298,8 +391,7 @@ button {
   cursor: pointer;
 }
 
-.play-pause-button-overlay,
-button[aria-label="Toggle play/pause"] {
+.play-pause-button-overlay {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
@@ -307,17 +399,6 @@ button[aria-label="Toggle play/pause"] {
 }
 
 /* Better tap buttons for mobile */
-button[aria-label="Tap Tempo"] {
-  background: transparent !important;
-  border: none !important;
-  outline: none !important;
-  transition: transform 0.2s ease;
-}
-
-button[aria-label="Tap Tempo"]:active {
-  transform: scale(0.95);
-}
-
 /* Make buttons more responsive on mobile */
 @media (max-width: 600px) {
   .subdivision-button {
@@ -472,4 +553,131 @@ button[aria-label="Tap Tempo"]:active {
 
 .style-guide-header-controls button:hover {
   background-color: var(--primary-teal-dark);
+}
+
+/* Precision-instrument application shell */
+.app-container {
+  padding:
+    max(var(--space-3), env(safe-area-inset-top))
+    max(var(--space-4), env(safe-area-inset-right))
+    max(var(--space-5), env(safe-area-inset-bottom))
+    max(var(--space-4), env(safe-area-inset-left));
+  background: var(--surface-canvas);
+}
+
+.practice-workspace {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.audio-error {
+  width: min(100%, 760px);
+  margin: 0 auto var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  color: var(--text-primary);
+  background: var(--danger-wash);
+  border: 1px solid var(--error);
+  border-radius: var(--radius-control);
+  font-weight: 700;
+}
+
+.metronome-stage,
+.practice-controls {
+  background: var(--surface-raised);
+  border: 1px solid var(--line-subtle);
+  border-radius: var(--radius-panel);
+}
+
+.metronome-stage {
+  padding: var(--space-4);
+}
+
+.practice-controls {
+  padding: var(--space-5);
+}
+
+.practice-controls h3 {
+  margin: 0 0 var(--space-2);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.practice-controls > div {
+  padding-bottom: var(--space-4);
+  margin-bottom: var(--space-4) !important;
+  border-bottom: 1px solid var(--line-subtle);
+}
+
+.practice-controls > div:last-child {
+  padding-bottom: 0;
+  margin-bottom: 0 !important;
+  border-bottom: 0;
+}
+
+.metronome-container {
+  background: transparent;
+  border: 0;
+  overflow: visible;
+}
+
+@media (min-width: 1000px) and (orientation: landscape),
+       (min-width: 1280px) {
+  .practice-workspace:not(.mode-multi):not(.mode-polyrhythm) {
+    display: grid;
+    grid-template-columns: minmax(520px, 1.35fr) minmax(360px, 0.85fr);
+    align-items: stretch;
+    gap: var(--space-5);
+  }
+
+  .practice-workspace:not(.mode-multi):not(.mode-polyrhythm) .metronome-stage {
+    min-height: min(610px, calc(100dvh - 218px));
+    display: grid;
+    place-items: center;
+  }
+
+  .practice-workspace:not(.mode-multi):not(.mode-polyrhythm) .practice-controls {
+    min-height: min(610px, calc(100dvh - 218px));
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .practice-controls .sliders-container {
+    max-width: 100%;
+  }
+
+  html.capacitor-native .footer {
+    display: none;
+  }
+}
+
+@media (max-width: 999px), (orientation: portrait) {
+  .practice-workspace {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .metronome-stage,
+  .practice-controls {
+    padding: var(--space-4);
+  }
+}
+
+@media (max-width: 600px) {
+  .app-container {
+    padding:
+      max(var(--space-2), env(safe-area-inset-top))
+      max(var(--space-3), env(safe-area-inset-right))
+      max(var(--space-5), env(safe-area-inset-bottom))
+      max(var(--space-3), env(safe-area-inset-left));
+  }
+
+  .metronome-stage,
+  .practice-controls {
+    border-radius: 14px;
+    padding: var(--space-3);
+  }
 }

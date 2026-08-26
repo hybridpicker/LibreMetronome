@@ -7,6 +7,7 @@ const Header = () => {
   return (
     <header className="header">
       <img src={LibreMetronomeLogo} alt="LibreMetronome" className="header-logo" />
+      <p className="header-kicker">Precision practice instrument</p>
     </header>
   );
 };

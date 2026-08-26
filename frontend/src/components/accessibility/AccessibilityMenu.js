@@ -6,6 +6,20 @@ import './AccessibilityMenu.css';
 const AccessibilityMenu = () => {
   const [showSettings, setShowSettings] = useState(false);
   const buttonRef = useRef(null);
+
+  useEffect(() => {
+    const body = document.body;
+    const highContrast = localStorage.getItem('accessibility-high-contrast') === 'true';
+    const largeText = localStorage.getItem('accessibility-large-text') === 'true';
+    const reducedMotion = localStorage.getItem('accessibility-reduced-motion') === 'true';
+    const colorBlindMode = localStorage.getItem('accessibility-color-blind-mode') || 'none';
+
+    body.classList.toggle('high-contrast', highContrast);
+    body.classList.toggle('large-text', largeText);
+    body.classList.toggle('reduced-motion', reducedMotion);
+    body.classList.remove('color-blind', 'protanopia', 'deuteranopia', 'tritanopia', 'monochromacy');
+    if (colorBlindMode !== 'none') body.classList.add('color-blind', colorBlindMode);
+  }, []);
   
   // Close settings panel with Escape key
   useEffect(() => {
@@ -60,7 +74,7 @@ const AccessibilityMenu = () => {
       </button>
       
       {showSettings && (
-        <div className="settings-overlay" role="dialog" aria-modal="true" aria-labelledby="a11y-title">
+        <div className="settings-overlay">
           <div className="settings-container">
             <AccessibilitySettings 
               onClose={() => setShowSettings(false)} 

@@ -21,7 +21,7 @@ const MetronomeControls = ({
     <>
       {/* Render Note Selector if mode is not "multi" */}
       {mode !== "multi" && (
-        <div style={{ marginBottom: "20px", textAlign: "center" }}>
+        <div className="control-group" style={{ marginBottom: "20px", textAlign: "center" }}>
           <h3>Notes</h3>
           <NoteSelector 
             beatMode={beatMode}
@@ -32,7 +32,7 @@ const MetronomeControls = ({
       
       {/* Render Subdivision Selector for all modes except analog */}
       {mode !== "analog" && mode !== "multi" && (
-        <div style={{ marginBottom: "20px", textAlign: "center" }}>
+        <div className="control-group" style={{ marginBottom: "20px", textAlign: "center" }}>
           <h3>Beats per Bar</h3>
           <SubdivisionSelector
             subdivisions={subdivisions}

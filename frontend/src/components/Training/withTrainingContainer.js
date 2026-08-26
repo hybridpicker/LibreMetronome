@@ -6,9 +6,9 @@ import TrainingActiveContainer from './TrainingActiveContainer';
  * This HOC ensures all metronome modes handle training state consistently
  * by injecting standardized event handling and state management.
  * 
- * DIRECT FIX VERSION: Adjusted to always render the wrapped metronome (canvas)
- * and conditionally show the training UI. The training state (insb. silence phase)
- * is nun beim Pausieren sofort zurückgesetzt, sodass Audio und Anzeige wieder übereinstimmen.
+ * Always render the wrapped metronome canvas and show the training UI only
+ * when required. Pausing immediately resets the training state, including the
+ * silence phase, so audio and visual feedback remain synchronized.
  */
 const withTrainingContainer = (WrappedMetronome) => {
   return function WrappedWithTraining(props) {

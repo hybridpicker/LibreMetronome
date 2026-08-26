@@ -106,13 +106,16 @@ const ModeSelector = ({ mode, setMode }) => {
   };
 
   return (
-    <div className="mode-selector-container">
-      <div className="mode-selector">
+    <nav className="mode-selector-container" aria-label="Metronome modes">
+      <div className="mode-selector" role="toolbar" aria-label="Choose a metronome mode">
         {getVisibleModes().map((modeConfig) => (
-          <div 
+          <button
+            type="button"
             key={modeConfig.id}
             className={`mode-option ${mode === modeConfig.id ? 'active' : ''}`}
             onClick={() => handleModeChange(modeConfig.id)}
+            aria-pressed={mode === modeConfig.id}
+            aria-label={`${modeConfig.name} mode`}
           >
             <div className="mode-icon-container">
               <img 
@@ -125,22 +128,24 @@ const ModeSelector = ({ mode, setMode }) => {
               )}
             </div>
             <div className="mode-name">{modeConfig.name}</div>
-          </div>
+          </button>
         ))}
         
         {showMoreButton && !showAllModes && (
-          <div 
+          <button
+            type="button"
             className="mode-option more-button"
             onClick={() => setShowAllModes(true)}
+            aria-label="Show all metronome modes"
           >
             <div className="mode-icon-container">
               <div className="more-icon">•••</div>
             </div>
             <div className="mode-name">More</div>
-          </div>
+          </button>
         )}
       </div>
-    </div>
+    </nav>
   );
 };
 

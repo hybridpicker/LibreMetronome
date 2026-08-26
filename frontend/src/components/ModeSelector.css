@@ -4,17 +4,19 @@
   width: 100%;
   display: flex;
   justify-content: center;
-  margin: 15px 0 25px;
+  margin: var(--space-2) 0 var(--space-4);
 }
 
 .mode-selector {
   display: flex;
   justify-content: center;
-  gap: 15px;
-  padding: 15px 10px;
-  border-radius: 12px;
-  max-width: 600px;
-  width: 100%;
+  gap: var(--space-1);
+  padding: 5px;
+  border: 1px solid var(--line-subtle);
+  border-radius: 14px;
+  max-width: 640px;
+  width: auto;
+  background: var(--surface-raised);
 }
 
 .mode-option {
@@ -23,33 +25,43 @@
   align-items: center;
   cursor: pointer;
   position: relative;
-  padding: 10px;
-  border-radius: 8px;
+  padding: 6px 10px;
+  border-radius: 10px;
   transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
-  min-width: 70px;
+  min-width: 88px;
+  min-height: 66px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+}
+
+.mode-option:focus-visible {
+  outline: 3px solid rgba(0, 160, 160, 0.35);
+  outline-offset: 2px;
 }
 
 .mode-option:hover {
-  transform: translateY(-2px);
+  background: var(--teal-wash);
 }
 
 .mode-option.active {
-  border: 1px solid rgb(255, 209, 130);
+  border-color: var(--primary-teal);
+  background: var(--surface-selected);
 }
 
 .mode-icon-container {
   position: relative;
-  margin-bottom: 5px;
+  margin-bottom: 2px;
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 60px;
-  height: 60px;
+  width: 36px;
+  height: 36px;
 }
 
 .mode-icon {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   transition: transform 0.2s ease;
 }
 
@@ -64,18 +76,18 @@
 }
 
 .mode-name {
-  font-size: 13px;
-  color: #333;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
   transition: color 0.2s ease;
 }
 
 .mode-option.active .mode-name {
   color: var(--primary-teal);
-  font-weight: 500;
+  font-weight: 700;
 }
 
 .mode-option.active .mode-icon {
-  transform: scale(1.1);
+  transform: scale(1.04);
 }
 
 .mode-tooltip {
@@ -136,18 +148,20 @@
 /* Media queries for responsiveness */
 @media (max-width: 600px) {
   .mode-selector {
-    gap: 10px;
-    padding: 10px;
+    gap: 2px;
+    padding: 4px;
+    max-width: calc(100vw - 24px);
   }
   
   .mode-option {
-    padding: 8px;
-    min-width: 65px;
+    padding: 5px 7px;
+    min-width: 64px;
+    min-height: 60px;
   }
   
   .mode-icon {
-    width: 40px;
-    height: 40px;
+    width: 30px;
+    height: 30px;
   }
   
   .mode-name {
@@ -157,23 +171,23 @@
 
 @media (max-width: 480px) {
   .mode-selector {
-    gap: 8px;
-    padding: 8px;
+    gap: 1px;
+    padding: 3px;
   }
   
   .mode-option {
-    padding: 6px;
-    min-width: 55px;
+    padding: 4px 6px;
+    min-width: 58px;
   }
   
   .mode-icon-container {
-    width: 55px;
-    height: 55px;
+    width: 30px;
+    height: 30px;
   }
   
   .mode-icon {
-    width: 42px;
-    height: 42px;
+    width: 28px;
+    height: 28px;
   }
   
   .mode-name {
@@ -225,5 +239,34 @@
   .mode-name {
     font-size: 11px;
     font-weight: 500;
+  }
+}
+
+@media (min-width: 1024px) and (orientation: landscape) {
+  .mode-selector-container {
+    margin: 2px 0 8px;
+  }
+
+  .mode-selector {
+    gap: 3px;
+    padding: 4px;
+  }
+
+  .mode-option {
+    min-width: 92px;
+    height: 64px;
+    min-height: 64px;
+    padding: 4px 10px;
+  }
+
+  .mode-icon-container {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 2px;
+  }
+
+  .mode-icon {
+    width: 34px;
+    height: 34px;
   }
 }

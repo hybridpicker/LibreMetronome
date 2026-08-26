@@ -1,18 +1,18 @@
 .accessibility-container {
   position: fixed;
-  top: 20px;
-  right: 20px;
+  top: max(10px, env(safe-area-inset-top));
+  right: max(70px, calc(env(safe-area-inset-right) + 70px));
   z-index: 1000;
 }
 
 .accessibility-toggle {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background-color: var(--primary-teal);
   color: var(--text-light);
   border: none;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  box-shadow: none;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -23,8 +23,8 @@
 
 .accessibility-toggle:hover {
   background-color: var(--primary-teal-dark);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transform: none;
+  box-shadow: none;
 }
 
 .accessibility-toggle:focus {
@@ -61,9 +61,10 @@ body.high-contrast .accessibility-toggle:focus {
   max-width: 90%;
   max-height: 90%;
   overflow-y: auto;
-  background-color: var(--neutral-bg);
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--line-subtle);
+  border-radius: var(--radius-panel);
+  box-shadow: none;
 }
 
 /* High contrast overrides */
@@ -85,8 +86,8 @@ body.high-contrast .settings-overlay {
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .accessibility-toggle {
-    width: 40px;
-    height: 40px;
+    width: 48px;
+    height: 48px;
   }
   
   .accessibility-icon {

@@ -28,28 +28,34 @@ const NoteSelector = ({ beatMode, onSelect, hideOptions = false }) => {
   return (
     <div className="note-selector-container" data-testid="note-selector">
       <button
+        type="button"
         onClick={() => handleNoteSelection("quarter")}
         className="note-selector-button"
         aria-label="Quarter Notes"
+        aria-pressed={beatMode === "quarter"}
         title="Quarter Notes"
         data-testid="quarter-note-button"
       >
         <img
           src={beatMode === "quarter" ? quarterNotesActive : quarterNotesInactive}
-          alt="Quarter Notes"
+          alt=""
+          aria-hidden="true"
           className={`note-icon ${beatMode === "quarter" ? "active" : ""}`}
         />
       </button>
       <button
+        type="button"
         onClick={() => handleNoteSelection("eighth")}
         className="note-selector-button"
         aria-label="Eighth Notes"
+        aria-pressed={beatMode === "eighth"}
         title="Eighth Notes"
         data-testid="eighth-note-button"
       >
         <img
           src={beatMode === "eighth" ? eightNotesActive : eightNotesInactive}
-          alt="Eighth Notes"
+          alt=""
+          aria-hidden="true"
           className={`note-icon ${beatMode === "eighth" ? "active" : ""}`}
         />
       </button>

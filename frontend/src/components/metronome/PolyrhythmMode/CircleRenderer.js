@@ -46,7 +46,8 @@ const CircleRenderer = ({
       }}
     >
       {/* Outer Circle */}
-      <div
+      <button
+        type="button"
         className={`outer-circle ${activeCircle === 'outer' ? 'active' : ''} ${isTransitioning ? 'transitioning' : ''}`}
         style={{
           width: containerSize,
@@ -61,6 +62,9 @@ const CircleRenderer = ({
           transition: 'all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.2s ease'
         }}
         onClick={() => !isTransitioning && setActiveCircle('outer')}
+        disabled={isTransitioning}
+        aria-label={`Select outer rhythm, ${outerBeats} beats`}
+        aria-pressed={activeCircle === 'outer'}
       >
         <BeatVisualizer
           beats={outerBeats}
@@ -75,10 +79,11 @@ const CircleRenderer = ({
           // Pass the color swap state to control beat colors
           colorSwapped={circleColorSwapped}
         />
-      </div>
+      </button>
       
       {/* Inner Circle */}
-      <div
+      <button
+        type="button"
         className={`inner-circle ${activeCircle === 'inner' ? 'active' : ''} ${isTransitioning ? 'transitioning' : ''}`}
         style={{
           width: innerRadius * 2,
@@ -93,6 +98,9 @@ const CircleRenderer = ({
           transition: 'all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.2s ease'
         }}
         onClick={() => !isTransitioning && setActiveCircle('inner')}
+        disabled={isTransitioning}
+        aria-label={`Select inner rhythm, ${innerBeats} beats`}
+        aria-pressed={activeCircle === 'inner'}
       >
         <BeatVisualizer
           beats={innerBeats}
@@ -107,7 +115,7 @@ const CircleRenderer = ({
           // Pass the color swap state to control beat colors
           colorSwapped={circleColorSwapped}
         />
-      </div>
+      </button>
     </div>
   );
 };

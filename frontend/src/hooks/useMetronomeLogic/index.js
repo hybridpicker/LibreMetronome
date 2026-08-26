@@ -4,7 +4,7 @@ import { useMetronomeRefs } from './references';
 import { createTapTempoLogic } from './tapTempo';
 import { handleMeasureBoundary, shouldMuteThisBeat } from './trainingLogic';
 import { runScheduler, scheduleSubdivision } from './scheduler';
-import { TEMPO_MIN, TEMPO_MAX, SCHEDULER_INTERVAL } from './constants';
+import { TEMPO_MIN, TEMPO_MAX, SCHEDULER_INTERVAL, STARTUP_LEAD_TIME } from './constants';
 import { getActiveSoundSet } from '../../services/soundSetService';
 
 export default function useMetronomeLogic({
@@ -202,7 +202,6 @@ export default function useMetronomeLogic({
       audioCtxRef,
       nextNoteTimeRef,
       currentSubRef,
-      currentSubdivisionSetter: setCurrentSubdivision,
       getCurrentSubIntervalSec,
       tempo: adjustedTempo,
       handleMeasureBoundary: () => {
@@ -239,17 +238,6 @@ export default function useMetronomeLogic({
           isSilencePhaseRef
         });
         
-        // Always dispatch event for training UI sync
-        window.dispatchEvent(new CustomEvent('metronome-beat', {
-          detail: {
-            timestamp: performance.now(),
-            subIndex,
-            when,
-            isSilencePhase: isSilencePhaseRef?.current,
-            isMuted: shouldMuteCurrentBeat
-          }
-        }));
-        
         scheduleSubdivision({
           subIndex,
           when,
@@ -258,7 +246,21 @@ export default function useMetronomeLogic({
           gridMode,
           multiCircleMode,
           volumeRef,
-          onAnySubTrigger,
+          onAnySubTrigger: (dueSubIndex) => {
+            setCurrentSubdivision(dueSubIndex);
+            if (onAnySubTrigger) onAnySubTrigger(dueSubIndex);
+          },
+          onBeatDue: ({ subIndex: dueSubIndex, when: dueWhen, isMuted }) => {
+            window.dispatchEvent(new CustomEvent('metronome-beat', {
+              detail: {
+                timestamp: performance.now(),
+                subIndex: dueSubIndex,
+                when: dueWhen,
+                isSilencePhase: isSilencePhaseRef?.current,
+                isMuted
+              }
+            }));
+          },
           normalBufferRef,
           accentBufferRef,
           firstBufferRef,
@@ -352,7 +354,7 @@ export default function useMetronomeLogic({
       }
       
       // Resume the context if suspended
-      if (audioCtxRef.current.state === 'suspended') {
+      if (audioCtxRef.current.state !== 'running') {
         try {
           console.log('Resuming suspended audio context');
           await resumeAudioContext(audioCtxRef.current);
@@ -437,7 +439,9 @@ export default function useMetronomeLogic({
     schedulerRunningRef.current = false;
     for (const node of nodeRefs.current) {
       try {
-        if (node.stop) {
+        if (node.cancel) {
+          node.cancel();
+        } else if (node.stop) {
           node.stop();
         } else if (node.disconnect) {
           node.disconnect();
@@ -468,7 +472,7 @@ export default function useMetronomeLogic({
       }
       
       // Try to resume audio one more time if needed
-      if (audioCtxRef.current.state === 'suspended') {
+      if (audioCtxRef.current.state !== 'running') {
         try {
           await resumeAudioContext(audioCtxRef.current);
           console.log('Audio context final state:', audioCtxRef.current.state);
@@ -486,8 +490,8 @@ export default function useMetronomeLogic({
       const now = audioCtxRef.current ? audioCtxRef.current.currentTime : performance.now()/1000;
       currentSubRef.current = 0;
       setCurrentSubdivision(0);
-      nextNoteTimeRef.current = now;
-      currentSubStartRef.current = now;
+      nextNoteTimeRef.current = now + STARTUP_LEAD_TIME;
+      currentSubStartRef.current = nextNoteTimeRef.current;
       currentSubIntervalRef.current = getCurrentSubIntervalSec(0);
       playedBeatTimesRef.current = [];
       
@@ -504,8 +508,8 @@ export default function useMetronomeLogic({
         const now = performance.now()/1000;
         currentSubRef.current = 0;
         setCurrentSubdivision(0);
-        nextNoteTimeRef.current = now;
-        currentSubStartRef.current = now;
+        nextNoteTimeRef.current = now + STARTUP_LEAD_TIME;
+        currentSubStartRef.current = nextNoteTimeRef.current;
         
         lookaheadRef.current = setInterval(
           () => doSchedulerLoopRef.current && doSchedulerLoopRef.current(),

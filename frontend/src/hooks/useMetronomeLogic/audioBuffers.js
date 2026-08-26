@@ -23,6 +23,17 @@ export function initAudioContext() {
       return null;
     }
 
+    // iOS only grants reliable playback to an AudioContext unlocked by a user
+    // gesture. Reuse that context across every metronome mode instead of
+    // silently creating another suspended context for each view.
+    const existingContext = globalAudioCtx || window._audioContextInit || window._audioContext;
+    if (existingContext && existingContext.state !== 'closed') {
+      globalAudioCtx = existingContext;
+      window._audioContext = existingContext;
+      window._audioContextInit = existingContext;
+      return existingContext;
+    }
+
     // Create and return a new audio context optimized for expert-level precision
     const context = new AudioContext({
       // Use 48kHz sample rate for professional audio quality (if supported)
@@ -45,6 +56,8 @@ export function initAudioContext() {
     
     // Store in window for debugging
     window._audioContext = context;
+    window._audioContextInit = context;
+    globalAudioCtx = context;
     
     return context;
   } catch (err) {
@@ -54,6 +67,8 @@ export function initAudioContext() {
       const fallbackContext = new AudioContext();
       console.log('Using fallback AudioContext');
       window._audioContext = fallbackContext;
+      window._audioContextInit = fallbackContext;
+      globalAudioCtx = fallbackContext;
       return fallbackContext;
     } catch (fallbackErr) {
       console.error('Error creating fallback AudioContext:', fallbackErr);
@@ -69,7 +84,9 @@ export function initAudioContext() {
 export async function resumeAudioContext(audioCtx) {
   if (!audioCtx) return false;
   
-  if (audioCtx.state === 'suspended') {
+  // WebKit can expose an additional `interrupted` state after an iOS route or
+  // app lifecycle change. Calling resume is required for both states.
+  if (audioCtx.state !== 'running' && audioCtx.state !== 'closed') {
     try {
       console.log('Attempting to resume suspended audio context...');
       
@@ -112,6 +129,23 @@ export async function resumeAudioContext(audioCtx) {
   }
   
   return audioCtx.state === 'running';
+}
+
+/**
+ * Resume every shared context reference after an iOS app or visibility
+ * interruption. References are de-duplicated because all modes normally point
+ * to the same user-unlocked AudioContext.
+ */
+export async function resumeSharedAudioContexts() {
+  const contexts = [...new Set([
+    globalAudioCtx,
+    window._audioContext,
+    window._audioContextInit,
+    window._multiCircleAudioContext
+  ].filter((context) => context && context.state !== 'closed'))];
+
+  const results = await Promise.all(contexts.map((context) => resumeAudioContext(context)));
+  return contexts.length > 0 && results.every(Boolean);
 }
 
 /**
@@ -186,11 +220,11 @@ function loadSound(url, audioCtx) {
         if (url.includes('/metronome_sounds/')) {
           let fallbackPath;
           if (url.includes('first_')) {
-            fallbackPath = '/assets/audio/click_new_first.mp3';
+            fallbackPath = '/assets/audio/click_new_first.wav';
           } else if (url.includes('accent_') || url.includes('second_')) {
-            fallbackPath = '/assets/audio/click_new_accent.mp3';
+            fallbackPath = '/assets/audio/click_new_accent.wav';
           } else {
-            fallbackPath = '/assets/audio/click_new.mp3';
+            fallbackPath = '/assets/audio/click_new.wav';
           }
           console.log(`Fetch failed. Falling back to default sound: ${fallbackPath}`);
           resolve(await loadSound(fallbackPath, audioCtx));
@@ -244,11 +278,11 @@ function loadSound(url, audioCtx) {
         if (url.includes('/metronome_sounds/')) {
           let fallbackPath;
           if (url.includes('first_')) {
-            fallbackPath = '/assets/audio/click_new_first.mp3';
+            fallbackPath = '/assets/audio/click_new_first.wav';
           } else if (url.includes('accent_') || url.includes('second_')) {
-            fallbackPath = '/assets/audio/click_new_accent.mp3';
+            fallbackPath = '/assets/audio/click_new_accent.wav';
           } else {
-            fallbackPath = '/assets/audio/click_new.mp3';
+            fallbackPath = '/assets/audio/click_new.wav';
           }
           console.log(`Processing failed. Falling back to default sound: ${fallbackPath}`);
           resolve(await loadSound(fallbackPath, audioCtx));
@@ -294,7 +328,8 @@ export async function loadClickBuffers({
   normalBufferRef,
   accentBufferRef,
   firstBufferRef,
-  soundSet = null
+  soundSet = null,
+  ignorePreferences = false
 }) {
   if (!audioCtx) {
     console.error("No audio context provided to loadClickBuffers");
@@ -302,12 +337,13 @@ export async function loadClickBuffers({
   }
 
   // Default paths (fallback)
-  let normalPath = '/assets/audio/click_new.mp3';
-  let accentPath = '/assets/audio/click_new_accent.mp3';
-  let firstPath = '/assets/audio/click_new_first.mp3';
+  let normalPath = '/assets/audio/click_new.wav';
+  let accentPath = '/assets/audio/click_new_accent.wav';
+  let firstPath = '/assets/audio/click_new_first.wav';
 
   // Check cookie first for most consistent sound selection
-  const cookieSoundSetId = getActiveSoundSetIdFromCookie();
+  const cookieSoundSetId = ignorePreferences ? null : getActiveSoundSetIdFromCookie();
+  if (ignorePreferences) soundSet = null;
   
   // If we have a cookie set, ensure our sound set matches it
   // This is vital for proper sound reloading with cookies
@@ -391,22 +427,52 @@ export async function loadClickBuffers({
     console.error("Error loading sound buffers:", error);
     
     // Try loading default sounds as fallback if something failed with custom sounds
-    if (soundSet || cookieSoundSetId) {
+    if (!ignorePreferences && (soundSet || cookieSoundSetId)) {
       console.log("Falling back to default sounds...");
       try {
-        // Use default paths (clear soundSet to use defaults)
+        // Ignore a stale preference on this retry. Without this guard, a
+        // missing custom set recursively requests the same unavailable URL.
         return await loadClickBuffers({
           audioCtx,
           normalBufferRef,
           accentBufferRef,
           firstBufferRef,
-          soundSet: null
+          soundSet: null,
+          ignorePreferences: true
         });
       } catch (fallbackError) {
         console.error("Even fallback sounds failed to load:", fallbackError);
         return false;
       }
     }
-    return false;
+    // The bundled samples should always be available, but a procedural click
+    // prevents a professional practice session from failing silently if WebKit
+    // cannot fetch or decode an asset.
+    try {
+      const createClick = (frequency, amplitude) => {
+        const duration = 0.045;
+        const frameCount = Math.ceil(audioCtx.sampleRate * duration);
+        const buffer = audioCtx.createBuffer(1, frameCount, audioCtx.sampleRate);
+        const channel = buffer.getChannelData(0);
+        for (let frame = 0; frame < frameCount; frame += 1) {
+          const time = frame / audioCtx.sampleRate;
+          const envelope = Math.exp(-time * 95);
+          channel[frame] = amplitude * envelope * (
+            0.82 * Math.sin(2 * Math.PI * frequency * time) +
+            0.18 * Math.sin(2 * Math.PI * frequency * 2.03 * time)
+          );
+        }
+        return buffer;
+      };
+
+      normalBufferRef.current = createClick(1650, 0.64);
+      accentBufferRef.current = createClick(2150, 0.78);
+      firstBufferRef.current = createClick(2700, 0.9);
+      console.warn('Using procedural metronome clicks as an audio fallback');
+      return true;
+    } catch (fallbackError) {
+      console.error('Unable to create procedural fallback clicks:', fallbackError);
+      return false;
+    }
   }
 }

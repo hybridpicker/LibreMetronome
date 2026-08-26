@@ -9,47 +9,19 @@ import "./MultiCircleMetronome.css";
 import '../Controls/slider-styles.css';
 import withTrainingContainer from '../../Training/withTrainingContainer'; // Use the standard training container
 import MultiCircleControls from './MultiCircleControls';
+import TransportButton from '../Controls/TransportButton';
 
 import AccelerateButton from "../Controls/AccelerateButton";
 import { manualTempoAcceleration } from "../../../hooks/useMetronomeLogic/trainingLogic";
 
 const MAX_CIRCLES = 2;
 
-const PlayButton = ({ handlePlayPause, isPaused }) => (
-  <div style={{ marginTop: "20px", display: "flex", justifyContent: "center" }}>
-    <button
-      className="play-pause-button"
-      type="button"
-      onClick={handlePlayPause}
-      aria-label="Toggle Play/Pause"
-      style={{ 
-        background: "transparent", 
-        border: "none", 
-        cursor: "pointer",
-        padding: "10px",
-        transition: "all 0.2s ease",
-        outline: "none"
-      }}
-    >
-      <img 
-        className="play-pause-icon"
-        src={isPaused ? playIcon : pauseIcon}
-        alt={isPaused ? "Play" : "Pause"}
-        style={{
-          width: "40px",
-          height: "40px",
-          objectFit: "contain",
-          transition: "transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)"
-        }}
-      />
-    </button>
-  </div>
-);
-
 const AddCircleButton = ({ addCircle, containerSize, isMobile }) => (
-  <div
+  <button
+    type="button"
     onClick={addCircle}
     className="add-circle-button"
+    aria-label="Add rhythm circle"
     style={{
       position: "relative",
       width: containerSize,
@@ -80,7 +52,7 @@ const AddCircleButton = ({ addCircle, containerSize, isMobile }) => (
     >
       +
     </div>
-  </div>
+  </button>
 );
 
 function MultiCircleMetronome(props) {
@@ -146,6 +118,7 @@ function MultiCircleMetronome(props) {
   const getContainerSize = () => {
     if (window.innerWidth < 600) return Math.min(window.innerWidth - 40, 300);
     if (window.innerWidth < 1024) return Math.min(window.innerWidth - 40, 400);
+    if (window.matchMedia?.('(orientation: landscape)').matches) return 240;
     return 300;
   };
   const [containerSize, setContainerSize] = useState(getContainerSize());
@@ -389,7 +362,7 @@ function MultiCircleMetronome(props) {
 
   // Render
   return (
-    <div style={{ textAlign: "center" }}>
+    <div className="multi-mode-shell" style={{ textAlign: "center" }}>
       <AccelerateButton onClick={handleAccelerate} speedMode={speedMode} />
 
       <div className="circles-container" style={{
@@ -432,41 +405,32 @@ function MultiCircleMetronome(props) {
         )}
       </div>
 
-      <PlayButton handlePlayPause={handlePlayPause} isPaused={isPaused} />
-
-      <button
-        onClick={() => {
-          if (logic && typeof logic.tapTempo === 'function') {
-            logic.tapTempo();
-          } else {
-            const now = performance.now();
-            window.dispatchEvent(new CustomEvent('metronome-tap-tempo', {
-              detail: { timestamp: now }
-            }));
-          }
-        }}
-        style={{ 
-          background: 'transparent', 
-          border: 'none', 
-          cursor: 'pointer', 
-          marginTop: '10px',
-          padding: '10px',
-          outline: 'none',
-          display: 'block',
-          margin: '10px auto'
-        }}
-        aria-label="Tap Tempo"
-      >
-        <img
-          src={tapButtonIcon}
-          alt="Tap Tempo"
-          style={{
-            height: '35px',
-            objectFit: 'contain',
-            transition: 'all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)'
+      <div className="transport-row multi-transport-row">
+        <TransportButton
+          kind="play"
+          icon={isPaused ? playIcon : pauseIcon}
+          label={isPaused ? 'Start' : 'Pause'}
+          onClick={handlePlayPause}
+          pressed={!isPaused}
+          className="play-pause-button"
+        />
+        <TransportButton
+          kind="tap"
+          icon={tapButtonIcon}
+          label="Tap Tempo"
+          className="tap-button"
+          onClick={() => {
+            if (logic && typeof logic.tapTempo === 'function') {
+              logic.tapTempo();
+            } else {
+              const now = performance.now();
+              window.dispatchEvent(new CustomEvent('metronome-tap-tempo', {
+                detail: { timestamp: now }
+              }));
+            }
           }}
         />
-      </button>
+      </div>
 
       <MultiCircleControls
         circleSettings={circleSettings}

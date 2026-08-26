@@ -45,19 +45,19 @@ describe('InfoModal Component', () => {
     expect(screen.getByText('Free Online Metronome')).toBeInTheDocument();
     
     // Click the "How to Use" tab
-    fireEvent.click(screen.getByRole('button', { name: /how to use/i }));
+    fireEvent.click(screen.getByRole('tab', { name: /how to use/i }));
     
     // "How to Use" content should now be visible
     expect(screen.getByText('How to Use LibreMetronome')).toBeInTheDocument();
     
     // Click the "Features" tab
-    fireEvent.click(screen.getByRole('button', { name: /features/i }));
+    fireEvent.click(screen.getByRole('tab', { name: /features/i }));
     
     // "Features" content should now be visible
     expect(screen.getByText('Key Metronome Features')).toBeInTheDocument();
     
     // Click the "Shortcuts" tab
-    fireEvent.click(screen.getByRole('button', { name: /shortcuts/i }));
+    fireEvent.click(screen.getByRole('tab', { name: /shortcuts/i }));
     
     // "Shortcuts" content should now be visible
     expect(screen.getByText('Keyboard Shortcuts')).toBeInTheDocument();
@@ -106,20 +106,20 @@ describe('InfoModal Component', () => {
     expect(screen.getByText('Online Metronome Benefits')).toBeInTheDocument();
     
     // Switch to "How to Use" tab and check content
-    fireEvent.click(screen.getByRole('button', { name: /how to use/i }));
+    fireEvent.click(screen.getByRole('tab', { name: /how to use/i }));
     expect(screen.getByText('Select a Mode')).toBeInTheDocument();
     expect(screen.getByText('Set Your Tempo')).toBeInTheDocument();
     expect(screen.getByText('Customize Settings')).toBeInTheDocument();
     expect(screen.getByText('Start Practicing')).toBeInTheDocument();
     
     // Switch to "Features" tab and check content
-    fireEvent.click(screen.getByRole('button', { name: /features/i }));
+    fireEvent.click(screen.getByRole('tab', { name: /features/i }));
     expect(screen.getByText('Tap Tempo')).toBeInTheDocument();
     expect(screen.getByText('Time Signatures')).toBeInTheDocument();
     expect(screen.getByText('Visual Modes')).toBeInTheDocument();
     
     // Switch to "Shortcuts" tab and check content
-    fireEvent.click(screen.getByRole('button', { name: /shortcuts/i }));
+    fireEvent.click(screen.getByRole('tab', { name: /shortcuts/i }));
     expect(screen.getByText('Keyboard Shortcuts')).toBeInTheDocument();
     expect(screen.getByText('Beat Types')).toBeInTheDocument();
   });

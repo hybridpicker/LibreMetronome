@@ -136,9 +136,9 @@ export const getAllSoundSets = async () => {
       return {
         ...set,
         is_active: isActive,
-        first_beat_sound_url: set.first_beat_sound_url || '/assets/audio/click_new_first.mp3',
-        accent_sound_url: set.accent_sound_url || '/assets/audio/click_new_accent.mp3',
-        normal_beat_sound_url: set.normal_beat_sound_url || '/assets/audio/click_new.mp3'
+        first_beat_sound_url: set.first_beat_sound_url || '/assets/audio/click_new_first.wav',
+        accent_sound_url: set.accent_sound_url || '/assets/audio/click_new_accent.wav',
+        normal_beat_sound_url: set.normal_beat_sound_url || '/assets/audio/click_new.wav'
       };
     });
     

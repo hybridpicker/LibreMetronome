@@ -4,16 +4,16 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 8px;
+  gap: 4px;
   margin: 0 auto;
   max-width: 100%;
-  padding: 5px;
+  padding: 0;
 }
 
 .subdivision-button {
   width: 36px;
   height: 36px;
-  cursor: pointer;
+  cursor: inherit;
   object-fit: contain;
-  margin: 0 3px;
+  margin: 0;
 }

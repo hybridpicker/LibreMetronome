@@ -54,31 +54,39 @@ const InfoModal = ({ isOpen, onClose }) => {
         ×
       </button>
       
-      <div className="info-modal" ref={modalRef}>
+      <div className="info-modal" ref={modalRef} role="dialog" aria-modal="true" aria-labelledby="info-modal-title">
         <div className="info-modal-header">
-          <h1>Metronome Guide</h1>
-          <div className="info-modal-tabs">
+          <h1 id="info-modal-title">Metronome Guide</h1>
+          <div className="info-modal-tabs" role="tablist" aria-label="Guide sections">
             <button 
               className={`info-modal-tab ${activeTab === 'about' ? 'active' : ''}`}
               onClick={() => setActiveTab('about')}
+              role="tab"
+              aria-selected={activeTab === 'about'}
             >
               About
             </button>
             <button 
               className={`info-modal-tab ${activeTab === 'usage' ? 'active' : ''}`}
               onClick={() => setActiveTab('usage')}
+              role="tab"
+              aria-selected={activeTab === 'usage'}
             >
               How to Use
             </button>
             <button 
               className={`info-modal-tab ${activeTab === 'features' ? 'active' : ''}`}
               onClick={() => setActiveTab('features')}
+              role="tab"
+              aria-selected={activeTab === 'features'}
             >
               Features
             </button>
             <button 
               className={`info-modal-tab ${activeTab === 'shortcuts' ? 'active' : ''}`}
               onClick={() => setActiveTab('shortcuts')}
+              role="tab"
+              aria-selected={activeTab === 'shortcuts'}
             >
               Shortcuts
             </button>

@@ -21,22 +21,21 @@ const SubdivisionSelector = ({ subdivisions, onSelect, hideOptions = false, styl
           : subdivisionIcons[`subdivision${subVal}`];
         
         return (
-          <img
+          <button
+            type="button"
             key={subVal}
-            src={icon}
-            alt={`Subdivision ${subVal}`}
             onClick={() => onSelect(subVal)}
-            className="subdivision-button"
-            style={{
-              cursor: "pointer",
-              width: "36px",
-              height: "36px",
-              margin: "0 3px",
-              transition: "transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
-              transform: isActive ? "scale(1.1)" : "scale(1)",
-              filter: isActive ? "drop-shadow(0 0 5px rgba(0, 160, 160, 0.5))" : "none"
-            }}
-          />
+            className="subdivision-choice"
+            aria-label={`${subVal} ${subVal === 1 ? 'beat' : 'beats'} per bar`}
+            aria-pressed={isActive}
+          >
+            <img
+              src={icon}
+              alt=""
+              aria-hidden="true"
+              className="subdivision-button"
+            />
+          </button>
         );
       })}
     </div>
