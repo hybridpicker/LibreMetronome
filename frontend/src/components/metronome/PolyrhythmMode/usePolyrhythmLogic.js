@@ -299,46 +299,6 @@ export default function usePolyrhythmLogic({
   }, [isSilencePhaseRef, measureCountRef, muteMeasureCountRef]);
 
   // --------------------------------------------
-  // load audio on mount
-  // --------------------------------------------
-  useEffect(() => {
-    const ctx = initAudioContext();
-    audioCtxRef.current = ctx;
-
-    const load = async () => {
-      try {
-        const set = await getActiveSoundSet();
-        await loadClickBuffers({
-          audioCtx: ctx,
-          normalBufferRef,
-          accentBufferRef,
-          firstBufferRef,
-          soundSet: set
-        });
-      } catch {
-        // fallback
-        await loadClickBuffers({
-          audioCtx: ctx,
-          normalBufferRef,
-          accentBufferRef,
-          firstBufferRef
-        });
-      }
-    };
-    load();
-
-    return () => {
-      stopScheduler();
-      
-      // Clean up audio context
-      if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
-        audioCtxRef.current.close().catch(() => {});
-      }
-    };
-
-  }, []);
-
-  // --------------------------------------------
   // Calculate measure duration based on global tempo with precise LCM calculations
   // Optimized for complex polyrhythms like 8:9
   // --------------------------------------------
@@ -837,6 +797,44 @@ export default function usePolyrhythmLogic({
       isStartingOrStoppingRef.current = false;
     }
   }, [syncTrainingState]);
+
+  // --------------------------------------------
+  // Load audio on mount and release native resources on unmount.
+  // --------------------------------------------
+  useEffect(() => {
+    const ctx = initAudioContext();
+    audioCtxRef.current = ctx;
+
+    const load = async () => {
+      try {
+        const set = await getActiveSoundSet();
+        await loadClickBuffers({
+          audioCtx: ctx,
+          normalBufferRef,
+          accentBufferRef,
+          firstBufferRef,
+          soundSet: set
+        });
+      } catch {
+        await loadClickBuffers({
+          audioCtx: ctx,
+          normalBufferRef,
+          accentBufferRef,
+          firstBufferRef
+        });
+      }
+    };
+
+    load();
+
+    return () => {
+      stopScheduler();
+
+      if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
+        audioCtxRef.current.close().catch(() => {});
+      }
+    };
+  }, [stopScheduler]);
   
   // --------------------------------------------
   // Start the scheduler and begin playing

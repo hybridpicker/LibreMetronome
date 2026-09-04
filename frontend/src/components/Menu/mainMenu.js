@@ -39,20 +39,6 @@ const MainMenu = ({
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [activeTab, setActiveTab] = useState('training'); // 'training', 'settings', 'support'
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
-  
-  // State to track if training mode is active
-  const trainingActive = trainingSettings.macroMode !== 0 || trainingSettings.speedMode !== 0;
-  
-  // Handle window resize
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 600);
-    };
-    
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
   
   // Close menu function
   const handleClose = () => {
@@ -81,12 +67,6 @@ const MainMenu = ({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Function to open the menu with a specific tab
-  const openMenuWithTab = (tab) => {
-    setActiveTab(tab);
-    setIsVisible(true);
-  };
-  
   // Render tab content based on active tab
   const renderTabContent = () => {
     switch (activeTab) {

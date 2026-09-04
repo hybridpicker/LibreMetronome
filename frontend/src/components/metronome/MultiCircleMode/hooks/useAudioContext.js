@@ -2,7 +2,6 @@
 import { useCallback } from 'react';
 import { initAudioContext, loadClickBuffers } from '../../../../hooks/useMetronomeLogic/audioBuffers';
 import { getActiveSoundSet } from '../../../../services/soundSetService';
-import { debugLog } from '../utils/debugUtils';
 
 /**
  * Hook to manage audio context initialization and sound loading
