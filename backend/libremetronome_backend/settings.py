@@ -13,15 +13,23 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import os
 
+from django.core.exceptions import ImproperlyConfigured
+from dotenv import load_dotenv
+
 VERSION = "0.6.0"
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR.parent / '.env')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'SECRET'
+SECRET_KEY = os.environ.get("SECRET_KEY")
+
+# Refuse to boot with a missing external secret.
+if not SECRET_KEY:
+    raise ImproperlyConfigured('SECRET_KEY must be set in the application .env file')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -153,16 +161,24 @@ MEDIA_URL = '/metronome_sounds/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'metronome_sounds')
 
 # Security settings for production
-SECURE_SSL_REDIRECT = False
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_SECURE = False
-CSRF_TRUSTED_ORIGINS = ["http://localhost:3000", "http://localhost:3001", "http://localhost:8000"]
-CORS_ALLOWED_ORIGINS = [
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = True
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+CSRF_TRUSTED_ORIGINS = [
+    'https://libremetronome.com',
+    'https://www.libremetronome.com',
+    'https://devel.libremetronome.com',
     'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:8000',
 ]
 
-SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
 
 try:
     from .local_settings import *

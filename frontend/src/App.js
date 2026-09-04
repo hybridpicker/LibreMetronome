@@ -13,7 +13,7 @@ import MainMenu from './components/Menu/mainMenu';
 import SettingsContent from './components/Menu/SettingsContent';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
 import ModeSelector from './components/ModeSelector'; // Import the new ModeSelector component
-import { SupportButton, SupportPage } from './components/Support'; // Import the Support components
+import { SupportPage } from './components/Support'; // Import the Support components
 import { HelpButton, InfoModal } from './components/InfoSection'; // Import the Help components
 import AdminPanel from './components/Admin/AdminPanel'; // Import Admin Panel
 // StyleGuide component removed
