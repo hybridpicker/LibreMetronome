@@ -1,6 +1,6 @@
 asgiref
 cffi
-Django==4.2.21
+Django==5.2.17
 django-cors-headers        
 djangorestframework
 npm
@@ -9,5 +9,7 @@ optional-django
 psycopg2-binary
 pycparser
 sounddevice
-sqlparse
+sqlparse==0.6.0
 typing_extensions
+gunicorn==23.0.0
+python-dotenv==1.2.2
