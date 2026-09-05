@@ -323,3 +323,35 @@ body.large-text .close-button {
     height: 40px;
   }
 }
+
+.accessibility-settings .setting-item:not(.color-blind-mode) {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  column-gap: 12px;
+  align-items: center;
+  padding: 12px;
+  text-align: left;
+}
+
+.accessibility-settings .setting-item input[type='checkbox'] {
+  margin: 0;
+  accent-color: var(--primary-teal-dark);
+}
+
+.accessibility-settings .setting-item label {
+  margin: 0;
+  text-align: left;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.accessibility-settings .setting-description {
+  grid-column: 2;
+  margin: 0;
+  text-align: left;
+}
+
+.accessibility-settings .color-blind-mode {
+  padding: 12px;
+}

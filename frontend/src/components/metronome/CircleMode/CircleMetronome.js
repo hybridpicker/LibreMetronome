@@ -299,7 +299,7 @@ export function AdvancedMetronomeWithCircle({
                     filter: useActive
                       ? 'drop-shadow(0 0 5px rgba(248, 211, 141, 0.8))'
                       : 'none',
-                    transform: useActive ? 'scale(1.05)' : 'scale(1)',
+                    transform: useActive ? 'scale(1.14)' : 'scale(1)',
 
                     // If it's going active, do a small keyframe "pulse"
                     animation: useActive

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { initAudioContext, loadClickBuffers } from '../../../hooks/useMetronomeLogic/audioBuffers';
+import { initAudioContext, loadClickBuffers, resumeAudioContext } from '../../../hooks/useMetronomeLogic/audioBuffers';
 import { getActiveSoundSet } from '../../../services/soundSetService';
 import { SCHEDULE_AHEAD_TIME } from '../../../hooks/useMetronomeLogic/constants';
 import { shouldMuteThisBeat } from '../../../hooks/useMetronomeLogic/trainingLogic';
@@ -397,17 +397,10 @@ export default function usePolyrhythmLogic({
     // Capture currentTime *once* at the start
     const now = ctx.currentTime;
 
-    // IMPROVEMENT: Higher precision rounding (microsecond)
-    const safeTime = Math.round(when * 1000000) / 1000000;
-    
-    // Ensure we don't schedule in the past
-    if (safeTime <= now) {
-      // IMPROVEMENT: Smaller adjustment for tighter timing
-      const adjustedTime = now + 0.001; 
-      console.warn(`Had to adjust scheduling time for ${circle} beat ${subIndex} - was in the past`);
-      return scheduleHit(adjustedTime, subIndex, circle, accentsArray);
-    }
-    
+    // Preserve the exact audio timestamp; late beats must not bunch together.
+    const safeTime = when;
+    if (safeTime < now) return 'late';
+
     // IMPROVEMENT: Prevent duplicate hits that are too close together (timing conflict resolution)
     const circleCache = lastHitTimeRef.current[circle];
     if (circleCache[subIndex] && Math.abs(safeTime - circleCache[subIndex]) < 0.05) {
@@ -449,9 +442,8 @@ export default function usePolyrhythmLogic({
 
     const gainNode = ctx.createGain();
     
-    // IMPROVEMENT: Apply slight ramp to avoid clicks
-    gainNode.gain.setValueAtTime(0, safeTime);
-    gainNode.gain.linearRampToValueAtTime(volumeRef.current, safeTime + 0.005);
+    // Preserve the click sample's attack for a clear, consistent onset.
+    gainNode.gain.setValueAtTime(volumeRef.current, safeTime);
     
     // FIXED CODE: Circle positions should always have the same sounds regardless of swap
     // Only modify non-first beats (accentValue !== 3)
@@ -491,15 +483,6 @@ export default function usePolyrhythmLogic({
         // Ignore cleanup errors
       }
     };
-
-    // Add detailed logging for debugging
-    if (subIndex === 0) {
-      // For first beats, log measure start
-      console.log(`${circle.toUpperCase()} measure start => subIndex=${subIndex}, time=${safeTime.toFixed(3)}`);
-    } else {
-      // For other beats, just log basic info
-      console.log(`${circle.toUpperCase()} beat ${subIndex} scheduled at ${safeTime.toFixed(3)}`);
-    }
 
     // NEW: Use improved animation timing calculation
     scheduleAnimationUpdate({
@@ -732,7 +715,7 @@ export default function usePolyrhythmLogic({
     
     // Schedule this measure if it falls within our lookahead window
     if (nextMeasureStart < scheduleAhead) {
-      console.log(`Scheduling measure #${nextMeasureToSchedule} at ${nextMeasureStart.toFixed(3)}`);
+
       
       // Update our tracking reference
       lastScheduledMeasureRef.current = nextMeasureToSchedule;
@@ -799,7 +782,7 @@ export default function usePolyrhythmLogic({
   }, [syncTrainingState]);
 
   // --------------------------------------------
-  // Load audio on mount and release native resources on unmount.
+  // Load audio on mount; release only this mode's scheduler on unmount.
   // --------------------------------------------
   useEffect(() => {
     const ctx = initAudioContext();
@@ -830,13 +813,8 @@ export default function usePolyrhythmLogic({
     return () => {
       stopScheduler();
 
-      if (
-        audioCtxRef.current &&
-        audioCtxRef.current.state !== 'closed' &&
-        typeof audioCtxRef.current.close === 'function'
-      ) {
-        audioCtxRef.current.close().catch(() => {});
-      }
+      // The shared context belongs to the app and survives mode changes.
+      audioCtxRef.current = null;
     };
   }, [stopScheduler]);
   
@@ -849,16 +827,15 @@ export default function usePolyrhythmLogic({
     isStartingOrStoppingRef.current = true;
     
     try {
-      const ctx = audioCtxRef.current;
+      const ctx = initAudioContext();
+      audioCtxRef.current = ctx;
       if (!ctx) {
         isStartingOrStoppingRef.current = false;
         return;
       }
       
-      // Resume audio context if suspended
-      if (ctx.state === 'suspended') {
-        await ctx.resume();
-      }
+      // Also recover WebKit's interrupted state after app/route changes.
+      if (!await resumeAudioContext(ctx)) return;
       
       // Ensure audio buffers are loaded
       if (!normalBufferRef.current || !accentBufferRef.current || !firstBufferRef.current) {
@@ -881,6 +858,9 @@ export default function usePolyrhythmLogic({
           });
         }
       }
+
+      // Loading/resuming may finish after Stop or a mode change.
+      if (isPausedRef.current || audioCtxRef.current !== ctx) return;
 
       // Reset all state for a clean start
       schedulerRunningRef.current = true;
@@ -964,11 +944,9 @@ export default function usePolyrhythmLogic({
     const timer = setTimeout(() => {
       if (isPaused) {
         stopScheduler();
-        audioCtxRef.current.suspend().catch(()=>{});
+        // Keep the shared, user-unlocked context alive while paused.
       } else {
-        audioCtxRef.current.resume()
-          .then(()=>startScheduler())
-          .catch(()=>{});
+        startScheduler();
       }
     }, 10); // Small debounce for state changes
     

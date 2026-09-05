@@ -187,7 +187,7 @@ const InfoModal = ({ isOpen, onClose }) => {
               
               <div className="info-feature">
                 <h3>Visual Modes</h3>
-                <p>Choose from Circle, Analog, Grid, Multi-Circle or Polyrhythm modes</p>
+                <p>Choose from Beat, Analog, Grid, Sequence or Polyrhythm modes</p>
               </div>
               
               <div className="info-feature">
@@ -216,9 +216,9 @@ const InfoModal = ({ isOpen, onClose }) => {
               <li><span className="key">1–9</span> Set Beats per Bar</li>
               <li><span className="key">↑↓</span> Increase/decrease tempo by 5 BPM</li>
               <li><span className="key">A</span> Switch to Analog/Pendulum mode</li>
-              <li><span className="key">C</span> Switch to Circle mode</li>
+              <li><span className="key">C</span> Switch to Beat mode</li>
               <li><span className="key">G</span> Switch to Grid mode</li>
-              <li><span className="key">M</span> Switch to Multi Circle mode</li>
+              <li><span className="key">M</span> Switch to Sequence mode</li>
               <li><span className="key">Y</span> Switch to Polyrhythm mode</li>
               <li><span className="key">I</span> Open this Guide</li>
               <li><span className="key">R</span> Show Training menu</li>

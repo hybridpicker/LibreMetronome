@@ -69,7 +69,7 @@ const MetronomeControls = ({
             parser={(val) => parseFloat(val.replace(/[^0-9.]/g, '')) / 100}
           />
           
-          {/* Swing slider LAST - only shown when conditions are met */}
+          {/* Keep Swing available when changing bar lengths or sequence selection. */}
           {mode === "analog" ? (
             <EditableSliderInput
               label="Swing"
@@ -82,7 +82,7 @@ const MetronomeControls = ({
               className="swing-slider disabled"
               formatter={() => "(Swing is not available in pendulum mode)"}
             />
-          ) : subdivisions % 2 === 0 && subdivisions >= 2 && (
+          ) : (
             <EditableSliderInput
               label="Swing"
               value={swing}

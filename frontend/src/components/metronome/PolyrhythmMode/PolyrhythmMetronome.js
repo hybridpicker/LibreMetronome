@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import usePolyrhythmLogic from "./usePolyrhythmLogic";
+import { initAudioContext, resumeAudioContext } from "../../../hooks/useMetronomeLogic/audioBuffers";
 import playIcon from "../../../assets/svg/play.svg";
 import pauseIcon from "../../../assets/svg/pause.svg";
 import swapIcon from "../../../assets/svg/swap-icon.svg";
 import tapButtonIcon from "../../../assets/svg/tap.svg";
-import { getSubdivisionIcon } from "../../../assets/svg/subdivisionIcons";
+import EditableSliderInput from "../Controls/EditableSliderInput";
 import CircleRenderer from "./CircleRenderer";
 // Removed unused import
 import "./PolyrhythmMetronome.css";
@@ -269,6 +270,9 @@ const PolyrhythmMetronome = (props) => {
     if (isTransitioning) return;
     if (!isPaused) {
       stopScheduler();
+    } else {
+      // Resume within the tap/keyboard gesture so mobile WebKit permits audio.
+      void resumeAudioContext(initAudioContext());
     }
     setIsPaused(!isPaused);
   }, [isPaused, setIsPaused, isTransitioning, stopScheduler]);
@@ -616,23 +620,7 @@ const PolyrhythmMetronome = (props) => {
                   opacity: isTransitioning ? 0.7 : 1
                 }}
               >
-                <img
-                  src={innerBeats === num 
-                    ? getSubdivisionIcon(num, true) 
-                    : getSubdivisionIcon(num, false)}
-                  alt=""
-                  aria-hidden="true"
-                  className="subdivision-button"
-                  style={{
-                    cursor: isTransitioning ? "not-allowed" : "pointer",
-                    width: "36px",
-                    height: "36px",
-                    margin: "0 3px",
-                    transition: "transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
-                    transform: innerBeats === num ? "scale(1.1)" : "scale(1)",
-                    filter: "none"
-                  }}
-                />
+                <span className="beat-choice-number" aria-hidden="true">{num}</span>
               </button>
             ))}
           </div>
@@ -657,23 +645,7 @@ const PolyrhythmMetronome = (props) => {
                   opacity: isTransitioning ? 0.7 : 1
                 }}
               >
-                <img
-                  src={outerBeats === num 
-                    ? getSubdivisionIcon(num, true) 
-                    : getSubdivisionIcon(num, false)}
-                  alt=""
-                  aria-hidden="true"
-                  className="subdivision-button"
-                  style={{
-                    cursor: isTransitioning ? "not-allowed" : "pointer",
-                    width: "36px",
-                    height: "36px",
-                    margin: "0 3px",
-                    transition: "transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
-                    transform: outerBeats === num ? "scale(1.1)" : "scale(1)",
-                    filter: "none"
-                  }}
-                />
+                <span className="beat-choice-number" aria-hidden="true">{num}</span>
               </button>
             ))}
           </div>
@@ -705,30 +677,17 @@ const PolyrhythmMetronome = (props) => {
 
       {/* Tempo and Volume */}
       <div className="sliders-container" style={{ marginTop: "20px" }}>
-        <label>
-          Tempo: {tempo} BPM
-          <input
-            type="range"
-            min={30}
-            max={240}
-            step={1}
-            value={tempo}
-            onChange={(e) => setTempo(Number(e.target.value))}
-            disabled={isTransitioning}
-          />
-        </label>
-        <label>
-          Volume: {Math.round(volume * 100)}%
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.01}
-            value={volume}
-            onChange={(e) => setVolume(Number(e.target.value))}
-            disabled={isTransitioning}
-          />
-        </label>
+        <EditableSliderInput
+          label="Tempo" value={tempo} setValue={setTempo}
+          min={30} max={240} step={1} disabled={isTransitioning}
+          formatter={(value) => `${value} BPM`} parser={parseFloat}
+        />
+        <EditableSliderInput
+          label="Volume" value={volume} setValue={setVolume}
+          min={0} max={1} step={0.01} disabled={isTransitioning}
+          formatter={(value) => `${Math.round(value * 100)}%`}
+          parser={(value) => parseFloat(value) / 100}
+        />
       </div>
       
     </div>

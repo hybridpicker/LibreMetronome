@@ -429,11 +429,11 @@ function App() {
       case "analog":
         return `${baseDescription} Currently in Analog Mode with realistic pendulum animation for traditional practice.`;
       case "circle":
-        return `${baseDescription} Currently in Circle Mode with interactive beat visualization for tempo precision.`;
+        return `${baseDescription} Currently in Beat Mode with interactive beat visualization for tempo precision.`;
       case "grid":
         return `${baseDescription} Currently in Grid Mode with customizable beat patterns for complex time signatures.`;
       case "multi":
-        return `${baseDescription} Currently in Multi-Circle Mode for polyrhythm practice and advanced timing exercises.`;
+        return `${baseDescription} Currently in Sequence Mode for repeating sequences of bars.`;
       case "polyrhythm":
         return `${baseDescription} Currently in Polyrhythm Mode for practicing complex rhythmic patterns and improving coordination.`;
       default:
@@ -584,13 +584,13 @@ function App() {
       <HelpButton onClick={() => setInfoModalOpen(true)} />
       <AccessibilityMenu />
       <Helmet>
-        <title>{`LibreMetronome - ${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode`}</title>
+        <title>{`LibreMetronome - ${({ circle: 'Beat', multi: 'Sequence' }[mode] || mode.charAt(0).toUpperCase() + mode.slice(1))} Mode`}</title>
         <meta name="description" content={getModeDescription()} />
         <meta name="keywords" content={`Free Online Metronome, Tap Tempo, Time Signatures, Beat Counter, ${mode} mode, Music Practice Tool, Rhythm Training`} />
         <meta name="application-version" content={version} />
-        <meta property="og:title" content={`LibreMetronome - ${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode`} />
+        <meta property="og:title" content={`LibreMetronome - ${({ circle: 'Beat', multi: 'Sequence' }[mode] || mode.charAt(0).toUpperCase() + mode.slice(1))} Mode`} />
         <meta property="og:description" content={getModeDescription()} />
-        <meta name="twitter:title" content={`LibreMetronome - ${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode`} />
+        <meta name="twitter:title" content={`LibreMetronome - ${({ circle: 'Beat', multi: 'Sequence' }[mode] || mode.charAt(0).toUpperCase() + mode.slice(1))} Mode`} />
         <meta name="twitter:description" content={getModeDescription()} />
       </Helmet>
 

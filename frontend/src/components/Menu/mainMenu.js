@@ -4,7 +4,6 @@ import './mainMenu.css';
 // InfoContent removed as it's no longer needed
 import TrainingContent from './TrainingContent';
 import SettingsContent from './SettingsContent';
-import { ReactComponent as MenuIcon } from '../../assets/svg/menu-icon.svg';
 import { SupportPage } from '../Support';
 import InterfaceIcon from '../common/InterfaceIcon';
 
@@ -124,12 +123,14 @@ const MainMenu = ({
       {/* Main Menu Button */}
       <button 
         ref={menuButtonRef}
-        className={`menu-button ${isVisible ? 'active' : ''}`}
+        className={`menu-button header-action ${isVisible ? 'active' : ''}`}
         onClick={() => setIsVisible(prev => !prev)}
         aria-label="Main Menu"
+        aria-expanded={isVisible}
+        aria-haspopup="dialog"
         title="Settings (S)"
       >
-        <MenuIcon />
+        <InterfaceIcon name="menu" size={22} />
       </button>
       
       {/* Menu Overlay */}

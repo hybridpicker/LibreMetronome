@@ -116,7 +116,7 @@ const InfoSection = () => {
           
           <div className="info-feature">
             <h3>Visual Modes</h3>
-            <p>Choose from Circle, Analog, Grid, Multi-Circle or Polyrhythm modes</p>
+            <p>Choose from Beat, Analog, Grid, Sequence or Polyrhythm modes</p>
           </div>
           
           <div className="info-feature">

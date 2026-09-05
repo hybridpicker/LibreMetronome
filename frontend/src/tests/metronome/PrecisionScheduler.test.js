@@ -104,4 +104,41 @@ describe('professional timing scheduler', () => {
     expect(nextNoteTimeRef.current).toBeCloseTo(5.55);
     expect(currentSubRef.current).toBe(1);
   });
+  test('skips overdue clicks after a UI stall while preserving beat phase', () => {
+    const scheduleSubFn = jest.fn();
+    const nextNoteTimeRef = { current: 5.05 };
+    const currentSubRef = { current: 0 };
+    runScheduler({
+      audioCtxRef: { current: { currentTime: 6 } },
+      nextNoteTimeRef, currentSubRef,
+      getCurrentSubIntervalSec: () => 0.25,
+      handleMeasureBoundary: jest.fn(), scheduleSubFn,
+      subdivisionsRef: { current: 4 }, multiCircleMode: false,
+      nodeRefs: { current: [] }, schedulerRunningRef: { current: true }
+    });
+    expect(scheduleSubFn).toHaveBeenCalledTimes(1);
+    expect(scheduleSubFn).toHaveBeenCalledWith(0, 6.05, expect.any(Object));
+    expect(nextNoteTimeRef.current).toBeCloseTo(6.3);
+  });
+
+  test.each([15, 120, 240])('preserves the audio grid for ten minutes at %i BPM', (bpm) => {
+    const ctx = { currentTime: 0 };
+    const starts = [];
+    const interval = 60 / bpm;
+    const refs = {
+      audioCtxRef: { current: ctx }, nextNoteTimeRef: { current: 0.05 },
+      currentSubRef: { current: 0 }, getCurrentSubIntervalSec: () => interval,
+      handleMeasureBoundary: jest.fn(), scheduleSubFn: (_, when) => starts.push(when),
+      subdivisionsRef: { current: 4 }, nodeRefs: { current: [] },
+      schedulerRunningRef: { current: true }
+    };
+    // Uneven scheduler invocations simulate ordinary main-thread jitter.
+    for (let tick = 0; ctx.currentTime < 600; tick++) {
+      runScheduler(refs);
+      ctx.currentTime += tick % 3 === 0 ? 0.035 : 0.02;
+    }
+    starts.forEach((when, index) => expect(when).toBeCloseTo(0.05 + index * interval, 8));
+    expect(starts.length).toBeGreaterThanOrEqual(600 / interval);
+  });
+
 });

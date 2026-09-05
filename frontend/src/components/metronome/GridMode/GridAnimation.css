@@ -9,25 +9,25 @@
 
 /* Playing state with minimal animation */
 .grid-square-playing {
-  transform: scale(1.03);
+  transform: scale(1.06);
   box-shadow: none;
 }
 
 /* First beat animation (subtle emphasis) */
 .grid-square-first-beat.grid-square-playing {
-  transform: scale(1.04);
+  transform: scale(1.08);
   box-shadow: none;
 }
 
 /* Accent beat animation */
 .grid-square-accent.grid-square-playing {
-  transform: scale(1.035);
+  transform: scale(1.07);
   box-shadow: none;
 }
 
 /* Normal beat animation */
 .grid-square-normal.grid-square-playing {
-  transform: scale(1.025);
+  transform: scale(1.05);
   box-shadow: none;
 }
 

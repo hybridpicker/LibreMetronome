@@ -5,6 +5,13 @@ import React from 'react';
  * language as the existing accessibility and menu SVGs.
  */
 const paths = {
+  menu: <path d="M5 7h14M5 12h14M5 17h14" />,
+  accessibility: (
+    <>
+      <circle cx="12" cy="4.5" r="2" />
+      <path d="M4.5 9 12 10.5 19.5 9M12 10.5V15M12 15l-4 6M12 15l4 6" />
+    </>
+  ),
   training: (
     <>
       <circle cx="12" cy="12" r="8" />

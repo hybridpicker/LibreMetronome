@@ -47,7 +47,7 @@ const ModeSelector = ({ mode, setMode }) => {
     },
     {
       id: "circle",
-      name: "Circle",
+      name: "Beat",
       icon: CircleIcon,
       description: "Interactive circular beat visualization with customizable accents"
     },
@@ -59,9 +59,9 @@ const ModeSelector = ({ mode, setMode }) => {
     },
     {
       id: "multi",
-      name: "Multi",
+      name: "Sequence",
       icon: MultiIcon,
-      description: "Multiple circles for practicing compound rhythms"
+      description: "A repeating sequence of bars, played one after another"
     },
     {
       id: "polyrhythm",
