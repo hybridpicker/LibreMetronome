@@ -93,31 +93,31 @@ describe('App Component', () => {
   test('renders mode selector buttons', async () => {
     render(<App />);
     expect(screen.getByText('Analog')).toBeInTheDocument();
-    expect(screen.getByText('Circle')).toBeInTheDocument();
+    expect(screen.getByText('Beat')).toBeInTheDocument();
     expect(screen.getByText('Grid')).toBeInTheDocument();
-    expect(screen.getByText('Multi')).toBeInTheDocument();
+    expect(screen.getByText('Sequence')).toBeInTheDocument();
     expect(screen.getByText('Polyrhythm')).toBeInTheDocument();
   });
 
   test('keeps a visible Tap Tempo label in every mode', () => {
     render(<App />);
 
-    ['Analog', 'Circle', 'Grid', 'Multi', 'Polyrhythm'].forEach((mode) => {
+    ['Analog', 'Beat', 'Grid', 'Sequence', 'Polyrhythm'].forEach((mode) => {
       fireEvent.click(screen.getByRole('button', { name: `${mode} mode` }));
       expect(screen.getByRole('button', { name: 'Tap Tempo' })).toHaveTextContent('Tap Tempo');
     });
   });
 
-  test('keeps transport SVGs visible and paired with their labels in every mode', () => {
+  test('keeps the play icon and text-only Tap Tempo accessible in every mode', () => {
     render(<App />);
 
-    ['Analog', 'Circle', 'Grid', 'Multi', 'Polyrhythm'].forEach((mode) => {
+    ['Analog', 'Beat', 'Grid', 'Sequence', 'Polyrhythm'].forEach((mode) => {
       fireEvent.click(screen.getByRole('button', { name: `${mode} mode` }));
 
       const startButton = screen.getByRole('button', { name: 'Start' });
       const tapButton = screen.getByRole('button', { name: 'Tap Tempo' });
       expect(startButton.querySelector('img')).toHaveAttribute('src', expect.stringContaining('play'));
-      expect(tapButton.querySelector('img')).toHaveAttribute('src', expect.stringContaining('tap'));
+      expect(tapButton.querySelector('img')).toBeNull();
       expect(startButton).toHaveTextContent('Start');
       expect(tapButton).toHaveTextContent('Tap Tempo');
     });
