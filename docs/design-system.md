@@ -2,20 +2,24 @@
 
 This document defines the product-wide visual and interaction system for the
 web and Capacitor applications. The 2026 app icon is the primary reference: a
-precise teal metronome on warm ivory, with gold reserved for timing emphasis.
+precise teal metronome with restrained gold accents. The application canvas is
+white; the icon artwork does not dictate the page background.
+
+Updated September 5, 2026.
 
 ## Design principles
 
 1. **Timing before decoration.** Motion communicates the beat, transport state,
    or a mode transition. Decorative movement, gradients, glass effects, and 3D
    styling are not part of the product language.
-2. **Ivory is the canvas.** The application uses warm ivory for the page and a
-   slightly lighter ivory for control panels. Heavy gray cards are avoided.
+2. **White is the canvas.** Pages and layout surfaces remain white. Layout
+   frames, panel dividers and elevation shadows are avoided; spacing establishes
+   grouping. Small interactive controls may retain subtle outlines or tints.
 3. **Teal operates the instrument.** Teal identifies primary actions, selected
    modes, focus, active tracks, and the first beat.
 4. **Gold marks musical emphasis.** Gold is limited to normal/accented beats,
    first-beat timing emphasis, and exceptional musical states.
-5. **State is never color-only.** Selected controls use borders and
+5. **State is never color-only.** Selected controls use shape, font weight or borders and
    `aria-pressed`; silent, muted, disabled, paused, and training states also use
    text or shape changes.
 6. **Touch is deliberate.** Interactive targets are at least 44 by 44 points.
@@ -28,8 +32,8 @@ The canonical CSS tokens live in `frontend/src/styles/colors.css`.
 
 | Role | Token | Value or behavior |
 | --- | --- | --- |
-| Canvas | `--surface-canvas` | Warm ivory (`#f7f3eb`) |
-| Raised surface | `--surface-raised` | Light ivory (`#fffdf8`) |
+| Canvas | `--surface-canvas` | White (`#ffffff`) |
+| Raised surface | `--surface-raised` | White (`#ffffff`) |
 | Primary instrument | `--primary-teal` | LibreMetronome teal (`#00a0a0`) |
 | Strong interaction | `--primary-teal-dark` | Dark teal (`#008585`) |
 | Timing accent | `--secondary-gold` | Restrained gold (`#f8d38d`) |
@@ -40,12 +44,19 @@ The canonical CSS tokens live in `frontend/src/styles/colors.css`.
 | Control radius | `--radius-control` | 10 pixels |
 
 Spacing follows the `--space-1` through `--space-7` scale (4, 8, 12, 16, 24,
-32, and 48 pixels). Panels use hairline borders rather than elevation shadows.
+32, and 48 pixels). Layout panels have no decorative frames or shadows.
 
 ## Components and states
 
 - Transport is text-first. Every mode displays **Start/Pause** and **Tap Tempo**
   in the same row. Icons are supplemental and hidden from assistive technology.
+- Modes are labeled **Analog**, **Beat**, **Grid**, **Sequence**, and **Polyrhythm**.
+  Internal identifiers remain `analog`, `circle`, `grid`, `multi`, and `polyrhythm`.
+- Sequence selection uses a bold central bar number, without an underline or
+  playback dot. Shared minus/plus buttons remove the selected bar or add a bar;
+  the last remaining bar cannot be removed.
+- Tap Tempo shows a short visual response on pointer contact, before release.
+  Its confirmation click remains enabled; Bluetooth output can delay that sound.
 - Mode selection is a compact toolbar with semantic buttons and
   `aria-pressed` state.
 - Beat and subdivision editing uses semantic buttons. Accessible names include
@@ -60,17 +71,20 @@ Spacing follows the `--space-1` through `--space-7` scale (4, 8, 12, 16, 24,
 
 ## Responsive behavior
 
-- **iPad landscape:** visualization and primary controls use a two-panel
-  performance surface. Start/Pause, Tap Tempo, tempo, volume, and primary mode
-  parameters remain visible without scrolling. Multi and Polyrhythm use their
-  own compact two-column instrument layouts.
-- **iPad portrait and tablet web:** the visualization remains first, followed by
-  the control panel. Transport and tempo are visible near the top of the
-  scrollable surface, with safe-area padding on every edge.
-- **Desktop web:** the same two-panel system expands deliberately; controls do
-  not simply scale with viewport width.
-- **Mobile web:** panels stack, transport buttons share the available width,
-  and mode selection stays compact while preserving touch targets.
+- **iPad landscape:** at widths of at least 1000 pixels, visualization and
+  controls share a two-column layout. Slider widths, order and vertical spacing
+  match across modes. Polyrhythm places Tempo and Volume vertically, aligned
+  with the same controls in other modes. Analog shows Swing as unavailable.
+- **Beat visualization:** its diameter is 80% of the responsive base size, with
+  a 52-pixel margin before the transport row. Touch targets remain generous.
+- **iPad portrait and mobile web:** content stacks in a scrollable surface.
+  Preserve room around the visualization and transport, and do not impose
+  landscape coordinates on narrow screens.
+- **Desktop web:** use the same shared interface; native safe-area and platform
+  behaviors remain conditional. Do not assume the live site already contains
+  changes verified only in a local build.
+- **Sequence:** additional bars wrap and can scroll within the visualization
+  area in landscape. Swing remains available when selecting odd-length bars.
 
 All responsive rules avoid hover-only affordances and respect CSS safe-area
 environment variables. `prefers-reduced-motion` reduces all non-essential

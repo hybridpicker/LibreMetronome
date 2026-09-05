@@ -154,21 +154,20 @@ input[type="reset"] {
   }
 }
 
-/* Specific metronome component accessibility styles */
-.metronome-container {
-  /* Ensure contrast ratio for colors */
-  border: 2px solid var(--border-color, #333);
+/* A strong visualization boundary belongs exclusively to high-contrast mode. */
+body.high-contrast .metronome-container {
+  border: 2px solid var(--border-color);
 }
 
-.play-pause-button,
-.tap-button {
+.play-pause-button:not(.transport-button),
+.tap-button:not(.transport-button) {
   /* Ensure buttons meet WCAG touch target size requirements */
   min-width: 44px;
   min-height: 44px;
 }
 
-.play-pause-button:focus,
-.tap-button:focus {
+.play-pause-button:focus-visible,
+.tap-button:focus-visible {
   outline: 3px solid var(--focus-color, #4d90fe);
   outline-offset: 2px;
 }

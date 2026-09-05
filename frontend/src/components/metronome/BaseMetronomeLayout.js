@@ -76,7 +76,7 @@ export default function BaseMetronomeLayout({
           }}
         >
           <img 
-            src={require('../../assets/svg/tap-button.svg').default} 
+            src={require('../../assets/svg/tap.svg').default}
             alt="Tap Tempo" 
             className="tap-icon"
           />

@@ -121,6 +121,13 @@
   display: flex;
   border-radius: 8px;
   align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.menu-tab .interface-icon {
+  width: 20px;
+  height: 20px;
 }
 
 .menu-tab .tab-label {
@@ -220,6 +227,8 @@
   .menu-tab {
     padding: 8px 3px;
     font-size: 11px;
+    flex-direction: column;
+    gap: 2px;
   }
   
   .menu-tab .tab-icon {
@@ -1101,6 +1110,53 @@
   content: none;
 }
 
+/* Normalize icon-and-label controls after legacy menu declarations. */
+.training-subtab,
+.settings-subtab,
+.preview-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.training-subtab .interface-icon,
+.settings-subtab .interface-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.preview-button img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+.preview-button.first-beat,
+.preview-button.accent-beat,
+.preview-button.normal-beat {
+  color: var(--text-primary);
+  background: var(--surface-raised);
+}
+
+.preview-button.first-beat {
+  border: 1px solid var(--primary-teal);
+}
+
+.preview-button.accent-beat {
+  border: 1px solid var(--secondary-gold-dark);
+}
+
+.preview-button.normal-beat {
+  border: 1px solid var(--secondary-gold-light);
+}
+
+.tip-icon .interface-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--secondary-gold-dark);
+}
+
 .training-overview,
 .settings-group,
 .training-options,
@@ -1156,4 +1212,50 @@
   .menu-tabs {
     background: var(--surface-raised);
   }
+}
+
+/* Align settings with the main instrument's restrained control hierarchy. */
+.menu-modal .settings-group {
+  padding: 20px;
+  text-align: left;
+  background: transparent;
+}
+
+.menu-modal .settings-group h3 {
+  margin: 0 0 16px;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.menu-modal .settings-row label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+}
+
+.menu-modal .settings-row label:has(.settings-slider) {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.menu-modal .settings-slider {
+  height: 44px;
+  background: linear-gradient(var(--line-subtle), var(--line-subtle)) center / 100% 4px no-repeat;
+}
+
+.menu-modal .sound-set-option {
+  min-height: 48px;
+  background: var(--surface-raised);
+}
+
+.menu-modal .sound-set-option:has(input:checked) {
+  border-color: var(--primary-teal-dark);
+  background: var(--surface-selected);
+}
+
+.menu-modal input[type='radio'] {
+  accent-color: var(--primary-teal-dark);
 }

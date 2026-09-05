@@ -4,8 +4,8 @@ import './mainMenu.css';
 // InfoContent removed as it's no longer needed
 import TrainingContent from './TrainingContent';
 import SettingsContent from './SettingsContent';
-import { ReactComponent as MenuIcon } from '../../assets/svg/menu-icon.svg';
 import { SupportPage } from '../Support';
+import InterfaceIcon from '../common/InterfaceIcon';
 
 /**
  * Unified MainMenu Component
@@ -123,12 +123,14 @@ const MainMenu = ({
       {/* Main Menu Button */}
       <button 
         ref={menuButtonRef}
-        className={`menu-button ${isVisible ? 'active' : ''}`}
+        className={`menu-button header-action ${isVisible ? 'active' : ''}`}
         onClick={() => setIsVisible(prev => !prev)}
         aria-label="Main Menu"
+        aria-expanded={isVisible}
+        aria-haspopup="dialog"
         title="Settings (S)"
       >
-        <MenuIcon />
+        <InterfaceIcon name="menu" size={22} />
       </button>
       
       {/* Menu Overlay */}
@@ -143,7 +145,7 @@ const MainMenu = ({
               aria-label="Close Menu"
               title="Close menu (ESC)"
             >
-              ×
+              <InterfaceIcon name="close" size={22} />
             </button>
             
             {/* Tabs */}
@@ -154,6 +156,7 @@ const MainMenu = ({
                 role="tab"
                 aria-selected={activeTab === 'training'}
               >
+                <InterfaceIcon name="training" />
                 <span>Training</span>
               </button>
               <button 
@@ -162,6 +165,7 @@ const MainMenu = ({
                 role="tab"
                 aria-selected={activeTab === 'settings'}
               >
+                <InterfaceIcon name="settings" />
                 <span>Settings</span>
               </button>
               <button 
@@ -170,6 +174,7 @@ const MainMenu = ({
                 role="tab"
                 aria-selected={activeTab === 'support'}
               >
+                <InterfaceIcon name="support" />
                 <span>Support</span>
               </button>
             </div>

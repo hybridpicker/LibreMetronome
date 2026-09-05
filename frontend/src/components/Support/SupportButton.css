@@ -116,11 +116,11 @@
 
 /* Heart icon */
 .support-button .heart-icon {
-  color: #ff3366;
+  color: var(--primary-teal);
   display: inline-block;
   font-size: 18px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  animation: heartbeat 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+  text-shadow: none;
+  animation: none;
   will-change: transform;
   position: relative;
 }
@@ -133,6 +133,10 @@
 
 /* Add a subtle glow effect to the heart */
 .support-button:hover .heart-icon {
-  animation-duration: 1.5s;
-  text-shadow: 0 0 8px rgba(255, 51, 102, 0.6);
+  text-shadow: none;
+}
+
+.support-button .heart-icon .interface-icon {
+  width: 18px;
+  height: 18px;
 }

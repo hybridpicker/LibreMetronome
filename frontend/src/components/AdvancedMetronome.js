@@ -10,7 +10,7 @@ import accentedBeatActive from "../assets/svg/accentedBeatActive.svg";
 
 import playIcon from "../assets/svg/play.svg";
 import pauseIcon from "../assets/svg/pause.svg";
-import tapButtonIcon from "../assets/svg/tap-button.svg";
+import tapButtonIcon from "../assets/svg/tap.svg";
 import TransportButton from "./metronome/Controls/TransportButton";
 
 import AnalogMetronomeCanvas from "./metronome/AnalogMode/AnalogMetronomeCanvas";
@@ -297,11 +297,16 @@ export function AdvancedMetronomeWithCircle({
     const h = window.innerHeight;
     const hasCoarsePointer = window.matchMedia?.('(pointer: coarse)').matches;
     if (w < 600) return Math.min(w - 40, 300);
-    if (hasCoarsePointer || w < 1024) return Math.min(w - 72, h * 0.48, 500);
+    if (hasCoarsePointer) {
+      const portrait = window.matchMedia?.('(orientation: portrait)').matches;
+      return Math.min(w - 72, h * (portrait ? 0.34 : 0.43), portrait ? 430 : 440);
+    }
+    if (w < 1024) return Math.min(w - 72, h * 0.44, 400);
     return Math.min(w * 0.30, h * 0.48, 400);
   };
 
-  const [containerSize, setContainerSize] = useState(getContainerSize());
+  const [baseContainerSize, setContainerSize] = useState(getContainerSize());
+  const containerSize = baseContainerSize * (analogMode ? 1 : 0.8);
   useEffect(() => {
     const handleResize = () => setContainerSize(getContainerSize());
     window.addEventListener("resize", handleResize);
@@ -341,14 +346,14 @@ export function AdvancedMetronomeWithCircle({
           style={{
             width: dist,
             height: 1,
-            backgroundColor: "#00A0A0",
+            backgroundColor: "var(--primary-teal)",
             position: "absolute",
             pointerEvents: "none",
             left: `calc(50% + ${mx}px - ${dist / 2}px)`,
             top: `calc(50% + ${my}px)`,
             transform: `rotate(${angleDeg}deg)`,
             transformOrigin: "center center",
-            boxShadow: "0 0 3px rgba(0,160,160,0.6)",
+            boxShadow: "none",
             transition: "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)"
           }}
         />
@@ -536,7 +541,7 @@ export function AdvancedMetronomeWithCircle({
   const beatStateLabels = ["Muted", "Normal", "Accent", "First beat"];
 
   return (
-    <div style={{ position: "relative", textAlign: "center" }}>
+    <div className={analogMode ? "analog-visual" : "beat-visual"} style={{ position: "relative", textAlign: "center" }}>
       <div
         className="metronome-container"
         style={{
@@ -633,6 +638,7 @@ export function AdvancedMetronomeWithCircle({
           kind="tap"
           icon={tapButtonIcon}
           label="Tap Tempo"
+          feedbackVolume={volume}
           className="tap-button"
           onClick={() => {
           console.log("[AdvancedMetronome] Tap button clicked");
@@ -663,26 +669,16 @@ export function AdvancedMetronomeWithCircle({
       </div>
 
       {!analogMode && (
-        <div
-          style={{
-            marginTop: "15px",
-            display: "flex",
-            justifyContent: "center",
-            gap: "15px",
-            flexWrap: "wrap",
-            fontSize: "12px",
-            color: "#666"
-          }}
-        >
+        <div className="beat-state-legend" style={{ marginTop: "15px" }}>
           <div style={{ display: "flex", alignItems: "center" }}>
             <div
               style={{
                 width: "12px",
                 height: "12px",
-                backgroundColor: "#e8e8e8",
+                backgroundColor: "var(--beat-muted)",
                 borderRadius: "50%",
                 marginRight: "5px",
-                border: "1px solid #ddd"
+                border: "1px solid var(--line-subtle)"
               }}
             ></div>
             Mute
@@ -692,10 +688,10 @@ export function AdvancedMetronomeWithCircle({
               style={{
                 width: "12px",
                 height: "12px",
-                backgroundColor: "#fce9c6",
+                backgroundColor: "var(--beat-normal)",
                 borderRadius: "50%",
                 marginRight: "5px",
-                border: "1px solid #ddd"
+                border: "1px solid var(--line-subtle)"
               }}
             ></div>
             Normal Beat
@@ -705,10 +701,10 @@ export function AdvancedMetronomeWithCircle({
               style={{
                 width: "12px",
                 height: "12px",
-                backgroundColor: "#f6cc7c",
+                backgroundColor: "var(--beat-accent)",
                 borderRadius: "50%",
                 marginRight: "5px",
-                border: "1px solid #ddd"
+                border: "1px solid var(--line-subtle)"
               }}
             ></div>
             Accent
@@ -718,10 +714,10 @@ export function AdvancedMetronomeWithCircle({
               style={{
                 width: "12px",
                 height: "12px",
-                backgroundColor: "#00a0a0",
+                backgroundColor: "var(--beat-first)",
                 borderRadius: "50%",
                 marginRight: "5px",
-                border: "1px solid #ddd"
+                border: "1px solid var(--line-subtle)"
               }}
             ></div>
             First Beat

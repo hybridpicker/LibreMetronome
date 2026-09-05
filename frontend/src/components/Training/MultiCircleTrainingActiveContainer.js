@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import './TrainingActiveContainer.css'; // Reuse the same CSS
 import useWindowDimensions from '../../hooks/useWindowDimensions';
+import InterfaceIcon from '../common/InterfaceIcon';
 
 /**
  * A specialized version of TrainingActiveContainer for Multi Circle Mode
@@ -189,7 +190,7 @@ const MultiCircleTrainingActiveContainer = ({
           
           {isSilencePhase ? (
             <div className="training-active-status-box silent">
-              <div className="status-icon">🔇</div>
+              <div className="status-icon"><InterfaceIcon name="silence" /></div>
               <div className="status-info">
                 <span className="status-label">Silent Phase</span>
                 <div className="progress-container">
@@ -209,7 +210,7 @@ const MultiCircleTrainingActiveContainer = ({
             </div>
           ) : (
             <div className="training-active-status-box playing">
-              <div className="status-icon">🔊</div>
+              <div className="status-icon"><InterfaceIcon name="sound" /></div>
               <div className="status-info">
                 <span className="status-label">Playing Phase</span>
                 <div className="progress-container">
@@ -242,7 +243,7 @@ const MultiCircleTrainingActiveContainer = ({
           </div>
           
           <div className="training-active-status-box speed">
-            <div className="status-icon">⏱️</div>
+            <div className="status-icon"><InterfaceIcon name="timer" /></div>
             <div className="status-info">
               {speedMode === 1 ? (
                 <>
@@ -277,7 +278,7 @@ const MultiCircleTrainingActiveContainer = ({
       )}
       
       <div className="training-active-tip">
-        <span className="tip-icon">💡</span>
+        <span className="tip-icon"><InterfaceIcon name="tip" /></span>
         <div>
           <span className="tip-title">Multi-Circle Tip</span>
           <span className="tip-text">{getCurrentTip()}</span>

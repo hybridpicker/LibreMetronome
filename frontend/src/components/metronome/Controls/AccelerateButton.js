@@ -1,6 +1,7 @@
 // src/components/metronome/Controls/AccelerateButton.js
 import React from 'react';
 import './AccelerateButton.css';
+import InterfaceIcon from '../../common/InterfaceIcon';
 
 /**
  * AccelerateButton component displays a button that allows manual tempo acceleration
@@ -29,7 +30,8 @@ const AccelerateButton = ({ onClick, speedMode }) => {
         title={`Increase tempo by max 10 BPM (up to 180 BPM max) in ${modeText} Speed Training Mode`}
         aria-label={`Accelerate tempo in ${modeText} Speed Training Mode`}
       >
-        Accelerate +10 BPM
+        <InterfaceIcon name="speed" size={20} />
+        <span>Accelerate +10 BPM</span>
       </button>
     </div>
   );
