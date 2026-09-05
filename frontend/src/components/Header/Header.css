@@ -31,3 +31,9 @@
     width: 188px;
   }
 }
+
+@media (max-width: 480px) {
+  .app-container .header {
+    padding-top: 52px;
+  }
+}

@@ -565,9 +565,7 @@ export default function useMetronomeLogic({
   useEffect(() => {
     return () => {
       stopScheduler();
-      if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
-        audioCtxRef.current.close().catch(console.error);
-      }
+      // Preserve the shared, user-unlocked context for the next mode.
     };
   }, [audioCtxRef, stopScheduler]);
 

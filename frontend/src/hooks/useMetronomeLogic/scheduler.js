@@ -232,7 +232,11 @@ export function runScheduler({
     if (!schedulerRunningRef.current) break;
     const subIndex = currentSubRef.current;
 
-    scheduleSubFn(subIndex, nextNoteTimeRef.current, nodeRefs);
+    // Keep the musical phase after a stalled UI thread, but never collapse
+    // missed clicks into a burst at the current time.
+    if (nextNoteTimeRef.current >= now) {
+      scheduleSubFn(subIndex, nextNoteTimeRef.current, nodeRefs);
+    }
 
     // Next subdivision
     const intervalSec = getCurrentSubIntervalSec(subIndex);
@@ -242,7 +246,7 @@ export function runScheduler({
     // If we've hit the start of a new measure
     if (currentSubRef.current === 0) {
       handleMeasureBoundary();
-      scheduleAtAudioTime({
+      if (nextNoteTimeRef.current >= now) scheduleAtAudioTime({
         audioCtx,
         when: nextNoteTimeRef.current,
         nodeRefs,

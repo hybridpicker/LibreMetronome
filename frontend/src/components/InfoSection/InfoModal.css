@@ -125,6 +125,15 @@
   position: relative;
   font-weight: 500;
   flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.info-modal-tab .interface-icon {
+  width: 19px;
+  height: 19px;
 }
 
 .info-modal-tab:hover {
@@ -174,7 +183,7 @@
 
 .info-modal-panel h3 {
   font-size: 1.2rem;
-  color: var(--secondary-gold-dark);
+  color: var(--text-secondary);
   margin: 1.2rem 0 0.7rem;
   font-weight: 600;
 }
@@ -225,7 +234,7 @@
 
 .info-step h3 {
   font-size: 1.1rem;
-  color: var(--secondary-gold-dark);
+  color: var(--text-secondary);
   margin: 0 0 0.4rem;
   font-weight: 600;
 }
@@ -249,6 +258,12 @@
 .info-tip-icon {
   font-size: 1.2rem;
   margin-right: 0.8rem;
+}
+
+.info-tip-icon .interface-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--text-secondary);
 }
 
 .info-tip p {
@@ -365,7 +380,7 @@
 
 .info-feature h3 {
   font-size: 1.1rem;
-  color: var(--secondary-gold-dark);
+  color: var(--text-secondary);
   margin: 0 0 0.6rem;
   font-weight: 600;
 }

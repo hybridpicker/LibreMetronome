@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './InfoModal.css';
 import packageJson from '../../../package.json';
+import InterfaceIcon from '../common/InterfaceIcon';
 
 const InfoModal = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState('about');
@@ -51,7 +52,7 @@ const InfoModal = ({ isOpen, onClose }) => {
         aria-label="Close guide"
         title="Close guide (ESC)"
       >
-        ×
+        <InterfaceIcon name="close" size={24} />
       </button>
       
       <div className="info-modal" ref={modalRef} role="dialog" aria-modal="true" aria-labelledby="info-modal-title">
@@ -64,6 +65,7 @@ const InfoModal = ({ isOpen, onClose }) => {
               role="tab"
               aria-selected={activeTab === 'about'}
             >
+              <InterfaceIcon name="info" />
               About
             </button>
             <button 
@@ -72,6 +74,7 @@ const InfoModal = ({ isOpen, onClose }) => {
               role="tab"
               aria-selected={activeTab === 'usage'}
             >
+              <InterfaceIcon name="usage" />
               How to Use
             </button>
             <button 
@@ -80,6 +83,7 @@ const InfoModal = ({ isOpen, onClose }) => {
               role="tab"
               aria-selected={activeTab === 'features'}
             >
+              <InterfaceIcon name="features" />
               Features
             </button>
             <button 
@@ -88,6 +92,7 @@ const InfoModal = ({ isOpen, onClose }) => {
               role="tab"
               aria-selected={activeTab === 'shortcuts'}
             >
+              <InterfaceIcon name="shortcuts" />
               Shortcuts
             </button>
           </div>
@@ -161,7 +166,7 @@ const InfoModal = ({ isOpen, onClose }) => {
             </div>
             
             <div className="info-tip">
-              <span className="info-tip-icon">💡</span>
+              <span className="info-tip-icon"><InterfaceIcon name="tip" /></span>
               <p>Press spacebar to start/stop. Use up/down arrow keys to adjust tempo by 5 BPM.</p>
             </div>
           </div>
@@ -182,7 +187,7 @@ const InfoModal = ({ isOpen, onClose }) => {
               
               <div className="info-feature">
                 <h3>Visual Modes</h3>
-                <p>Choose from Circle, Analog, Grid, Multi-Circle or Polyrhythm modes</p>
+                <p>Choose from Beat, Analog, Grid, Sequence or Polyrhythm modes</p>
               </div>
               
               <div className="info-feature">
@@ -211,9 +216,9 @@ const InfoModal = ({ isOpen, onClose }) => {
               <li><span className="key">1–9</span> Set Beats per Bar</li>
               <li><span className="key">↑↓</span> Increase/decrease tempo by 5 BPM</li>
               <li><span className="key">A</span> Switch to Analog/Pendulum mode</li>
-              <li><span className="key">C</span> Switch to Circle mode</li>
+              <li><span className="key">C</span> Switch to Beat mode</li>
               <li><span className="key">G</span> Switch to Grid mode</li>
-              <li><span className="key">M</span> Switch to Multi Circle mode</li>
+              <li><span className="key">M</span> Switch to Sequence mode</li>
               <li><span className="key">Y</span> Switch to Polyrhythm mode</li>
               <li><span className="key">I</span> Open this Guide</li>
               <li><span className="key">R</span> Show Training menu</li>

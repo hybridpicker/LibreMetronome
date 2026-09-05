@@ -1,6 +1,5 @@
 // src/components/metronome/Controls/SubdivisionSelector.js
 import React from 'react';
-import { subdivisionIcons } from '../../../assets/svg/subdivisionIcons';
 import './SubdivisionSelector.css';
 
 /**
@@ -16,10 +15,6 @@ const SubdivisionSelector = ({ subdivisions, onSelect, hideOptions = false, styl
       {Array.from({ length: 9 }, (_, idx) => {
         const subVal = idx + 1;
         const isActive = subVal === subdivisions;
-        const icon = isActive 
-          ? subdivisionIcons[`subdivision${subVal}Active`] 
-          : subdivisionIcons[`subdivision${subVal}`];
-        
         return (
           <button
             type="button"
@@ -29,12 +24,7 @@ const SubdivisionSelector = ({ subdivisions, onSelect, hideOptions = false, styl
             aria-label={`${subVal} ${subVal === 1 ? 'beat' : 'beats'} per bar`}
             aria-pressed={isActive}
           >
-            <img
-              src={icon}
-              alt=""
-              aria-hidden="true"
-              className="subdivision-button"
-            />
+            <span className="beat-choice-number" aria-hidden="true">{subVal}</span>
           </button>
         );
       })}

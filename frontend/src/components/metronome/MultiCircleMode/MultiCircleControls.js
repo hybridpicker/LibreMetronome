@@ -117,7 +117,7 @@ const MultiCircleControls = ({
           parser={(val) => parseFloat(val.replace(/[^0-9.]/g, '')) / 100}
         />
         
-        {currentSettings.subdivisions % 2 === 0 && (
+        {(
           <EditableSliderInput
             label="Swing"
             value={swing}

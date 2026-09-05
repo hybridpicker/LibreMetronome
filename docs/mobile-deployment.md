@@ -1,55 +1,68 @@
 # Mobile Deployment
 
-## Current Status
+## Current Status — September 5, 2026
 
-LibreMetronome has Capacitor 8 projects for iOS and Android. Both native apps
-share the React application and Web Audio implementation in `frontend/`.
+Web and Capacitor iPad builds share the React application in `frontend/`.
+The latest signed Debug build was installed and launched on the connected
+13-inch iPad Air (M2). It includes the white interface, shared landscape slider
+positions, smaller Beat visualization, ordered Sequence playback, bold selected
+bar numbers, and Tap Tempo registration on pointer contact.
 
-- The web application and automated tests pass locally.
-- The iOS app builds for simulator and physical devices.
-- The Android debug app builds with JDK 21.
-- Louder normalized click samples are included in the mobile and web bundles.
-- The iOS app configures a playback audio session and a low-latency I/O buffer.
-- The default clicks are onset-trimmed, mono 48 kHz PCM WAV files, avoiding MP3
-  decoder delay in the timing-critical fallback path.
-- Every mode reuses the same user-unlocked AudioContext on iOS, including
-  recovery from WebKit's interrupted state. A deterministic procedural click
-  remains available if a bundled or custom sample cannot be decoded.
-- Audio is scheduled 100 ms ahead on the Web Audio clock; display events are
-  deferred to the audible output time instead of firing when JavaScript merely
-  queues the beat.
-- The iPad landscape layout keeps the visualization, transport, tap tempo, and
-  primary controls on one performance surface.
-- The native iOS asset catalog contains a dedicated opaque 1024 px
-  LibreMetronome icon designed for iOS masking.
-- On August 26, 2026, the signed Debug build was installed and launched on the
-  connected 13-inch iPad Air (iPadOS 26.6). The running device UI was captured
-  through Xcode and visually verified.
+The matching production web build succeeds locally. It has not been deployed
+to libremetronome.com. Server deployment belongs in an AlmaLinux Codex session;
+see [the release plan](release-plan.md).
 
-## iPad Installation
+Android and simulator builds were verified in earlier work, but were not
+rebuilt during the latest iPad layout changes.
 
-The July 31, 2026 installation blocker is resolved. The previously protected
-Wedding controller is no longer installed, and the Personal Team now has a
-free-provisioning slot for LibreMetronome. Home Media and Nex Note were left
-installed.
+## Provisioning and Distribution
 
-The app uses free provisioning for direct development-device installation.
-These profiles expire regularly and do not provide TestFlight or App Store
-distribution, so rebuild and reinstall the app when the development profile
-expires. No Apple account, team identifier, device identifier, certificate, or
-provisioning profile is stored in this repository.
+The app currently uses free Personal Team provisioning for development-device
+installation. The user confirmed that Apple Developer Program enrollment is
+not yet active. TestFlight and App Store distribution remain pending.
 
-## Timing Verification Scope
+Development profiles expire; rebuild and reinstall when necessary. Successful
+installation on the development iPad does not establish distribution readiness.
+A free public app is under consideration, and pricing is not finalized.
+Keep account credentials, signing keys and provisioning profiles out of Git.
 
-Automated tests verify audio-clock scheduling, output-latency-compensated UI
-delivery, cancellation of queued display beats, and audio-timeline BPM
-measurement. The full React suite currently contains 163 passing tests. The
-production web build and signed arm64 device build both complete successfully.
+## Signing Incident
 
-This verifies deterministic scheduling in software. It does not replace an
-external microphone or wired loopback measurement of the iPad speaker/output,
-which is required to quantify the final digital-to-analog and transducer
-latency of a particular hardware route.
+On September 5, code signing failed with `errSecInternalComponent` in both
+Xcode and command-line builds. The certificate appeared valid and the login
+keychain reported itself unlocked, but securityd logged
+`CSSMERR_CSP_INVALID_DATA` while decoding keychain data. An independent signing
+probe failed as well, isolating the issue from application code.
+
+An encrypted local keychain backup was preserved. After the user restarted the
+Mac and signed in again, the same build succeeded, followed by successful iPad
+installation and launch. No certificate replacement or keychain reset was
+needed. This is the observed resolution of this incident, not a universal fix
+for every signing error.
+
+## Verification Scope
+
+Recent targeted checks passed:
+
+- Sequence scheduling and lifecycle, collection, beat mode, precision, audio
+  unlock and polyrhythm lifecycle: 7 suites, 28 tests at that change stage.
+- Tap feedback and Swing visibility: 3 suites, 6 tests at that change stage.
+- Latest layout stage: collection, beat mode and Swing visibility, 3 suites,
+  8 tests; production web build and signed iPad Debug build successful.
+
+These are separate targeted runs, not a current full-suite total. Browser
+inspection verified matching landscape slider coordinates and the smaller
+Beat layout. The latest device install and process launch were confirmed;
+this does not constitute an external measurement of audible timing.
+
+Audio scheduling remains on the Web Audio clock. Every mode reuses the shared
+unlocked context. Sequence schedules complete bars before advancing. Tap Tempo
+responds on contact rather than release, but its confirmation sound still
+passes through the selected output route. Bluetooth latency remains possible;
+no zero-latency Bluetooth feedback is claimed.
+
+External microphone or wired loopback measurements are still needed to quantify
+speaker/output timing on a particular device and route.
 
 ## Build and Sync
 

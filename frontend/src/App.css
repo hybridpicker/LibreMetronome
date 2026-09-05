@@ -170,7 +170,7 @@ html.capacitor-native .footer {
   position: absolute;
   pointer-events: none;
   transform-origin: center center;
-  box-shadow: 0 0 3px rgba(0, 160, 160, 0.6);
+  box-shadow: none;
   transition: all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
@@ -271,6 +271,102 @@ input[type="range"] {
   }
 }
 
+/* Intentional tablet compositions. Portrait stays compact; landscape keeps
+   the complete performance surface above the fold. */
+@media (min-width: 768px) and (orientation: portrait) {
+  .header {
+    padding-block: var(--space-2) var(--space-1);
+  }
+
+  .header-logo {
+    width: 208px;
+  }
+
+  .mode-selector-container {
+    margin: var(--space-1) 0 var(--space-3);
+  }
+
+  .practice-workspace {
+    max-width: 920px;
+    gap: var(--space-3);
+  }
+
+  .metronome-stage {
+    padding: var(--space-3);
+  }
+
+  .practice-controls {
+    padding: var(--space-4);
+  }
+
+  .practice-controls > div {
+    padding-bottom: var(--space-3);
+    margin-bottom: var(--space-3) !important;
+  }
+}
+
+@media (min-width: 1000px) and (orientation: landscape) {
+  .app-container {
+    padding-top: max(var(--space-2), env(safe-area-inset-top));
+  }
+
+  .header {
+    padding: 0 var(--space-5) var(--space-1);
+  }
+
+  .header-logo {
+    width: 184px;
+  }
+
+  .header-kicker {
+    font-size: 0.62rem;
+  }
+
+  .mode-selector-container {
+    margin: 0 0 var(--space-2);
+  }
+
+  .mode-option {
+    min-height: 56px;
+    height: 56px;
+  }
+
+  .mode-icon-container {
+    width: 32px;
+    height: 32px;
+  }
+
+  .mode-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .practice-workspace:not(.mode-multi):not(.mode-polyrhythm) {
+    grid-template-columns: minmax(450px, 1.18fr) minmax(340px, 0.82fr);
+    gap: var(--space-4);
+  }
+
+  .practice-workspace:not(.mode-multi):not(.mode-polyrhythm) .metronome-stage,
+  .practice-workspace:not(.mode-multi):not(.mode-polyrhythm) .practice-controls {
+    min-height: 0;
+    height: calc(100dvh - 174px);
+    max-height: 680px;
+  }
+
+  .practice-workspace:not(.mode-multi):not(.mode-polyrhythm) .metronome-stage {
+    padding: var(--space-3);
+  }
+
+  .practice-workspace:not(.mode-multi):not(.mode-polyrhythm) .practice-controls {
+    padding: var(--space-4);
+  }
+
+  .practice-controls > div {
+    padding-bottom: var(--space-3);
+    margin-bottom: var(--space-3) !important;
+  }
+}
+
 /* Mode styles historically declared transparent icon buttons. These final
    selectors keep the shared text-first transport visually authoritative. */
 .app-container .transport-button.transport-play {
@@ -287,8 +383,16 @@ input[type="range"] {
 
 .app-container .transport-button.transport-tap {
   color: var(--primary-teal-dark) !important;
-  background: var(--surface-raised) !important;
-  border: 2px solid var(--primary-teal) !important;
+  background: var(--teal-wash) !important;
+  border: 1px solid transparent !important;
+  font-weight: 600;
+}
+
+.app-container .transport-button {
+  height: 52px;
+  min-height: 52px;
+  padding: 10px 18px;
+  font-size: var(--text-md);
 }
 
 /* Tablet adjustments (between 601px and 1024px) */
@@ -620,6 +724,8 @@ button {
 .metronome-container {
   background: transparent;
   border: 0;
+  max-width: none;
+  max-height: none;
   overflow: visible;
 }
 
@@ -679,5 +785,230 @@ button {
   .practice-controls {
     border-radius: 14px;
     padding: var(--space-3);
+  }
+}
+
+/* Quiet control surfaces: readable values and generous touch targets. */
+.app-container .slider-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 8px 2px;
+  background: transparent;
+  text-align: left;
+}
+
+.slider-label-name {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.slider-label-value {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: var(--text-md);
+}
+
+.tempo-slider .slider-label-value {
+  font-size: var(--text-md);
+  letter-spacing: normal;
+}
+
+.app-container .editable-slider {
+  margin-bottom: 8px;
+}
+
+.app-container .subdivision-choice,
+.app-container .polyrhythm-choice {
+  border: 1px solid var(--line-subtle);
+  border-radius: 10px;
+  background: var(--surface-raised);
+  box-shadow: none;
+  color: var(--text-secondary);
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.beat-choice-number {
+  font-size: 1.125rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.app-container .subdivision-choice[aria-pressed='true'],
+.app-container .polyrhythm-choice[aria-pressed='true'] {
+  background: var(--primary-teal-dark);
+  border-color: var(--primary-teal-dark);
+  color: var(--text-light);
+}
+
+.app-container .polyrhythm-ratio {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.app-container .ratio-number {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.app-container .circle-badge {
+  box-shadow: none;
+  border-radius: 6px;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.app-container .footer {
+  max-width: 1180px;
+  margin: 24px auto 0;
+  padding: 12px 32px;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+}
+
+.app-container .separator {
+  border-color: var(--line-subtle);
+}
+
+@media (hover: hover) {
+  .app-container .slider-label:not(:disabled):hover {
+    background: var(--teal-wash);
+  }
+  .app-container .subdivision-choice:not([aria-pressed='true']):hover,
+  .app-container .polyrhythm-choice:not([aria-pressed='true']):hover {
+    background: var(--surface-selected);
+  }
+}
+
+@media (min-width: 1000px) and (orientation: landscape) {
+  .app-container .practice-controls {
+    padding-inline: 28px;
+  }
+}
+
+/* White, open layout; spacing provides the structure between controls. */
+.app-container .metronome-stage,
+.app-container .practice-controls,
+.app-container .multi-mode-shell > .multi-controls-panel,
+.app-container .polyrhythm-mode-shell > .polyrhythm-controls,
+.app-container .mode-selector,
+.app-container .instrument-panel {
+  border: 0;
+  box-shadow: none;
+  background: var(--surface-canvas);
+}
+
+.app-container .practice-controls > div,
+.app-container .multi-controls-panel .control-group {
+  border-bottom: 0;
+}
+
+.app-container .separator {
+  border: 0;
+}
+
+.app-container .settings-group,
+.app-container .training-options,
+.app-container .training-overview {
+  border: 0;
+  box-shadow: none;
+  background: var(--surface-raised);
+}
+
+/* Shared control coordinates keep mode changes predictable on iPad. */
+.app-container .beat-visual > .transport-row {
+  margin-top: 52px;
+}
+
+@media (min-width: 1000px) and (orientation: landscape) {
+  .app-container .practice-workspace:not(.mode-multi):not(.mode-polyrhythm),
+  .app-container .multi-mode-shell,
+  .app-container .polyrhythm-mode-shell {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+    column-gap: 32px;
+  }
+
+  .app-container .practice-workspace.mode-multi > .metronome-stage,
+  .app-container .practice-workspace.mode-polyrhythm > .metronome-stage {
+    padding: 0;
+  }
+
+  .app-container .practice-workspace:not(.mode-multi):not(.mode-polyrhythm) .practice-controls,
+  .app-container .multi-mode-shell > .multi-controls-panel {
+    display: grid;
+    grid-template-rows: 112px 164px auto;
+    align-content: start;
+    justify-content: stretch;
+    align-self: start;
+    padding: 16px;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+  }
+
+  .app-container .practice-controls > .control-group,
+  .app-container .multi-controls-panel > .control-group {
+    margin: 0 !important;
+    padding: 0;
+  }
+
+  .app-container .practice-controls > .sliders-container,
+  .app-container .multi-controls-panel > .sliders-container {
+    grid-row: 3;
+    width: 100%;
+    max-width: none;
+    margin: 0 !important;
+  }
+
+  .app-container .polyrhythm-mode-shell {
+    grid-template-rows: 220px 72px auto auto;
+    grid-template-areas: "visual choices" "visual ratio" "transport sliders" "legend sliders";
+    align-items: start;
+  }
+
+  .app-container .polyrhythm-mode-shell > .polyrhythm-controls {
+    padding: 16px;
+  }
+
+  .app-container .polyrhythm-mode-shell > .sliders-container {
+    display: block;
+    width: auto;
+    max-width: none;
+    margin: 0 16px !important;
+  }
+
+  .app-container .sliders-container .editable-slider {
+    margin: 0 0 20px;
+    min-height: 88px;
+  }
+}
+
+@media (min-width: 1000px) and (orientation: landscape) {
+  .app-container .practice-workspace:is(.mode-analog, .mode-circle, .mode-grid, .mode-multi, .mode-polyrhythm) {
+    width: 100%;
+    max-width: 1180px;
+  }
+
+  .app-container .sliders-container .editable-slider {
+    box-sizing: border-box;
+    min-height: 112px;
+  }
+
+  .app-container .polyrhythm-mode-shell > .polyrhythm-transport-row {
+    margin-top: 40px;
+  }
+}
+
+@media (min-width: 1000px) and (orientation: landscape) {
+  .app-container .practice-workspace .sliders-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
   }
 }

@@ -18,8 +18,8 @@
   --secondary-gold-ultra-light: #FFF8E6; /* Very light gold for subtle backgrounds */
 
   /* Neutral Colors */
-  --neutral-bg: #f7f3eb;         /* Warm ivory canvas from the app icon */
-  --neutral-bg-alt: #fffdf8;     /* Quiet raised instrument surface */
+  --neutral-bg: #ffffff;         /* White app canvas */
+  --neutral-bg-alt: #ffffff;     /* White control and dialog surfaces */
   --neutral-border: #d7d7ca;     /* Low-contrast instrument rule */
   --neutral-border-light: #e9e5db; /* Subtle dividers on ivory */
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './InfoOverlay.css';
+import InterfaceIcon from '../../common/InterfaceIcon';
 
 // Updated Modal with responsive content for mobile and desktop
 const InfoModal = ({ onClose }) => {
@@ -34,7 +35,7 @@ const InfoModal = ({ onClose }) => {
           onClick={onClose} 
           aria-label="Close Info Overlay"
         >
-          &times;
+          <InterfaceIcon name="close" />
         </button>
         
         {isMobile ? (

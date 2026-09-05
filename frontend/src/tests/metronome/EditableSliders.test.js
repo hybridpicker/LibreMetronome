@@ -175,7 +175,7 @@ describe('EditableSliderInput Component', () => {
       />
     );
     
-    expect(screen.getByText('Test: 50 Units')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Edit Test' })).toBeInTheDocument();
   });
   
   // Fix the test for editing
@@ -196,7 +196,7 @@ describe('EditableSliderInput Component', () => {
     );
     
     // Click on the label to enter edit mode
-    fireEvent.click(screen.getByText('Test: 50 Units'));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Test' }));
     
     // Check if the input field appears
     const input = screen.getByTestId('editable-input');
@@ -229,7 +229,7 @@ describe('EditableSliderInput Component', () => {
     );
     
     // Click on the label to enter edit mode
-    fireEvent.click(screen.getByText('Test: 50 Units'));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Test' }));
     
     // Change the value to something above max
     const input = screen.getByTestId('editable-input');
@@ -344,7 +344,7 @@ describe('Editable Slider Edge Cases', () => {
     );
     
     // Click on the label to enter edit mode
-    fireEvent.click(screen.getByText('Test: 50 Units'));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Test' }));
     
     // Enter non-numeric input
     const input = screen.getByTestId('editable-input');
@@ -358,7 +358,7 @@ describe('Editable Slider Edge Cases', () => {
     
     // Should revert to original value
     await waitFor(() => {
-      expect(screen.getByText('Test: 50 Units')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Edit Test' })).toBeInTheDocument();
     });
   });
   
@@ -379,7 +379,7 @@ describe('Editable Slider Edge Cases', () => {
     );
     
     // Click on the label to enter edit mode
-    fireEvent.click(screen.getByText('Test: 50 Units'));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Test' }));
     
     // Clear the input and don't enter anything
     const input = screen.getByTestId('editable-input');
@@ -393,7 +393,7 @@ describe('Editable Slider Edge Cases', () => {
     
     // Should revert to original value
     await waitFor(() => {
-      expect(screen.getByText('Test: 50 Units')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Edit Test' })).toBeInTheDocument();
     });
   });
   
@@ -414,7 +414,7 @@ describe('Editable Slider Edge Cases', () => {
     );
     
     // Click on the label to enter edit mode
-    fireEvent.click(screen.getByText('Test: 50 Units'));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Test' }));
     
     // Change the value but then press Escape
     const input = screen.getByTestId('editable-input');
@@ -428,7 +428,7 @@ describe('Editable Slider Edge Cases', () => {
     
     // Should revert to original value
     await waitFor(() => {
-      expect(screen.getByText('Test: 50 Units')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Edit Test' })).toBeInTheDocument();
     });
   });
 });

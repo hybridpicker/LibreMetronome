@@ -4,19 +4,19 @@ const config: CapacitorConfig = {
   appId: 'com.hybridpicker.libremetronome',
   appName: 'LibreMetronome',
   webDir: 'build',
-  backgroundColor: '#f7f3eb',
+  backgroundColor: '#ffffff',
   ios: {
     contentInset: 'always',
     preferredContentMode: 'mobile',
   },
   android: {
-    backgroundColor: '#f7f3eb',
+    backgroundColor: '#ffffff',
   },
   plugins: {
     StatusBar: {
       overlaysWebView: true,
       style: 'LIGHT',
-      backgroundColor: '#f7f3eb',
+      backgroundColor: '#ffffff',
     },
   },
 };
