@@ -299,3 +299,63 @@ body.reduced-motion *::after {
   scroll-behavior: auto !important;
   transition-duration: 0.01ms !important;
 }
+
+/* Matched, quiet utility controls in the safe area of the app header. */
+.app-container .header-action {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 14px;
+  box-shadow: none;
+  transform: none;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+body:not(.high-contrast) .app-container .header-action {
+  color: var(--text-secondary);
+  background: var(--surface-raised);
+  border: 1px solid var(--line-subtle);
+}
+
+.app-container .header-action svg {
+  width: 22px;
+  height: 22px;
+  color: inherit;
+  stroke-width: 1.7;
+}
+
+.app-container .menu-button.header-action {
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+}
+
+.app-container .accessibility-container {
+  top: max(12px, env(safe-area-inset-top));
+  right: calc(max(12px, env(safe-area-inset-right)) + 56px);
+}
+
+body:not(.high-contrast) .app-container .header-action[aria-expanded='true'],
+body:not(.high-contrast) .app-container .header-action:active {
+  color: var(--primary-teal-dark);
+  background: var(--surface-selected);
+  border-color: var(--primary-teal);
+}
+
+.app-container .header-action:focus:not(:focus-visible) {
+  outline: none;
+  box-shadow: none;
+}
+
+.app-container .header-action:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+  box-shadow: none;
+}
+
+@media (hover: hover) {
+  body:not(.high-contrast) .app-container .header-action:hover {
+    color: var(--primary-teal-dark);
+    background: var(--surface-selected);
+    border-color: var(--primary-teal-light);
+  }
+}

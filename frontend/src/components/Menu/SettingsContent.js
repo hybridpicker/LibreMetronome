@@ -334,7 +334,7 @@ const SettingsContent = ({
             <label>
               <span>Current Mode:</span>
               <span className="settings-value">
-                {currentMode.charAt(0).toUpperCase() + currentMode.slice(1)} Mode
+                {({ circle: 'Beat', multi: 'Sequence' }[currentMode] || currentMode.charAt(0).toUpperCase() + currentMode.slice(1))} Mode
               </span>
             </label>
           </div>

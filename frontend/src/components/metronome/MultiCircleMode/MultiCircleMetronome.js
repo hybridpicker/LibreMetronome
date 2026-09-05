@@ -15,46 +15,6 @@ import TransportButton from '../Controls/TransportButton';
 import AccelerateButton from "../Controls/AccelerateButton";
 import { manualTempoAcceleration } from "../../../hooks/useMetronomeLogic/trainingLogic";
 
-const MAX_CIRCLES = 2;
-
-const AddCircleButton = ({ addCircle, containerSize, isMobile }) => (
-  <button
-    type="button"
-    onClick={addCircle}
-    className="add-circle-button"
-    aria-label="Add rhythm circle"
-    style={{
-      position: "relative",
-      width: containerSize,
-      height: containerSize,
-      margin: isMobile ? "15px 0" : "15px",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      cursor: "pointer",
-      transition: "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)"
-    }}
-  >
-    <div
-      className="plus-button"
-      style={{
-        width: "60px",
-        height: "60px",
-        borderRadius: "50%",
-        backgroundColor: "#00A0A0",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        color: "#fff",
-        fontSize: "36px",
-        fontWeight: "bold",
-        boxShadow: "0 0 8px rgba(0, 160, 160, 0.5)"
-      }}
-    >
-      <InterfaceIcon name="add" size={30} />
-    </div>
-  </button>
-);
 
 function MultiCircleMetronome(props) {
   const {
@@ -119,7 +79,7 @@ function MultiCircleMetronome(props) {
   const getContainerSize = () => {
     if (window.innerWidth < 600) return Math.min(window.innerWidth - 40, 300);
     if (window.innerWidth < 1024) return Math.min(window.innerWidth - 40, 400);
-    if (window.matchMedia?.('(orientation: landscape)').matches) return 240;
+    if (window.matchMedia?.('(orientation: landscape)').matches) return 210;
     return 300;
   };
   const [containerSize, setContainerSize] = useState(getContainerSize());
@@ -281,12 +241,7 @@ function MultiCircleMetronome(props) {
     }
   }, [circleSettings, playingCircle, activeCircle]);
 
-  /**
-   * This function is changed to:
-   * 1) Only update logic.accentsRef when editing the PLAYING circle
-   * 2) Immediately stop/restart scheduler if not paused and editing playing circle,
-   *    ensuring the next measure uses the updated accent.
-   */
+  // Accent edits are read at the next bar boundary without restarting playback.
   const updateAccent = useCallback((beatIndex, circleIndex) => {
     if (beatIndex === 'remove') {
       removeCircle(circleIndex);
@@ -312,25 +267,6 @@ function MultiCircleMetronome(props) {
       return updated;
     });
   
-    // CRITICAL FIX: Only update the audio scheduler's reference if editing the PLAYING circle
-    if (logic && logic.accentsRef && activeCircle === playingCircle) {
-      // Overwrite the reference with the newly updated array
-      const newArray = circleSettings[activeCircle]?.accents?.slice() || [];
-      newArray[beatIndex] = (newArray[beatIndex] + 1) % 4;
-      logic.accentsRef.current = newArray;
-      
-      // Re-schedule so the next measure doesn't use stale accent data
-      // but ONLY if we're in the playing circle!
-      if (logic.stopScheduler && logic.startScheduler) {
-        logic.stopScheduler();
-        setTimeout(() => {
-          if (!isPaused) {
-            logic.startScheduler();
-          }
-        }, 0);
-      }
-    }
-  
     // Dispatch an event for potential debugging
     window.dispatchEvent(new CustomEvent('accent-change', {
       detail: {
@@ -340,12 +276,12 @@ function MultiCircleMetronome(props) {
         isPlayingCircle: activeCircle === playingCircle // Add this property
       }
     }));
-  }, [activeCircle, playingCircle, removeCircle, logic, circleSettings, isPaused]);
+  }, [activeCircle, playingCircle, removeCircle]);
 
   // Add new circle
   const addCircle = useCallback(() => {
     setCircleSettings(prev => {
-      if (!prev || prev.length >= MAX_CIRCLES) return prev;
+      if (!prev?.length) return prev;
       const lastCircle = prev[prev.length - 1];
       const newSubdivisions = (lastCircle.subdivisions === 4) ? 3 : 4;
       const newBeatMode = (lastCircle.beatMode === "quarter") ? "eighth" : "quarter";
@@ -397,13 +333,21 @@ function MultiCircleMetronome(props) {
           />
         ))}
         
-        {circleSettings.length < MAX_CIRCLES && (
-          <AddCircleButton
-            addCircle={addCircle}
-            containerSize={containerSize}
-            isMobile={isMobile}
-          />
-        )}
+      </div>
+
+      <div className="circle-actions" role="group" aria-label="Manage rhythm circles">
+        <button
+          type="button"
+          onClick={() => removeCircle(activeCircle)}
+          disabled={circleSettings.length <= 1}
+          aria-label={`Remove circle ${activeCircle + 1}`}
+          title={`Remove selected circle ${activeCircle + 1}`}
+        >
+          <InterfaceIcon name="remove" size={20} />
+        </button>
+        <button type="button" onClick={addCircle} aria-label="Add rhythm circle" title="Add circle">
+          <InterfaceIcon name="add" size={20} />
+        </button>
       </div>
 
       <div className="transport-row multi-transport-row">

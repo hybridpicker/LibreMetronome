@@ -183,7 +183,7 @@
 
 .info-modal-panel h3 {
   font-size: 1.2rem;
-  color: var(--secondary-gold-dark);
+  color: var(--text-secondary);
   margin: 1.2rem 0 0.7rem;
   font-weight: 600;
 }
@@ -234,7 +234,7 @@
 
 .info-step h3 {
   font-size: 1.1rem;
-  color: var(--secondary-gold-dark);
+  color: var(--text-secondary);
   margin: 0 0 0.4rem;
   font-weight: 600;
 }
@@ -263,7 +263,7 @@
 .info-tip-icon .interface-icon {
   width: 20px;
   height: 20px;
-  color: var(--secondary-gold-dark);
+  color: var(--text-secondary);
 }
 
 .info-tip p {
@@ -380,7 +380,7 @@
 
 .info-feature h3 {
   font-size: 1.1rem;
-  color: var(--secondary-gold-dark);
+  color: var(--text-secondary);
   margin: 0 0 0.6rem;
   font-weight: 600;
 }

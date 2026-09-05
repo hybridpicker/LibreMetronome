@@ -383,8 +383,9 @@ input[type="range"] {
 
 .app-container .transport-button.transport-tap {
   color: var(--primary-teal-dark) !important;
-  background: var(--surface-raised) !important;
-  border: 2px solid var(--primary-teal) !important;
+  background: var(--teal-wash) !important;
+  border: 1px solid transparent !important;
+  font-weight: 600;
 }
 
 .app-container .transport-button {
@@ -784,5 +785,230 @@ button {
   .practice-controls {
     border-radius: 14px;
     padding: var(--space-3);
+  }
+}
+
+/* Quiet control surfaces: readable values and generous touch targets. */
+.app-container .slider-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 8px 2px;
+  background: transparent;
+  text-align: left;
+}
+
+.slider-label-name {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.slider-label-value {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: var(--text-md);
+}
+
+.tempo-slider .slider-label-value {
+  font-size: var(--text-md);
+  letter-spacing: normal;
+}
+
+.app-container .editable-slider {
+  margin-bottom: 8px;
+}
+
+.app-container .subdivision-choice,
+.app-container .polyrhythm-choice {
+  border: 1px solid var(--line-subtle);
+  border-radius: 10px;
+  background: var(--surface-raised);
+  box-shadow: none;
+  color: var(--text-secondary);
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.beat-choice-number {
+  font-size: 1.125rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.app-container .subdivision-choice[aria-pressed='true'],
+.app-container .polyrhythm-choice[aria-pressed='true'] {
+  background: var(--primary-teal-dark);
+  border-color: var(--primary-teal-dark);
+  color: var(--text-light);
+}
+
+.app-container .polyrhythm-ratio {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.app-container .ratio-number {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.app-container .circle-badge {
+  box-shadow: none;
+  border-radius: 6px;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.app-container .footer {
+  max-width: 1180px;
+  margin: 24px auto 0;
+  padding: 12px 32px;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+}
+
+.app-container .separator {
+  border-color: var(--line-subtle);
+}
+
+@media (hover: hover) {
+  .app-container .slider-label:not(:disabled):hover {
+    background: var(--teal-wash);
+  }
+  .app-container .subdivision-choice:not([aria-pressed='true']):hover,
+  .app-container .polyrhythm-choice:not([aria-pressed='true']):hover {
+    background: var(--surface-selected);
+  }
+}
+
+@media (min-width: 1000px) and (orientation: landscape) {
+  .app-container .practice-controls {
+    padding-inline: 28px;
+  }
+}
+
+/* White, open layout; spacing provides the structure between controls. */
+.app-container .metronome-stage,
+.app-container .practice-controls,
+.app-container .multi-mode-shell > .multi-controls-panel,
+.app-container .polyrhythm-mode-shell > .polyrhythm-controls,
+.app-container .mode-selector,
+.app-container .instrument-panel {
+  border: 0;
+  box-shadow: none;
+  background: var(--surface-canvas);
+}
+
+.app-container .practice-controls > div,
+.app-container .multi-controls-panel .control-group {
+  border-bottom: 0;
+}
+
+.app-container .separator {
+  border: 0;
+}
+
+.app-container .settings-group,
+.app-container .training-options,
+.app-container .training-overview {
+  border: 0;
+  box-shadow: none;
+  background: var(--surface-raised);
+}
+
+/* Shared control coordinates keep mode changes predictable on iPad. */
+.app-container .beat-visual > .transport-row {
+  margin-top: 52px;
+}
+
+@media (min-width: 1000px) and (orientation: landscape) {
+  .app-container .practice-workspace:not(.mode-multi):not(.mode-polyrhythm),
+  .app-container .multi-mode-shell,
+  .app-container .polyrhythm-mode-shell {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+    column-gap: 32px;
+  }
+
+  .app-container .practice-workspace.mode-multi > .metronome-stage,
+  .app-container .practice-workspace.mode-polyrhythm > .metronome-stage {
+    padding: 0;
+  }
+
+  .app-container .practice-workspace:not(.mode-multi):not(.mode-polyrhythm) .practice-controls,
+  .app-container .multi-mode-shell > .multi-controls-panel {
+    display: grid;
+    grid-template-rows: 112px 164px auto;
+    align-content: start;
+    justify-content: stretch;
+    align-self: start;
+    padding: 16px;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+  }
+
+  .app-container .practice-controls > .control-group,
+  .app-container .multi-controls-panel > .control-group {
+    margin: 0 !important;
+    padding: 0;
+  }
+
+  .app-container .practice-controls > .sliders-container,
+  .app-container .multi-controls-panel > .sliders-container {
+    grid-row: 3;
+    width: 100%;
+    max-width: none;
+    margin: 0 !important;
+  }
+
+  .app-container .polyrhythm-mode-shell {
+    grid-template-rows: 220px 72px auto auto;
+    grid-template-areas: "visual choices" "visual ratio" "transport sliders" "legend sliders";
+    align-items: start;
+  }
+
+  .app-container .polyrhythm-mode-shell > .polyrhythm-controls {
+    padding: 16px;
+  }
+
+  .app-container .polyrhythm-mode-shell > .sliders-container {
+    display: block;
+    width: auto;
+    max-width: none;
+    margin: 0 16px !important;
+  }
+
+  .app-container .sliders-container .editable-slider {
+    margin: 0 0 20px;
+    min-height: 88px;
+  }
+}
+
+@media (min-width: 1000px) and (orientation: landscape) {
+  .app-container .practice-workspace:is(.mode-analog, .mode-circle, .mode-grid, .mode-multi, .mode-polyrhythm) {
+    width: 100%;
+    max-width: 1180px;
+  }
+
+  .app-container .sliders-container .editable-slider {
+    box-sizing: border-box;
+    min-height: 112px;
+  }
+
+  .app-container .polyrhythm-mode-shell > .polyrhythm-transport-row {
+    margin-top: 40px;
+  }
+}
+
+@media (min-width: 1000px) and (orientation: landscape) {
+  .app-container .practice-workspace .sliders-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
   }
 }

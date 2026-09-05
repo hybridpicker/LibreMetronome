@@ -305,7 +305,8 @@ export function AdvancedMetronomeWithCircle({
     return Math.min(w * 0.30, h * 0.48, 400);
   };
 
-  const [containerSize, setContainerSize] = useState(getContainerSize());
+  const [baseContainerSize, setContainerSize] = useState(getContainerSize());
+  const containerSize = baseContainerSize * (analogMode ? 1 : 0.8);
   useEffect(() => {
     const handleResize = () => setContainerSize(getContainerSize());
     window.addEventListener("resize", handleResize);
@@ -540,7 +541,7 @@ export function AdvancedMetronomeWithCircle({
   const beatStateLabels = ["Muted", "Normal", "Accent", "First beat"];
 
   return (
-    <div style={{ position: "relative", textAlign: "center" }}>
+    <div className={analogMode ? "analog-visual" : "beat-visual"} style={{ position: "relative", textAlign: "center" }}>
       <div
         className="metronome-container"
         style={{

@@ -83,7 +83,7 @@ const BeatVisualizer = ({
         }
         
         // Less dramatic scale for subtler, quicker pulses
-        const scaleValue = isActive ? 1.2 : 1;
+        const scaleValue = isActive ? 1.3 : 1;
         
         // Enhanced styles with faster animation properties
         const styles = {

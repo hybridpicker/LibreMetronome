@@ -51,7 +51,7 @@
 
 /* Simple scaling animation for active dots */
 .beat-dot.active {
-  transform: translate(-50%, -50%) scale(1.25);
+  transform: translate(-50%, -50%) scale(1.32);
   box-shadow: none;
 }
 
@@ -643,5 +643,34 @@
   .switch-circles-button {
     padding: 6px 12px;
     font-size: 14px;
+  }
+}
+
+/* Keep ratio and transport settings within reach in portrait orientation. */
+@media (orientation: portrait), (max-width: 999px) {
+  .polyrhythm-mode-shell > .side-controls {
+    flex-direction: row;
+    gap: 24px;
+    max-width: 360px;
+    margin: 16px auto;
+  }
+
+  .polyrhythm-mode-shell > .side-controls .polyrhythm-ratio {
+    width: auto;
+    margin: 0;
+  }
+
+  .polyrhythm-mode-shell > .side-controls .switch-circles-button {
+    margin: 0;
+    box-shadow: none;
+  }
+}
+
+@media (min-width: 600px) and (orientation: portrait) {
+  .polyrhythm-mode-shell > .sliders-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    max-width: 600px;
+    gap: 32px;
   }
 }

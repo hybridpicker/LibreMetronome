@@ -20,6 +20,7 @@ const TransportButton = ({
 }) => {
   const [isTapFeedbackActive, setIsTapFeedbackActive] = useState(false);
   const feedbackTimeoutRef = useRef(null);
+  const pointerTapRef = useRef(false);
   const pressedProps = typeof pressed === 'boolean'
     ? { 'aria-pressed': pressed }
     : {};
@@ -36,7 +37,7 @@ const TransportButton = ({
     window.clearTimeout(feedbackTimeoutRef.current);
   }, []);
 
-  const handleClick = (event) => {
+  const activate = (event) => {
     if (kind === 'tap') {
       showTapFeedback();
       playTapFeedback(feedbackVolume);
@@ -48,12 +49,24 @@ const TransportButton = ({
     <button
       type="button"
       className={`transport-button transport-${kind} ${pressed ? 'is-playing' : ''} ${isTapFeedbackActive ? 'is-tapping' : ''} ${className}`.trim()}
-      onClick={handleClick}
+      onPointerDown={(event) => {
+        if (kind !== 'tap' || event.button !== 0 || event.isPrimary === false) return;
+        pointerTapRef.current = true;
+        activate(event);
+      }}
+      onKeyDown={() => { pointerTapRef.current = false; }}
+      onClick={(event) => {
+        if (kind === 'tap' && pointerTapRef.current) {
+          pointerTapRef.current = false;
+          return;
+        }
+        activate(event);
+      }}
       disabled={disabled}
       aria-label={label}
       {...pressedProps}
     >
-      {icon && (
+      {icon && kind !== 'tap' && (
         <img
           src={icon}
           alt=""

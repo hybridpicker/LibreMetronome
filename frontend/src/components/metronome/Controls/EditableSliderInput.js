@@ -62,6 +62,8 @@ const EditableSliderInput = ({
       {isEditing ? (
         <input
           type="text"
+          inputMode="decimal"
+          aria-label={`Edit ${label} value`}
           value={inputValue}
           onChange={handleChange}
           onBlur={handleBlur}
@@ -79,7 +81,8 @@ const EditableSliderInput = ({
           aria-label={`Edit ${label}`}
           disabled={disabled}
         >
-          {label}: {formatter(value)}
+          <span className="slider-label-name">{label}</span>
+          <span className="slider-label-value">{formatter(value)}</span>
         </button>
       )}
       

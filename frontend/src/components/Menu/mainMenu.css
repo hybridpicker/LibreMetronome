@@ -1213,3 +1213,49 @@
     background: var(--surface-raised);
   }
 }
+
+/* Align settings with the main instrument's restrained control hierarchy. */
+.menu-modal .settings-group {
+  padding: 20px;
+  text-align: left;
+  background: transparent;
+}
+
+.menu-modal .settings-group h3 {
+  margin: 0 0 16px;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.menu-modal .settings-row label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+}
+
+.menu-modal .settings-row label:has(.settings-slider) {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.menu-modal .settings-slider {
+  height: 44px;
+  background: linear-gradient(var(--line-subtle), var(--line-subtle)) center / 100% 4px no-repeat;
+}
+
+.menu-modal .sound-set-option {
+  min-height: 48px;
+  background: var(--surface-raised);
+}
+
+.menu-modal .sound-set-option:has(input:checked) {
+  border-color: var(--primary-teal-dark);
+  background: var(--surface-selected);
+}
+
+.menu-modal input[type='radio'] {
+  accent-color: var(--primary-teal-dark);
+}

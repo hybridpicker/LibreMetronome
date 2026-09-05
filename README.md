@@ -17,10 +17,10 @@ A modern, open-source metronome application that merges classic musical function
 
 ### Multiple Visualization Modes
 
-- **Circle Mode** - Interactive circular beat visualization with customizable accents
+- **Beat Mode** - Interactive circular beat visualization with customizable accents
 - **Analog Mode** - Classic metronome with realistic pendulum animation
 - **Grid Mode** - Visual grid pattern layout for complex rhythms and beat patterns
-- **Multi Circle Mode** - Advanced polyrhythm practice with multiple independent circles and synchronized beat line visualization
+- **Sequence Mode** - Repeat multiple bars in order, each with its own beat count, note value, and accents
 - **Polyrhythm Mode** - Simultaneous inner and outer beat patterns with a unified timing view
 
 ### Beat Customization
@@ -137,7 +137,14 @@ The debug APK is generated at
 `frontend/android/app/build/outputs/apk/debug/app-debug.apk`.
 
 See [`docs/mobile-deployment.md`](docs/mobile-deployment.md) for native build,
-signing, device installation, and the current iPad deployment plan.
+signing and device installation. See [`docs/design-system.md`](docs/design-system.md)
+for shared interface rules and [`docs/release-plan.md`](docs/release-plan.md)
+for the AlmaLinux web deployment and App Store preparation.
+
+As of September 5, 2026, the updated development app is installed on the test
+iPad. The matching web build is prepared but has not been deployed to the live
+site. App Store and TestFlight distribution are pending Apple Developer Program
+enrollment; a free public app is being considered.
 
 #### Backend Setup
 
@@ -186,10 +193,10 @@ The backend will run at http://localhost:8000
 | T | Tap tempo |
 | 1-9 | Set beats per measure |
 | ← / → | Decrease/increase tempo by 5 BPM |
-| P | Switch to Pendulum |
-| C | Switch to Circle |
+| P | Switch to Analog |
+| C | Switch to Beat |
 | G | Switch to Grid |
-| M | Switch to Multi Circle |
+| M | Switch to Sequence |
 | I | Toggle Info Overlay |
 | R | Toggle Training Mode Settings |
 | S | Toggle Settings Panel |

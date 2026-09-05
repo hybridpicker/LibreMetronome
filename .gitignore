@@ -55,3 +55,19 @@ backend/metronome_sounds/test*
 # Django static files
 staticfiles/
 backend/staticfiles/
+
+# Local configuration and signing material
+.env.*
+!.env.example
+!.env.sample
+*.keychain
+*.keychain-db
+*.p12
+*.pfx
+*.mobileprovision
+*.provisionprofile
+*.private-key
+**/xcuserdata/
+*.xcuserstate
+*.jks
+*.keystore
