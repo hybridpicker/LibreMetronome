@@ -16,6 +16,7 @@ import ModeSelector from './components/ModeSelector'; // Import the new ModeSele
 import { SupportPage } from './components/Support';
 import { HelpButton, InfoModal } from './components/InfoSection'; // Import the Help components
 import { initAudioContext, resumeAudioContext } from './hooks/useMetronomeLogic/audioBuffers';
+import { setScreenAwake } from './mobile';
 import { manualTempoAcceleration } from './hooks/useMetronomeLogic/trainingLogic';
 import AccessibilityMenu from './components/accessibility/AccessibilityMenu';
 import './styles/accessibility.css';
@@ -26,16 +27,43 @@ import './styles/color-blindness.css';
 
 const TEMPO_MIN = 15;
 const TEMPO_MAX = 240;
-const DEFAULT_VOLUME = 0.85;
+// The click samples are mastered to their safe peak already. Starting below
+// unity gain made the web app quieter than the selected device level even
+// before the user touched the volume control.
+const DEFAULT_VOLUME = 1;
+const PREVIOUS_DEFAULT_VOLUME = 0.85;
 const VOLUME_STORAGE_KEY = 'libreMetronome.volume';
+const VOLUME_DEFAULT_MIGRATION_KEY = 'libreMetronome.volumeDefault.v2';
+const TEMPO_STORAGE_KEY = 'libreMetronome.tempo';
 
 const getInitialVolume = () => {
   const storedVolume = Number.parseFloat(
     window.localStorage?.getItem(VOLUME_STORAGE_KEY)
   );
+
+  // Existing installations persisted the previous 85% default. Upgrade that
+  // value once, while leaving every other explicitly chosen volume untouched.
+  if (
+    storedVolume === PREVIOUS_DEFAULT_VOLUME &&
+    window.localStorage?.getItem(VOLUME_DEFAULT_MIGRATION_KEY) !== '1'
+  ) {
+    window.localStorage?.setItem(VOLUME_DEFAULT_MIGRATION_KEY, '1');
+    return DEFAULT_VOLUME;
+  }
+
   return Number.isFinite(storedVolume)
     ? Math.max(0, Math.min(1, storedVolume))
     : DEFAULT_VOLUME;
+};
+
+const getInitialTempo = () => {
+  const storedTempo = Number.parseInt(
+    window.localStorage?.getItem(TEMPO_STORAGE_KEY),
+    10
+  );
+  return Number.isFinite(storedTempo)
+    ? Math.max(TEMPO_MIN, Math.min(TEMPO_MAX, storedTempo))
+    : 120;
 };
 
 // Global debug helper for testing sound preview
@@ -128,7 +156,7 @@ function App() {
   const [mode, setMode] = useState("analog"); // Options: "analog", "circle", "grid", "multi", "polyrhythm"
   const [showSupportPage, setShowSupportPage] = useState(false);
   // Style guide toggle removed
-  const [tempo, setTempo] = useState(120);
+  const [tempo, setTempo] = useState(getInitialTempo);
   const [isPaused, setIsPaused] = useState(true);
   const [audioError, setAudioError] = useState('');
   const [subdivisions, setSubdivisions] = useState(4);
@@ -141,6 +169,23 @@ function App() {
   useEffect(() => {
     window.localStorage?.setItem(VOLUME_STORAGE_KEY, volume.toString());
   }, [volume]);
+
+  // Keep the last selected BPM across screen locks, app suspension, and a
+  // complete relaunch of the Capacitor app.
+  useEffect(() => {
+    window.localStorage?.setItem(TEMPO_STORAGE_KEY, tempo.toString());
+  }, [tempo]);
+
+  // iPadOS may otherwise dim and lock the display during a practice session.
+  // Requesting the lock only while playing avoids changing the user's normal
+  // screen timeout when the metronome is stopped.
+  useEffect(() => {
+    setScreenAwake(!isPaused);
+
+    return () => {
+      setScreenAwake(false);
+    };
+  }, [isPaused]);
 
   useEffect(() => {
     if (isPaused) return undefined;
