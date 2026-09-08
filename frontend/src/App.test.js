@@ -83,6 +83,7 @@ jest.mock('./components/metronome/AnalogMode/AnalogMetronomeCanvas', () => () =>
 describe('App Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    window.localStorage.clear();
   });
 
   test('renders header with logo', async () => {
@@ -97,6 +98,27 @@ describe('App Component', () => {
     expect(screen.getByText('Grid')).toBeInTheDocument();
     expect(screen.getByText('Sequence')).toBeInTheDocument();
     expect(screen.getByText('Polyrhythm')).toBeInTheDocument();
+  });
+
+  test('starts playback at the full device input level', () => {
+    render(<App />);
+
+    expect(screen.getByRole('slider', { name: 'Volume' })).toHaveValue('1');
+  });
+
+  test('upgrades the former default volume without replacing a chosen level', () => {
+    window.localStorage.setItem('libreMetronome.volume', '0.85');
+    render(<App />);
+
+    expect(screen.getByRole('slider', { name: 'Volume' })).toHaveValue('1');
+    expect(window.localStorage.getItem('libreMetronome.volume')).toBe('1');
+  });
+
+  test('keeps a previously selected volume', () => {
+    window.localStorage.setItem('libreMetronome.volume', '0.5');
+    render(<App />);
+
+    expect(screen.getByRole('slider', { name: 'Volume' })).toHaveValue('0.5');
   });
 
   test('keeps a visible Tap Tempo label in every mode', () => {
@@ -135,5 +157,18 @@ describe('App Component', () => {
     fireEvent.keyDown(window, { code: 'Space' });
     await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Metronome paused'));
     dateNow.mockRestore();
+  });
+
+  test('restores and persists the last selected tempo', () => {
+    window.localStorage.setItem('libreMetronome.tempo', '172');
+    render(<App />);
+
+    expect(screen.getByRole('slider', { name: 'Tempo' })).toHaveValue('172');
+
+    fireEvent.change(screen.getByRole('slider', { name: 'Tempo' }), {
+      target: { value: '156' }
+    });
+
+    expect(window.localStorage.getItem('libreMetronome.tempo')).toBe('156');
   });
 });
