@@ -1,1 +1,1 @@
-Always use conda activate libremetronome when doing terminal commands
+Always run `source .venv/bin/activate` (repository root) before terminal commands

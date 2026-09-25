@@ -71,3 +71,4 @@ backend/staticfiles/
 *.xcuserstate
 *.jks
 *.keystore
+.venv/
