@@ -4,9 +4,11 @@ This is the Django backend server for the LibreMetronome application.
 
 ## Development Setup
 
-1. **Activate the conda environment**:
+1. **Create and activate the virtual environment** (from the repository root, requires [uv](https://docs.astral.sh/uv/)):
    ```bash
-   conda activate libremetronome
+   uv venv --python 3.12 .venv
+   source .venv/bin/activate
+   uv pip install -r requirements.txt
    ```
 
 2. **Use development settings**:
