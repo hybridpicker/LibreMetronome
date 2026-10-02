@@ -37,5 +37,6 @@ Terminal=false
 Categories=AudioVideo;Audio;Music;
 StartupWMClass=libremetronome-desktop
 DESKTOP
+git -C "$REPO" rev-parse HEAD > "$DEST/.installed-commit"
 update-desktop-database "$HOME/.local/share/applications" 2>/dev/null || true
 echo "Installed. Launch 'Libre Metronome' from the app launcher."
