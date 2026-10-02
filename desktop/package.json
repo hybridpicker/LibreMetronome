@@ -1,0 +1,9 @@
+{
+  "name": "libremetronome-desktop",
+  "version": "1.0.0",
+  "description": "Libre Metronome desktop app for Linux (Electron wrapper)",
+  "main": "main.js",
+  "license": "GPL-3.0-or-later",
+  "scripts": { "start": "electron ." },
+  "devDependencies": { "electron": "^37.0.0" }
+}
