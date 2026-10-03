@@ -150,6 +150,12 @@ const useKeyboardShortcuts = ({
         return;
       }
 
+      // Leave modifier combinations to the browser and the macOS menu bar
+      // (⌘C, ⌘M, ⌘1, …) instead of also triggering a metronome shortcut.
+      if (event.metaKey || event.ctrlKey || event.altKey) {
+        return;
+      }
+
       if (event.code === 'Space') {
         event.preventDefault();
         const now = Date.now();
@@ -183,12 +189,17 @@ const useKeyboardShortcuts = ({
         }
       }
 
+      // Handled keys are marked as consumed. Otherwise the browser scrolls on
+      // arrow keys, and the macOS app passes the key on to AppKit, which plays
+      // the system alert sound.
+      let handled = true;
       switch (event.code) {
         case 'Enter':
           // Add Enter key support for manual acceleration in training mode
           if (onManualTempoIncrease) {
-            event.preventDefault();
             onManualTempoIncrease();
+          } else {
+            handled = false;
           }
           break;
         case 'KeyT':
@@ -305,7 +316,12 @@ const useKeyboardShortcuts = ({
           break;
         // KeyI case removed - now using G for guide
         default:
+          handled = false;
           break;
+      }
+
+      if (handled) {
+        event.preventDefault();
       }
     };
 
