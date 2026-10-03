@@ -17,6 +17,7 @@ import { SupportPage } from './components/Support';
 import { HelpButton, InfoModal } from './components/InfoSection'; // Import the Help components
 import { initAudioContext, resumeAudioContext } from './hooks/useMetronomeLogic/audioBuffers';
 import { setScreenAwake } from './mobile';
+import { DESKTOP_COMMAND_EVENT, reportDesktopState } from './desktop';
 import { manualTempoAcceleration } from './hooks/useMetronomeLogic/trainingLogic';
 import AccessibilityMenu from './components/accessibility/AccessibilityMenu';
 import './styles/accessibility.css';
@@ -465,6 +466,57 @@ function App() {
     },
     // Style guide toggle removed
   });
+
+  // Mirror transport state to the macOS shell (Dock badge, menus, media keys).
+  useEffect(() => {
+    reportDesktopState({ tempo, isPaused, mode, subdivisions });
+  }, [tempo, isPaused, mode, subdivisions]);
+
+  // Commands from the macOS shell: menu bar, Dock menu and media keys.
+  useEffect(() => {
+    const handleNativeCommand = (event) => {
+      const { command, value } = event.detail || {};
+      switch (command) {
+        case 'togglePlay':
+          if (togglePlayRef.current) togglePlayRef.current();
+          break;
+        case 'play':
+          if (playStateRef.current && togglePlayRef.current) togglePlayRef.current();
+          break;
+        case 'pause':
+          if (!playStateRef.current && togglePlayRef.current) togglePlayRef.current();
+          break;
+        case 'adjustTempo':
+          setTempo(prev => Math.min(Math.max(prev + Number(value || 0), TEMPO_MIN), TEMPO_MAX));
+          break;
+        case 'setTempo':
+          setTempo(Math.min(Math.max(Math.round(Number(value) || 0), TEMPO_MIN), TEMPO_MAX));
+          break;
+        case 'tapTempo':
+          if (tapTempoRef.current) tapTempoRef.current();
+          break;
+        case 'setMode':
+          if (["analog", "circle", "grid", "multi", "polyrhythm"].includes(value)) setMode(value);
+          break;
+        case 'setSubdivisions': {
+          const beats = Math.round(Number(value));
+          if (beats >= 1 && beats <= 9) setSubdivisions(beats);
+          break;
+        }
+        case 'toggleSettings':
+          setSettingsVisible(prev => !prev);
+          break;
+        case 'toggleInfo':
+          setInfoModalOpen(prev => !prev);
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener(DESKTOP_COMMAND_EVENT, handleNativeCommand);
+    return () => window.removeEventListener(DESKTOP_COMMAND_EVENT, handleNativeCommand);
+  }, []);
 
   const version = '0.4.6';
 

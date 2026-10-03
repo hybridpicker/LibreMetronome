@@ -136,6 +136,18 @@ cd android
 The debug APK is generated at
 `frontend/android/app/build/outputs/apk/debug/app-debug.apk`.
 
+#### macOS App
+
+A native Dock app for macOS 14+ wraps the same web bundle and adds a Dock
+badge and menu, menu bar commands, media keys, a global shortcut and
+background playback:
+
+```bash
+macos/build.sh --install --dock
+```
+
+See [`macos/README.md`](macos/README.md) for features and build options.
+
 See [`docs/mobile-deployment.md`](docs/mobile-deployment.md) for native build,
 signing and device installation. See [`docs/design-system.md`](docs/design-system.md)
 for shared interface rules and [`docs/release-plan.md`](docs/release-plan.md)
