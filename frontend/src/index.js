@@ -4,8 +4,10 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import { initializeMobileRuntime } from './mobile';
+import { initializeDesktopRuntime } from './desktop';
 
 initializeMobileRuntime();
+initializeDesktopRuntime();
 
 // Suppress UNSAFE_componentWillMount warning from react-helmet
 const originalConsoleError = console.error;
