@@ -231,4 +231,33 @@ describe('useKeyboardShortcuts', () => {
     // The tap tempo shouldn't be triggered for inputs
     expect(mockFunctions.onTapTempo).not.toHaveBeenCalled();
   });
+
+  test('Handled shortcut keys are consumed so they do not scroll or trigger the system alert', () => {
+    render(<TestComponent {...mockFunctions} />);
+
+    // fireEvent returns false when the handler called preventDefault().
+    expect(fireEvent.keyDown(window, { code: 'ArrowRight' })).toBe(false);
+    expect(fireEvent.keyDown(window, { code: 'ArrowLeft' })).toBe(false);
+    expect(fireEvent.keyDown(window, { code: 'Digit3' })).toBe(false);
+    expect(fireEvent.keyDown(window, { code: 'KeyG' })).toBe(false);
+
+    // Keys without a shortcut keep their default behavior.
+    expect(fireEvent.keyDown(window, { code: 'KeyQ' })).toBe(true);
+  });
+
+  test('Modifier combinations are left to the browser and the menu bar', () => {
+    render(<TestComponent {...mockFunctions} />);
+
+    fireEvent.keyDown(window, { code: 'KeyC', metaKey: true });
+    fireEvent.keyDown(window, { code: 'KeyM', metaKey: true });
+    fireEvent.keyDown(window, { code: 'Digit1', metaKey: true });
+    fireEvent.keyDown(window, { code: 'ArrowRight', altKey: true });
+    fireEvent.keyDown(window, { code: 'Space', ctrlKey: true });
+
+    expect(mockFunctions.onSwitchToCircle).not.toHaveBeenCalled();
+    expect(mockFunctions.onSwitchToMulti).not.toHaveBeenCalled();
+    expect(mockFunctions.onSetSubdivisions).not.toHaveBeenCalled();
+    expect(mockFunctions.onIncreaseTempo).not.toHaveBeenCalled();
+    expect(mockFunctions.onTogglePlayPause).not.toHaveBeenCalled();
+  });
 });
