@@ -10,7 +10,7 @@ mkdir -p "$DEST"
 rm -rf "$DEST/build"
 cp -r "$REPO/frontend/build" "$DEST/build"
 cp "$HERE/main.js" "$HERE/package.json" "$DEST/"
-cp "$REPO/frontend/public/logo512.png" "$DEST/icon.png"
+cp "$HERE/icon.png" "$DEST/icon.png"
 ( cd "$DEST" && npm install --omit=dev --no-audit --no-fund && npm install --no-save --no-audit --no-fund electron@^37 )
 
 # electron's own installer silently fails to extract on very new Node versions; fall back to unzip
