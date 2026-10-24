@@ -293,7 +293,7 @@ Hinweis zur Umgebung: In der Claude-Shell sind `npm`/`node` als nvm-Funktionen d
 | # | Tor | Stand |
 |---|---|---|
 | 1 | „go“ für Code-Änderungen am App-Build | Am 2026-10-24 als „berate alles für die Testphase vor“ aufgefasst und umgesetzt; Diff liegt zur Durchsicht vor. Bei Einwand zurücknehmen mit `git revert`. |
-| 2 | „App anlegen“ (Kennung + bezahlt, 1,99 €) | offen |
+| 2 | „App anlegen“ (Kennung + bezahlt, 1,99 €) | **erledigt 2026-10-24**: App „LibreMetronome“, `com.libremetronome`, en-US, App, kostenpflichtig angelegt (Eigentümer gab ausdrückliches Ja inkl. der zwei Erklärungen: Programmrichtlinien, US-Exportbestimmungen). **Preis 1,99 € noch nicht gesetzt** (braucht Zahlungsprofil). Die Kennung ist belegt. Die Console bestätigt: geschlossener Test mit mind. 12 Testern über mind. 14 Tage vor Produktionszugriff. |
 | 3 | „upload“ je AAB | offen, Eigentümer zieht die Datei |
 | 4 | „Produktion beantragen“ / „veröffentlichen“ | offen; vorher Liste Preis, Länder (weltweit), Händlerstatus |
 
