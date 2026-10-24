@@ -6,7 +6,7 @@
  * Rules of the look: no shadows, no gradients, hairlines instead of frames,
  * square keys (2 px radius), one colour (teal) for the active state, the
  * current beat and Start; accented beats are teal rings. The visualisation
- * sits on a dark teal-black dial plate; the rest is light.
+ * sits on a plate drawn with hairlines on the white page.
  */
 
 /* ---- Base ------------------------------------------------------------- */
@@ -295,6 +295,7 @@ body.reduced-motion *::after {
   min-width: 0;
   min-height: 0;
   overflow: hidden;
+  border: var(--stroke) solid var(--dial-line-strong);
   border-radius: var(--r-surface);
   background: var(--dial-bg);
 }
@@ -318,16 +319,6 @@ body.reduced-motion *::after {
   --accent-wash: var(--dial-accent-wash);
   --on-accent: var(--dial-on-accent);
   --focus: var(--dial-focus);
-}
-
-/* A hairline frame inside the plate, like the bezel of a gauge. */
-.viz-card::after {
-  content: '';
-  position: absolute;
-  inset: var(--sp-2);
-  border: var(--stroke) solid var(--dial-line);
-  border-radius: 0;
-  pointer-events: none;
 }
 
 .metronome-container {

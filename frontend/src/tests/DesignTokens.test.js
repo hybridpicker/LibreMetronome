@@ -25,9 +25,9 @@ describe('design tokens', () => {
     expect(tokens.touch).toBe('44px');
   });
 
-  test('dial plate palette is defined and stays teal-tinted', () => {
+  test('dial plate palette is defined', () => {
     for (const k of ['dial-bg', 'dial-ink', 'dial-ink-2', 'dial-line', 'dial-accent']) expect(tokens[k]).toMatch(/^#[0-9a-f]{6}$/i);
-    expect(tokens['dial-bg'].toLowerCase()).toBe('#0b2626');
+    expect(tokens['dial-bg'].toLowerCase()).toBe('#ffffff');
   });
 
   test.each(['layout.css', 'instrument-system.css'])('%s uses tokens, no raw colours, no drop shadows', (file) => {

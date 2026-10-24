@@ -26,19 +26,20 @@
   --accent-wash: #e6f5f5;    /* very light teal, selected-state tint */
   --on-accent: #ffffff;
 
-  /* The dial face: the visualisation sits on a dark teal-black plate, like an
-     instrument face. Components inside it read the same token names; the
-     plate re-maps them (see .viz-card in instrument-system.css). */
-  --dial-bg: #0b2626;
-  --dial-ink: #e8f4f4;       /* 14:1 on the plate */
-  --dial-ink-2: #9bb7b7;     /* secondary text on the plate */
-  --dial-ink-3: #5f8585;     /* graphics only */
-  --dial-line: #1c4141;
-  --dial-line-strong: #4a7a7a;
-  --dial-accent: #2ec4c4;    /* teal on the plate: current beat, accents */
-  --dial-accent-wash: #123636;
-  --dial-on-accent: #0b2626;
-  --dial-focus: #7ee6e6;
+  /* The dial plate: the visualisation sits on its own plate, drawn on the white
+     page with hairlines. Components inside it read the same token names; the
+     plate re-maps them (see .viz-card in instrument-system.css). Today the
+     plate is as light as the page; modes (high contrast) can change it. */
+  --dial-bg: #ffffff;
+  --dial-ink: #111111;
+  --dial-ink-2: #5c6e6e;
+  --dial-ink-3: #7b9090;     /* graphics only */
+  --dial-line: #dbe7e7;
+  --dial-line-strong: #bdd0d0;
+  --dial-accent: #00797a;    /* teal on the plate: current beat, accents, text */
+  --dial-accent-wash: #e6f5f5;
+  --dial-on-accent: #ffffff;
+  --dial-focus: #00797a;
 
   --focus: #00797a;
   --danger: #b3261e;
