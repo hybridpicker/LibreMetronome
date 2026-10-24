@@ -296,7 +296,7 @@ export function AdvancedMetronomeWithCircle({
     const w = window.innerWidth;
     const h = window.innerHeight;
     const hasCoarsePointer = window.matchMedia?.('(pointer: coarse)').matches;
-    if (w < 600) return Math.min(w - 40, 300);
+    if (w < 600) return Math.min(w - 40, 300, Math.max(200, h * 0.34));
     if (hasCoarsePointer) {
       const portrait = window.matchMedia?.('(orientation: portrait)').matches;
       return Math.min(w - 72, h * (portrait ? 0.34 : 0.43), portrait ? 430 : 440);

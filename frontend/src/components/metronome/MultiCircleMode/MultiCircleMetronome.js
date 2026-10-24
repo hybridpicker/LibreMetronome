@@ -77,7 +77,7 @@ function MultiCircleMetronome(props) {
   }, [measureCountRef, muteMeasureCountRef, isSilencePhaseRef]);
 
   const getContainerSize = () => {
-    if (window.innerWidth < 600) return Math.min(window.innerWidth - 40, 300);
+    if (window.innerWidth < 600) return Math.min(window.innerWidth - 40, 300, Math.max(200, window.innerHeight * 0.34));
     if (window.innerWidth < 1024) return Math.min(window.innerWidth - 40, 400);
     if (window.matchMedia?.('(orientation: landscape)').matches) return 210;
     return 300;

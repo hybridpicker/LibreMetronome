@@ -1012,3 +1012,19 @@ button {
     gap: 0;
   }
 }
+
+/* Phones: keep the visualization, transport and tempo controls on one screen. */
+@media (max-width: 600px) {
+  .practice-workspace .metronome-stage {
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .practice-workspace .practice-controls {
+    padding: var(--space-3);
+  }
+
+  .practice-controls .sliders-container {
+    gap: 8px;
+    margin-top: 4px;
+  }
+}
