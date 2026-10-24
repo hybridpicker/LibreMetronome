@@ -5,6 +5,17 @@
  */
 
 :root {
+  /* Phone "instrument card" tokens (used by phone-modern.css) */
+  --app-bg: #F4F8F8;
+  --card-bg: #FFFFFF;
+  --seg-track: #E3EEEE;
+  --chip-rest: #F1F6F6;
+  --slider-track: #E6EDED;
+  --divider: #EDF2F2;
+  --text-tertiary-aa: #5f7070;   /* small tertiary text, passes AA on white and --app-bg */
+  --ring-rest: #DCE6E6;
+  --card-shadow: 0 2px 10px rgba(24, 54, 56, 0.07), 0 1px 2px rgba(24, 54, 56, 0.05);
+
   /* Primary Colors */
   --primary-teal: #00A0A0;       /* Main brand color - vibrant teal specified */
   --primary-teal-dark: #008585;  /* Darker variant for hover states */

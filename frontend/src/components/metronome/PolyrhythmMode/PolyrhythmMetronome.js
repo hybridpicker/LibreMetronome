@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { PHONE_MAX_WIDTH, getPhoneVisualSize } from '../../../utils/phoneLayout';
+import { useVizCardSize } from '../../../utils/phoneLayout';
 import usePolyrhythmLogic from "./usePolyrhythmLogic";
 import { initAudioContext, resumeAudioContext } from "../../../hooks/useMetronomeLogic/audioBuffers";
 import playIcon from "../../../assets/svg/play.svg";
@@ -85,11 +85,25 @@ const PolyrhythmMetronome = (props) => {
   }, [outerBeats]);
 
   const getContainerSize = () => {
-    if (window.innerWidth < PHONE_MAX_WIDTH) return getPhoneVisualSize('polyrhythm');
     if (window.innerWidth < 1024) return Math.min(window.innerWidth - 40, 400);
     return 300;
   };
-  const [containerSize, setContainerSize] = useState(getContainerSize());
+  const [baseContainerSize, setContainerSize] = useState(getContainerSize());
+  // Phones: the concentric rings fill the visualisation card.
+  const [vizRef, vizSize] = useVizCardSize();
+  // The outer beat dots overhang the ring by about 16px and the card keeps a
+  // 12px margin, so the ring itself is 56px smaller than the card's short side.
+  // The swap button (44px, 10px from the top-right corner) must also stay clear
+  // of the dots, which caps the ring by its distance from the card centre.
+  const containerSize = (() => {
+    if (!(vizSize.height > 0)) return baseContainerSize;
+    const swapDistance = Math.hypot(vizSize.width / 2 - 32, vizSize.height / 2 - 32);
+    const swapLimit = 2 * (swapDistance - 27 - 16 - 4);
+    return Math.max(
+      120,
+      Math.floor(Math.min(320, vizSize.width - 56, vizSize.height - 56, swapLimit))
+    );
+  })();
   // Removed unused variable
   
   // Removed unused isMobileOrTablet variable
@@ -501,7 +515,7 @@ const PolyrhythmMetronome = (props) => {
 
   return (
     <div className="polyrhythm-mode-shell" style={{ textAlign: "center", position: "relative" }}>
-      <div className="polyrhythm-container">
+      <div className="polyrhythm-container viz-card" ref={vizRef}>
         <CircleRenderer
           innerBeats={innerBeats}
           outerBeats={outerBeats}
@@ -625,6 +639,28 @@ const PolyrhythmMetronome = (props) => {
               </button>
             ))}
           </div>
+          {/* Phones show this stepper instead of the eight chips (CSS toggles). */}
+          <div className="poly-stepper" role="group" aria-label="Inner beats">
+            <button
+              type="button"
+              className="stepper-button"
+              onClick={() => !isTransitioning && debouncedSetSubdivisions(Math.max(2, innerBeats - 1), "inner")}
+              disabled={isTransitioning || innerBeats <= 2}
+              aria-label="Fewer inner beats"
+            >
+              <span aria-hidden="true">&minus;</span>
+            </button>
+            <span className="stepper-count" aria-live="polite">{innerBeats}</span>
+            <button
+              type="button"
+              className="stepper-button"
+              onClick={() => !isTransitioning && debouncedSetSubdivisions(Math.min(9, innerBeats + 1), "inner")}
+              disabled={isTransitioning || innerBeats >= 9}
+              aria-label="More inner beats"
+            >
+              <span aria-hidden="true">+</span>
+            </button>
+          </div>
         </div>
         <div className="polyrhythm-config">
           <div className="circle-header">
@@ -649,6 +685,28 @@ const PolyrhythmMetronome = (props) => {
                 <span className="beat-choice-number" aria-hidden="true">{num}</span>
               </button>
             ))}
+          </div>
+          {/* Phones show this stepper instead of the eight chips (CSS toggles). */}
+          <div className="poly-stepper" role="group" aria-label="Outer beats">
+            <button
+              type="button"
+              className="stepper-button"
+              onClick={() => !isTransitioning && debouncedSetSubdivisions(Math.max(2, outerBeats - 1), "outer")}
+              disabled={isTransitioning || outerBeats <= 2}
+              aria-label="Fewer outer beats"
+            >
+              <span aria-hidden="true">&minus;</span>
+            </button>
+            <span className="stepper-count" aria-live="polite">{outerBeats}</span>
+            <button
+              type="button"
+              className="stepper-button"
+              onClick={() => !isTransitioning && debouncedSetSubdivisions(Math.min(9, outerBeats + 1), "outer")}
+              disabled={isTransitioning || outerBeats >= 9}
+              aria-label="More outer beats"
+            >
+              <span aria-hidden="true">+</span>
+            </button>
           </div>
         </div>
       </div>
@@ -679,7 +737,7 @@ const PolyrhythmMetronome = (props) => {
       {/* Tempo and Volume */}
       <div className="sliders-container" style={{ marginTop: "20px" }}>
         <EditableSliderInput
-          label="Tempo" value={tempo} setValue={setTempo}
+          label="Tempo" value={tempo} setValue={setTempo} stepButtons
           min={30} max={240} step={1} disabled={isTransitioning}
           formatter={(value) => `${value} BPM`} parser={parseFloat}
         />

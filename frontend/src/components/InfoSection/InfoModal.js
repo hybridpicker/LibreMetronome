@@ -3,6 +3,7 @@ import './InfoModal.css';
 import packageJson from '../../../package.json';
 import InterfaceIcon from '../common/InterfaceIcon';
 import { IS_NATIVE_APP } from '../../nativeApp';
+import { SupportButton } from '../Support';
 
 const InfoModal = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState('about');
@@ -126,6 +127,21 @@ const InfoModal = ({ isOpen, onClose }) => {
                 <li>Precise tempo control with tap tempo feature</li>
                 <li>{IS_NATIVE_APP ? 'One purchase, no ads, no locked features' : 'Always completely free with no premium restrictions'}</li>
               </ul>
+            </div>
+
+            <div className="info-section-block about-block">
+              <h3>About this app</h3>
+              <p>&copy; {new Date().getFullYear()} LibreMetronome | GPL v3 License.</p>
+              <p>
+                <a href="https://github.com/hybridpicker/LibreMetronome" target="_blank" rel="noopener noreferrer">
+                  View Source Code
+                </a>
+              </p>
+              {!IS_NATIVE_APP && (
+                <div className="about-donate" onClick={onClose}>
+                  <SupportButton useInternalPage={true} />
+                </div>
+              )}
             </div>
           </div>
 

@@ -1,5 +1,5 @@
 // src/components/metronome/MultiCircleMode/MultiCircleMetronome.js
-import { PHONE_MAX_WIDTH, getPhoneVisualSize } from '../../../utils/phoneLayout';
+import { PHONE_MAX_WIDTH, useVizCardSize } from '../../../utils/phoneLayout';
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import useMultiCircleMetronomeLogic from "./hooks/useMultiCircleMetronomeLogic";
 import CircleRenderer from "./CircleRenderer";
@@ -78,12 +78,12 @@ function MultiCircleMetronome(props) {
   }, [measureCountRef, muteMeasureCountRef, isSilencePhaseRef]);
 
   const getContainerSize = () => {
-    if (window.innerWidth < PHONE_MAX_WIDTH) return getPhoneVisualSize('sequence');
     if (window.innerWidth < 1024) return Math.min(window.innerWidth - 40, 400);
     if (window.matchMedia?.('(orientation: landscape)').matches) return 210;
     return 300;
   };
   const [containerSize, setContainerSize] = useState(getContainerSize());
+  const [vizRef, vizSize] = useVizCardSize();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
@@ -298,19 +298,51 @@ function MultiCircleMetronome(props) {
     });
   }, []);
 
+  // Phones: lay the circles out in the visualisation card so the dots, the
+  // beat counts and the circle stepper never overlap. One row for 1-3 circles
+  // (2 + 1 when the card is narrower than 360px), a 2x2 grid for 4.
+  const circleCount = circleSettings.length;
+  const isPhone = vizSize.height > 0;
+  const maxCircles = window.innerWidth < PHONE_MAX_WIDTH ? 4 : Infinity;
+  let phoneRing = 0;
+  let phoneColumns = 0;
+  let phoneGap = 12;
+  if (isPhone) {
+    // The grid fills the card with equal columns (so it is centred on both
+    // axes) and rows share the height left under the "Circles" header. Beat
+    // dots sit on the ring and overhang it by half a dot, so each column
+    // reserves one dot diameter plus 6px, and rows are one dot plus 4px apart.
+    const availW = vizSize.width - 20;
+    const availH = vizSize.height - 54 - 6; // stepper header, bottom padding
+    phoneColumns = circleCount <= 2 ? circleCount : circleCount === 3 ? (vizSize.width >= 360 ? 3 : 2) : 2;
+    const rows = Math.ceil(circleCount / phoneColumns);
+    let ring = Math.min(availW / phoneColumns, availH / rows);
+    let dot = 22;
+    for (let i = 0; i < 5; i += 1) {
+      dot = Math.min(22, Math.max(16, ring * 0.2));
+      const gap = dot + 4;
+      const fromW = availW / phoneColumns - dot - 6;
+      const fromH = (availH - dot - (rows - 1) * gap) / rows;
+      ring = Math.min(fromW, fromH);
+    }
+    phoneGap = Math.round(dot + 4);
+    phoneRing = Math.max(64, Math.floor(Math.min(circleCount <= 2 ? 170 : 200, ring)));
+  }
+
   // Render
   return (
     <div className="multi-mode-shell" style={{ textAlign: "center" }}>
       <AccelerateButton onClick={handleAccelerate} speedMode={speedMode} />
 
-      <div className="circles-container" style={{
+      <div className="circles-container viz-card" ref={vizRef} style={{
         display: "flex",
         flexDirection: isMobile ? "column" : "row",
         alignItems: "center",
         justifyContent: "center",
         marginTop: "20px",
         width: "100%",
-        flexWrap: "wrap"
+        flexWrap: "wrap",
+        ...(isPhone ? { "--phone-columns": phoneColumns, "--phone-gap": `${phoneGap}px` } : null)
       }}>
         {circleSettings.map((settings, idx) => (
           <CircleRenderer
@@ -331,12 +363,14 @@ function MultiCircleMetronome(props) {
             macroMode={macroMode}
             isSilencePhaseRef={localIsSilencePhaseRef}
             isMobile={isMobile}
+            phoneRing={phoneRing}
           />
         ))}
         
       </div>
 
       <div className="circle-actions" role="group" aria-label="Manage rhythm circles">
+        <span className="circle-actions-label" aria-hidden="true">Circles</span>
         <button
           type="button"
           onClick={() => removeCircle(activeCircle)}
@@ -346,7 +380,16 @@ function MultiCircleMetronome(props) {
         >
           <InterfaceIcon name="remove" size={20} />
         </button>
-        <button type="button" onClick={addCircle} aria-label="Add rhythm circle" title="Add circle">
+        <span className="circle-actions-count" aria-live="polite">
+          {circleCount}<span className="sr-only"> circles</span>
+        </span>
+        <button
+          type="button"
+          onClick={addCircle}
+          disabled={circleCount >= maxCircles}
+          aria-label="Add rhythm circle"
+          title="Add circle"
+        >
           <InterfaceIcon name="add" size={20} />
         </button>
       </div>

@@ -23,7 +23,8 @@ const CircleRenderer = ({
   circleSettings,
   macroMode,
   isSilencePhaseRef,
-  isMobile
+  isMobile,
+  phoneRing = 0
 }) => {
   const circleCount = circleSettings?.length || 1;
   let actualContainerSize = circleCount > 1 ? containerSize * 0.7 : containerSize;
@@ -33,10 +34,18 @@ const CircleRenderer = ({
     const share = (window.innerWidth - 24 - (circleCount - 1) * 8) / circleCount;
     actualContainerSize = Math.max(70, Math.min(containerSize, share - (circleCount > 2 ? 28 : 32)));
   }
+  if (phoneRing > 0) actualContainerSize = phoneRing;
   const actualRadius = actualContainerSize / 2;
+  // On phones the dot grows with the ring (16-22px) and its touch target
+  // shrinks on crowded rings so neighbouring beats stay separately tappable.
+  const phoneDot = phoneRing > 0 ? Math.round(Math.min(22, Math.max(16, phoneRing * 0.2))) : 0;
+  const beatCountForSpacing = settings.subdivisions || 4;
+  const spacing = (2 * Math.PI * actualRadius) / Math.max(beatCountForSpacing, 1);
+  const hit = phoneRing > 0 ? Math.round(Math.min(44, Math.max(28, spacing))) : 44;
+  const hitHalf = hit / 2;
   const isSilent = isPlaying && macroMode !== 0 && isSilencePhaseRef?.current;
 
-  const iconSize = 24;
+  const iconSize = phoneDot || 24;
   const beatStateLabels = ['muted', 'normal', 'accent', 'first beat'];
   const beats = Array.from({ length: settings.subdivisions || 4 }, (_, i) => {
     const angle = (2 * Math.PI * i) / (settings.subdivisions || 4) - Math.PI / 2;
@@ -68,9 +77,10 @@ const CircleRenderer = ({
           aria-label={`Circle ${idx + 1}, beat ${i + 1}: muted. Activate to change accent.`}
           disabled={!isActiveUI}
           style={{
-            left: `calc(50% + ${xPos}px - 22px)`,
-            top: `calc(50% + ${yPos}px - 22px)`,
-            zIndex: 5
+            left: `calc(50% + ${xPos}px - ${hitHalf}px)`,
+            top: `calc(50% + ${yPos}px - ${hitHalf}px)`,
+            zIndex: 5,
+            ...(phoneRing > 0 ? { width: hit, height: hit } : null)
           }}
         />
       );
@@ -105,8 +115,9 @@ const CircleRenderer = ({
         aria-pressed={beatState > 1}
         disabled={!isActiveUI}
         style={{
-          left: `calc(50% + ${xPos}px - 22px)`,
-          top: `calc(50% + ${yPos}px - 22px)`,
+          left: `calc(50% + ${xPos}px - ${hitHalf}px)`,
+          top: `calc(50% + ${yPos}px - ${hitHalf}px)`,
+          ...(phoneRing > 0 ? { width: hit, height: hit } : null),
           filter: "none",
           transform: isActive ? "scale(1.16)" : "none",
           transition: "filter 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
@@ -124,7 +135,8 @@ const CircleRenderer = ({
       style={{
         width: actualContainerSize,
         height: actualContainerSize,
-        margin: isMobile ? "15px 0 38px" : "15px 15px 38px"
+        ...(phoneRing > 0 ? { "--ring": `${actualContainerSize}px` } : null),
+        margin: phoneRing > 0 ? 0 : isMobile ? "15px 0 38px" : "15px 15px 38px"
       }}
     >
       <button
