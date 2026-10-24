@@ -15,9 +15,22 @@
   margin: 0;
 }
 
-.footer a {
+.footer a,
+.footer .support-button {
   color: var(--accent-ink);
+  font-size: var(--fs-1);
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.footer a:hover,
+.footer a:focus-visible,
+.footer .support-button:hover,
+.footer .support-button:focus-visible {
   text-decoration: underline;
+  text-decoration-thickness: var(--stroke);
+  text-underline-offset: 3px;
 }
 
 /* Links keep their 12 px look but get a 40 px touch area. */
@@ -25,4 +38,16 @@
 .footer .support-button {
   padding: 12px var(--sp-2);
   margin: -12px calc(var(--sp-2) * -1);
+}
+
+/* Narrow phones: keep the line on one row. */
+@media (max-width: 400px) {
+  .footer-line {
+    gap: 0 var(--sp-1);
+  }
+
+  .footer a,
+  .footer .support-button {
+    letter-spacing: 0;
+  }
 }
