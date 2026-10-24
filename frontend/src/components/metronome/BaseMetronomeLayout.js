@@ -21,7 +21,7 @@ export default function BaseMetronomeLayout({
       const hasCoarsePointer = window.matchMedia?.('(pointer: coarse)').matches;
 
       if (w < 600) {
-        setContainerSize(Math.min(w - 40, 320));
+        setContainerSize(Math.min(w - 40, 320, Math.max(200, h * 0.34)));
       } else if (hasCoarsePointer || w <= 1180) {
         setContainerSize(Math.min(w - 72, h * 0.48, 500));
       } else {

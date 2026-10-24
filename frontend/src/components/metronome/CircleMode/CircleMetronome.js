@@ -427,7 +427,7 @@ export function AdvancedMetronomeWithCircle({
 /** Helper to compute container size based on screen width */
 function calcContainerSize() {
   const w = window.innerWidth;
-  if (w < 600) return Math.min(w - 40, 300);
+  if (w < 600) return Math.min(w - 40, 300, Math.max(200, window.innerHeight * 0.34));
   if (w < 1024) return Math.min(w - 40, 400);
   return 300;
 }

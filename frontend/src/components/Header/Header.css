@@ -28,12 +28,12 @@
   }
 
   .header-logo {
-    width: 188px;
+    width: 160px;
   }
 }
 
 @media (max-width: 480px) {
   .app-container .header {
-    padding-top: 52px;
+    padding-top: 12px;
   }
 }
