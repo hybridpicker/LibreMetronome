@@ -1,12 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import AccessibilitySettings from './AccessibilitySettings';
-import InterfaceIcon from '../common/InterfaceIcon';
-import { playAudioFeedback, announceToScreenReader } from '../../utils/accessibility/accessibilityUtils';
+import { playAudioFeedback } from '../../utils/accessibility/accessibilityUtils';
 import './AccessibilityMenu.css';
 
-const AccessibilityMenu = () => {
-  const [showSettings, setShowSettings] = useState(false);
-  const buttonRef = useRef(null);
+const AccessibilityMenu = ({ isOpen = false, onClose, triggerRef }) => {
+  const showSettings = isOpen;
+  const setShowSettings = (open) => { if (!open && onClose) onClose(); };
 
   useEffect(() => {
     const body = document.body;
@@ -37,43 +36,14 @@ const AccessibilityMenu = () => {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [showSettings]);
   
-  const handleButtonClick = () => {
-    setShowSettings(!showSettings);
-    if (window.audioFeedbackEnabled) {
-      playAudioFeedback('click');
-    }
-    
-    // Announce to screen readers
-    if (window.screenReaderMessagesEnabled) {
-      if (showSettings) {
-        announceToScreenReader('Accessibility settings panel closed', 'polite');
-      } else {
-        announceToScreenReader('Accessibility settings panel opened', 'polite');
-      }
-    }
-  };
-  
   return (
     <div className="accessibility-container">
-      <button 
-        ref={buttonRef}
-        className="accessibility-toggle header-action"
-        title="Accessibility settings"
-        onClick={handleButtonClick}
-        aria-label="Accessibility settings"
-        aria-expanded={showSettings}
-        aria-haspopup="dialog"
-      >
-        <InterfaceIcon name="accessibility" size={22} />
-        <span className="sr-only">Accessibility</span>
-      </button>
-      
       {showSettings && (
         <div className="settings-overlay">
           <div className="settings-container">
             <AccessibilitySettings 
               onClose={() => setShowSettings(false)} 
-              triggerRef={buttonRef}
+              triggerRef={triggerRef}
             />
           </div>
         </div>
