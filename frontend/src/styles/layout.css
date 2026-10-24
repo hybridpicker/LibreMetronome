@@ -138,21 +138,31 @@ html.capacitor-native #root {
   grid-row: 3;
   grid-column: 1;
   align-self: start;
-  justify-self: center;
+  justify-self: end;
   z-index: 4;
-  margin-top: calc(var(--sp-3) + var(--sp-3));
+  margin: calc(var(--sp-3) + var(--sp-3)) var(--sp-3) 0 0;
+}
+
+/* Phones: a smaller label keeps the button clear of the top beat mark. */
+@media (max-width: 519px) {
+  .app-container .accelerate-button-container {
+    --fs-2: var(--fs-1);
+    margin-right: var(--sp-2);
+  }
 }
 
 .app-container .training-active-container {
   grid-row: 3;
   grid-column: 1;
-  align-self: start;
+  align-self: end;
+  justify-self: stretch;
   z-index: 6;
-  max-height: calc(100% - var(--sp-3));
-  margin-top: var(--sp-3);
+  max-height: calc(100% - var(--sp-3) - var(--sp-4));
+  margin: 0 var(--sp-2) var(--sp-2);
   overflow-y: auto;
-  border: var(--stroke) solid var(--line);
-  border-radius: var(--r-surface);
+  border: 0;
+  border-top: var(--stroke) solid var(--line-strong);
+  border-radius: 0;
   background: var(--bg);
 }
 
@@ -324,6 +334,7 @@ html.capacitor-native #root {
 .app-container .polyrhythm-mode-shell > .sliders-container > .editable-slider:nth-child(1) {
   grid-row: 5;
   grid-column: 1;
+  margin-top: var(--sp-2);
   display: grid;
   grid-template-columns: auto var(--touch) minmax(0, 1fr) var(--touch);
   align-items: center;
@@ -448,7 +459,11 @@ html.capacitor-native .app-container .transport-row {
   .app-container .practice-controls,
   .app-container .multi-mode-shell > .multi-controls-panel,
   .app-container .polyrhythm-mode-shell > .polyrhythm-controls {
-    margin-top: 0;
+    margin-top: var(--sp-4);
+  }
+
+  .app-container .polyrhythm-mode-shell > .sliders-container > .editable-slider:nth-child(1) {
+    margin-top: var(--sp-4);
   }
 
   .app-container .polyrhythm-mode-shell > .polyrhythm-controls {
@@ -465,15 +480,27 @@ html.capacitor-native .app-container .transport-row {
   .app-container .polyrhythm-mode-shell > .polyrhythm-controls { grid-row: 5; }
   .app-container .polyrhythm-mode-shell > .sliders-container > .editable-slider:nth-child(2) { grid-row: 6; }
 
-  .app-container .mode-selector { max-width: 720px; }
 
   /* The ratio sits in the middle of the whole visualisation area. */
   .app-container .polyrhythm-mode-shell .ratio-display { grid-row: 3 / 9; }
 
-  .app-container .transport-row { margin-top: var(--sp-4); }
+  /* Start and Tap sit on the floor of the column, level with the plate's
+     bottom edge, so they never move when the mode changes. */
+  .app-container .transport-row {
+    grid-row: 8;
+    align-self: end;
+    margin-top: var(--sp-4);
+    margin-bottom: var(--sp-2);
+  }
 
   .app-container .footer { grid-area: 9 / 1 / 10 / -1; }
   .app-container .support-page-container { grid-row: 3 / 9; }
+
+  /* The training panel floats over the visualisation, not over the 0-high row. */
+  .app-container .training-active-container {
+    grid-row: 3 / 9;
+    margin: 0 var(--sp-2) calc(var(--sp-2) + var(--sp-2));
+  }
 
   /* The wide column gives every control its own full-width row, label above. */
   .app-container .control-beats,

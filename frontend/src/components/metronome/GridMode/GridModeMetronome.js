@@ -10,7 +10,7 @@ import { manualTempoAcceleration } from '../../../hooks/useMetronomeLogic/traini
 // Room around the grid and height of the beat-number row, in CSS pixels.
 const GRID_MARGIN = 16;
 const GRID_NUMBER_HEIGHT = 28;
-const MAX_CELL = 64;
+const MAX_CELL = 120;
 
 const GridModeMetronome = (props) => {
   // Re-render on resize/rotation so the cell size follows the window.
