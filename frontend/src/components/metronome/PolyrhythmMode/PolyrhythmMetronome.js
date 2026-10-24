@@ -1,16 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { useVizCardSize } from '../../../utils/phoneLayout';
+import { useVizCardSize } from '../../../utils/layoutSize';
 import usePolyrhythmLogic from "./usePolyrhythmLogic";
 import { initAudioContext, resumeAudioContext } from "../../../hooks/useMetronomeLogic/audioBuffers";
-import playIcon from "../../../assets/svg/play.svg";
-import pauseIcon from "../../../assets/svg/pause.svg";
-import swapIcon from "../../../assets/svg/swap-icon.svg";
-import tapButtonIcon from "../../../assets/svg/tap.svg";
 import EditableSliderInput from "../Controls/EditableSliderInput";
 import CircleRenderer from "./CircleRenderer";
 // Removed unused import
-import "./PolyrhythmMetronome.css";
-import "./EnhancedPolyrhythmStyles.css";
 import withTrainingContainer from "../../Training/withTrainingContainer";
 import AccelerateButton from "../Controls/AccelerateButton";
 import { manualTempoAcceleration } from "../../../hooks/useMetronomeLogic/trainingLogic";
@@ -30,6 +24,10 @@ const debounce = (func, wait) => {
     timeout = setTimeout(later, wait);
   };
 };
+
+// Room between the rings and the edge of the visualisation area.
+const RING_MARGIN = 28;
+const MAX_RING = 520;
 
 const PolyrhythmMetronome = (props) => {
   const {
@@ -84,26 +82,13 @@ const PolyrhythmMetronome = (props) => {
     );
   }, [outerBeats]);
 
-  const getContainerSize = () => {
-    if (window.innerWidth < 1024) return Math.min(window.innerWidth - 40, 400);
-    return 300;
-  };
-  const [baseContainerSize, setContainerSize] = useState(getContainerSize());
-  // Phones: the concentric rings fill the visualisation card.
+  // The rings fill the visualisation area. The outer beat marks overhang the
+  // ring by about 12px, and the area keeps a 16px margin.
   const [vizRef, vizSize] = useVizCardSize();
-  // The outer beat dots overhang the ring by about 16px and the card keeps a
-  // 12px margin, so the ring itself is 56px smaller than the card's short side.
-  // The swap button (44px, 10px from the top-right corner) must also stay clear
-  // of the dots, which caps the ring by its distance from the card centre.
-  const containerSize = (() => {
-    if (!(vizSize.height > 0)) return baseContainerSize;
-    const swapDistance = Math.hypot(vizSize.width / 2 - 32, vizSize.height / 2 - 32);
-    const swapLimit = 2 * (swapDistance - 27 - 16 - 4);
-    return Math.max(
-      120,
-      Math.floor(Math.min(320, vizSize.width - 56, vizSize.height - 56, swapLimit))
-    );
-  })();
+  const vizReady = vizSize.width > 0 && vizSize.height > 0;
+  const containerSize = vizReady
+    ? Math.max(120, Math.floor(Math.min(MAX_RING, vizSize.width - 2 * RING_MARGIN, vizSize.height - 2 * RING_MARGIN)))
+    : 0;
   // Removed unused variable
   
   // Removed unused isMobileOrTablet variable
@@ -248,14 +233,6 @@ const PolyrhythmMetronome = (props) => {
       };
     }
   }, [macroMode, speedMode, polyrhythmMeasureCountRef, polyrhythmMuteMeasureCountRef, isSilencePhaseRef]);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setContainerSize(getContainerSize());
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   useEffect(() => {
     if (soundSetReloadTrigger > 0 && reloadSounds) {
@@ -514,9 +491,9 @@ const PolyrhythmMetronome = (props) => {
   }, []);
 
   return (
-    <div className="polyrhythm-mode-shell" style={{ textAlign: "center", position: "relative" }}>
+    <div className="polyrhythm-mode-shell">
       <div className="polyrhythm-container viz-card" ref={vizRef}>
-        <CircleRenderer
+        {vizReady && <CircleRenderer
           innerBeats={innerBeats}
           outerBeats={outerBeats}
           innerAccents={innerAccents}
@@ -534,21 +511,20 @@ const PolyrhythmMetronome = (props) => {
           }
           isTransitioning={isTransitioning}
           circleColorSwapped={circleColorSwapped}
-        />
-        
+        />}
+
         {/* Direct beat indicator synchronized with the actual beat position */}
-        <DirectBeatIndicator
+        {vizReady && <DirectBeatIndicator
           containerSize={containerSize}
           isPaused={isPaused || isTransitioning}
           tempo={tempo}
           innerBeats={innerBeats}
-        />
+        />}
       </div>
 
       <div className="transport-row polyrhythm-transport-row">
         <TransportButton
           kind="play"
-          icon={isPaused ? playIcon : pauseIcon}
           label={isPaused ? "Start" : "Pause"}
           onClick={handlePlayPause}
           pressed={!isPaused}
@@ -557,7 +533,6 @@ const PolyrhythmMetronome = (props) => {
         />
         <TransportButton
           kind="tap"
-          icon={tapButtonIcon}
           label="Tap Tempo"
           feedbackVolume={volume}
           onClick={handleTapTempo}
@@ -568,51 +543,6 @@ const PolyrhythmMetronome = (props) => {
 
       {/* Accelerate Button positioned after the play button */}
       <AccelerateButton onClick={handleAccelerate} speedMode={speedMode} />
-
-      <div className="beat-state-legend polyrhythm-state-legend" style={{
-        marginTop: '20px', 
-        marginBottom: '20px',
-        display: 'flex', 
-        justifyContent: 'center', 
-        gap: '15px',
-        flexWrap: 'wrap',
-        fontSize: '12px',
-        color: 'var(--text-secondary)'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <div style={{ 
-            width: '12px', 
-            height: '12px', 
-            backgroundColor: 'var(--beat-inner)', 
-            borderRadius: '50%',
-            marginRight: '5px',
-            border: '1px solid var(--neutral-border)'
-          }}></div>
-          Inner Beat
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <div style={{ 
-            width: '12px', 
-            height: '12px', 
-            backgroundColor: 'var(--beat-outer)', 
-            borderRadius: '50%',
-            marginRight: '5px',
-            border: '1px solid var(--neutral-border)'
-          }}></div>
-          Outer Beat
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <div style={{ 
-            width: '12px', 
-            height: '12px', 
-            backgroundColor: 'var(--beat-first)', 
-            borderRadius: '50%',
-            marginRight: '5px',
-            border: '1px solid var(--neutral-border)'
-          }}></div>
-          First Beat
-        </div>
-      </div>
 
       <div className="polyrhythm-controls">
         <div className="polyrhythm-config">
@@ -730,12 +660,14 @@ const PolyrhythmMetronome = (props) => {
             opacity: isTransitioning ? 0.7 : 1
           }}
         >
-          <img src={swapIcon} alt="Swap" />
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+            <path d="M7 16 3 12l4-4M3 12h18M17 8l4 4-4 4" />
+          </svg>
         </button>
       </div>
 
       {/* Tempo and Volume */}
-      <div className="sliders-container" style={{ marginTop: "20px" }}>
+      <div className="sliders-container">
         <EditableSliderInput
           label="Tempo" value={tempo} setValue={setTempo} stepButtons
           min={30} max={240} step={1} disabled={isTransitioning}

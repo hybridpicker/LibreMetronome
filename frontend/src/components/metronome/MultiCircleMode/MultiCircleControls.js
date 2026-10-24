@@ -72,10 +72,10 @@ const MultiCircleControls = ({
   };
 
   return (
-    <div className="controls-section multi-controls-panel" style={{ marginTop: "20px" }}>
+    <div className="controls-section multi-controls-panel">
       {/* Notes section */}
-      <div className="control-group" style={{ marginBottom: "20px", textAlign: "center" }}>
-        <h3 className="section-title"><span className="lbl-full">Notes (Circle {activeCircle + 1})</span><span className="lbl-phone">Note for circle {activeCircle + 1}</span></h3>
+      <div className="control-group control-note">
+        <h3 className="section-title">Note value<span className="control-sub">Circle {activeCircle + 1}</span></h3>
         <NoteSelector 
           beatMode={currentSettings.beatMode}
           onSelect={handleNoteSelection}
@@ -83,8 +83,8 @@ const MultiCircleControls = ({
       </div>
       
       {/* Beats per Bar section */}
-      <div className="control-group" style={{ marginBottom: "20px", textAlign: "center" }}>
-        <h3 className="section-title"><span className="lbl-full">Beats per Bar (Circle {activeCircle + 1})</span><span className="lbl-phone">Circle {activeCircle + 1} beats</span></h3>
+      <div className="control-group control-beats">
+        <h3 className="section-title">Beats per bar<span className="control-sub">Circle {activeCircle + 1}</span></h3>
         <SubdivisionSelector
           subdivisions={currentSettings.subdivisions}
           onSelect={handleSetSubdivisions}

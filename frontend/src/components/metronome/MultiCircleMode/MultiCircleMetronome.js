@@ -1,14 +1,9 @@
 // src/components/metronome/MultiCircleMode/MultiCircleMetronome.js
-import { PHONE_MAX_WIDTH, useVizCardSize } from '../../../utils/phoneLayout';
+import { useVizCardSize } from '../../../utils/layoutSize';
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import useMultiCircleMetronomeLogic from "./hooks/useMultiCircleMetronomeLogic";
 import CircleRenderer from "./CircleRenderer";
-import tapButtonIcon from "../../../assets/svg/tap.svg";
 import InterfaceIcon from "../../common/InterfaceIcon";
-import playIcon from "../../../assets/svg/play.svg";
-import pauseIcon from "../../../assets/svg/pause.svg";
-import "./MultiCircleMetronome.css";
-import '../Controls/slider-styles.css';
 import withTrainingContainer from '../../Training/withTrainingContainer'; // Use the standard training container
 import MultiCircleControls from './MultiCircleControls';
 import TransportButton from '../Controls/TransportButton';
@@ -16,6 +11,15 @@ import TransportButton from '../Controls/TransportButton';
 import AccelerateButton from "../Controls/AccelerateButton";
 import { manualTempoAcceleration } from "../../../hooks/useMetronomeLogic/trainingLogic";
 
+
+// Below this window width Sequence is limited to four circles.
+const PHONE_MAX_WIDTH = 600;
+// Room around the circles, the stepper row above them, and the mark size range.
+const SEQ_PAD = 12;
+const SEQ_HEADER = 56;
+const SEQ_MARK_MIN = 16;
+const SEQ_MARK_MAX = 22;
+const SEQ_RING_MAX = 260;
 
 function MultiCircleMetronome(props) {
   const {
@@ -298,52 +302,49 @@ function MultiCircleMetronome(props) {
     });
   }, []);
 
-  // Phones: lay the circles out in the visualisation card so the dots, the
-  // beat counts and the circle stepper never overlap. One row for 1-3 circles
-  // (2 + 1 when the card is narrower than 360px), a 2x2 grid for 4.
+  // Lay the circles out in the visualisation area so the marks, the beat
+  // counts and the "Circles" stepper never overlap. Every column count is
+  // tried and the one that gives the biggest rings wins: 1-3 circles end up in
+  // one row on a wide area, 4 in a 2x2 block on a narrow one.
   const circleCount = circleSettings.length;
-  const isPhone = vizSize.height > 0;
+  const vizReady = vizSize.width > 0 && vizSize.height > 0;
   const maxCircles = window.innerWidth < PHONE_MAX_WIDTH ? 4 : Infinity;
-  let phoneRing = 0;
-  let phoneColumns = 0;
-  let phoneGap = 12;
-  if (isPhone) {
-    // The grid fills the card with equal columns (so it is centred on both
-    // axes) and rows share the height left under the "Circles" header. Beat
-    // dots sit on the ring and overhang it by half a dot, so each column
-    // reserves one dot diameter plus 6px, and rows are one dot plus 4px apart.
-    const availW = vizSize.width - 20;
-    const availH = vizSize.height - 54 - 6; // stepper header, bottom padding
-    phoneColumns = circleCount <= 2 ? circleCount : circleCount === 3 ? (vizSize.width >= 360 ? 3 : 2) : 2;
-    const rows = Math.ceil(circleCount / phoneColumns);
-    let ring = Math.min(availW / phoneColumns, availH / rows);
-    let dot = 22;
-    for (let i = 0; i < 5; i += 1) {
-      dot = Math.min(22, Math.max(16, ring * 0.2));
-      const gap = dot + 4;
-      const fromW = availW / phoneColumns - dot - 6;
-      const fromH = (availH - dot - (rows - 1) * gap) / rows;
-      ring = Math.min(fromW, fromH);
+  let ring = 120; // until the area is measured
+  let columns = 2;
+  let rowGap = 12;
+  if (vizReady) {
+    // Beat marks sit on the ring and overhang it by half a mark, so each
+    // column reserves one mark plus 6px and each row one mark plus 4px.
+    const availW = vizSize.width - 2 * SEQ_PAD;
+    const availH = vizSize.height - SEQ_HEADER - SEQ_PAD;
+    let best = { ring: 0, columns: 1, mark: SEQ_MARK_MAX };
+    for (let c = 1; c <= circleCount; c += 1) {
+      const rows = Math.ceil(circleCount / c);
+      let candidate = Math.min(availW / c, availH / rows);
+      let mark = SEQ_MARK_MAX;
+      for (let i = 0; i < 5; i += 1) {
+        mark = Math.min(SEQ_MARK_MAX, Math.max(SEQ_MARK_MIN, candidate * 0.2));
+        const fromW = availW / c - mark - 6;
+        const fromH = (availH - mark - (rows - 1) * (mark + 10)) / rows;
+        candidate = Math.min(fromW, fromH);
+      }
+      if (candidate > best.ring) best = { ring: candidate, columns: c, mark };
     }
-    phoneGap = Math.round(dot + 4);
-    phoneRing = Math.max(64, Math.floor(Math.min(circleCount <= 2 ? 170 : 200, ring)));
+    columns = best.columns;
+    rowGap = Math.round(best.mark + 10);
+    ring = Math.max(64, Math.floor(Math.min(SEQ_RING_MAX, best.ring)));
   }
 
   // Render
   return (
-    <div className="multi-mode-shell" style={{ textAlign: "center" }}>
+    <div className="multi-mode-shell">
       <AccelerateButton onClick={handleAccelerate} speedMode={speedMode} />
 
-      <div className="circles-container viz-card" ref={vizRef} style={{
-        display: "flex",
-        flexDirection: isMobile ? "column" : "row",
-        alignItems: "center",
-        justifyContent: "center",
-        marginTop: "20px",
-        width: "100%",
-        flexWrap: "wrap",
-        ...(isPhone ? { "--phone-columns": phoneColumns, "--phone-gap": `${phoneGap}px` } : null)
-      }}>
+      <div
+        className="circles-container viz-card"
+        ref={vizRef}
+        style={vizReady ? { "--seq-columns": columns, "--seq-gap": `${rowGap}px` } : undefined}
+      >
         {circleSettings.map((settings, idx) => (
           <CircleRenderer
             key={idx}
@@ -363,7 +364,7 @@ function MultiCircleMetronome(props) {
             macroMode={macroMode}
             isSilencePhaseRef={localIsSilencePhaseRef}
             isMobile={isMobile}
-            phoneRing={phoneRing}
+            ring={ring}
           />
         ))}
         
@@ -397,7 +398,6 @@ function MultiCircleMetronome(props) {
       <div className="transport-row multi-transport-row">
         <TransportButton
           kind="play"
-          icon={isPaused ? playIcon : pauseIcon}
           label={isPaused ? 'Start' : 'Pause'}
           onClick={handlePlayPause}
           pressed={!isPaused}
@@ -405,7 +405,6 @@ function MultiCircleMetronome(props) {
         />
         <TransportButton
           kind="tap"
-          icon={tapButtonIcon}
           label="Tap Tempo"
           feedbackVolume={volume}
           className="tap-button"
