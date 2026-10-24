@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import './InfoModal.css';
 import packageJson from '../../../package.json';
 import InterfaceIcon from '../common/InterfaceIcon';
+import { IS_NATIVE_APP } from '../../nativeApp';
 
 const InfoModal = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState('about');
@@ -100,10 +101,10 @@ const InfoModal = ({ isOpen, onClose }) => {
 
         <div className="info-modal-content">
           <div className={`info-modal-panel ${activeTab === 'about' ? 'active' : ''}`}>
-            <h2>Free Online Metronome</h2>
+            <h2>{IS_NATIVE_APP ? 'Precision Practice Metronome' : 'Free Online Metronome'}</h2>
             <p>
               LibreMetronome is a professional-grade metronome that helps musicians develop precise timing
-              and rhythm. Unlike physical metronomes, this free online tool offers multiple visualization 
+              and rhythm. Unlike physical metronomes, this {IS_NATIVE_APP ? 'app' : 'free online tool'} offers multiple visualization 
               modes, customizable time signatures, and advanced training features.
             </p>
             
@@ -117,13 +118,13 @@ const InfoModal = ({ isOpen, onClose }) => {
             </div>
             
             <div className="info-section-block">
-              <h3>Online Metronome Benefits</h3>
+              <h3>{IS_NATIVE_APP ? 'Why LibreMetronome' : 'Online Metronome Benefits'}</h3>
               <ul className="info-section-list">
-                <li>Instantly accessible from any device with a browser</li>
+                <li>{IS_NATIVE_APP ? 'Works fully offline, with no account and no tracking' : 'Instantly accessible from any device with a browser'}</li>
                 <li>Multiple visual modes for different learning preferences</li>
                 <li>Customizable time signatures and subdivisions</li>
                 <li>Precise tempo control with tap tempo feature</li>
-                <li>Always completely free with no premium restrictions</li>
+                <li>{IS_NATIVE_APP ? 'One purchase, no ads, no locked features' : 'Always completely free with no premium restrictions'}</li>
               </ul>
             </div>
           </div>
@@ -223,7 +224,7 @@ const InfoModal = ({ isOpen, onClose }) => {
               <li><span className="key">I</span> Open this Guide</li>
               <li><span className="key">R</span> Show Training menu</li>
               <li><span className="key">S</span> Show Settings menu</li>
-              <li><span className="key">D</span> Show Support menu</li>
+              {!IS_NATIVE_APP && <li><span className="key">D</span> Show Support menu</li>}
               <li><span className="key">Enter</span> Force tempo increase (Training Mode)</li>
               <li><span className="key">Esc</span> Close menus and dialogs</li>
             </ul>
