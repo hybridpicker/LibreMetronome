@@ -14,7 +14,7 @@ import SettingsContent from './components/Menu/SettingsContent';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
 import ModeSelector from './components/ModeSelector'; // Import the new ModeSelector component
 import { SupportPage } from './components/Support';
-import { HelpButton, InfoModal } from './components/InfoSection'; // Import the Help components
+import { InfoModal } from './components/InfoSection'; // Import the Help components
 import { initAudioContext, resumeAudioContext } from './hooks/useMetronomeLogic/audioBuffers';
 import { setScreenAwake } from './mobile';
 import { DESKTOP_COMMAND_EVENT, reportDesktopState } from './desktop';
@@ -436,6 +436,7 @@ function App() {
   const [soundSetReloadTrigger, setSoundSetReloadTrigger] = useState(0);
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [infoModalOpen, setInfoModalOpen] = useState(false);
+  const [accessibilityOpen, setAccessibilityOpen] = useState(false);
 
   const togglePlayRef = useRef(null);
   const tapTempoRef = useRef(null);
@@ -678,9 +679,7 @@ function App() {
         Initialize Audio
       </button>
       
-      {/* Help button positioned at bottom-left corner */}
-      <HelpButton onClick={() => setInfoModalOpen(true)} />
-      <AccessibilityMenu />
+      <AccessibilityMenu isOpen={accessibilityOpen} onClose={() => setAccessibilityOpen(false)} />
       <Helmet>
         <title>{`LibreMetronome - ${({ circle: 'Beat', multi: 'Sequence' }[mode] || mode.charAt(0).toUpperCase() + mode.slice(1))} Mode`}</title>
         <meta name="description" content={getModeDescription()} />
@@ -706,6 +705,8 @@ function App() {
         setDefaultSubdivisions={setSubdivisions}
         currentMode={mode}
         setSoundSetReloadTrigger={setSoundSetReloadTrigger}
+        onOpenAccessibility={() => setAccessibilityOpen(true)}
+        onOpenGuide={() => setInfoModalOpen(true)}
       />
 
       <Header />

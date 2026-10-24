@@ -1259,3 +1259,36 @@
 .menu-modal input[type='radio'] {
   accent-color: var(--primary-teal-dark);
 }
+
+.menu-links {
+  display: flex;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+}
+
+.menu-link {
+  flex: 1;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: 8px 10px;
+  background: transparent;
+  border: 1px solid var(--line-subtle);
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.menu-link:hover {
+  color: var(--primary-teal);
+  background: var(--surface-selected);
+}
+
+.menu-link .interface-icon {
+  width: 20px;
+  height: 20px;
+}

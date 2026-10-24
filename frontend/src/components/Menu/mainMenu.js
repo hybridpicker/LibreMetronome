@@ -36,7 +36,11 @@ const MainMenu = ({
   currentTempo,
   
   // For sound reload
-  setSoundSetReloadTrigger
+  setSoundSetReloadTrigger,
+
+  // Entries that open other dialogs from the single menu
+  onOpenAccessibility,
+  onOpenGuide
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [activeTab, setActiveTab] = useState('training'); // 'training', 'settings', 'support'
@@ -55,6 +59,11 @@ const MainMenu = ({
     }
   }, [isVisible]);
   
+  const openFromMenu = (open) => {
+    setIsVisible(false);
+    if (open) open(menuButtonRef);
+  };
+
   // Close menu when Escape is pressed and handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -126,7 +135,7 @@ const MainMenu = ({
         ref={menuButtonRef}
         className={`menu-button header-action ${isVisible ? 'active' : ''}`}
         onClick={() => setIsVisible(prev => !prev)}
-        aria-label="Main Menu"
+        aria-label="Menu"
         aria-expanded={isVisible}
         aria-haspopup="dialog"
         title="Settings (S)"
@@ -182,6 +191,17 @@ const MainMenu = ({
               )}
             </div>
             
+            <div className="menu-links">
+              <button type="button" className="menu-link" onClick={() => openFromMenu(onOpenAccessibility)}>
+                <InterfaceIcon name="accessibility" />
+                <span>Accessibility</span>
+              </button>
+              <button type="button" className="menu-link" onClick={() => openFromMenu(onOpenGuide)}>
+                <InterfaceIcon name="info" />
+                <span>Guide</span>
+              </button>
+            </div>
+
             {/* Content Area */}
             <div className="menu-content" role="tabpanel">
               {renderTabContent()}
