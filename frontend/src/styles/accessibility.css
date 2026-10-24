@@ -109,21 +109,6 @@ body.high-contrast .metronome-container {
   outline-offset: 2px;
 }
 
-/* Slider accessibility improvements */
-input[type="range"] {
-  height: 30px; /* Larger target for sliders */
-}
-
-input[type="range"]::-webkit-slider-thumb {
-  width: 24px;
-  height: 24px;
-}
-
-input[type="range"]::-moz-range-thumb {
-  width: 24px;
-  height: 24px;
-}
-
 /* Keyboard focus indicators */
 .keyboard-focus-indicator {
   position: fixed;
@@ -131,7 +116,6 @@ input[type="range"]::-moz-range-thumb {
   z-index: 9999;
   border: 3px solid var(--focus);
   border-radius: 4px;
-  box-shadow: 0 0 8px rgba(77, 144, 254, 0.5);
   transition: all 0.15s ease;
   display: none;
 }
