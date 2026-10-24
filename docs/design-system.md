@@ -4,15 +4,15 @@ One calm, precise look for every output: web (desktop and phone browser),
 the paid, ad-free, offline Android app, and the iOS/macOS shell. One token
 base, one set of components; only the arrangement changes with the width.
 
-Updated October 24, 2026 (build 0.7.0).
+Updated October 24, 2026 (build 0.7.1).
 
 ## Principles
 
 1. **A measuring instrument.** Almost monochrome. White canvas, flat grey
    surfaces, hairlines instead of framed cards.
-2. **One accent.** Teal marks the active state, the current beat and the Start
-   button, nothing else. Gold appears only as a thin contour or a small dot on
-   accented beats, never as a surface.
+2. **One colour: teal.** It marks the active state, the current beat, accented
+   beats (ring) and the Start button. There is no gold. Neutrals carry a faint
+   teal tint so the screen feels warm, not sterile.
 3. **No decoration.** No shadows, no gradients, no legend dots, no filled gold.
    The meaning of the beat marks is explained in the Guide.
 4. **State is never colour only.** Shape carries it too (ring, ring with dot,
@@ -25,14 +25,13 @@ Updated October 24, 2026 (build 0.7.0).
 | Role | Token | Value |
 | --- | --- | --- |
 | Canvas | `--bg` | `#ffffff` |
-| Surface | `--surface` | `#f6f7f7` |
+| Surface | `--surface` | `#eff6f6` |
 | Text | `--ink` | `#111111` |
-| Secondary text | `--ink-2` | `#6b7072` (4.9:1 on white) |
-| Graphics only | `--ink-3` | `#868c8e` (rings, filled cells; 3.4:1) |
-| Lines | `--line`, `--line-strong` | `#e3e6e6`, `#c7cccd` |
+| Secondary text | `--ink-2` | `#5c6e6e` (5.5:1 on white) |
+| Graphics only | `--ink-3` | `#7b9090` (rings, filled cells; 3.4:1) |
+| Lines | `--line`, `--line-strong` | `#dbe7e7`, `#bdd0d0` |
 | Accent | `--accent` | `#00a0a0` (fills, current beat, thumb) |
 | Accent as text | `--accent-ink` | `#00797a` (5.2:1) |
-| Gold | `--gold` | `#b98a12` (contour or dot) |
 | Type scale | `--fs-1` … `--fs-5` | 12 / 14 / 17 / 22 / 44 px |
 | Radius | `--r-control`, `--r-surface` | 10 px, 12 px |
 | Space | `--sp-1` … `--sp-6` | 4 / 8 / 12 / 16 / 24 / 32 px |
@@ -72,11 +71,12 @@ The page is one grid that fills the window and never scrolls
 - **Mode selector:** text-only segmented control; the active segment is white
   with a teal underline.
 - **Beat marks** (Beat, Sequence, Polyrhythm): current beat teal filled with a
-  hairline halo; normal grey ring; accent gold ring; first beat gold ring with
-  a gold dot; muted dashed pale ring.
-- **Analog:** rod, pivot, weight; the weight is teal while running.
+  hairline halo; normal grey ring; accent teal ring; first beat teal ring with
+  a dot; muted dashed pale ring.
+- **Beat** sits inside a watch-bezel of 60 hairline ticks; **Analog** shows rod,
+  pivot and weight under a hairline tick scale; the weight is teal while running.
 - **Grid:** hairline cells; filled cells grey, the current column teal; accent
-  and first-beat cells get a gold contour.
+  and first-beat cells get a teal contour.
 - **Sequence:** circles with hairline rings, the selected one teal; "Circles"
   stepper in the top corner.
 - **Controls:** rows separated by hairlines; 10 px outlined buttons; selected

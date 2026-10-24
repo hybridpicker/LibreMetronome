@@ -429,3 +429,12 @@ Prüfung: drei getrennte Prüfer (Optik, Handy-Daumen, Desktop/Tablet) auf Basis
 - Hoher Kontrast, Großschrift und Farbenblind nicht in allen Größen.
 - Kontrast nur nach Augenmaß und Token-Werten (ink-2 4,9:1, accent-ink 5,2:1), nicht mit einem Werkzeug über alle Zustände gemessen. Start-Label (22 px fett auf Teal `#00A0A0`, 3,2:1) erfüllt AA nur als großer Text.
 - Web: noch nicht gepusht; Server-Build und Kopieren der Icons nach `static_cdn/assets` stehen aus.
+
+### 15.1 Nachtrag: nur Teal, mehr Charakter (Build 0.7.1, versionCode 6)
+
+Build 0.7.0 (versionCode 5) wurde vom Eigentümer im internen Test veröffentlicht (nicht von mir geprüft). Rückmeldung: Design besser, aber nur eine Farbe (Teal), Gold entfällt, und „einen Tick zu clean“.
+
+- Gold entfernt: Akzent-Schlag ist ein Teal-Ring, erster Schlag Teal-Ring mit Punkt, Grid-Konturen teal. Neutrale Töne leicht teal getönt (`--surface` `#eff6f6`, Linien `#dbe7e7`/`#bdd0d0`, `--ink-2` `#5c6e6e`).
+- Mehr Charakter innerhalb der Regeln: Beat-Modus mit Zifferblatt-Ring und 60 Haarlinien-Strichen (Fünferstriche teal), Analog mit Haarlinien-Skala über dem Pendel, Halo um den aktuellen Schlag.
+- Nachweis: 42 von 42 Fälle Überlänge 0 px; Modi (Kontrast, Großschrift, Farbenblind) bei 412×805, 360×740, 1280×800 je 0 px; 187 Tests grün.
+- Nicht geprüft: wie vorher (echtes Gerät, iOS, macOS); Kontrast der neuen Töne nur nach Token-Werten.

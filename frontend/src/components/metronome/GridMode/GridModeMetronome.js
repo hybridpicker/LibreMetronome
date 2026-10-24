@@ -299,7 +299,7 @@ const GridModeMetronome = (props) => {
   }, [props.isPaused, props.tempo, props.tempoIncreasePercent, props.setTempo]);
 
   // A column is three stacked cells; the level fills them from the bottom.
-  // Level 1 normal, 2 accent (middle cell gets a gold contour), 3 first beat.
+  // Level 1 normal, 2 accent (middle cell gets a teal contour), 3 first beat.
   const renderGridSquares = () => {
     return Array.from({ length: props.subdivisions }, (_, colIndex) => {
       const isCurrentBeat = colIndex === animationFrame && !props.isPaused;

@@ -508,6 +508,18 @@ export function AdvancedMetronomeWithCircle({
           ) : (
             vizReady && (
               <>
+                <svg className="dial-ticks" viewBox="-50 -50 100 100" aria-hidden="true" focusable="false">
+                  {Array.from({ length: 60 }, (_, i) => (
+                    <line
+                      key={i}
+                      className={i % 5 === 0 ? 'is-major' : undefined}
+                      x1="0" x2="0"
+                      y1={i % 5 === 0 ? -49 : -49}
+                      y2={i % 5 === 0 ? -45.5 : -47}
+                      transform={`rotate(${i * 6})`}
+                    />
+                  ))}
+                </svg>
                 {lineConnections}
                 {beatData.map((bd) => {
                   const state = effectiveAccents[bd.i];
