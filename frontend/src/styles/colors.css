@@ -26,6 +26,19 @@
   --accent-wash: #e6f5f5;    /* very light teal, selected-state tint */
   --on-accent: #ffffff;
 
+  /* The dial face: the visualisation sits on a dark teal-black plate, like an
+     instrument face. Components inside it read the same token names; the
+     plate re-maps them (see .viz-card in instrument-system.css). */
+  --dial-bg: #0b2626;
+  --dial-ink: #e8f4f4;       /* 14:1 on the plate */
+  --dial-ink-2: #9bb7b7;     /* secondary text on the plate */
+  --dial-ink-3: #5f8585;     /* graphics only */
+  --dial-line: #1c4141;
+  --dial-line-strong: #4a7a7a;
+  --dial-accent: #2ec4c4;    /* teal on the plate: current beat, accents */
+  --dial-accent-wash: #123636;
+  --dial-on-accent: #0b2626;
+  --dial-focus: #7ee6e6;
 
   --focus: #00797a;
   --danger: #b3261e;
@@ -36,7 +49,7 @@
   --fs-2: 14px;              /* labels, secondary text */
   --fs-3: 17px;              /* values, buttons, body */
   --fs-4: 22px;              /* Start label, section titles */
-  --fs-5: 44px;              /* BPM */
+  --fs-5: 64px;              /* BPM */
   --fw-regular: 400;
   --fw-bold: 700;
 
@@ -49,8 +62,8 @@
   --sp-6: 32px;
 
   /* ---- Shape ---------------------------------------------------------- */
-  --r-control: 10px;         /* buttons and fields */
-  --r-surface: 12px;         /* flat surfaces; 0 where a hairline is enough */
+  --r-control: 2px;          /* square keys: buttons and fields */
+  --r-surface: 4px;          /* the dial plate; 0 where a hairline is enough */
   --stroke: 1px;
   --stroke-viz: 1.5px;       /* lines inside visualisations (2px max) */
   --stroke-select: 2px;      /* selected and focused outlines */
@@ -114,7 +127,7 @@
   --info: var(--accent-ink);
   --highlight: var(--accent);
 
-  --overlay-bg: rgba(17, 17, 17, 0.55);
+  --overlay-bg: rgba(11, 38, 38, 0.72);
   --modal-shadow: none;
 
   --training-tip-bg: var(--surface);

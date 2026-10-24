@@ -22,6 +22,16 @@ body.high-contrast {
   --accent-ink: #00ffff;
   --accent-wash: #000000;
   --on-accent: #000000;
+  --dial-bg: #000000;
+  --dial-ink: #ffffff;
+  --dial-ink-2: #ffffff;
+  --dial-ink-3: #ffffff;
+  --dial-line: #ffffff;
+  --dial-line-strong: #ffffff;
+  --dial-accent: #00ffff;
+  --dial-accent-wash: #000000;
+  --dial-on-accent: #000000;
+  --dial-focus: #ffff00;
   --focus: #ffff00;
   --danger: #ff8a80;
   background: #000000;
@@ -57,7 +67,7 @@ body.large-text {
   --fs-2: 17px;
   --fs-3: 20px;
   --fs-4: 24px;
-  --fs-5: 52px;
+  --fs-5: 72px;
 }
 
 /* Dialogs and guide text scale with the root size. */
@@ -82,22 +92,32 @@ body.deuteranopia {
   --accent: #0072b2;
   --accent-ink: #005a8d;
   --accent-wash: #e3f0f8;
+  --dial-accent: #56b4e9;
+  --dial-accent-wash: #10303f;
+  --dial-focus: #9bd3f2;
 }
 
 body.tritanopia {
   --accent: #c24d00;
   --accent-ink: #a13f00;
   --accent-wash: #fbece3;
+  --dial-accent: #e69f00;
+  --dial-accent-wash: #3a2c0b;
+  --dial-focus: #f5c860;
 }
 
 body.monochromacy {
   --accent: #111111;
   --accent-ink: #111111;
   --accent-wash: #eeeeee;
+  --dial-accent: #ffffff;
+  --dial-accent-wash: #1c4141;
+  --dial-focus: #ffffff;
 }
 
 /* Large text on short phones: tighter rows, the footer keeps to one line. */
 @media (max-height: 759px) {
+  body.large-text { --fs-5: 56px; }
   body.large-text .app-container { --row-pad: 0px; }
   body.large-text .footer-line { flex-wrap: nowrap; white-space: nowrap; }
 }
