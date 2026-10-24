@@ -1,6 +1,6 @@
 # LibreMetronome als App in Google Play und im App Store
 
-Stand: 2026-10-22. **Anleitung für den Eigentümer, nur Vorbereitung.** Noch nichts gebaut, kein Konto angelegt, keine App-Kennung belegt, nichts hochgeladen. Ältere Notizen: [mobile-deployment.md](mobile-deployment.md) (Entwicklungs-Build am iPad), [release-plan.md](release-plan.md) (Web und App Store, Stand 2026-09-05).
+Stand: 2026-10-24. **Anleitung für den Eigentümer.** Entscheidung vom 2026-10-24: LibreMetronome wird eine **bezahlte App (1,99 € inkl. MwSt.), werbefrei, ohne Konto, offline**, Android zuerst, iOS danach. Der Code bleibt GPL v3. Technische Vorbereitung für den Android-Test ist im Repo erledigt (Abschnitt 12). In Play ist **noch keine App angelegt, keine Kennung belegt, nichts hochgeladen**. Ältere Notizen: [mobile-deployment.md](mobile-deployment.md) (Entwicklungs-Build am iPad), [release-plan.md](release-plan.md) (Web und App Store, Stand 2026-09-05).
 
 **Keine Rechtsberatung.** Store-Regeln stehen unten mit Quelle und Lesedatum (Abschnitt 11). Was daraus rechtlich folgt (GPL, Verbraucherrecht, DSGVO), ist nicht geprüft.
 
@@ -8,14 +8,15 @@ Stand: 2026-10-22. **Anleitung für den Eigentümer, nur Vorbereitung.** Noch ni
 
 | Frage | Empfehlung |
 |---|---|
+| Preis | **Bezahlt, 1,99 € inkl. MwSt., weltweit**, keine In-App-Käufe, keine Werbung. Wird beim Anlegen der App festgelegt: kostenlos lässt sich nie in bezahlt ändern, bezahlt in kostenlos schon (laut Auftrag; Play-Hilfe vor dem Anlegen prüfen, Abschnitt 13). |
 | Weg | **Capacitor 8** weiterführen (schon eingebaut: `frontend/ios`, `frontend/android`, `capacitor.config.ts`). Die React-App wird mit allen Klängen in die App gepackt und läuft **ohne Server**. |
 | Konten | Die schon vorhandenen Konten des Eigentümers: Google Play „Schoensgibl.com“ (privat, verifiziert) und Apple-Einzelmitgliedschaft (Aktivierung ausstehend). Keine neuen Konten. |
-| App-Kennung | Vorschlag: `com.hybridpicker.libremetronome` beibehalten (steht schon im Code). Unumkehrbar ab dem ersten Upload, Entscheidung des Eigentümers (Abschnitt 3). |
-| Name im Store | „LibreMetronome“ (Vorschlag; Untertitel z. B. „Metronom für Übung und Unterricht“) |
+| App-Kennung | **`com.libremetronome`** (Entscheidung 2026-10-24, im Code umgestellt). Unumkehrbar ab dem ersten Upload; vor „App anlegen“ nochmals bestätigen (Abschnitt 3). |
+| Name im Store | „LibreMetronome“, Store-Sprache **nur Englisch** (Entwurf: [store/listing-en.md](store/listing-en.md)) |
 | Daten | Keine Konten, keine Analyse, keine Werbung, kein Server nötig: Ziel „Keine Daten erhoben“ in beiden Stores |
-| Spenden-Knopf | in den Apps **ausblenden** (Stripe-Link widerspricht den Zahlungsregeln beider Stores, Abschnitt 6) |
+| Spenden-Knopf | im App-Build **ausgeblendet** (Abschnitt 6), im Web unverändert |
 | Testphase | Play: interner Test → geschlossener Test mit mind. 12 Personen über 14 Tage → Produktion. Apple: TestFlight → App-Prüfung |
-| Kosten | keine zusätzlichen Gebühren (Konten bestehen schon), Abschnitt 9 |
+| Kosten | Play-Provision auf den Preis, Abschnitt 9 |
 
 ## 1. Warum Capacitor (und nicht TWA, Flutter oder nativ)
 
@@ -38,7 +39,7 @@ Apple-Richtlinie 4.2 verlangt mehr als eine „verpackte Webseite“ (11.1). Fü
 
 ## 2. Technische Arbeiten vor dem ersten Store-Build (eigene Aufträge)
 
-Befunde aus dem Code, Stand 2026-10-22, nicht auf Geräten geprüft:
+Befunde aus dem Code, Stand 2026-10-22. **Erledigt am 2026-10-24 (Android, lokal gebaut, noch nicht committed gepusht):** Punkte 1, 2, 3, 4 (Android), 5; Details und Nachweise in Abschnitt 12. Offen: 6 bis 9.
 
 1. **Klänge und API ohne Server:** `config.js`, `audioBuffers.js` und `soundSetService.js` nehmen `REACT_APP_BACKEND_URL`, sonst `http://localhost:8000` bzw. in Produktion `window.location.origin`. In der App ist der Ursprung `capacitor://localhost` (iOS) bzw. `https://localhost` (Android), Anfragen an `/api/…` laufen ins Leere. Vorschlag: für App-Builds die Klangsätze fest mitliefern, API-Aufrufe abschalten (Build-Schalter, z. B. `REACT_APP_NATIVE=1` oder `Capacitor.isNativePlatform()`), damit die App **keine Netzanfragen** macht. Falls doch online nachgeladen werden soll: nur von `https://libremetronome.com`, und dann ändern sich die Datenschutzangaben (Abschnitt 5).
 2. **Spenden ausblenden:** `SupportButton`, `SupportPage` und `supportUtils.js` (Stripe-Zahlungslink) im App-Build nicht anzeigen (Abschnitt 6).
@@ -51,6 +52,8 @@ Befunde aus dem Code, Stand 2026-10-22, nicht auf Geräten geprüft:
 9. **Zeitgenauigkeit:** Klick-Latenz über Bluetooth und Lautsprecher am Gerät messen (offen laut `mobile-deployment.md`). Kein Store-Thema, aber Thema für Bewertungen.
 
 ## 3. App-Kennung (unumkehrbar)
+
+**Entschieden 2026-10-24: `com.libremetronome`.** Im Code umgestellt (`capacitor.config.ts`, Android `applicationId`/Paket, iOS-Projekt). Die Tabelle unten ist der ursprüngliche Vergleich. Die Entscheidung muss vor „App anlegen“ noch einmal ausdrücklich bestätigt werden.
 
 Die Kennung (iOS Bundle-ID, Android `applicationId`) ist ab dem ersten Upload in App Store Connect bzw. Play Console belegt und lässt sich danach nicht mehr ändern; eine andere Kennung heißt neue App ohne Bewertungen und Nutzer.
 
@@ -80,7 +83,7 @@ Ablage für Store-Texte und Screenshots: `docs/store/` im Repo (keine Geheimniss
 
 ## 5. Datenschutz
 
-**Datenschutzerklärung:** Beide Stores verlangen eine öffentlich erreichbare Datenschutz-URL, auch wenn die App nichts erhebt; Apple zusätzlich einen Link **in der App** (Richtlinie 5.1.1(i)). Heute gibt es auf `libremetronome.com` keine Datenschutzseite (im Repo nicht gefunden). Aufgabe: eine Seite anlegen (z. B. `https://libremetronome.com/privacy`) für Webseite **und** Apps, und im Info-Fenster der App verlinken. Inhalt (Vorschlag, vom Eigentümer zu prüfen): wer verantwortlich ist, dass die App keine Konten, keine Analyse und keine Werbung hat, dass Einstellungen (Tempo, Lautstärke, Barrierefreiheit) nur auf dem Gerät gespeichert werden, was der Webserver protokolliert (gilt nur für die Webseite oder für die App, falls sie online nachlädt).
+**Datenschutzerklärung:** Beide Stores verlangen eine öffentlich erreichbare Datenschutz-URL, auch wenn die App nichts erhebt; Apple zusätzlich einen Link **in der App** (Richtlinie 5.1.1(i)). Heute gibt es auf `libremetronome.com` keine Datenschutzseite. Entwurf: [store/privacy-policy.md](store/privacy-policy.md); Veröffentlichung ist ein Serverauftrag. Der Link steht schon im Info-Fenster der App. Aufgabe: eine Seite anlegen (z. B. `https://libremetronome.com/privacy`) für Webseite **und** Apps, und im Info-Fenster der App verlinken. Inhalt (Vorschlag, vom Eigentümer zu prüfen): wer verantwortlich ist, dass die App keine Konten, keine Analyse und keine Werbung hat, dass Einstellungen (Tempo, Lautstärke, Barrierefreiheit) nur auf dem Gerät gespeichert werden, was der Webserver protokolliert (gilt nur für die Webseite oder für die App, falls sie online nachlädt).
 
 **Apple App Privacy:** Nur auf dem Gerät verarbeitete Daten gelten nicht als „erhoben“. Ohne Netzanfragen: „Data Not Collected“.
 
@@ -99,7 +102,7 @@ Die Webseite hat einen Stripe-Spendenlink (`supportUtils.js`, Spendenseite).
 - **Apple:** Trinkgeld an den Entwickler nur über In-App-Kauf (3.1.1). Außerhalb des US-Stores dürfen App und Metadaten keine Knöpfe oder Links zu anderen Zahlungswegen enthalten (3.1.1(a)). Spendensammeln ohne In-App-Kauf nur für anerkannte gemeinnützige Organisationen (3.2.1(vi), 3.2.2(iv)).
 - **Google:** Apps dürfen nicht zu anderen Zahlungswegen als Google Play Billing führen (Links, Knöpfe), Ausnahmen u. a. für steuerbefreite Spenden und für Sonderprogramme in bestimmten Ländern. Trinkgeld an Entwickler erwähnt die Seite nicht.
 
-**Empfehlung:** in beiden Apps keinen Spendenlink zeigen. Später optional ein Trinkgeld per In-App-Kauf (Apple) bzw. Play Billing; das macht die App kostenpflichtig im Sinn der Abrechnung (Steuer, Auszahlung, wahrscheinlich Händlerstatus). **Entscheidung des Eigentümers.**
+**Umgesetzt (Android-Build):** Knopf, Seite, Menü-Reiter und Taste „D“ sind im App-Build aus (`IS_NATIVE_APP` in `frontend/src/nativeApp.js`). Der Stripe-Text steckt als toter Code noch im JavaScript-Paket, wird aber nirgends angezeigt oder aufgerufen. **Empfehlung:** in beiden Apps keinen Spendenlink zeigen. Später optional ein Trinkgeld per In-App-Kauf (Apple) bzw. Play Billing; das macht die App kostenpflichtig im Sinn der Abrechnung (Steuer, Auszahlung, wahrscheinlich Händlerstatus). **Entscheidung des Eigentümers.**
 
 ## 7. Signatur (alles außerhalb des Repos)
 
@@ -124,7 +127,7 @@ Kein CI mit Schlüsseln, solange nicht ausdrücklich entschieden.
 
 ### Google Play
 
-1. Play Console (Konto „Schoensgibl.com“): App anlegen (Name, Standardsprache, App, kostenlos). **Ab dem ersten Upload ist die Kennung belegt.**
+1. Play Console (Konto „Schoensgibl.com“): App anlegen (Name, Standardsprache Englisch, App, **bezahlt**). Preis 1,99 € setzen; Händlerprofil muss aktiv sein (Abschnitt 13). **Ab dem ersten Upload ist die Kennung belegt.**
 2. **Interner Test:** E-Mail-Liste (bis 100), AAB hochladen, veröffentlichen, Teilnahme-Link verschicken. Keine Standardprüfung, kein Datensicherheitsformular nötig. Bis die App eingerichtet und geprüft ist, zeigt Play einen vorläufigen Namen wie „com.hybridpicker.libremetronome (unreviewed)“ (bei SPÖ Connect so beobachtet).
 3. **Geschlossener Test (Pflicht für private Konten, die nach 2023-11-13 angelegt wurden):** mindestens **12 Testpersonen**, die **14 Tage ununterbrochen** eingetragen sind. Wer austritt und wieder eintritt, beginnt neu. Dafür müssen Store-Eintrag, Datensicherheitsformular, Altersfreigabe und Datenschutz-URL fertig sein. Der interne Test zählt nicht. Tipp: dieselbe Testgruppe (z. B. eine Google Group) für LibreMetronome und Guitar Positions nutzen und beide geschlossenen Tests gleichzeitig laufen lassen. Ob die Pflicht je App gilt, sagt die Hilfeseite nicht ausdrücklich („for their app“); vorsichtshalber je App einplanen.
 4. **Zugriff auf Produktion beantragen** im Dashboard (drei Abschnitte: geschlossener Test, App, Bereitschaft). Prüfung meist bis 7 Tage; Google kann längeres Testen verlangen.
@@ -148,12 +151,18 @@ AAB-Upload macht der Eigentümer selbst in der Play Console (Claude in Chrome l�
 |---|---|---|
 | Apple Developer Program | 99 USD pro Jahr (Landeswährung je nach Region) | schon für SPÖ Connect bezahlt, gilt für alle Apps des Kontos; läuft die Mitgliedschaft aus, verschwinden die Apps aus dem Store |
 | Google Play Konto | 25 USD einmalig | schon bezahlt |
-| Store-Provision | 0 | App kostenlos, keine In-App-Käufe |
-| Geräte zum Testen | vorhanden (iPad, Android-Emulator) | ein echtes Android-Telefon empfohlen (Audio-Latenz) |
+| Store-Provision | Anteil von Google am Verkaufspreis (aktuellen Satz in der Console prüfen, nicht hier festgeschrieben) | bezahlte App, keine In-App-Käufe; Play erstattet auf Wunsch innerhalb von 2 Stunden automatisch, das ist normal |
+| Geräte zum Testen | vorhanden (iPad, Android-Emulator) | **echtes Android-Telefon Pflicht vor Produktion** (Latenz, Hintergrund-Audio) |
 
 Apple zeigt bei Einzelmitgliedschaften den **bürgerlichen Namen** als Anbieter, Google den Namen des Entwicklerkontos („Schoensgibl.com“).
 
-## 10. Offene Entscheidungen des Eigentümers
+## 10. Entscheidungen des Eigentümers
+
+**Entschieden am 2026-10-24:** Kennung `com.libremetronome` (1), offline ohne Server (2), keine Spenden im App-Build (3), Preis 1,99 € weltweit, Store-Sprache nur Englisch (6, 10), Hintergrund-Audio nach Messung entscheiden, `bluetooth-central` entfernen (9; im iOS-Projekt schon entfernt).
+
+**Noch offen:** (4) DSA-Händlerstatus und Steuerfrage (Frage an den Steuerberater in Abschnitt 13), (5) GPL im App Store (nur iOS), (7) Geräte iOS, (8) Testpersonen.
+
+Ursprüngliche Liste (zur Nachvollziehbarkeit):
 
 1. **App-Kennung** (Abschnitt 3): `com.hybridpicker.libremetronome` beibehalten oder `com.libremetronome.app`.
 2. **Offline oder online:** App ohne Netz (Vorschlag) oder Klangsätze vom Server nachladen (dann andere Datenschutzangaben).
@@ -196,3 +205,104 @@ Gelesen am **2026-10-22**, außer wo „2026-10-21“ steht (Recherche für SPÖ
 - Ziel-API seit 2026-08-31 mindestens 36 (Projekt: `targetSdkVersion = 36`). Quelle: [11926878](https://support.google.com/googleplay/android-developer/answer/11926878) (2026-10-21).
 - Kontolöschung nur bei Kontoerstellung in der App. Quelle: [13327111](https://support.google.com/googleplay/android-developer/answer/13327111) (2026-10-21).
 - DSA-Händlerstatus bei Google Play: offizielle Hilfeseite nicht gefunden **[offen]**.
+
+## 12. Android-Build: Stand und Nachweise (2026-10-24)
+
+### Geändert im Repo (lokal, nicht gepusht)
+
+| Thema | Änderung |
+|---|---|
+| Kennung | `com.libremetronome` in `capacitor.config.ts`, `android/app/build.gradle`, `strings.xml`, iOS-`project.pbxproj`; `MainActivity` in `com/libremetronome/` |
+| Offline | `frontend/src/nativeApp.js` (`IS_NATIVE_APP = Capacitor.isNativePlatform()`). Im App-Build liefert `soundSetService.js` den mitgelieferten Klangsatz „Classic“ (`/assets/audio/click_new*.wav`) und ruft `/api/…` nie auf. Die Web-Version bleibt unverändert. |
+| Netzrecht | Permission `INTERNET` aus dem Android-Manifest entfernt. Ohne sie kann die App technisch keine Verbindung öffnen. |
+| Spenden | `SupportButton` (Footer), Reiter „Support“, Taste „D“ und `SupportPage` im App-Build aus. |
+| Info-Fenster | Links „Source code“ (GitHub) und „Privacy“ (`https://libremetronome.com/privacy`) |
+| Version | Eine Quelle `frontend/package.json`: `version` → `versionName`, `buildNumber` → `versionCode` (heute 1). **Vor jedem Upload `buildNumber` erhöhen** und im Bundle Explorer prüfen, dass Play den Code noch nicht kennt. iOS `MARKETING_VERSION`/`CURRENT_PROJECT_VERSION` sind noch nicht angebunden (iOS-Auftrag). |
+| Signatur | `build.gradle` liest die Datei, auf die die Umgebungsvariable `LIBREMETRONOME_KEY_PROPERTIES` zeigt. Ohne Variable entsteht eine unsignierte AAB (zum Testen des Builds). `key.properties` steht in `.gitignore`. |
+| Absturzschutz | `MainActivity` setzt einen `BridgeWebViewClient` mit `onRenderProcessGone`: ein abgestürzter WebView-Renderer lädt die Seite neu statt die App zu beenden. |
+| iOS | `bluetooth-central` aus `UIBackgroundModes` entfernt (`audio` bleibt). |
+
+### Geprüft (mit Nachweis)
+
+| Prüfung | Ergebnis |
+|---|---|
+| Frontend-Tests (`CI=true npm test`) | 36 Suites, 195 Tests grün |
+| `npm run build` | erfolgreich |
+| `./gradlew assembleDebug bundleRelease` (JDK 21, nicht das JDK 25 von Android Studio) | erfolgreich; AAB **4,2 MB**, also unter dem 10-MB-Limit von Claude in Chrome, Upload macht der Eigentümer trotzdem selbst |
+| Berechtigungen der APK (`aapt dump permissions`) | keine außer der von Android automatisch angelegten internen Empfängerberechtigung; **kein INTERNET** |
+| Start im Emulator (System-Image API 37) | App läuft, `AudioContext` Zustand „running“ (48 kHz), keine Fetch-Fehler im Log |
+| Service Worker | im Quelltext keine Registrierung (Suche in `src`, `public/index.html`) |
+
+### Nicht geprüft / offen
+
+- **Echtes Telefon:** keines angeschlossen. Pflicht vor Produktion für Klick-Latenz, Taktstabilität (Jitter) und Hintergrund-Audio. Ein iPad steckt am Mac (für den späteren iOS-Lauf nützlich, nicht für Android).
+- **Emulator:** instabil (zwischenzeitlich „System died“, Screenshot-Übertragung brach ab). Emulator-Audio ist ohnehin nicht aussagekräftig. Screenshots für Play (mind. 4, 1080 × 1920) sind nicht gemacht.
+- **Hintergrund-Audio (Bildschirm aus / App im Hintergrund):** **nicht gemessen**. Entscheidung „nach Messung“ steht aus. Wenn Android die Wiedergabe pausiert, braucht es einen Vordergrunddienst mit Benachrichtigung und der Berechtigung `FOREGROUND_SERVICE` (Typ `mediaPlayback`); das müsste im Play-Formular „Vordergrunddienste“ und in der Datenschutzerklärung stehen. Messplan: Metronom 120 BPM starten, Bildschirm aus bzw. App wechseln, 5 Minuten, Takte aufzeichnen (Mikrofon am Telefon oder Systemaudio) und Abstände auswerten.
+- **Netzmitschnitt:** ersetzt durch die Permission-Prüfung (strenger als ein Mitschnitt). Ein Mitschnitt mit `tcpdump` wäre nur nötig, wenn der Eigentümer einen Nachweis für Dritte will.
+- „Error injecting safe area CSS“ im Log stammt aus Capacitor beim Start (Body noch `null`), ohne sichtbare Folge im Log; am Telefon gegenprüfen.
+- Ein Klangsatz: die Weboberfläche kennt auch „Wood Block“ und „Drums“, deren Dateien im Repo fehlen. Die App liefert nur „Classic“. Die Beschreibung verspricht deshalb nur „Classic“. Mehr Klänge = eigener Auftrag (Dateien liefern, Lizenz klären).
+- Der Stripe-Text steckt als toter Code im JavaScript-Paket (siehe Abschnitt 6).
+
+### Eine signierte AAB bauen (Eigentümer oder Claude lokal, ohne Schlüssel in Ausgaben)
+
+1. Schlüssel einmalig erzeugen, **Passwörter nur im Terminal eintippen, nicht in den Chat**:
+   ```bash
+   mkdir -p ~/libremetronome-release && chmod 700 ~/libremetronome-release
+   keytool -genkeypair -v -keystore ~/libremetronome-release/upload.jks -alias upload -keyalg RSA -keysize 4096 -validity 10000
+   ```
+2. `~/libremetronome-release/key.properties` anlegen (Rechte 600) mit `storeFile` (absoluter Pfad), `storePassword`, `keyAlias=upload`, `keyPassword`. Schlüssel und Passwörter in den Passwortmanager.
+3. `buildNumber` in `frontend/package.json` erhöhen.
+4. Bauen, am besten aus einem sauberen Worktree von `origin/main`:
+   ```bash
+   cd frontend && npm ci && npm run build && npx cap sync android
+   cd android && export JAVA_HOME=<JDK 21> LIBREMETRONOME_KEY_PROPERTIES=$HOME/libremetronome-release/key.properties
+   ./gradlew bundleRelease
+   open -R app/build/outputs/bundle/release/app-release.aab
+   ```
+5. Datei per Drag and Drop in die Play Console ziehen (Eigentümer).
+
+Hinweis zur Umgebung: In der Claude-Shell sind `npm`/`node` als nvm-Funktionen definiert, die dort nicht laden. Aufruf mit `bash --noprofile --norc -c 'export PATH=$HOME/.nvm/versions/node/v24.15.0/bin:/usr/bin:/bin:$PATH; npm …'`.
+
+## 13. Vorbereitung für die Testphase (Google Play)
+
+### Was der Eigentümer vor „App anlegen“ klären und selbst eintragen muss
+
+1. **Händlerprofil (Zahlungsprofil)** in der Play Console: Das ist Voraussetzung für den Verkauf. Eintragen: Bankverbindung, Steuer- und Adressangaben, Kontaktdaten. Ich trage nichts davon ein. Danach prüfe ich nur, ob der Status „aktiv“ ist. Menüpunkte (Namen können sich ändern): *Play Console → Einstellungen → Zahlungsprofil* bzw. *Berichte → Finanzen*; genaue Pfade bei der Durchsicht der Hilfe prüfen.
+2. **DSA-Händlerstatus** (Play Console, Kontoeinstellungen): Entscheidung des Eigentümers. **Frage für den Steuerberater:** „Ich verkaufe als Privatperson ohne Gewerbeschein eine Android-App (1,99 € inkl. MwSt.) an Verbraucher in der EU, abgewickelt über Google Play. Gilt das als Gewerbe beziehungsweise ‚Honorarnote ohne Gewerbe‘, und bin ich damit ‚Händler‘ im Sinne des DSA? Dann stehen meine Adresse, Telefonnummer und E-Mail öffentlich im Eintrag; das gilt kontoweit, auch für SPÖ Connect.“ Ohne Antwort wird nichts veröffentlicht.
+3. **Play-Hilfe prüfen** vor dem Anlegen: (a) kostenlos/bezahlt ist beim Anlegen bindend; (b) ob dies auch für den internen Test gilt. Beides ist laut Auftrag zu prüfen und **noch nicht geprüft**.
+4. **Kennung bestätigen**: `com.libremetronome`, unumkehrbar.
+
+### Tore (nichts davon ohne ausdrückliches Wort)
+
+| # | Tor | Stand |
+|---|---|---|
+| 1 | „go“ für Code-Änderungen am App-Build | Am 2026-10-24 als „berate alles für die Testphase vor“ aufgefasst und umgesetzt; Diff liegt zur Durchsicht vor. Bei Einwand zurücknehmen mit `git revert`. |
+| 2 | „App anlegen“ (Kennung + bezahlt, 1,99 €) | offen |
+| 3 | „upload“ je AAB | offen, Eigentümer zieht die Datei |
+| 4 | „Produktion beantragen“ / „veröffentlichen“ | offen; vorher Liste Preis, Länder (weltweit), Händlerstatus |
+
+### Zeitplan (Beispiel, Starttag = Tag 0 = Beginn des geschlossenen Tests mit 12 Testern)
+
+| Wann | Schritt | Wer |
+|---|---|---|
+| vor Tag 0 | Händlerprofil aktiv, DSA-Frage beantwortet, Play-Hilfe geprüft | Eigentümer |
+| vor Tag 0 | Datenschutzseite `/privacy` live (Serversitzung, Entwurf: `docs/store/privacy-policy.md`) | Serversitzung |
+| vor Tag 0 | Messung am echten Telefon (Latenz, Jitter, Hintergrund-Audio), danach ggf. Vordergrunddienst | Claude + Eigentümer |
+| vor Tag 0 | Signierte AAB (versionCode neu), Icon 512, Feature Graphic 1024 × 500, 4+ Screenshots | Claude baut, Eigentümer lädt hoch |
+| vor Tag 0 | App anlegen, interner Test (bis 100 Tester) | Eigentümer, nach Tor 2/3 |
+| vor Tag 0 | Store-Eintrag, Datensicherheit, Altersfreigabe, Zielgruppe (Erklärungen nur durch den Eigentümer) | Eigentümer |
+| Tag 0 | Geschlossener Test: mind. 12 Tester eintragen, **Lizenztest-Zugriff** vergeben (damit sie nicht zahlen) | Eigentümer |
+| Tag 0 bis 14 | Tester dürfen nicht austreten; Fehler sammeln; bei neuem Build `buildNumber` erhöhen | alle |
+| Tag 14 | „Zugriff auf Produktion beantragen“ (Prüfung meist bis 7 Tage) | Eigentümer, Tor 4 |
+| danach | Produktion, gestaffelt oder voll | Eigentümer |
+
+Regeln im Detail sind in Abschnitt 8 und 11.2 mit Quelle und Lesedatum festgehalten; die 12-Tester-/14-Tage-Regel vor dem Start in der Console gegenprüfen. Der Zähler (14 Tage) beginnt erst, wenn der Test wirklich läuft; ein konkretes Datum steht daher noch nicht fest.
+
+Gemeinsame Testgruppe (Google Group) mit Guitar Positions ist möglich; der Test zählt je App.
+
+### Weitere Hinweise
+
+- Bezahlte Apps haben keinen Probezeitraum. Play erstattet auf Wunsch innerhalb von 2 Stunden automatisch.
+- Die Console zeigt bis zur ersten Prüfung einen vorläufigen Namen mit „(unreviewed)“, das ist normal.
+- Quelltext-Link steht im Info-Fenster und im Store-Text. iOS-Frage (FSF) bleibt offen.
+- iOS ist vorbereitet (Kennung, Hintergrundmodus), aber nicht eingereicht. Offen für iOS: Apple-Vereinbarung für bezahlte Apps samt Bank- und Steuerdaten (Eigentümer), `ITSAppUsesNonExemptEncryption`, Privacy Manifest, Versionsanbindung, Icons.

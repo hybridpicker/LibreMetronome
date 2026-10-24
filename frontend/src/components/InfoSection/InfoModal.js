@@ -249,7 +249,7 @@ const InfoModal = ({ isOpen, onClose }) => {
             </div>
             
             <div className="version-info">
-              <p>LibreMetronome Version {packageJson.version} | <a href="https://github.com/hybridpicker/LibreMetronome" target="_blank" rel="noopener noreferrer">GitHub</a> | GPL v3 License</p>
+              <p>LibreMetronome Version {packageJson.version} | <a href="https://github.com/hybridpicker/LibreMetronome" target="_blank" rel="noopener noreferrer">Source code</a> | GPL v3 License | <a href="https://libremetronome.com/privacy" target="_blank" rel="noopener noreferrer">Privacy</a></p>
             </div>
           </div>
         </div>

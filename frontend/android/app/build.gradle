@@ -1,14 +1,26 @@
 apply plugin: 'com.android.application'
 
+// Single version source: frontend/package.json ("version" and "buildNumber").
+// buildNumber becomes versionCode and must grow with every Play upload.
+def appPackage = new groovy.json.JsonSlurper().parse(file('../../package.json'))
+
+// Upload key lives outside the repo. Point LIBREMETRONOME_KEY_PROPERTIES at
+// a key.properties file (storeFile, storePassword, keyAlias, keyPassword).
+def keyPropertiesPath = System.getenv('LIBREMETRONOME_KEY_PROPERTIES')
+def keyProperties = new Properties()
+if (keyPropertiesPath) {
+    file(keyPropertiesPath).withInputStream { keyProperties.load(it) }
+}
+
 android {
-    namespace = "com.hybridpicker.libremetronome"
+    namespace = "com.libremetronome"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.hybridpicker.libremetronome"
+        applicationId "com.libremetronome"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode appPackage.buildNumber as int
+        versionName appPackage.version
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,8 +28,21 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        if (keyPropertiesPath) {
+            release {
+                storeFile file(keyProperties['storeFile'])
+                storePassword keyProperties['storePassword']
+                keyAlias keyProperties['keyAlias']
+                keyPassword keyProperties['keyPassword']
+            }
+        }
+    }
     buildTypes {
         release {
+            if (keyPropertiesPath) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

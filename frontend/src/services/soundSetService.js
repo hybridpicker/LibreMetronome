@@ -1,4 +1,5 @@
 import { getCookie, setCookie } from './cookieUtils';
+import { IS_NATIVE_APP } from '../nativeApp';
 
 // Use REACT_APP_BACKEND_URL (if set) or window.location.origin in production
 // For development, ensure it's set to the Django backend URL
@@ -43,12 +44,26 @@ const defaultSoundSets = [
   }
 ];
 
+// Sound sets shipped inside the app package (the app never calls the API)
+const bundledSoundSets = [
+  {
+    id: 'bundled-classic',
+    name: 'Classic',
+    is_active: true,
+    first_beat_sound_url: '/assets/audio/click_new_first.wav',
+    accent_sound_url: '/assets/audio/click_new_accent.wav',
+    normal_beat_sound_url: '/assets/audio/click_new.wav'
+  }
+];
+
 /**
  * Fetches all sound sets from the API with fallback.
  * Determines active state solely from cookie, not from backend is_active flag.
  * @returns {Promise<Array>} - An array of sound set objects.
  */
 export const getAllSoundSets = async () => {
+  if (IS_NATIVE_APP) return bundledSoundSets;
+
   const url = getApiUrl('/sound-sets/');
   try {
     console.log("Fetching sound sets from:", url);
@@ -177,6 +192,10 @@ export const setActiveSoundSet = async (id) => {
   
   console.log(`Sound set activated (ID: ${idStr}), cookie set and event dispatched`);
   
+  if (IS_NATIVE_APP) {
+    return { id: idStr, is_active: true, status: 'Local preference saved' };
+  }
+
   // Try to validate the sound set exists on the backend, but don't rely on the API
   // response to determine active status (which is now entirely client-side)
   const url = getApiUrl(`/sound-sets/${idStr}/set-active/`);

@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">LibreMetronome</string>
     <string name="title_activity_main">LibreMetronome</string>
-    <string name="package_name">com.hybridpicker.libremetronome</string>
-    <string name="custom_url_scheme">com.hybridpicker.libremetronome</string>
+    <string name="package_name">com.libremetronome</string>
+    <string name="custom_url_scheme">com.libremetronome</string>
 </resources>

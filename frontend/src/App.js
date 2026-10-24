@@ -24,6 +24,7 @@ import './styles/accessibility.css';
 import './styles/high-contrast.css';
 import './styles/large-text.css';
 import './styles/color-blindness.css';
+import { IS_NATIVE_APP } from './nativeApp';
 // StyleGuide component removed
 
 const TEMPO_MIN = 15;
@@ -718,7 +719,7 @@ function App() {
         </div>
       )}
 
-      {showSupportPage ? (
+      {showSupportPage && !IS_NATIVE_APP ? (
         <div className="support-page-container">
           <div style={{ 
             position: 'sticky', 

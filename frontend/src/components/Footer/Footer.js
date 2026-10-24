@@ -2,6 +2,7 @@
 import React from 'react';
 import './Footer.css';
 import { SupportButton } from '../Support';
+import { IS_NATIVE_APP } from '../../nativeApp';
 
 const Footer = () => {
   return (
@@ -22,7 +23,7 @@ const Footer = () => {
           </p>
         </div>
         <div className="footer-right">
-          <SupportButton useInternalPage={true} />
+          {!IS_NATIVE_APP && <SupportButton useInternalPage={true} />}
         </div>
       </div>
     </footer>
