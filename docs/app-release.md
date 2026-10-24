@@ -8,7 +8,7 @@ Stand: 2026-10-24. **Anleitung für den Eigentümer.** Entscheidung vom 2026-10-
 
 | Frage | Empfehlung |
 |---|---|
-| Preis | **Bezahlt, 1,99 € inkl. MwSt., weltweit**, keine In-App-Käufe, keine Werbung. Wird beim Anlegen der App festgelegt: kostenlos lässt sich nie in bezahlt ändern, bezahlt in kostenlos schon (laut Auftrag; Play-Hilfe vor dem Anlegen prüfen, Abschnitt 13). |
+| Preis | **Bezahlt, 1,99 € inkl. MwSt., weltweit**, keine In-App-Käufe, keine Werbung. Wird beim Anlegen der App festgelegt: kostenlos lässt sich nie in bezahlt ändern, bezahlt in kostenlos schon (Play-Hilfe gelesen am 2026-10-24, Abschnitt 13.1). |
 | Weg | **Capacitor 8** weiterführen (schon eingebaut: `frontend/ios`, `frontend/android`, `capacitor.config.ts`). Die React-App wird mit allen Klängen in die App gepackt und läuft **ohne Server**. |
 | Konten | Die schon vorhandenen Konten des Eigentümers: Google Play „Schoensgibl.com“ (privat, verifiziert) und Apple-Einzelmitgliedschaft (Aktivierung ausstehend). Keine neuen Konten. |
 | App-Kennung | **`com.libremetronome`** (Entscheidung 2026-10-24, im Code umgestellt). Unumkehrbar ab dem ersten Upload; vor „App anlegen“ nochmals bestätigen (Abschnitt 3). |
@@ -269,8 +269,23 @@ Hinweis zur Umgebung: In der Claude-Shell sind `npm`/`node` als nvm-Funktionen d
 
 1. **Händlerprofil (Zahlungsprofil)** in der Play Console: Das ist Voraussetzung für den Verkauf. Eintragen: Bankverbindung, Steuer- und Adressangaben, Kontaktdaten. Ich trage nichts davon ein. Danach prüfe ich nur, ob der Status „aktiv“ ist. Menüpunkte (Namen können sich ändern): *Play Console → Einstellungen → Zahlungsprofil* bzw. *Berichte → Finanzen*; genaue Pfade bei der Durchsicht der Hilfe prüfen.
 2. **DSA-Händlerstatus** (Play Console, Kontoeinstellungen): Entscheidung des Eigentümers. **Frage für den Steuerberater:** „Ich verkaufe als Privatperson ohne Gewerbeschein eine Android-App (1,99 € inkl. MwSt.) an Verbraucher in der EU, abgewickelt über Google Play. Gilt das als Gewerbe beziehungsweise ‚Honorarnote ohne Gewerbe‘, und bin ich damit ‚Händler‘ im Sinne des DSA? Dann stehen meine Adresse, Telefonnummer und E-Mail öffentlich im Eintrag; das gilt kontoweit, auch für SPÖ Connect.“ Ohne Antwort wird nichts veröffentlicht.
-3. **Play-Hilfe prüfen** vor dem Anlegen: (a) kostenlos/bezahlt ist beim Anlegen bindend; (b) ob dies auch für den internen Test gilt. Beides ist laut Auftrag zu prüfen und **noch nicht geprüft**.
+3. **Play-Hilfe:** geprüft am 2026-10-24, Ergebnis in Abschnitt 13.1. Kurz: bezahlt muss von Anfang an gewählt werden, auch für den internen Test (siehe dort).
 4. **Kennung bestätigen**: `com.libremetronome`, unumkehrbar.
+
+### 13.1 Ergebnis der Play-Hilfe (gelesen 2026-10-24)
+
+| Frage | Antwort der Hilfe | Quelle |
+|---|---|---|
+| Kostenlos → bezahlt? | **Nein.** „Once your app has been offered for free, the app can't be changed to paid.“ Dann nur neue App mit neuer Kennung. | [6334373](https://support.google.com/googleplay/android-developer/answer/6334373) |
+| Bezahlt → kostenlos? | Ja, jederzeit. | 6334373 |
+| Gilt das schon für den internen Test? | Die Seite zum internen Test sagt dazu nichts Ausdrückliches; Preisänderungen gelten für alle Spuren („affect all versions across all tracks“). **Vorsicht:** Aus „offered for free“ ist nicht sicher abzuleiten, ob ein interner Test als „angeboten“ zählt. Darum die App **von Anfang an als bezahlt anlegen**, nie erst „kostenlos testen“. | [9845334](https://support.google.com/googleplay/android-developer/answer/9845334), 6334373 |
+| Zahlungsprofil nötig? | Ja, **vor dem Preis** muss ein Zahlungsprofil (Google Payments Center) eingerichtet sein; Steuersätze werden in der Console angegeben. Es verlinkt sich automatisch mit der Console. Rechtlicher Firmen- bzw. Privatname und eine echte Anschrift (kein Postfach) sind Pflicht, dazu eine Zahlungsmethode für die Auszahlung. Das Land des Geschäftssitzes lässt sich später nicht ändern. | 6334373, [Payments Center 7161426](https://support.google.com/paymentscenter/answer/7161426) |
+| Menüpfad | Sinngemäß *Play Console → Einstellungen → Zahlungsprofil* (Quellen weichen im Wortlaut ab; im aktuellen Layout nachsehen). | Websuche, nicht aus der Console |
+| Internes Testen und Zahlungsprofil | Die Seite nennt keine Pflicht. Ein gültiges App-Bundle genügt; die App muss nicht fertig eingerichtet sein. Tester brauchen ein Google-Konto, bis 100 pro App. | 9845334 |
+| Tester zahlen? | Bei bezahlten Apps installieren Tester die **interne** Testversion kostenlos („testers can install your internal test version for free“). Für **geschlossene** Tests Lizenztester eintragen (Einstellungen → Lizenztests), damit niemand zahlt. | 9845334; Lizenztests: nicht separat gelesen |
+| Preis und Steuer | Der eingegebene Preis ist die Basis, andere Länder rechnet Play um. Option „Default price includes tax“ (EU-Preis inkl. MwSt.) wurde früher in Preisvorlagen gesetzt; seit 2025-10-27 pro Produkt. **Bei der Preiseingabe prüfen, dass 1,99 € inkl. Steuer gemeint ist.** Länder ohne Vertrieb: kein Zugriff. | 6334373 |
+
+**Empfehlung für die Reihenfolge:** (1) Zahlungsprofil aktiv (Eigentümer), (2) DSA-/Steuerfrage geklärt, (3) App als **bezahlt** anlegen und Preis setzen, (4) erst dann Upload in den internen Test.
 
 ### Tore (nichts davon ohne ausdrückliches Wort)
 
