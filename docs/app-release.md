@@ -381,3 +381,12 @@ Tester A: „sehr viel scrollen“. Ursache: Überlänge der Hauptseite gegenüb
 - Bekannte Schwächen: Regler-Spuren sind in den Zweier-Zeilen kurz (bei 360 px etwa 100–110 px, Polyrhythm-Tempo am kürzesten); Beat-Zahlen in Polyrhythm bei 360 px am Mindestmaß 40 px; in Analog und Grid bleibt Leerraum unten. Die Fußzeile mit Spendenknopf gibt es nur in der Web-Version; im App-Build entfällt sie (mehr Platz), das wurde nicht eigens gemessen.
 - Nicht geprüft: echtes Gerät (Samsung), Gesten-Leiste und große Systemschrift, App-Build im Emulator (Anzeige instabil), Hintergrund-Audio und Latenz.
 - Vor dem Upload: versionCode 3 in der Play Console frei (Release 2 / 0.6.1 nur hochgeladen, falls du es bereits getan hast; sonst darf 0.6.2 den Code 2 überspringen).
+
+### 14.2 Nachtrag: Redesign Handy-Layout (Build 0.6.3, versionCode 4)
+
+Auf dem Samsung (Screenshots Tester A/Eigentümer) sichtbar: Sequence mit 4 Kreisen überlappte, Beschriftungen stießen an Buttons, unten blieb Platz leer, Fußzeile belegte zwei Zeilen. Daraufhin Redesign in drei unabhängigen Entwürfen (Karten, Daumenzone, Tempo zuerst); gewählt: **Karten-Layout** (Modus-Leiste, Visualisierungskarte, eine Reglerkarte, feste Start-/Tap-Leiste unten). Nur Breite ≤ 600 px; Desktop unverändert (Agent-Screenshots bei 1280/1000/768/601 px verglichen, nicht pixelgenau von mir).
+
+- Nachweis: 18 Fälle (6 Darstellungen × 412×805, 393×780, 360×740) Überlänge 0 px; 195 Tests grün; AAB signiert (`jarsigner` verifiziert), versionCode 4, kein INTERNET.
+- Verhaltensänderung: „Beats pro Takt“ ist auf Handys ein −/+-Zähler statt 1–9-Direktwahl (ab 520 px Breite bleiben die Felder). Sequence erlaubt auf Handys höchstens 4 Kreise.
+- Bekannte Schwächen: Kreise in Sequence mit 4 Kreisen nur etwa 104 px; Mode-Beschriftungen 12 px; Fußzeile auf Handys eine Zeile; Großschrift/Hoher Kontrast nur an wenigen Fällen geprüft; App-Build (Capacitor) nicht im Emulator gestartet, Guide-Fußzeilentext dort nicht sichtbar bestätigt.
+- Offen: Prüfung auf dem Samsung, Latenz/Takt/Hintergrund-Audio weiterhin ungemessen.
