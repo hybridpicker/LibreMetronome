@@ -335,3 +335,10 @@ Gemeinsame Testgruppe (Google Group) mit Guitar Positions ist möglich; der Test
 - Eigentümer hat die AAB selbst hochgeladen (Tor 3) und den Release 1 (0.6.0, versionCode 1) im internen Test veröffentlicht: „Für interne Tester verfügbar“, 24. Okt. 07:12, Status „Nicht überprüft“. Console zeigt vorläufigen Namen „com.libremetronome (unreviewed)“, das ist normal.
 - Der Track steht noch auf „Inaktiv“, weil noch keine Tester eingetragen sind (Reiter „Tester“). Offen: E-Mail-Liste anlegen, Teilnahme-Link verschicken, auf dem Telefon installieren und messen (Abschnitt 12).
 - Nächster Upload braucht `buildNumber` 2.
+
+### 13.4 Tester einrichten und Teilnahme-Link (2026-10-24)
+
+- **Wo:** Play Console → App LibreMetronome → *Testen und veröffentlichen → Interner Test → Reiter „Tester“*. E-Mail-Liste „Tester LibreMetronome“ (1 Nutzer) angelegt, angehakt und gespeichert. Track-Status danach **Aktiv**. Die Adressen trägt der Eigentümer selbst ein, sie stehen nicht in diesem Repo.
+- **Teilnahme-Link (intern, nur für Konten aus der Liste):** `https://play.google.com/apps/internaltest/4701428133926911851`. Auf dem Telefon öffnen, „Tester werden“, dann bei Google Play installieren. Der Name lautet bis zur Prüfung „com.libremetronome (unreviewed)“. Bei bezahlten Apps installieren interne Tester kostenlos.
+- **Beobachtung 2026-10-24:** Der Link zeigte auf dem Telefon „Nicht gefunden“, obwohl Track aktiv und Liste gespeichert waren. Mögliche Ursachen, noch nicht geklärt: (1) auf dem Telefon ist ein anderes Google-Konto aktiv als in der Liste (am häufigsten), (2) falsche Adresse in der Liste (muss die Google-Konto-Adresse sein), (3) Wartezeit nach dem ersten Veröffentlichen einer neuen App (Minuten bis Stunden), (4) Link unvollständig kopiert. Prüfreihenfolge 1 → 4. Ergebnis hier nachtragen.
+- **Geschlossener Test (später):** eigene Liste mit mind. 12 Google-Konten, 14 Tage ununterbrochen, dazu *Konto verwalten → Einstellungen für Google Play-Apps → Einstellungen für die Monetarisierung → Lizenztest*, damit Tester nicht zahlen.
