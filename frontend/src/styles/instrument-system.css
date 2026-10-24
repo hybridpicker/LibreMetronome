@@ -1,9 +1,14 @@
 /*
- * LibreMetronome precision instrument system
+ * LibreMetronome instrument system: base rules and every component of the main
+ * screen, written once against the tokens in colors.css. layout.css decides
+ * where things sit for a given width; this file decides what they look like.
  *
- * This layer intentionally centralizes product-wide interaction and surface
- * behavior. Mode-specific files retain geometry and timing visualization only.
+ * Rules of the look: no shadows, no gradients, hairlines instead of frames,
+ * radius 10 px on controls, teal only for the active state / current beat /
+ * Start, gold only as a contour or a small dot on accented beats.
  */
+
+/* ---- Base ------------------------------------------------------------- */
 
 *,
 *::before,
@@ -12,16 +17,18 @@
 }
 
 html {
-  background: var(--surface-canvas);
+  background: var(--bg);
   color-scheme: light;
 }
 
 body {
-  min-height: 100dvh;
-  background: var(--surface-canvas);
-  color: var(--text-primary);
-  font-family: var(--font-ui);
-  line-height: 1.45;
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: var(--fs-2);
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
 }
 
 button,
@@ -36,26 +43,20 @@ button {
   touch-action: manipulation;
 }
 
-button:focus-visible,
-a:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible,
-[tabindex]:focus-visible {
-  outline: 3px solid var(--focus-ring);
-  outline-offset: 3px;
-}
-
 button:disabled,
 input:disabled,
 select:disabled {
   cursor: not-allowed;
 }
 
-.instrument-panel {
-  background: var(--surface-raised);
-  border: var(--stroke-hairline) solid var(--line-subtle);
-  border-radius: var(--radius-panel);
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: var(--stroke-select) solid var(--focus);
+  outline-offset: 2px;
 }
 
 .sr-status {
@@ -70,214 +71,18 @@ select:disabled {
   border: 0;
 }
 
-.transport-row {
-  display: flex;
-  align-items: stretch;
-  justify-content: center;
-  gap: var(--space-3);
-  margin: var(--space-4) auto 0;
-  width: min(100%, 360px);
-}
-
-.transport-button {
-  position: relative;
-  min-height: 52px;
-  min-width: 132px;
-  padding: 10px 18px;
-  border: var(--stroke-control) solid var(--primary-teal);
-  border-radius: var(--radius-control);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  font-size: var(--text-md);
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  cursor: pointer;
-  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
-}
-
-.transport-button .transport-icon {
-  width: 24px;
-  height: 24px;
-  flex: 0 0 24px;
-  object-fit: contain;
-}
-
-.transport-play:not(.is-playing) .transport-icon {
-  filter: brightness(0) invert(1);
-}
-
-.transport-tap .transport-icon {
-  width: 34px;
-  height: 20px;
-  flex-basis: 34px;
-}
-
-.transport-play {
-  color: var(--text-light);
-  background: var(--primary-teal);
-}
-
-.transport-play.is-playing {
-  color: var(--primary-teal-dark);
-  background: var(--surface-raised);
-  border-color: var(--primary-teal-dark);
-}
-
-.transport-tap {
-  color: var(--primary-teal-dark);
-  background: var(--surface-raised);
-}
-
-.transport-tap.is-tapping {
-  color: var(--text-light);
-  background: var(--primary-teal);
-  border-color: var(--primary-teal-dark);
-  transform: scale(0.97);
-}
-
-.transport-tap.is-tapping .transport-icon {
-  filter: brightness(0) invert(1);
-}
-
-.transport-tap.is-tapping::after {
-  content: "";
-  position: absolute;
-  inset: -5px;
-  border: 2px solid var(--primary-teal);
-  border-radius: calc(var(--radius-control) + 4px);
-  pointer-events: none;
-  animation: tap-feedback-ring 150ms ease-out both;
-}
-
-@keyframes tap-feedback-ring {
-  from {
-    opacity: 0.75;
-    transform: scale(0.96);
-  }
-  to {
-    opacity: 0;
-    transform: scale(1.05);
-  }
-}
-
-.transport-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-}
-
-.transport-button:active:not(:disabled) {
-  transform: translateY(1px);
-  background: var(--teal-pressed);
-}
-
-.transport-play:active:not(:disabled) {
-  color: var(--primary-teal-dark);
-}
-
-.transport-button:disabled {
-  opacity: 0.48;
-  background: var(--muted-wash);
-  border-color: var(--line-subtle);
-}
-
 .interface-icon {
   display: block;
   flex: 0 0 auto;
 }
 
-.beat-state-legend {
-  display: flex;
-  justify-content: center;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-  color: var(--text-secondary);
-  font-size: var(--text-xs);
-}
-
-.beat-control,
-.grid-beat-control,
-.subdivision-choice,
-.polyrhythm-choice {
-  min-width: 44px;
-  min-height: 44px;
-  border: 0;
-  padding: 0;
-  background: transparent;
-  cursor: pointer;
-}
-
-.beat-control {
-  position: absolute;
-  width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  z-index: 2;
-}
-
-.beat-control img {
-  width: 24px;
-  height: 24px;
-}
-
-.beat-control:hover,
-.beat-control:focus-visible,
-.subdivision-choice:hover,
-.polyrhythm-choice:hover {
-  background: var(--teal-wash);
-}
-
-.beat-control.is-muted::after {
-  content: '+';
-  width: 24px;
-  height: 24px;
-  border: 2px dashed var(--text-tertiary);
-  color: var(--text-secondary);
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-}
-
-.subdivision-choice,
-.polyrhythm-choice {
-  display: inline-grid;
-  place-items: center;
-  border-radius: var(--radius-control);
-}
-
-.subdivision-choice[aria-pressed='true'],
-.polyrhythm-choice[aria-pressed='true'] {
-  background: var(--surface-selected);
-  box-shadow: inset 0 0 0 2px var(--primary-teal);
-}
-
-.menu-modal,
-.info-modal,
-.training-modal {
-  background: var(--surface-raised);
-  border: 1px solid var(--line-subtle);
-  box-shadow: none;
-}
-
-@media (hover: none) {
-  .transport-button:hover:not(:disabled),
-  .mode-option:hover {
-    transform: none;
-  }
-}
-
-@media (max-width: 520px) {
-  .transport-row {
-    gap: var(--space-2);
-  }
-
-  .transport-button {
-    flex: 1 1 0;
-    min-width: 0;
-    padding-inline: 12px;
-  }
+.audio-error {
+  padding: var(--sp-2) var(--sp-3);
+  border: var(--stroke) solid var(--danger);
+  border-radius: var(--r-control);
+  background: var(--bg);
+  color: var(--danger);
+  font-size: var(--fs-2);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -300,62 +105,938 @@ body.reduced-motion *::after {
   transition-duration: 0.01ms !important;
 }
 
-/* Matched, quiet utility controls in the safe area of the app header. */
-.app-container .header-action {
-  width: 48px;
-  height: 48px;
+/* ---- Header ----------------------------------------------------------- */
+
+.header {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.header-logo {
+  display: block;
+  width: auto;
+  height: 24px;
+  color: var(--ink);
+}
+
+.menu-button.header-action {
+  display: grid;
+  place-items: center;
+  width: var(--touch);
+  height: var(--touch);
   padding: 0;
-  border-radius: 14px;
-  box-shadow: none;
+  border: 0;
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
   transform: none;
-  transition: background-color 150ms ease, border-color 150ms ease;
+  box-shadow: none;
 }
 
-body:not(.high-contrast) .app-container .header-action {
-  color: var(--text-secondary);
-  background: var(--surface-raised);
-  border: 1px solid var(--line-subtle);
-}
-
-.app-container .header-action svg {
-  width: 22px;
-  height: 22px;
+.menu-button.header-action svg {
+  width: 24px;
+  height: 24px;
   color: inherit;
-  stroke-width: 1.7;
+  stroke-width: 1.75;
 }
 
-.app-container .menu-button.header-action {
-  top: max(12px, env(safe-area-inset-top));
-  right: max(12px, env(safe-area-inset-right));
-}
-
-.app-container .accessibility-container {
-  top: max(12px, env(safe-area-inset-top));
-  right: calc(max(12px, env(safe-area-inset-right)) + 56px);
-}
-
-body:not(.high-contrast) .app-container .header-action[aria-expanded='true'],
-body:not(.high-contrast) .app-container .header-action:active {
-  color: var(--primary-teal-dark);
-  background: var(--surface-selected);
-  border-color: var(--primary-teal);
-}
-
-.app-container .header-action:focus:not(:focus-visible) {
-  outline: none;
-  box-shadow: none;
-}
-
-.app-container .header-action:focus-visible {
-  outline: 3px solid var(--focus-ring);
-  outline-offset: 3px;
-  box-shadow: none;
+.menu-button.header-action[aria-expanded='true'] {
+  color: var(--accent-ink);
 }
 
 @media (hover: hover) {
-  body:not(.high-contrast) .app-container .header-action:hover {
-    color: var(--primary-teal-dark);
-    background: var(--surface-selected);
-    border-color: var(--primary-teal-light);
+  .menu-button.header-action:hover {
+    background: var(--surface);
   }
+}
+
+/* ---- Mode selector: plain segmented control, text only ----------------- */
+
+.mode-selector {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 0;
+  width: 100%;
+  margin: 0;
+  padding: 3px;
+  border-radius: var(--r-control);
+  background: var(--surface);
+}
+
+.mode-option {
+  position: relative;
+  min-width: 0;
+  height: var(--touch);
+  padding: 0;
+  border: 0;
+  border-radius: calc(var(--r-control) - 3px);
+  background: transparent;
+  color: var(--ink-2);
+  font-size: var(--fs-1);
+  font-weight: var(--fw-bold);
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.mode-option.active {
+  background: var(--bg);
+  color: var(--accent-ink);
+}
+
+.mode-option.active::after {
+  content: '';
+  position: absolute;
+  right: 24%;
+  bottom: 5px;
+  left: 24%;
+  height: 2px;
+  background: var(--accent);
+}
+
+@media (hover: hover) {
+  .mode-option:not(.active):hover {
+    color: var(--ink);
+  }
+}
+
+/* ---- Transport: Start (solid teal) and Tap Tempo (grey outline) --------- */
+
+.transport-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: var(--sp-3);
+}
+
+.transport-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  height: 56px;
+  min-width: 0;
+  padding: 0 var(--sp-3);
+  border: var(--stroke) solid transparent;
+  border-radius: var(--r-control);
+  font-family: inherit;
+  font-weight: var(--fw-bold);
+  cursor: pointer;
+  transition: background-color var(--t-fast), border-color var(--t-fast), color var(--t-fast);
+}
+
+.transport-button .transport-icon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  fill: currentColor;
+}
+
+.transport-play {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.transport-play .transport-label {
+  font-size: var(--fs-4);
+  line-height: 1;
+}
+
+.transport-play.is-playing {
+  border: var(--stroke-select) solid var(--accent);
+  background: var(--bg);
+  color: var(--accent-ink);
+}
+
+.transport-tap {
+  border-color: var(--line-strong);
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.transport-tap .transport-label {
+  font-size: var(--fs-3);
+  line-height: 1;
+}
+
+.transport-tap.is-tapping {
+  border-color: var(--ink-2);
+  background: var(--surface);
+}
+
+.transport-button:active:not(:disabled) {
+  background: var(--surface);
+}
+
+.transport-play:active:not(:disabled) {
+  background: var(--accent-ink);
+  border-color: var(--accent-ink);
+  color: var(--on-accent);
+}
+
+.transport-button:disabled {
+  opacity: 0.45;
+}
+
+/* ---- Visualisation area ------------------------------------------------- */
+
+.viz-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: var(--r-surface);
+  background: var(--surface);
+}
+
+.metronome-container {
+  position: relative;
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.accelerate-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-height: var(--touch);
+  padding: 0 var(--sp-3);
+  border: var(--stroke) solid var(--line-strong);
+  border-radius: var(--r-control);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: var(--fs-2);
+  font-weight: var(--fw-bold);
+  cursor: pointer;
+}
+
+.accelerate-button:active {
+  background: var(--surface);
+}
+
+/* ---- Beat marks: Beat, Sequence, Polyrhythm share one vocabulary --------
+ * current beat: teal fill | normal: grey ring | accent: gold ring |
+ * first beat: gold ring with a gold dot | muted: pale dashed ring.        */
+
+.beat-control {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.beat-control:disabled {
+  cursor: default;
+}
+
+.beat-mark,
+.beat-dot {
+  position: relative;
+  width: var(--mark, 20px);
+  height: var(--mark, 20px);
+  border: var(--stroke-select) solid var(--ink-3);
+  border-radius: 50%;
+  background: var(--bg);
+}
+
+.beat-mark[data-state='accent'],
+.beat-mark[data-state='first'],
+.beat-dot.accent-beat,
+.beat-dot.first-beat {
+  border-color: var(--gold);
+}
+
+.beat-mark[data-state='first']::after,
+.beat-dot.first-beat::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: 50%;
+  background: var(--gold);
+}
+
+.beat-mark[data-state='muted'] {
+  border: var(--stroke-viz) dashed var(--ink-3);
+  background: transparent;
+  opacity: 0.55;
+}
+
+.beat-control.is-current .beat-mark,
+.beat-dot.active {
+  border-color: var(--beat-now);
+  background: var(--beat-now);
+}
+
+.beat-control.is-current .beat-mark[data-state='first']::after,
+.beat-dot.active.first-beat::after {
+  background: var(--on-accent);
+}
+
+.beat-control:focus-visible {
+  outline-offset: 0;
+}
+
+@media (hover: hover) {
+  .beat-control:not(:disabled):hover .beat-mark {
+    border-color: var(--ink-2);
+  }
+}
+
+.line-connection {
+  position: absolute;
+  height: var(--stroke-viz);
+  background: var(--line-strong);
+  pointer-events: none;
+  transform-origin: center center;
+}
+
+/* ---- Grid: hairline cells, filled cells grey, current column teal -------- */
+
+.grid-columns {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.grid-beat-control {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.grid-cell {
+  position: relative;
+  display: block;
+  border: var(--stroke) solid var(--line-strong);
+  background: var(--bg);
+  margin-bottom: -1px;
+}
+
+.grid-beat-control {
+  margin-right: -1px;
+}
+
+.grid-cell.is-on::after {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  background: var(--ink-3);
+}
+
+.grid-cell.grid-square-accent,
+.grid-cell.grid-square-first-beat {
+  outline: var(--stroke-select) solid var(--gold);
+  outline-offset: -1px;
+}
+
+.grid-beat-control.is-current .grid-cell.is-on::after {
+  background: var(--accent);
+}
+
+.grid-number {
+  margin-top: var(--sp-3);
+  color: var(--ink-2);
+  font-size: var(--fs-2);
+  font-weight: var(--fw-regular);
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+.grid-beat-control.is-first .grid-number {
+  color: var(--ink);
+  font-weight: var(--fw-bold);
+}
+
+.grid-beat-control:focus-visible {
+  outline-offset: 2px;
+}
+
+/* ---- Sequence: circles and the "Circles" stepper ------------------------ */
+
+.circles-container.viz-card {
+  display: grid;
+  grid-template-columns: repeat(var(--seq-columns, 2), minmax(0, 1fr));
+  align-content: center;
+  align-items: center;
+  justify-items: center;
+  row-gap: var(--seq-gap, 12px);
+  padding: 56px var(--sp-3) var(--sp-3);
+}
+
+.multi-circle-surface {
+  position: relative;
+  flex: 0 0 auto;
+  border: var(--stroke-viz) solid var(--ink-3);
+  border-radius: 50%;
+  background: var(--bg);
+}
+
+.multi-circle-surface.is-selected {
+  border: var(--stroke-select) solid var(--accent);
+}
+
+.multi-circle-surface.is-silent {
+  border-style: dashed;
+}
+
+.circle-select-button {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.circle-select-button:focus-visible {
+  outline-offset: 4px;
+}
+
+.sequence-position {
+  position: relative;
+  display: inline-block;
+  color: var(--ink-2);
+  font-size: var(--fs-4);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+  line-height: 24px;
+  transform: translateY(-9px);
+}
+
+.multi-circle-surface.is-selected .sequence-position {
+  color: var(--ink);
+}
+
+/* "N beats" sits inside the ring under the number, so it never touches a
+   neighbouring circle, a beat mark or the stepper. */
+.sequence-beat-count {
+  position: absolute;
+  top: calc(50% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--ink-2);
+  font-size: var(--fs-1);
+  line-height: 16px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.circle-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.circle-actions-label {
+  margin-right: auto;
+  color: var(--ink-2);
+  font-size: var(--fs-2);
+  font-weight: var(--fw-bold);
+}
+
+.circle-actions-count {
+  min-width: 32px;
+  color: var(--ink);
+  font-size: var(--fs-4);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.circle-actions button {
+  display: grid;
+  place-items: center;
+  width: var(--touch);
+  height: var(--touch);
+  padding: 0;
+  border: var(--stroke) solid var(--line-strong);
+  border-radius: var(--r-control);
+  background: var(--bg);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.circle-actions button:disabled {
+  opacity: 0.35;
+}
+
+/* ---- Polyrhythm --------------------------------------------------------- */
+
+.polyrhythm-circles {
+  position: relative;
+}
+
+.inner-circle,
+.outer-circle {
+  position: absolute;
+  padding: 0;
+  border: var(--stroke-viz) solid var(--ink-3);
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.inner-circle.active,
+.outer-circle.active {
+  border: var(--stroke-select) solid var(--accent);
+}
+
+.beat-dot {
+  position: absolute;
+  --mark: 20px;
+}
+
+.beat-dot.muted {
+  opacity: 0.55;
+}
+
+.beat-dot.transitioning,
+.transitioning {
+  opacity: 0.7;
+}
+
+.polyrhythm-ratio .ratio-label {
+  display: none;
+}
+
+.ratio-display {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--sp-2);
+  color: var(--ink);
+  font-size: var(--fs-4);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.switch-circles-button {
+  display: grid;
+  place-items: center;
+  width: var(--touch);
+  height: var(--touch);
+  padding: 0;
+  border: var(--stroke) solid var(--line-strong);
+  border-radius: var(--r-control);
+  background: var(--bg);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.switch-circles-button svg {
+  width: 22px;
+  height: 22px;
+}
+
+.switch-circles-button:disabled {
+  opacity: 0.45;
+}
+
+.polyrhythm-config {
+  min-width: 0;
+}
+
+.circle-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+}
+
+.circle-badge {
+  color: var(--ink-2);
+  font-size: var(--fs-2);
+  font-weight: var(--fw-bold);
+}
+
+.circle-beat-count {
+  color: var(--ink-2);
+  font-size: var(--fs-1);
+}
+
+.polyrhythm-buttons {
+  display: none;
+  gap: var(--sp-1);
+}
+
+/* ---- Controls: rows divided by hairlines -------------------------------- */
+
+.control-group {
+  min-width: 0;
+}
+
+.control-group > h3 {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: var(--fs-2);
+  font-weight: var(--fw-bold);
+  line-height: 18px;
+  text-align: left;
+}
+
+.control-sub {
+  display: inline;
+  margin-left: var(--sp-2);
+  font-size: var(--fs-1);
+  font-weight: var(--fw-regular);
+}
+
+.subdivision-container {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: var(--sp-1);
+}
+
+.polyrhythm-buttons {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.subdivision-choice,
+.polyrhythm-choice {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 48px;
+  height: var(--touch);
+  padding: 0;
+  border: var(--stroke) solid var(--line-strong);
+  border-radius: var(--r-control);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: var(--fs-3);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.subdivision-choice .beat-choice-number,
+.polyrhythm-choice .beat-choice-number {
+  font-size: inherit;
+  line-height: 1;
+}
+
+.subdivision-choice[aria-pressed='true'],
+.polyrhythm-choice[aria-pressed='true'] {
+  border: var(--stroke-select) solid var(--accent);
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+}
+
+.subdivision-stepper,
+.poly-stepper {
+  display: none;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.stepper-button,
+.slider-step {
+  display: grid;
+  place-items: center;
+  width: var(--touch);
+  height: var(--touch);
+  padding: 0;
+  border: var(--stroke) solid var(--line-strong);
+  border-radius: var(--r-control);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 22px;
+  font-weight: var(--fw-regular);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.stepper-button:disabled,
+.slider-step:disabled {
+  opacity: 0.35;
+}
+
+.stepper-count {
+  min-width: 32px;
+  color: var(--ink);
+  font-size: var(--fs-4);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.note-selector-container {
+  display: flex;
+  gap: var(--sp-1);
+}
+
+.note-selector-button {
+  display: grid;
+  place-items: center;
+  width: var(--touch);
+  height: var(--touch);
+  padding: 0;
+  border: var(--stroke) solid var(--line-strong);
+  border-radius: var(--r-control);
+  background: var(--bg);
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.note-selector-button[aria-pressed='true'] {
+  border: var(--stroke-select) solid var(--accent);
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+}
+
+.note-icon {
+  display: block;
+  width: 26px;
+  height: 26px;
+}
+
+@media (hover: hover) {
+  .subdivision-choice:not([aria-pressed='true']):hover,
+  .polyrhythm-choice:not([aria-pressed='true']):hover,
+  .note-selector-button:not([aria-pressed='true']):hover,
+  .stepper-button:not(:disabled):hover,
+  .slider-step:not(:disabled):hover,
+  .circle-actions button:not(:disabled):hover,
+  .switch-circles-button:not(:disabled):hover,
+  .accelerate-button:hover,
+  .transport-tap:not(:disabled):hover {
+    border-color: var(--ink-2);
+  }
+}
+
+/* ---- Sliders ------------------------------------------------------------ */
+
+.editable-slider {
+  position: relative;
+  min-width: 0;
+}
+
+.slider-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: inherit;
+  text-align: left;
+  cursor: text;
+}
+
+.slider-label-name {
+  color: var(--ink-2);
+  font-size: var(--fs-2);
+  font-weight: var(--fw-bold);
+}
+
+.slider-label-value {
+  color: var(--ink);
+  font-size: var(--fs-3);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.slider-value-number {
+  font-size: var(--fs-5);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.slider-value-unit {
+  color: var(--ink-2);
+  font-size: var(--fs-1);
+  font-weight: var(--fw-bold);
+}
+
+.editable-input {
+  width: 100%;
+  height: var(--touch);
+  padding: 0 var(--sp-3);
+  border: var(--stroke-select) solid var(--accent);
+  border-radius: var(--r-control);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: var(--fs-3);
+  font-variant-numeric: tabular-nums;
+}
+
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: var(--touch);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  touch-action: pan-y;
+}
+
+input[type='range']::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    var(--accent) var(--slider-progress, 0%),
+    var(--line) var(--slider-progress, 0%)
+  );
+}
+
+input[type='range']::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line);
+}
+
+input[type='range']::-moz-range-progress {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  width: 22px;
+  height: 22px;
+  margin-top: -9px;
+  border: var(--stroke-select) solid var(--accent);
+  border-radius: 50%;
+  background: var(--bg);
+}
+
+input[type='range']::-moz-range-thumb {
+  box-sizing: border-box;
+  width: 22px;
+  height: 22px;
+  border: var(--stroke-select) solid var(--accent);
+  border-radius: 50%;
+  background: var(--bg);
+}
+
+input[type='range']:disabled {
+  opacity: 0.45;
+}
+
+/* ---- Web-only support page bar ----------------------------------------- */
+
+.support-page-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  padding: var(--sp-3) 0;
+  border-bottom: var(--stroke) solid var(--line);
+  background: var(--bg);
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: var(--touch);
+  padding: 0 var(--sp-4);
+  border: var(--stroke) solid var(--line-strong);
+  border-radius: var(--r-control);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: var(--fs-3);
+  font-weight: var(--fw-bold);
+  cursor: pointer;
+}
+
+/* ---- Finishing touches: quiet, precise, a little poetic ------------------ */
+
+/* BPM in the regular cut, tightly tracked: an airy number like a watch face. */
+.slider-value-number {
+  font-weight: var(--fw-regular);
+  letter-spacing: -0.01em;
+}
+
+.mode-option { letter-spacing: 0.02em; }
+
+/* The current beat gets a hairline halo (an outline, not a shadow). */
+.beat-control.is-current .beat-mark,
+.beat-dot.active {
+  outline: var(--stroke-viz) solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* Beat mode: a faint dial ring behind the polygon. */
+.beat-visual .metronome-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: var(--stroke) solid var(--line);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.beat-visual .metronome-container {
+  border-radius: 50%;
+}
+
+/* Guide: the beat types use the same marks as the instrument. */
+.info-modal .beat-indicator {
+  position: relative;
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  border: var(--stroke-select) solid var(--ink-3);
+  border-radius: 50%;
+  background: var(--bg);
+  box-shadow: none;
+}
+
+.info-modal .beat-indicator.muted { border: var(--stroke-viz) dashed var(--ink-3); background: transparent; }
+.info-modal .beat-indicator.accent,
+.info-modal .beat-indicator.first { border-color: var(--gold); }
+
+.info-modal .beat-indicator.first::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: 50%;
+  background: var(--gold);
 }

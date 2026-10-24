@@ -1,0 +1,503 @@
+/*
+ * One layout for every device. The page is a single grid that fills the
+ * window and never scrolls: header, mode selector, visualisation, controls,
+ * transport, footer. Only the arrangement changes with the width:
+ *
+ *   phone  (< 600 px, portrait)   one column; visualisation on top, controls
+ *                                 below, Start / Tap at the bottom (thumb zone)
+ *   tablet (600-1023 px)          portrait: the phone arrangement with more
+ *                                 air; landscape: two columns
+ *   desktop (>= 1024 px)          two columns: visualisation left, controls and
+ *                                 Start / Tap right, content centred (max 1200)
+ *
+ * The mode components keep their own DOM. Their wrappers become
+ * `display: contents`, which turns the pieces into direct grid items of
+ * .app-container; this file assigns rows and columns. Everything that is
+ * drawn lives in instrument-system.css and uses the tokens in colors.css.
+ * Components inside the visualisation area scale to it (utils/layoutSize.js).
+ */
+
+/* ---- Shell -------------------------------------------------------------- */
+
+.app-container {
+  --touch: 44px;
+  --pad-x: var(--sp-4);
+  --row-pad: var(--sp-2);
+  --control-w: 100%;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto auto auto auto;
+  width: 100%;
+  max-width: var(--content-max);
+  height: 100vh;
+  height: 100dvh;
+  min-height: 560px;
+  margin: 0 auto;
+  padding:
+    max(var(--sp-1), env(safe-area-inset-top))
+    max(var(--pad-x), env(safe-area-inset-right))
+    0
+    max(var(--pad-x), env(safe-area-inset-left));
+  overflow: hidden;
+  font-family: var(--font);
+}
+
+html,
+body {
+  overflow-x: hidden;
+}
+
+html.capacitor-native,
+html.capacitor-native body,
+html.capacitor-native #root {
+  overscroll-behavior: none;
+}
+
+#root {
+  display: block;
+  min-height: 0;
+}
+
+/* Short screens: 40 px touch targets (still above the 40 px floor). */
+@media (max-height: 759px) {
+  .app-container {
+    --touch: 40px;
+    --row-pad: var(--sp-1);
+  }
+}
+
+/* Wrappers dissolve so their children become grid items. */
+.app-container .practice-workspace,
+.app-container .metronome-stage,
+.app-container .metronome-with-training-wrapper,
+.app-container .beat-visual,
+.app-container .analog-visual,
+.app-container .grid-visual,
+.app-container .multi-mode-shell,
+.app-container .polyrhythm-mode-shell,
+.app-container .polyrhythm-mode-shell > .side-controls,
+.app-container .polyrhythm-mode-shell .polyrhythm-ratio {
+  display: contents;
+}
+
+/* Invisible helpers take no space. */
+.app-container > .sr-status,
+.app-container > .accessibility-container,
+.app-container > button[aria-hidden='true'],
+.app-container > .skip-link {
+  grid-row: 1;
+  grid-column: 1;
+}
+
+.app-container > .audio-error {
+  position: absolute;
+  top: 56px;
+  right: var(--pad-x);
+  left: var(--pad-x);
+  z-index: 20;
+  margin: 0;
+}
+
+/* ---- Header ------------------------------------------------------------- */
+
+.app-container .header {
+  grid-area: 1 / 1 / 2 / -1;
+  align-self: center;
+  height: 52px;
+  padding-right: calc(var(--touch) + var(--sp-2));
+}
+
+.app-container .menu-button.header-action {
+  position: relative;
+  top: auto;
+  right: auto;
+  grid-area: 1 / 1 / 2 / -1;
+  justify-self: end;
+  align-self: center;
+  z-index: 5;
+}
+
+/* ---- Mode selector ------------------------------------------------------ */
+
+.app-container .mode-selector-container {
+  grid-area: 2 / 1 / 3 / -1;
+  margin: 0;
+}
+
+/* ---- Visualisation area (row 3; spans the column on wide layouts) ------- */
+
+.app-container .viz-card {
+  grid-row: 3;
+  grid-column: 1;
+  margin-top: var(--sp-3);
+}
+
+/* Overlays share the visualisation cell. */
+.app-container .accelerate-button-container {
+  grid-row: 3;
+  grid-column: 1;
+  align-self: start;
+  justify-self: center;
+  z-index: 4;
+  margin-top: calc(var(--sp-3) + var(--sp-3));
+}
+
+.app-container .training-active-container {
+  grid-row: 3;
+  grid-column: 1;
+  align-self: start;
+  z-index: 6;
+  max-height: calc(100% - var(--sp-3));
+  margin-top: var(--sp-3);
+  overflow-y: auto;
+  border: var(--stroke) solid var(--line);
+  border-radius: var(--r-surface);
+  background: var(--bg);
+}
+
+.app-container .multi-mode-shell > .circle-actions {
+  grid-row: 3;
+  grid-column: 1;
+  align-self: start;
+  z-index: 3;
+  height: var(--touch);
+  margin-top: calc(var(--sp-3) + var(--sp-2));
+  padding: 0 var(--sp-3) 0 var(--sp-4);
+}
+
+.app-container .polyrhythm-mode-shell .ratio-display {
+  grid-row: 3;
+  grid-column: 1;
+  align-self: center;
+  justify-self: center;
+  z-index: 2;
+  margin-top: var(--sp-3);
+}
+
+.app-container .polyrhythm-mode-shell .switch-circles-button {
+  grid-row: 3;
+  grid-column: 1;
+  align-self: start;
+  justify-self: end;
+  z-index: 3;
+  margin: calc(var(--sp-3) + var(--sp-2)) var(--sp-2) 0 0;
+}
+
+/* ---- Controls (rows 4 and 5) -------------------------------------------- */
+
+.app-container .practice-controls,
+.app-container .multi-mode-shell > .multi-controls-panel {
+  grid-row: 4;
+  grid-column: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: var(--sp-5);
+  align-content: start;
+  min-width: 0;
+  margin: var(--sp-2) 0 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.app-container .practice-controls > .sliders-container,
+.app-container .multi-controls-panel > .sliders-container,
+.app-container .polyrhythm-mode-shell > .sliders-container {
+  display: contents;
+}
+
+/* Every row of the controls is separated by a hairline. */
+.app-container .practice-controls > .control-group,
+.app-container .multi-controls-panel > .control-group,
+.app-container .tempo-slider,
+.app-container .volume-slider,
+.app-container .swing-slider,
+.app-container .polyrhythm-mode-shell > .sliders-container > .editable-slider,
+.app-container .polyrhythm-mode-shell > .polyrhythm-controls {
+  padding: var(--row-pad) 0;
+  border-top: var(--stroke) solid var(--line);
+}
+
+.app-container .tempo-slider { grid-row: 1; grid-column: 1 / -1; border-top: 0; }
+.app-container .control-beats { grid-row: 2; grid-column: 1 / -1; }
+.app-container .control-note { grid-row: 3; grid-column: 1 / -1; }
+.app-container .volume-slider { grid-row: 4; grid-column: 1; }
+.app-container .swing-slider { grid-row: 4; grid-column: 2; }
+.app-container .practice-workspace.mode-analog .volume-slider { grid-column: 1 / -1; }
+.app-container .editable-slider.swing-slider.disabled { display: none; } /* the pendulum has no swing */
+
+/* Beats per bar and note value: label left, control right. */
+.app-container .control-beats,
+.app-container .control-note {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.app-container .control-beats > h3,
+.app-container .control-note > h3 {
+  flex: 0 0 112px;
+}
+
+.app-container .control-note {
+  justify-content: space-between;
+}
+
+.app-container .subdivision-container {
+  justify-content: flex-end;
+}
+
+.app-container .subdivision-stepper {
+  flex: 1 1 auto;
+  justify-content: flex-end;
+}
+
+/* Nine chips from 520 px; below that a stepper (no chip under 40 px wide). */
+@media (max-width: 519px) {
+  .app-container .subdivision-container { display: none; }
+  .app-container .subdivision-stepper { display: flex; }
+}
+
+/* Tempo: the big number, minus, slider, plus on one line. */
+.app-container .tempo-slider {
+  display: grid;
+  grid-template-columns: auto var(--touch) minmax(0, 1fr) var(--touch);
+  align-items: center;
+  column-gap: var(--sp-1);
+}
+
+.app-container .tempo-slider .slider-label {
+  min-width: 0;
+  height: var(--touch);
+  padding-right: var(--sp-2);
+  align-items: center;
+}
+
+.app-container .tempo-slider .slider-label-name { display: none; }
+
+.app-container .tempo-slider .slider-label-value {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-1);
+}
+
+.app-container .tempo-slider .editable-input {
+  grid-column: 1 / -1;
+}
+
+/* Volume and swing: label and value above a slider. */
+.app-container .editable-slider:not(.tempo-slider) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+}
+
+.app-container .editable-slider:not(.tempo-slider) .slider-label {
+  width: 100%;
+  min-height: var(--sp-5);
+  align-items: baseline;
+}
+
+/* The value is a button only 20 px tall; widen its touch area without
+   changing the layout. */
+.app-container .editable-slider:not(.tempo-slider) .slider-label::before {
+  content: '';
+  position: absolute;
+  inset: -12px -4px -4px;
+}
+
+.app-container .editable-slider:not(.tempo-slider) .slider-label { position: relative; }
+
+/* ---- Polyrhythm controls ------------------------------------------------ */
+
+.app-container .polyrhythm-mode-shell > .polyrhythm-controls {
+  grid-row: 4;
+  grid-column: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: var(--sp-5);
+  margin: var(--sp-2) 0 0;
+}
+
+.app-container .polyrhythm-mode-shell > .sliders-container > .editable-slider:nth-child(1) {
+  grid-row: 5;
+  grid-column: 1;
+  display: grid;
+  grid-template-columns: auto var(--touch) minmax(0, 1fr) var(--touch);
+  align-items: center;
+  column-gap: var(--sp-1);
+}
+
+.app-container .polyrhythm-mode-shell > .sliders-container > .editable-slider:nth-child(1) .slider-label {
+  height: var(--touch);
+  padding-right: var(--sp-2);
+  align-items: center;
+}
+
+.app-container .polyrhythm-mode-shell > .sliders-container > .editable-slider:nth-child(1) .slider-label-name { display: none; }
+
+.app-container .polyrhythm-mode-shell > .sliders-container > .editable-slider:nth-child(1) .slider-label-value {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-1);
+}
+
+.app-container .polyrhythm-mode-shell > .sliders-container > .editable-slider:nth-child(2) {
+  grid-row: 6;
+  grid-column: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.app-container .polyrhythm-mode-shell > .sliders-container > .editable-slider:nth-child(2) .slider-label {
+  min-height: var(--sp-5);
+}
+
+.app-container .polyrhythm-mode-shell .poly-stepper {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--sp-1);
+}
+
+/* ---- Transport (row 7; rows 4-7 hold controls and transport) ------------ */
+
+.app-container .transport-row {
+  grid-row: 7;
+  grid-column: 1;
+  margin-top: var(--sp-3);
+  padding-bottom: var(--sp-2);
+}
+
+html.capacitor-native .app-container .transport-row {
+  padding-bottom: calc(var(--sp-2) + env(safe-area-inset-bottom));
+}
+
+/* ---- Footer ------------------------------------------------------------- */
+
+.app-container .footer {
+  grid-area: 8 / 1 / 9 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px; /* its links keep a 40 px touch area */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.app-container .footer--native {
+  display: none;
+}
+
+.app-container .support-page-container {
+  grid-row: 3 / 8;
+  grid-column: 1 / -1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* ---- Tablet portrait and other roomy single columns: more air ----------- */
+
+@media (min-width: 600px) {
+  .app-container {
+    --pad-x: var(--sp-5);
+    --row-pad: var(--sp-3);
+  }
+
+  .app-container .header-logo { height: 28px; }
+  .app-container .mode-option { font-size: var(--fs-2); }
+  .app-container .viz-card { margin-top: var(--sp-4); }
+  .app-container .transport-button { height: 60px; }
+  .app-container .transport-row { margin-top: var(--sp-4); }
+}
+
+/* ---- Two columns: tablet landscape and desktop ------------------------- */
+
+@media (min-width: 1024px), (min-width: 600px) and (min-height: 500px) and (orientation: landscape) {
+  .app-container {
+    --pad-x: var(--sp-5);
+    --control-w: clamp(400px, 34vw, 460px);
+    grid-template-columns: minmax(0, 1fr) var(--control-w);
+    /* header, modes, 4 control rows (top-aligned, so they never jump between
+       modes), filler, footer */
+    grid-template-rows: auto auto 0 auto auto auto auto minmax(0, 1fr) auto;
+    column-gap: var(--sp-6);
+  }
+
+  .app-container .header-logo { height: 28px; }
+
+  /* Visualisation and its overlays: left column, rows 3-8. */
+  .app-container .viz-card {
+    grid-row: 3 / 9;
+    margin-top: var(--sp-4);
+    margin-bottom: var(--sp-2);
+  }
+
+  .app-container .practice-controls,
+  .app-container .multi-mode-shell > .multi-controls-panel { margin-top: var(--sp-4); }
+
+  /* Controls and transport: right column, centred between the spacer rows. */
+  .app-container .practice-controls,
+  .app-container .multi-mode-shell > .multi-controls-panel,
+  .app-container .polyrhythm-mode-shell > .polyrhythm-controls,
+  .app-container .polyrhythm-mode-shell > .sliders-container > .editable-slider,
+  .app-container .transport-row {
+    grid-column: 2;
+  }
+
+  .app-container .practice-controls,
+  .app-container .multi-mode-shell > .multi-controls-panel,
+  .app-container .polyrhythm-mode-shell > .polyrhythm-controls {
+    margin-top: 0;
+  }
+
+  .app-container .polyrhythm-mode-shell > .polyrhythm-controls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .app-container .polyrhythm-mode-shell > .sliders-container > .editable-slider:nth-child(1),
+  .app-container .polyrhythm-mode-shell > .sliders-container > .editable-slider:nth-child(2) {
+    grid-column: 2;
+  }
+
+  /* Same order as every other mode: tempo first, then the pickers, volume. */
+  .app-container .polyrhythm-mode-shell > .sliders-container > .editable-slider:nth-child(1) { grid-row: 4; border-top: 0; }
+  .app-container .polyrhythm-mode-shell > .polyrhythm-controls { grid-row: 5; }
+  .app-container .polyrhythm-mode-shell > .sliders-container > .editable-slider:nth-child(2) { grid-row: 6; }
+
+  .app-container .mode-selector { max-width: 720px; }
+
+  /* The ratio sits in the middle of the whole visualisation area. */
+  .app-container .polyrhythm-mode-shell .ratio-display { grid-row: 3 / 9; }
+
+  .app-container .transport-row { margin-top: var(--sp-4); }
+
+  .app-container .footer { grid-area: 9 / 1 / 10 / -1; }
+  .app-container .support-page-container { grid-row: 3 / 9; }
+
+  /* The wide column gives every control its own full-width row, label above. */
+  .app-container .control-beats,
+  .app-container .control-note {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--sp-2);
+  }
+
+  .app-container .control-beats > h3,
+  .app-container .control-note > h3 { flex: 0 0 auto; }
+
+  .app-container .control-note { align-items: flex-start; }
+
+  .app-container .volume-slider,
+  .app-container .swing-slider,
+  .app-container .practice-workspace.mode-analog .volume-slider { grid-column: 1 / -1; }
+  .app-container .swing-slider { grid-row: 5; }
+
+  .app-container .subdivision-container { display: flex; justify-content: flex-start; }
+  .app-container .subdivision-stepper { display: none; }
+
+  .app-container .polyrhythm-buttons { display: flex; }
+  .app-container .polyrhythm-mode-shell .poly-stepper { display: none; }
+  .app-container .polyrhythm-mode-shell .circle-header { margin-bottom: var(--sp-2); }
+  .app-container .polyrhythm-mode-shell .polyrhythm-config + .polyrhythm-config { margin-top: var(--sp-3); }
+}

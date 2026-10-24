@@ -1,6 +1,5 @@
 // src/App.js
 import React, { useState, useRef, useEffect } from 'react';
-import './App.css';
 import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
 import AdvancedMetronomeWithCircle from './components/AdvancedMetronome';
@@ -21,11 +20,8 @@ import { DESKTOP_COMMAND_EVENT, reportDesktopState } from './desktop';
 import { manualTempoAcceleration } from './hooks/useMetronomeLogic/trainingLogic';
 import AccessibilityMenu from './components/accessibility/AccessibilityMenu';
 import './styles/accessibility.css';
-import './styles/high-contrast.css';
-import './styles/large-text.css';
-import './styles/color-blindness.css';
-import './styles/phone-compact.css';
-import './styles/phone-modern.css';
+import './styles/layout.css';
+import './styles/accessibility-modes.css';
 import { IS_NATIVE_APP } from './nativeApp';
 // StyleGuide component removed
 
@@ -724,47 +720,13 @@ function App() {
 
       {showSupportPage && !IS_NATIVE_APP ? (
         <div className="support-page-container">
-          <div style={{ 
-            position: 'sticky', 
-            top: '0',
-            zIndex: '10',
-            backgroundColor: 'var(--neutral-bg)',
-            padding: '15px',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
-            display: 'flex',
-            justifyContent: 'flex-start',
-            alignItems: 'center'
-          }}>
-            <button 
-              className="back-button" 
+          <div className="support-page-bar">
+            <button
+              type="button"
+              className="back-button"
               onClick={() => setShowSupportPage(false)}
-              style={{
-                padding: '10px 18px',
-                backgroundColor: 'var(--secondary-gold)',
-                color: 'var(--text-primary)',
-                border: 'none',
-                borderRadius: '20px',
-                cursor: 'pointer',
-                fontFamily: 'Lato, sans-serif',
-                fontWeight: 'bold',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                boxShadow: '0 2px 6px rgba(0, 0, 0, 0.1)',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 4px 10px rgba(0, 0, 0, 0.12)';
-                e.currentTarget.style.backgroundColor = 'var(--secondary-gold-dark)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.1)';
-                e.currentTarget.style.backgroundColor = 'var(--secondary-gold)';
-              }}
             >
-              <span style={{ fontSize: '1.2em', lineHeight: 1 }}>&larr;</span> Back to Metronome
+              <span aria-hidden="true">&larr;</span> Back to Metronome
             </button>
           </div>
           <SupportPage />
