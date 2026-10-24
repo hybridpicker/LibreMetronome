@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { PHONE_MAX_WIDTH, getPhoneVisualSize } from '../utils/phoneLayout';
 import useMetronomeLogic from "../hooks/useMetronomeLogic";
 
 import firstBeat from "../assets/svg/firstBeat.svg";
@@ -296,7 +297,10 @@ export function AdvancedMetronomeWithCircle({
     const w = window.innerWidth;
     const h = window.innerHeight;
     const hasCoarsePointer = window.matchMedia?.('(pointer: coarse)').matches;
-    if (w < 600) return Math.min(w - 40, 300, Math.max(200, h * 0.34));
+    if (w < PHONE_MAX_WIDTH) {
+      // The beat circle is drawn at 80% of this size, so scale it back up.
+      return getPhoneVisualSize(analogMode ? 'analog' : 'beat') / (analogMode ? 1 : 0.8);
+    }
     if (hasCoarsePointer) {
       const portrait = window.matchMedia?.('(orientation: portrait)').matches;
       return Math.min(w - 72, h * (portrait ? 0.34 : 0.43), portrait ? 430 : 440);
@@ -308,10 +312,14 @@ export function AdvancedMetronomeWithCircle({
   const [baseContainerSize, setContainerSize] = useState(getContainerSize());
   const containerSize = baseContainerSize * (analogMode ? 1 : 0.8);
   useEffect(() => {
+    // Analog and Beat share this component, but the phone layout reserves a
+    // different amount of height for each, so recompute when the mode changes.
     const handleResize = () => setContainerSize(getContainerSize());
+    handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [analogMode]);
 
   const radius = containerSize / 2;
 

@@ -6,10 +6,14 @@ import tapButtonIcon from '../../../assets/svg/tap.svg';
 import TransportButton from '../Controls/TransportButton';
 import './GridAnimation.css';
 import withTrainingContainer from '../../Training/withTrainingContainer';
+import { isPhoneViewport, getPhoneGridSquare } from '../../../utils/phoneLayout';
+import useWindowDimensions from '../../../hooks/useWindowDimensions';
 import AccelerateButton from '../Controls/AccelerateButton';
 import { manualTempoAcceleration } from '../../../hooks/useMetronomeLogic/trainingLogic';
 
 const GridModeMetronome = (props) => {
+  // Re-render on resize/rotation so the phone square size follows the width.
+  useWindowDimensions();
   // Initialize grid configuration based on current subdivisions
   const [gridConfig, setGridConfig] = useState(
     Array.from({ length: props.subdivisions }, (_, i) => (i === 0 ? 3 : 1))
@@ -274,8 +278,12 @@ const GridModeMetronome = (props) => {
   }, [props.isPaused, animateCurrentBeat]);
 
   // Square size, gap, and color configuration
-  const squareSize = 50;
-  const gapSize = 8;
+  const phone = isPhoneViewport();
+  // Phones: shrink the squares so every beat column fits the screen width and
+  // the three rows stay compact (no horizontal or vertical page scrolling).
+  const phoneGap = 4;
+  const squareSize = phone ? getPhoneGridSquare(props.subdivisions) : 50;
+  const gapSize = phone ? phoneGap : 8;
   
   const colors = {
     inactive: "var(--muted-wash)",
@@ -457,12 +465,12 @@ const GridModeMetronome = (props) => {
 
   return (
     <div 
-      style={{ textAlign: 'center', padding: '20px 0' }}
+      style={{ textAlign: 'center', padding: phone ? '0' : '20px 0' }}
       className={`${!props.isPaused ? 'metronome-active' : ''} ${isFirstBeatPlaying ? 'first-beat-playing' : ''}`}
     >
       <div style={{ 
         margin: '0 auto',
-        padding: '20px',
+        padding: phone ? '0 0 4px' : '20px',
         maxWidth: '100%',
         overflowX: 'auto', 
         overflowY: 'visible',
@@ -503,8 +511,8 @@ const GridModeMetronome = (props) => {
       </div>
 
       <div style={{ 
-        marginTop: '20px', 
-        marginBottom: '20px',
+        marginTop: phone ? '4px' : '20px', 
+        marginBottom: phone ? '0' : '20px',
         display: 'flex', 
         justifyContent: 'center', 
         gap: '15px',

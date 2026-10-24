@@ -1,4 +1,5 @@
 import React from 'react';
+import { isPhoneViewport } from '../../../utils/phoneLayout';
 import firstBeat from "../../../assets/svg/firstBeat.svg";
 import firstBeatActive from "../../../assets/svg/firstBeatActive.svg";
 import normalBeat from "../../../assets/svg/normalBeat.svg";
@@ -24,8 +25,15 @@ const CircleRenderer = ({
   isSilencePhaseRef,
   isMobile
 }) => {
-  const actualContainerSize = circleSettings?.length > 1 ? containerSize * 0.7 : containerSize;
-  const actualRadius = circleSettings?.length > 1 ? radius * 0.7 : radius;
+  const circleCount = circleSettings?.length || 1;
+  let actualContainerSize = circleCount > 1 ? containerSize * 0.7 : containerSize;
+  if (isPhoneViewport() && circleCount > 1) {
+    // On phones the circles sit side by side. Each one gets an equal share of
+    // the width, minus room for the beat icons that overhang the circle edge.
+    const share = (window.innerWidth - 24 - (circleCount - 1) * 8) / circleCount;
+    actualContainerSize = Math.max(70, Math.min(containerSize, share - (circleCount > 2 ? 28 : 32)));
+  }
+  const actualRadius = actualContainerSize / 2;
   const isSilent = isPlaying && macroMode !== 0 && isSilencePhaseRef?.current;
 
   const iconSize = 24;

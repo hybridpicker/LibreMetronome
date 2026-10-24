@@ -1,0 +1,491 @@
+/*
+ * Phone layout: everything needed to practise (mode selector, visualisation,
+ * Start / Tap Tempo, tempo, volume, note and beat choices) fits one screen,
+ * so the page never has to be scrolled. Scoped to viewports narrower than
+ * 600px; tablets and desktop are unaffected. Imported last so these rules
+ * refine the earlier layers without touching them.
+ */
+@media (max-width: 600px) {
+  /* ---- Shell ------------------------------------------------------ */
+  .app-container {
+    padding:
+      max(6px, env(safe-area-inset-top))
+      max(12px, env(safe-area-inset-right))
+      max(4px, env(safe-area-inset-bottom))
+      max(12px, env(safe-area-inset-left));
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  /* ---- Header: logo on one line, menu button beside it ------------ */
+  .app-container .header {
+    padding: 0;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .app-container .header-logo {
+    width: 128px;
+  }
+
+  .app-container .header-kicker {
+    display: none;
+  }
+
+  .app-container .menu-button.header-action {
+    top: max(4px, env(safe-area-inset-top));
+    right: max(8px, env(safe-area-inset-right));
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+  }
+
+  /* ---- Mode selector --------------------------------------------- */
+  .app-container .mode-selector-container {
+    margin: 2px 0 6px;
+  }
+
+  .app-container .mode-selector {
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+    gap: 2px;
+    padding: 3px;
+  }
+
+  .app-container .mode-option {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 50px;
+    padding: 3px 2px;
+    justify-content: center;
+  }
+
+  .app-container .mode-icon-container {
+    width: 26px;
+    height: 26px;
+    margin-bottom: 1px;
+  }
+
+  .app-container .mode-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .app-container .mode-name {
+    font-size: 12px;
+    line-height: 15px;
+  }
+
+  /* ---- Workspace -------------------------------------------------- */
+  .app-container .practice-workspace {
+    gap: 6px;
+  }
+
+  .app-container .practice-workspace .metronome-stage,
+  .app-container .practice-workspace .practice-controls {
+    padding: 0;
+    border-radius: 0;
+  }
+
+  .app-container .metronome-with-training-wrapper {
+    margin: 0;
+    padding: 0;
+  }
+
+  .app-container .metronome-container {
+    margin-bottom: 0 !important;
+  }
+
+  /* The beat icons overhang the circle by half a touch target. */
+  .app-container .beat-visual .metronome-container {
+    margin: 22px auto !important;
+  }
+
+  /* ---- Transport -------------------------------------------------- */
+  .app-container .practice-workspace .transport-row {
+    margin: 6px auto 0 !important;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .app-container .transport-button {
+    height: 48px;
+    min-height: 48px;
+    padding: 6px 12px;
+  }
+
+  .app-container .beat-state-legend {
+    margin: 4px 0 0 !important;
+    gap: 4px 12px;
+    font-size: 12px;
+    line-height: 17px;
+  }
+
+  /* ---- Notes / beats / sliders panel ------------------------------ */
+  .app-container .practice-controls,
+  .app-container .multi-controls-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 10px;
+    row-gap: 4px;
+    align-items: start;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0;
+    min-height: 0;
+    height: auto;
+    max-height: none;
+  }
+
+  .app-container .practice-controls > .control-group,
+  .app-container .multi-controls-panel > .control-group {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0;
+    min-width: 0;
+  }
+
+  /* DOM order is Notes, Beats per Bar; show the beats on the left. */
+  .app-container .practice-controls > .control-group:nth-child(1),
+  .app-container .multi-controls-panel > .control-group:nth-child(1) {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .app-container .practice-controls > .control-group:nth-child(2),
+  .app-container .multi-controls-panel > .control-group:nth-child(2) {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .app-container .practice-workspace.mode-analog .practice-controls > .control-group {
+    grid-column: 1 / -1;
+  }
+
+  .app-container .practice-controls > .sliders-container,
+  .app-container .multi-controls-panel > .sliders-container {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .app-container .practice-controls .control-group > h3,
+  .app-container .multi-controls-panel .control-group > h3 {
+    margin: 0 0 2px;
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0.06em;
+    text-align: center;
+  }
+
+  /* Notes: icons stacked beside the beat grid. */
+  .app-container .note-selector-container {
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+  }
+
+  .app-container .practice-workspace.mode-analog .note-selector-container {
+    flex-direction: row;
+    gap: 8px;
+  }
+
+  .app-container .note-selector-button {
+    width: 40px;
+    height: 40px;
+    padding: 3px;
+  }
+
+  .app-container .note-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* Beats per bar: 1-9 as two compact rows. */
+  .app-container .subdivision-container {
+    display: grid;
+    grid-template-columns: repeat(5, 40px);
+    justify-content: center;
+    gap: 4px;
+    margin: 0 auto;
+  }
+
+  .app-container .subdivision-choice {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
+  }
+
+  /* ---- Sliders ----------------------------------------------------- */
+  .app-container .sliders-container {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 18px;
+    row-gap: 6px;
+    width: 100%;
+    max-width: none;
+    margin: 0 !important;
+    padding: 0;
+  }
+
+  .app-container .sliders-container .editable-slider {
+    min-height: 0 !important;
+    margin: 0 !important;
+    min-width: 0;
+  }
+
+  /* Every slider is one row: its label and value on the left, the track
+     right next to it. Volume and Swing sit side by side as two such pairs. */
+  .app-container .sliders-container .editable-slider {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: 6px;
+    height: 40px;
+  }
+
+  .app-container .sliders-container .editable-slider:not(.tempo-slider) .slider-label {
+    min-width: 46px;
+  }
+
+  .app-container .sliders-container .tempo-slider,
+  .app-container .practice-workspace.mode-analog .sliders-container .volume-slider,
+  .app-container .sliders-container .editable-slider:only-child {
+    grid-column: 1 / -1;
+    grid-template-columns: 104px minmax(0, 1fr);
+    column-gap: 8px;
+  }
+
+  /* The pendulum has no swing; do not spend room on the disabled slider. */
+  .app-container .sliders-container .swing-slider.disabled {
+    display: none;
+  }
+
+  .app-container .sliders-container .slider-label {
+    width: auto;
+    min-height: 40px;
+    height: 40px;
+    padding: 0 4px;
+    box-sizing: border-box;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    text-align: left;
+    gap: 0;
+    line-height: 1.15;
+  }
+
+  .app-container .slider-label-name {
+    font-size: 12px;
+  }
+
+  .app-container .slider-label-value,
+  .app-container .tempo-slider .slider-label-value {
+    font-size: 15px;
+  }
+
+  .app-container .sliders-container .editable-input {
+    min-height: 40px;
+    padding: 4px 0;
+    box-sizing: border-box;
+  }
+
+  .app-container .sliders-container .slider-item input[type="range"],
+  .app-container .sliders-container input[type="range"] {
+    height: 40px;
+    min-height: 40px;
+    width: 100%;
+    margin: 0;
+  }
+
+  /* ---- Footer: one slim line ------------------------------------- */
+  .app-container .footer {
+    margin: 4px auto 0;
+    padding: 2px 0 0;
+    max-width: none;
+  }
+
+  html.capacitor-native .app-container .footer {
+    padding-bottom: 0;
+  }
+
+  .app-container .footer .separator {
+    display: none;
+  }
+
+  .app-container .footer-content {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .app-container .footer-left,
+  .app-container .footer-right {
+    width: auto;
+    margin: 0;
+  }
+
+  .app-container .footer-left {
+    text-align: left;
+    font-size: 12px;
+    line-height: 16px;
+  }
+
+  .app-container .footer-left p {
+    margin: 0;
+  }
+
+  .app-container .footer-left a {
+    display: inline-block;
+    padding: 6px 0;
+  }
+
+  .app-container .footer .support-button {
+    margin: 0;
+    min-height: 40px;
+    padding: 6px 14px;
+    font-size: 14px;
+  }
+
+  /* ---- Grid mode --------------------------------------------------- */
+  .app-container .practice-workspace.mode-grid .metronome-stage > * > div {
+    min-width: 0;
+  }
+
+  .app-container .grid-beat-control {
+    min-width: 0;
+    min-height: 0;
+  }
+
+  /* ---- Sequence mode ----------------------------------------------- */
+  .app-container .multi-mode-shell .circles-container {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: flex-start !important;
+    justify-content: center;
+    gap: 4px;
+    margin-top: 4px !important;
+  }
+
+  .app-container .multi-mode-shell .multi-circle-surface {
+    margin: 12px 0 30px !important;
+    flex: 0 0 auto;
+  }
+
+  .app-container .multi-mode-shell .circle-actions {
+    margin: 4px auto 0;
+  }
+
+  .app-container .multi-mode-shell .multi-controls-panel {
+    margin-top: 6px !important;
+  }
+
+  /* ---- Polyrhythm mode ---------------------------------------------- */
+  .app-container .polyrhythm-mode-shell {
+    display: block;
+  }
+
+  .app-container .polyrhythm-mode-shell .polyrhythm-container {
+    margin: 0 auto;
+  }
+
+  .app-container .polyrhythm-mode-shell .polyrhythm-controls {
+    gap: 4px;
+    margin: 6px auto 0;
+    max-width: none;
+  }
+
+  .app-container .polyrhythm-mode-shell .polyrhythm-config {
+    display: block;
+  }
+
+  .app-container .polyrhythm-mode-shell .circle-header {
+    flex-direction: row;
+    justify-content: center;
+    gap: 8px;
+    margin: 0 0 2px;
+  }
+
+  .app-container .polyrhythm-mode-shell .circle-badge {
+    padding: 1px 10px;
+    margin: 0;
+    font-size: 12px;
+    line-height: 18px;
+  }
+
+  .app-container .polyrhythm-mode-shell .circle-beat-count {
+    margin: 0;
+    font-size: 14px;
+  }
+
+  .app-container .polyrhythm-mode-shell .polyrhythm-buttons {
+    display: flex;
+    flex-wrap: nowrap;
+    max-width: none;
+    gap: 2px;
+    justify-content: center;
+  }
+
+  .app-container .polyrhythm-mode-shell .polyrhythm-choice {
+    flex: 0 0 auto;
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
+  }
+
+  /* One centred row: label | 4:3 | swap, so the ratio sits on the middle. */
+  .app-container .polyrhythm-mode-shell > .side-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: 10px;
+    margin: 4px 0 0;
+    max-width: none;
+    width: 100%;
+  }
+
+  .app-container .polyrhythm-mode-shell .polyrhythm-ratio {
+    display: contents;
+  }
+
+  .app-container .polyrhythm-mode-shell .ratio-label {
+    grid-column: 1;
+    justify-self: end;
+    margin: 0;
+    font-size: 12px;
+  }
+
+  .app-container .polyrhythm-mode-shell .ratio-display {
+    grid-column: 2;
+  }
+
+  .app-container .polyrhythm-mode-shell .ratio-number {
+    font-size: 26px;
+  }
+
+  .app-container .polyrhythm-mode-shell .switch-circles-button {
+    grid-column: 3;
+    justify-self: start;
+    min-height: 40px;
+    height: 40px;
+    width: 52px;
+    padding: 2px 8px;
+    margin: 0;
+  }
+
+  .app-container .polyrhythm-mode-shell .switch-circles-button img {
+    width: 28px;
+    height: 28px;
+  }
+
+  .app-container .polyrhythm-mode-shell > .sliders-container {
+    margin-top: 6px !important;
+    max-width: none;
+  }
+}
