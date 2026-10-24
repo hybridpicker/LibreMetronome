@@ -1,0 +1,110 @@
+/*
+ * Accessibility modes as token overrides. The main screen and every dialog
+ * read the tokens in colors.css, so a mode only has to redefine them:
+ *   high contrast   black canvas, white lines and text, cyan active, yellow gold
+ *   large text      the type scale steps up one size (layout absorbs it)
+ *   colour blind    accent and gold move to the Okabe-Ito palette; shapes
+ *                   (ring + dot for the first beat, dashed muted ring) already
+ *                   carry the meaning without colour.
+ */
+
+/* ---- High contrast ------------------------------------------------------ */
+
+body.high-contrast {
+  --bg: #000000;
+  --surface: #000000;
+  --ink: #ffffff;
+  --ink-2: #ffffff;
+  --ink-3: #ffffff;
+  --line: #ffffff;
+  --line-strong: #ffffff;
+  --accent: #00ffff;
+  --accent-ink: #00ffff;
+  --accent-wash: #000000;
+  --on-accent: #000000;
+  --gold: #ffff00;
+  --focus: #ffff00;
+  --danger: #ff8a80;
+  background: #000000;
+  color: #ffffff;
+}
+
+body.high-contrast .viz-card {
+  border: var(--stroke-select) solid var(--line);
+}
+
+body.high-contrast .mode-option.active,
+body.high-contrast .subdivision-choice[aria-pressed='true'],
+body.high-contrast .note-selector-button[aria-pressed='true'],
+body.high-contrast .polyrhythm-choice[aria-pressed='true'] {
+  border: 3px solid var(--gold);
+  color: var(--ink);
+}
+
+body.high-contrast .transport-play,
+body.high-contrast .transport-play.is-playing {
+  border: 3px solid var(--accent);
+}
+
+body.high-contrast .transport-play { color: var(--on-accent); }
+body.high-contrast .transport-play.is-playing { color: var(--accent); }
+
+body.high-contrast .grid-cell.is-on::after { background: var(--ink); }
+
+/* ---- Large text --------------------------------------------------------- */
+
+body.large-text {
+  --fs-1: 14px;
+  --fs-2: 17px;
+  --fs-3: 20px;
+  --fs-4: 24px;
+  --fs-5: 52px;
+}
+
+/* Dialogs and guide text scale with the root size. */
+body.large-text .menu-modal,
+body.large-text .info-modal,
+body.large-text .training-modal,
+body.large-text .accessibility-settings {
+  font-size: 125%;
+}
+
+@media (max-width: 519px) {
+  /* Five labels share the width; keep them at the 12 px floor. */
+  body.large-text .mode-option { font-size: 12px; }
+  body.large-text .app-container .control-beats > h3,
+  body.large-text .app-container .control-note > h3 { flex-basis: 128px; }
+}
+
+/* ---- Colour blind ------------------------------------------------------- */
+
+body.protanopia,
+body.deuteranopia {
+  --accent: #0072b2;
+  --accent-ink: #005a8d;
+  --accent-wash: #e3f0f8;
+  --gold: #a86c00;
+}
+
+body.tritanopia {
+  --accent: #c24d00;
+  --accent-ink: #a13f00;
+  --accent-wash: #fbece3;
+  --gold: #6a4c93;
+}
+
+body.monochromacy {
+  --accent: #111111;
+  --accent-ink: #111111;
+  --accent-wash: #eeeeee;
+  --gold: #111111;
+}
+
+/* Large text on short phones: tighter rows, the footer keeps to one line. */
+@media (max-height: 759px) {
+  body.large-text .app-container { --row-pad: 0px; }
+  body.large-text .footer-line { flex-wrap: nowrap; white-space: nowrap; }
+}
+
+/* The footer is secondary text; it keeps the 12 px floor so it fits one line. */
+body.large-text .footer { font-size: 12px; }
