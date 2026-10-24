@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { PHONE_MAX_WIDTH, getPhoneVisualSize } from '../utils/phoneLayout';
+import { useVizCardSize } from '../utils/phoneLayout';
 import useMetronomeLogic from "../hooks/useMetronomeLogic";
 
 import firstBeat from "../assets/svg/firstBeat.svg";
@@ -297,10 +297,6 @@ export function AdvancedMetronomeWithCircle({
     const w = window.innerWidth;
     const h = window.innerHeight;
     const hasCoarsePointer = window.matchMedia?.('(pointer: coarse)').matches;
-    if (w < PHONE_MAX_WIDTH) {
-      // The beat circle is drawn at 80% of this size, so scale it back up.
-      return getPhoneVisualSize(analogMode ? 'analog' : 'beat') / (analogMode ? 1 : 0.8);
-    }
     if (hasCoarsePointer) {
       const portrait = window.matchMedia?.('(orientation: portrait)').matches;
       return Math.min(w - 72, h * (portrait ? 0.34 : 0.43), portrait ? 430 : 440);
@@ -310,10 +306,23 @@ export function AdvancedMetronomeWithCircle({
   };
 
   const [baseContainerSize, setContainerSize] = useState(getContainerSize());
-  const containerSize = baseContainerSize * (analogMode ? 1 : 0.8);
+  // Phones: the visualisation card is sized by CSS; scale the beats to it.
+  const [vizRef, vizSize] = useVizCardSize();
+  let phoneContainerSize = 0;
+  if (vizSize.height > 0) {
+    phoneContainerSize = analogMode
+      ? Math.min(vizSize.width - 20, vizSize.height - 20)
+      // Beat icons overhang the circle by half their icon; the legend owns the
+      // bottom 34px of the card.
+      : Math.min(300, vizSize.width - 20 - 24, vizSize.height - 44 - 24);
+    phoneContainerSize = Math.max(120, Math.floor(phoneContainerSize));
+  }
+  const containerSize = phoneContainerSize || baseContainerSize * (analogMode ? 1 : 0.8);
+  // Phone pendulum: the canvas fills the whole visualisation card.
+  const analogPhoneBox = analogMode && vizSize.height > 0
+    ? { width: Math.max(160, vizSize.width - 20), height: Math.max(160, vizSize.height - 20) }
+    : null;
   useEffect(() => {
-    // Analog and Beat share this component, but the phone layout reserves a
-    // different amount of height for each, so recompute when the mode changes.
     const handleResize = () => setContainerSize(getContainerSize());
     handleResize();
     window.addEventListener("resize", handleResize);
@@ -550,19 +559,21 @@ export function AdvancedMetronomeWithCircle({
 
   return (
     <div className={analogMode ? "analog-visual" : "beat-visual"} style={{ position: "relative", textAlign: "center" }}>
+      <div className="viz-card" ref={vizRef}>
       <div
         className="metronome-container"
         style={{
           position: "relative",
-          width: containerSize,
-          height: containerSize,
+          width: analogPhoneBox ? analogPhoneBox.width : containerSize,
+          height: analogPhoneBox ? analogPhoneBox.height : containerSize,
           margin: "0 auto"
         }}
       >
         {analogMode ? (
           <AnalogMetronomeCanvas
-            width={containerSize}
-            height={containerSize}
+            modern={!!analogPhoneBox}
+            width={analogPhoneBox ? analogPhoneBox.width : containerSize}
+            height={analogPhoneBox ? analogPhoneBox.height : containerSize}
             isPaused={isPaused}
             tempo={tempo}
             audioCtxCurrentTime={() => logic.audioCtx?.currentTime || 0}
@@ -629,6 +640,7 @@ export function AdvancedMetronomeWithCircle({
           </>
         )}
       </div>
+      </div>
 
       {/* Accelerate Button positioned directly after the metronome canvas */}
       <AccelerateButton onClick={handleAccelerate} speedMode={speedMode} />
@@ -677,7 +689,7 @@ export function AdvancedMetronomeWithCircle({
       </div>
 
       {!analogMode && (
-        <div className="beat-state-legend" style={{ marginTop: "15px" }}>
+        <div className="beat-state-legend viz-legend" style={{ marginTop: "15px" }}>
           <div style={{ display: "flex", alignItems: "center" }}>
             <div
               style={{

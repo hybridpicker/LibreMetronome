@@ -22,7 +22,7 @@ const MetronomeControls = ({
       {/* Render Note Selector if mode is not "multi" */}
       {mode !== "multi" && (
         <div className="control-group" style={{ marginBottom: "20px", textAlign: "center" }}>
-          <h3>Notes</h3>
+          <h3><span className="lbl-full">Notes</span><span className="lbl-phone">Note value</span></h3>
           <NoteSelector 
             beatMode={beatMode}
             onSelect={(mode) => setBeatMode(mode)}
@@ -33,7 +33,7 @@ const MetronomeControls = ({
       {/* Render Subdivision Selector for all modes except analog */}
       {mode !== "analog" && mode !== "multi" && (
         <div className="control-group" style={{ marginBottom: "20px", textAlign: "center" }}>
-          <h3>Beats per Bar</h3>
+          <h3><span className="lbl-full">Beats per Bar</span><span className="lbl-phone">Beats / bar</span></h3>
           <SubdivisionSelector
             subdivisions={subdivisions}
             onSelect={(num) => setSubdivisions(num)}
@@ -52,6 +52,7 @@ const MetronomeControls = ({
             max={240}
             step={1}
             className="tempo-slider"
+            stepButtons
             formatter={(val) => `${val} BPM`}
             parser={(val) => parseInt(val.replace(/\D/g, ''))}
           />

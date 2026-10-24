@@ -6,7 +6,7 @@ import tapButtonIcon from '../../../assets/svg/tap.svg';
 import TransportButton from '../Controls/TransportButton';
 import './GridAnimation.css';
 import withTrainingContainer from '../../Training/withTrainingContainer';
-import { isPhoneViewport, getPhoneGridSquare } from '../../../utils/phoneLayout';
+import { isPhoneViewport, useVizCardSize } from '../../../utils/phoneLayout';
 import useWindowDimensions from '../../../hooks/useWindowDimensions';
 import AccelerateButton from '../Controls/AccelerateButton';
 import { manualTempoAcceleration } from '../../../hooks/useMetronomeLogic/trainingLogic';
@@ -279,10 +279,20 @@ const GridModeMetronome = (props) => {
 
   // Square size, gap, and color configuration
   const phone = isPhoneViewport();
-  // Phones: shrink the squares so every beat column fits the screen width and
-  // the three rows stay compact (no horizontal or vertical page scrolling).
+  // Phones: the grid fills its visualisation card. A cell is as wide as the
+  // card allows (max 60px), and three rows plus the beat number must fit the
+  // card height under the legend.
+  const [vizRef, vizSize] = useVizCardSize();
   const phoneGap = 4;
-  const squareSize = phone ? getPhoneGridSquare(props.subdivisions) : 50;
+  let squareSize = 50;
+  if (phone) {
+    const fromWidth = Math.floor((vizSize.width - 28 - props.subdivisions * phoneGap) / props.subdivisions);
+    // card padding 10+34 (legend), beat number 25, row gaps 12
+    const fromHeight = Math.floor((vizSize.height - 44 - 25 - 12) / 3);
+    squareSize = vizSize.height > 0
+      ? Math.max(24, Math.min(72, fromWidth, fromHeight))
+      : Math.max(24, Math.min(60, Math.floor((window.innerWidth - 32 - props.subdivisions * phoneGap) / props.subdivisions)));
+  }
   const gapSize = phone ? phoneGap : 8;
   
   const colors = {
@@ -369,7 +379,7 @@ const GridModeMetronome = (props) => {
             <div style={{ 
               fontSize: '12px', 
               marginTop: '8px', 
-              color: colIndex === 0 ? "#f5bc5e" : "#999",
+              color: phone ? (colIndex === 0 ? "var(--primary-teal-dark)" : "var(--text-tertiary-aa)") : (colIndex === 0 ? "#f5bc5e" : "#999"),
               fontWeight: colIndex === 0 ? "500" : "normal"
             }}>
               {colIndex + 1}
@@ -453,7 +463,7 @@ const GridModeMetronome = (props) => {
           <div style={{ 
             fontSize: '12px', 
             marginTop: '8px', 
-            color: colIndex === 0 ? "#f5bc5e" : "#999",
+            color: phone ? (colIndex === 0 ? "var(--primary-teal-dark)" : "var(--text-tertiary-aa)") : (colIndex === 0 ? "#f5bc5e" : "#999"),
             fontWeight: colIndex === 0 ? "500" : "normal"
           }}>
             {colIndex + 1}
@@ -466,9 +476,10 @@ const GridModeMetronome = (props) => {
   return (
     <div 
       style={{ textAlign: 'center', padding: phone ? '0' : '20px 0' }}
-      className={`${!props.isPaused ? 'metronome-active' : ''} ${isFirstBeatPlaying ? 'first-beat-playing' : ''}`}
+      className={`grid-visual ${!props.isPaused ? 'metronome-active' : ''} ${isFirstBeatPlaying ? 'first-beat-playing' : ''}`}
     >
-      <div style={{ 
+      <div className="viz-card" ref={vizRef}>
+      <div className="grid-columns" style={{ 
         margin: '0 auto',
         padding: phone ? '0 0 4px' : '20px',
         maxWidth: '100%',
@@ -477,6 +488,7 @@ const GridModeMetronome = (props) => {
         whiteSpace: 'nowrap'
       }}>
         {renderGridSquares()}
+      </div>
       </div>
       
       <AccelerateButton 
@@ -510,7 +522,7 @@ const GridModeMetronome = (props) => {
         />
       </div>
 
-      <div style={{ 
+      <div className="viz-legend" style={{ 
         marginTop: phone ? '4px' : '20px', 
         marginBottom: phone ? '0' : '20px',
         display: 'flex', 

@@ -75,7 +75,7 @@ const MultiCircleControls = ({
     <div className="controls-section multi-controls-panel" style={{ marginTop: "20px" }}>
       {/* Notes section */}
       <div className="control-group" style={{ marginBottom: "20px", textAlign: "center" }}>
-        <h3 className="section-title">Notes (Circle {activeCircle + 1})</h3>
+        <h3 className="section-title"><span className="lbl-full">Notes (Circle {activeCircle + 1})</span><span className="lbl-phone">Note for circle {activeCircle + 1}</span></h3>
         <NoteSelector 
           beatMode={currentSettings.beatMode}
           onSelect={handleNoteSelection}
@@ -84,7 +84,7 @@ const MultiCircleControls = ({
       
       {/* Beats per Bar section */}
       <div className="control-group" style={{ marginBottom: "20px", textAlign: "center" }}>
-        <h3 className="section-title">Beats per Bar (Circle {activeCircle + 1})</h3>
+        <h3 className="section-title"><span className="lbl-full">Beats per Bar (Circle {activeCircle + 1})</span><span className="lbl-phone">Circle {activeCircle + 1} beats</span></h3>
         <SubdivisionSelector
           subdivisions={currentSettings.subdivisions}
           onSelect={handleSetSubdivisions}
@@ -101,6 +101,7 @@ const MultiCircleControls = ({
           max={240}
           step={1}
           className="tempo-slider"
+          stepButtons
           formatter={(val) => `${val} BPM`}
           parser={(val) => parseInt(val.replace(/\D/g, ''))}
         />

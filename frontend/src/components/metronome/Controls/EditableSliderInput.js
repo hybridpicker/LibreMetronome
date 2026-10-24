@@ -13,7 +13,8 @@ const EditableSliderInput = ({
   className, 
   formatter = (val) => val, 
   parser = (val) => val,
-  disabled = false
+  disabled = false,
+  stepButtons = false
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState(formatter(value));
@@ -55,6 +56,17 @@ const EditableSliderInput = ({
     setValue(parseFloat(e.target.value));
   };
 
+  // Phones show -1 / +1 buttons beside the tempo slider (hidden by CSS elsewhere).
+  const nudge = (direction) => {
+    if (disabled) return;
+    const next = Math.max(min, Math.min(max, Number(value) + direction * (step || 1)));
+    setValue(Math.round(next * 100) / 100);
+  };
+
+  // "120 BPM" is drawn as a large number with a small unit; the text stays whole.
+  const formatted = String(formatter(value));
+  const unitMatch = /^(\S+)\s+([A-Za-z]+)$/.exec(formatted);
+
   const progress = max === min ? 0 : ((value - min) / (max - min)) * 100;
   
   return (
@@ -82,10 +94,28 @@ const EditableSliderInput = ({
           disabled={disabled}
         >
           <span className="slider-label-name">{label}</span>
-          <span className="slider-label-value">{formatter(value)}</span>
+          {unitMatch ? (
+            <span className="slider-label-value">
+              <span className="slider-value-number">{unitMatch[1]}</span>{' '}
+              <span className="slider-value-unit">{unitMatch[2]}</span>
+            </span>
+          ) : (
+            <span className="slider-label-value">{formatted}</span>
+          )}
         </button>
       )}
       
+      {stepButtons && (
+        <button
+          type="button"
+          className="slider-step slider-step-down"
+          onClick={() => nudge(-1)}
+          disabled={disabled || value <= min}
+          aria-label={`${label} minus ${step || 1}`}
+        >
+          <span aria-hidden="true">&minus;</span>
+        </button>
+      )}
       <input
         type="range"
         min={min}
@@ -98,6 +128,17 @@ const EditableSliderInput = ({
         style={{ '--slider-progress': `${Math.max(0, Math.min(100, progress))}%` }}
         disabled={disabled}
       />
+      {stepButtons && (
+        <button
+          type="button"
+          className="slider-step slider-step-up"
+          onClick={() => nudge(1)}
+          disabled={disabled || value >= max}
+          aria-label={`${label} plus ${step || 1}`}
+        >
+          <span aria-hidden="true">+</span>
+        </button>
+      )}
     </div>
   );
 };
