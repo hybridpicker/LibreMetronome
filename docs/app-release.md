@@ -322,3 +322,10 @@ Gemeinsame Testgruppe (Google Group) mit Guitar Positions ist möglich; der Test
 - Die Console zeigt bis zur ersten Prüfung einen vorläufigen Namen mit „(unreviewed)“, das ist normal.
 - Quelltext-Link steht im Info-Fenster und im Store-Text. iOS-Frage (FSF) bleibt offen.
 - iOS ist vorbereitet (Kennung, Hintergrundmodus), aber nicht eingereicht. Offen für iOS: Apple-Vereinbarung für bezahlte Apps samt Bank- und Steuerdaten (Eigentümer), `ITSAppUsesNonExemptEncryption`, Privacy Manifest, Versionsanbindung, Icons.
+
+### 13.2 Upload-Schlüssel und signierte AAB (2026-10-24)
+
+- Schlüssel erzeugt lokal in `~/libremetronome-release/` (Ordner 700, Dateien 600, nicht in iCloud): `upload.jks` (RSA 4096, Alias `upload`, 10 000 Tage) und `key.properties`. Die Passwörter wurden zufällig erzeugt und **nie ausgegeben**. **Offen für den Eigentümer:** `key.properties` selbst öffnen und Passwort und Dateien in den Passwortmanager sichern. Ohne Sicherung ist der Schlüssel bei Datenverlust weg (Play kann den Upload-Schlüssel zwar zurücksetzen, das kostet aber Zeit).
+- Signierte AAB gebaut aus dem committed Stand: `frontend/android/app/build/outputs/bundle/release/app-release.aab`, 4,2 MB, `jarsigner -verify` meldet „verifiziert“. Zertifikat SHA-256 (öffentlich, zum Abgleich in der Play Console): `71:0C:AA:D6:BE:18:D0:49:B0:F7:8E:C1:62:9B:C6:66:E3:AA:CC:DE:FC:A1:D7:62:AB:55:BA:6E:09:6B:E6:67`.
+- `versionCode` 1, `versionName` 0.6.0. Für jeden weiteren Upload `buildNumber` erhöhen.
+- Nicht hochgeladen. Der Upload ist Tor 3 und wird vom Eigentümer per Drag and Drop gemacht.
