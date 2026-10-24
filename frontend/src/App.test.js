@@ -88,7 +88,7 @@ describe('App Component', () => {
 
   test('renders header with logo', async () => {
     render(<App />);
-    expect(screen.getByAltText('LibreMetronome')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'LibreMetronome' })).toBeInTheDocument();
   });
 
   test('renders mode selector buttons', async () => {
@@ -138,8 +138,8 @@ describe('App Component', () => {
 
       const startButton = screen.getByRole('button', { name: 'Start' });
       const tapButton = screen.getByRole('button', { name: 'Tap Tempo' });
-      expect(startButton.querySelector('img')).toHaveAttribute('src', expect.stringContaining('play'));
-      expect(tapButton.querySelector('img')).toBeNull();
+      expect(startButton.querySelector('svg.transport-icon')).not.toBeNull();
+      expect(tapButton.querySelector('svg, img')).toBeNull();
       expect(startButton).toHaveTextContent('Start');
       expect(tapButton).toHaveTextContent('Tap Tempo');
     });

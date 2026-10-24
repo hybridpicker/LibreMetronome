@@ -1,16 +1,25 @@
 // src/components/metronome/Controls/NoteSelector.js
 import React from 'react';
-import quarterNotesActive from '../../../assets/svg/quarter_eight_notes/quarterNotesActive.svg';
-import quarterNotesInactive from '../../../assets/svg/quarter_eight_notes/quarterNotesInactive.svg';
-import eightNotesActive from '../../../assets/svg/quarter_eight_notes/eightNotesActive.svg';
-import eightNotesInactive from '../../../assets/svg/quarter_eight_notes/eightNotesInactive.svg';
-import './NoteSelector.css';
 
 /**
  * NoteSelector Component:
  * Renders selection buttons for Quarter Notes and Eighth Notes.
  * When the prop "hideOptions" is true, nothing is rendered.
  */
+// Quarter and eighth note as outline glyphs; colour follows the button state.
+const QuarterNote = () => (
+  <svg className="note-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <ellipse cx="9" cy="18" rx="3.6" ry="2.7" transform="rotate(-20 9 18)" fill="currentColor" />
+    <path d="M12.3 17V4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+);
+const EighthNote = () => (
+  <svg className="note-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <ellipse cx="9" cy="18" rx="3.6" ry="2.7" transform="rotate(-20 9 18)" fill="currentColor" />
+    <path d="M12.3 17V4c0 3.2 5 3.2 5 8" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+);
+
 const NoteSelector = ({ beatMode, onSelect, hideOptions = false }) => {
   if (hideOptions) return null; // Do not render options if hideOptions is true
 
@@ -36,12 +45,7 @@ const NoteSelector = ({ beatMode, onSelect, hideOptions = false }) => {
         title="Quarter Notes"
         data-testid="quarter-note-button"
       >
-        <img
-          src={beatMode === "quarter" ? quarterNotesActive : quarterNotesInactive}
-          alt=""
-          aria-hidden="true"
-          className={`note-icon ${beatMode === "quarter" ? "active" : ""}`}
-        />
+        <QuarterNote />
       </button>
       <button
         type="button"
@@ -52,12 +56,7 @@ const NoteSelector = ({ beatMode, onSelect, hideOptions = false }) => {
         title="Eighth Notes"
         data-testid="eighth-note-button"
       >
-        <img
-          src={beatMode === "eighth" ? eightNotesActive : eightNotesInactive}
-          alt=""
-          aria-hidden="true"
-          className={`note-icon ${beatMode === "eighth" ? "active" : ""}`}
-        />
+        <EighthNote />
       </button>
     </div>
   );
