@@ -1,100 +1,103 @@
-# LibreMetronome Precision Instrument Design System
+# LibreMetronome Design System
 
-This document defines the product-wide visual and interaction system for the
-web and Capacitor applications. The 2026 app icon is the primary reference: a
-precise teal metronome with restrained gold accents. The application canvas is
-white; the icon artwork does not dictate the page background.
+One calm, precise look for every output: web (desktop and phone browser),
+the paid, ad-free, offline Android app, and the iOS/macOS shell. One token
+base, one set of components; only the arrangement changes with the width.
 
-Updated September 5, 2026.
+Updated October 24, 2026 (build 0.7.0).
 
-## Design principles
+## Principles
 
-1. **Timing before decoration.** Motion communicates the beat, transport state,
-   or a mode transition. Decorative movement, gradients, glass effects, and 3D
-   styling are not part of the product language.
-2. **White is the canvas.** Pages and layout surfaces remain white. Layout
-   frames, panel dividers and elevation shadows are avoided; spacing establishes
-   grouping. Small interactive controls may retain subtle outlines or tints.
-3. **Teal operates the instrument.** Teal identifies primary actions, selected
-   modes, focus, active tracks, and the first beat.
-4. **Gold marks musical emphasis.** Gold is limited to normal/accented beats,
-   first-beat timing emphasis, and exceptional musical states.
-5. **State is never color-only.** Selected controls use shape, font weight or borders and
-   `aria-pressed`; silent, muted, disabled, paused, and training states also use
-   text or shape changes.
-6. **Touch is deliberate.** Interactive targets are at least 44 by 44 points.
-   Tempo and volume use restrained tracks with a visible active portion and a
-   large thumb. No operation depends on hover.
+1. **A measuring instrument.** Almost monochrome. White canvas, flat grey
+   surfaces, hairlines instead of framed cards.
+2. **One accent.** Teal marks the active state, the current beat and the Start
+   button, nothing else. Gold appears only as a thin contour or a small dot on
+   accented beats, never as a surface.
+3. **No decoration.** No shadows, no gradients, no legend dots, no filled gold.
+   The meaning of the beat marks is explained in the Guide.
+4. **State is never colour only.** Shape carries it too (ring, ring with dot,
+   dashed ring, filled), plus `aria-pressed` and text names.
+5. **Touch is deliberate.** Targets are 44 px (40 px on screens shorter than
+   760 px). Text is never below 12 px.
 
-## Source tokens
+## Tokens (`frontend/src/styles/colors.css`)
 
-The canonical CSS tokens live in `frontend/src/styles/colors.css`.
-
-| Role | Token | Value or behavior |
+| Role | Token | Value |
 | --- | --- | --- |
-| Canvas | `--surface-canvas` | White (`#ffffff`) |
-| Raised surface | `--surface-raised` | White (`#ffffff`) |
-| Primary instrument | `--primary-teal` | LibreMetronome teal (`#00a0a0`) |
-| Strong interaction | `--primary-teal-dark` | Dark teal (`#008585`) |
-| Timing accent | `--secondary-gold` | Restrained gold (`#f8d38d`) |
-| Primary text | `--text-primary` | Deep teal-black (`#183638`) |
-| Focus | `--focus-ring` | Three-pixel teal ring with offset |
-| Touch target | `--touch-target` | 48 pixels; never below 44 pixels |
-| Panel radius | `--radius-panel` | 18 pixels |
-| Control radius | `--radius-control` | 10 pixels |
+| Canvas | `--bg` | `#ffffff` |
+| Surface | `--surface` | `#f6f7f7` |
+| Text | `--ink` | `#111111` |
+| Secondary text | `--ink-2` | `#6b7072` (4.9:1 on white) |
+| Graphics only | `--ink-3` | `#868c8e` (rings, filled cells; 3.4:1) |
+| Lines | `--line`, `--line-strong` | `#e3e6e6`, `#c7cccd` |
+| Accent | `--accent` | `#00a0a0` (fills, current beat, thumb) |
+| Accent as text | `--accent-ink` | `#00797a` (5.2:1) |
+| Gold | `--gold` | `#b98a12` (contour or dot) |
+| Type scale | `--fs-1` … `--fs-5` | 12 / 14 / 17 / 22 / 44 px |
+| Radius | `--r-control`, `--r-surface` | 10 px, 12 px |
+| Space | `--sp-1` … `--sp-6` | 4 / 8 / 12 / 16 / 24 / 32 px |
+| Touch | `--touch` | 44 px (40 px when the window is shorter than 760 px) |
 
-Spacing follows the `--space-1` through `--space-7` scale (4, 8, 12, 16, 24,
-32, and 48 pixels). Layout panels have no decorative frames or shadows.
+**Typeface:** Lato (bundled), regular and bold. It ships inside the app, so the
+metrics are identical on every device, which the no-scroll guarantee relies on.
+BPM is a large tabular number (`--fs-5`).
 
-## Components and states
+Components use tokens only; `DesignTokens.test.js` fails on raw colours or
+drop shadows in `layout.css` and `instrument-system.css`. The old variable
+names remain as aliases at the end of `colors.css` for untouched dialogs.
 
-- Transport is text-first. Every mode displays **Start/Pause** and **Tap Tempo**
-  in the same row. Icons are supplemental and hidden from assistive technology.
-- Modes are labeled **Analog**, **Beat**, **Grid**, **Sequence**, and **Polyrhythm**.
-  Internal identifiers remain `analog`, `circle`, `grid`, `multi`, and `polyrhythm`.
-- Sequence selection uses a bold central bar number, without an underline or
-  playback dot. Shared minus/plus buttons remove the selected bar or add a bar;
-  the last remaining bar cannot be removed.
-- Tap Tempo shows a short visual response on pointer contact, before release.
-  Its confirmation click remains enabled; Bluetooth output can delay that sound.
-- Mode selection is a compact toolbar with semantic buttons and
-  `aria-pressed` state.
-- Beat and subdivision editing uses semantic buttons. Accessible names include
-  the beat number and current musical state.
-- Sliders expose programmatic labels, a visible value, editable numeric input,
-  active track, 26-pixel thumb, and a 44-pixel interaction height.
-- Dialog navigation uses tab and tabpanel semantics. The main menu restores
-  focus to its trigger when closed.
-- Disabled controls retain readable labels and a visible outline while using
-  reduced opacity. Muted beats use a dashed shape and an explicit accessible
-  name. Silent training is announced with text, not color alone.
+## Files
 
-## Responsive behavior
+- `colors.css`: tokens.
+- `instrument-system.css`: base rules and every component (what it looks like).
+- `layout.css`: the shell grid and the arrangement per width (where it sits).
+- `accessibility-modes.css`: high contrast, large text, colour-blind palettes as
+  token overrides.
+- `utils/layoutSize.js`: reports the size of the visualisation area so SVG,
+  canvas and DOM visualisations scale to it at every width.
 
-- **iPad landscape:** at widths of at least 1000 pixels, visualization and
-  controls share a two-column layout. Slider widths, order and vertical spacing
-  match across modes. Polyrhythm places Tempo and Volume vertically, aligned
-  with the same controls in other modes. Analog shows Swing as unavailable.
-- **Beat visualization:** its diameter is 80% of the responsive base size, with
-  a 52-pixel margin before the transport row. Touch targets remain generous.
-- **iPad portrait and mobile web:** content stacks in a scrollable surface.
-  Preserve room around the visualization and transport, and do not impose
-  landscape coordinates on narrow screens.
-- **Desktop web:** use the same shared interface; native safe-area and platform
-  behaviors remain conditional. Do not assume the live site already contains
-  changes verified only in a local build.
-- **Sequence:** additional bars wrap and can scroll within the visualization
-  area in landscape. Swing remains available when selecting odd-length bars.
+## Arrangement
 
-All responsive rules avoid hover-only affordances and respect CSS safe-area
-environment variables. `prefers-reduced-motion` reduces all non-essential
-animation and transition durations globally.
+The page is one grid that fills the window and never scrolls
+(header, mode selector, visualisation, controls, Start/Tap, footer).
+
+| Width | Arrangement |
+| --- | --- |
+| Phone, below 600 px | One column; visualisation on top, controls below, Start/Tap at the bottom (thumb zone). Beats per bar is a stepper below 520 px. |
+| Tablet, 600-1023 px | Portrait: the phone arrangement with more air. Landscape: two columns. |
+| Desktop, 1024 px and up | Two columns: visualisation left, controls and Start/Tap right (top-aligned, so rows do not jump between modes); content centred, max 1200 px. |
+
+## Components
+
+- **Mode selector:** text-only segmented control; the active segment is white
+  with a teal underline.
+- **Beat marks** (Beat, Sequence, Polyrhythm): current beat teal filled with a
+  hairline halo; normal grey ring; accent gold ring; first beat gold ring with
+  a gold dot; muted dashed pale ring.
+- **Analog:** rod, pivot, weight; the weight is teal while running.
+- **Grid:** hairline cells; filled cells grey, the current column teal; accent
+  and first-beat cells get a gold contour.
+- **Sequence:** circles with hairline rings, the selected one teal; "Circles"
+  stepper in the top corner.
+- **Controls:** rows separated by hairlines; 10 px outlined buttons; selected
+  chips get a teal outline; sliders have a 4 px track, teal progress and a ring
+  thumb.
+- **Start** is solid teal; **Tap Tempo** is a grey outline button.
+- **Web only:** footer line with Source and Donate; the app build
+  (`IS_NATIVE_APP`) renders no footer and no donation elements.
+
+## Verification
+
+`frontend/scripts/measure-layout.mjs` (headless Chrome through playwright-core,
+dev only) builds the page from `build/`, visits every viewport and view, reports
+the overflow in px, small touch targets and small text, and writes PNGs.
+Required result: overflow 0 in all 42 cases (412x805, 393x780, 360x740,
+768x1024, 1024x768, 1280x800, 1440x900 across analog, beat, grid, sequence,
+sequence with four circles, polyrhythm). `--mode contrast|large|colorblind`
+repeats a viewport in an accessibility mode.
 
 ## Audio boundary
 
-Visual redesign work must not move beat scheduling onto animation timers. Audio
-continues to be scheduled against the Web Audio clock, and visual beat events
-remain aligned to the expected audible output time. The shared unlocked
-`AudioContext`, iOS interruption recovery, lookahead scheduling, PCM click
-samples, and procedural fallback are timing infrastructure rather than visual
-implementation details.
+Visual changes must not move beat scheduling onto animation timers. Audio stays
+scheduled against the Web Audio clock; visual beat events follow the expected
+audible output time.
