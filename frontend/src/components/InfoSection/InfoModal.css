@@ -1,35 +1,32 @@
+/*
+ * Guide dialog. A flat white sheet: hairline-separated sections, text tabs with
+ * a 3px underline, no tinted boxes. Tokens only (see colors.css); the
+ * accessibility modes re-map the tokens. The beat marks in the "Beat Types"
+ * list are drawn in instrument-system.css (.info-modal .beat-indicator).
+ */
+
 .info-modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  inset: 0;
   z-index: 1000;
-  animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--overlay-bg);
 }
 
 .info-modal {
-  background-color: var(--neutral-bg);
-  border-radius: 12px;
-  box-shadow: var(--shadow-lg);
-  width: 90%;
-  max-width: 800px;
-  max-height: 85vh;
+  position: relative;
   display: flex;
   flex-direction: column;
+  width: 90%;
+  max-width: 640px;
+  max-height: 88vh;
   overflow: hidden;
-  animation: slideUp 0.3s ease;
-  position: relative;
-  border: 1px solid var(--neutral-border);
+  border: var(--stroke) solid var(--line-strong);
+  border-radius: var(--r-surface);
+  background: var(--bg);
+  color: var(--ink);
 }
 
 .info-modal-actions {
@@ -37,82 +34,56 @@
   top: 0;
   right: 0;
   z-index: 2000;
-  padding: 8px;
-}
-
-@keyframes slideUp {
-  from { transform: translateY(30px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  padding: var(--sp-2);
 }
 
 .info-modal-close {
-  position: fixed;
-  top: 10px;
-  right: 10px;
-  background-color: var(--primary-teal);
-  color: white;
-  border: none;
-  font-size: 1.5rem;
-  line-height: 1;
-  font-weight: bold;
-  cursor: pointer;
-  z-index: 2500;
+  position: absolute;
+  top: var(--sp-4);
+  right: var(--sp-4);
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  width: var(--touch);
+  height: var(--touch);
   padding: 0;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+  border: var(--stroke) solid var(--line-strong);
+  border-radius: var(--r-control);
+  background: var(--bg);
+  color: var(--ink);
+  cursor: pointer;
 }
 
-.info-modal-close:hover {
-  background-color: var(--primary-teal-dark);
-  transform: scale(1.05);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-
-.info-modal-close:focus {
-  outline: 2px solid var(--primary-teal-light);
-  outline-offset: 2px;
-}
-
-/* Special handling for very small screens */
-@media (max-width: 350px) {
-  .info-modal-close {
-    top: 5px;
-    right: 5px;
-    background-color: var(--primary-teal); /* Explicitly set for small screens */
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); /* Enhanced shadow for visibility */
-  }
-}
+/* ---- Header and tabs ----------------------------------------------------- */
 
 .info-modal-header {
-  padding: 1.5rem 1.5rem 0;
   position: sticky;
   top: 0;
-  background-color: var(--neutral-bg);
   z-index: 100;
+  flex: 0 0 auto;
+  padding: var(--sp-4) var(--sp-4) 0;
+  background: var(--bg);
 }
 
 .info-modal-header h1 {
-  font-size: 1.6rem;
-  margin: 0 0 1rem;
-  padding: 0 2.5rem;
-  color: var(--primary-teal);
-  text-align: center;
-  font-weight: 700;
+  display: flex;
+  align-items: center;
+  min-height: var(--touch);
+  margin: 0 calc(var(--touch) + var(--sp-3)) var(--sp-3) 0;
+  color: var(--ink);
+  font-size: var(--fs-2);
+  font-weight: var(--fw-regular);
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-align: left;
+  text-transform: uppercase;
 }
 
 .info-modal-tabs {
   display: flex;
-  border-bottom: 1px solid var(--neutral-border-light);
-  background-color: var(--neutral-bg-light, var(--surface-canvas));
-  position: relative;
-  z-index: 1;
   overflow-x: auto;
+  border-bottom: var(--stroke) solid var(--line);
+  background: transparent;
   scrollbar-width: none;
 }
 
@@ -121,59 +92,57 @@
 }
 
 .info-modal-tab {
-  padding: 1rem 1rem;
-  white-space: nowrap;
-  flex: 1 0 auto;
-  border: none;
-  background: transparent;
-  font-family: 'Lato', sans-serif;
-  font-size: 0.95rem;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.2s ease;
   position: relative;
-  font-weight: 500;
   display: inline-flex;
+  flex: 1 0 auto;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
+  gap: var(--sp-2);
+  min-height: var(--touch);
+  padding: 0 var(--sp-3);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink-2);
+  font-family: var(--font);
+  font-size: var(--fs-2);
+  font-weight: var(--fw-regular);
+  white-space: nowrap;
+  cursor: pointer;
 }
 
 .info-modal-tab .interface-icon {
-  width: 19px;
-  height: 19px;
-}
-
-.info-modal-tab:hover {
-  color: var(--primary-teal);
-  background-color: var(--primary-teal-ultra-light);
+  display: none;
 }
 
 .info-modal-tab.active {
-  color: var(--primary-teal);
-  font-weight: 600;
+  background: transparent;
+  color: var(--ink);
+  font-weight: var(--fw-bold);
 }
 
-.info-modal-tab.active:after {
+.info-modal-tab.active::after {
   content: '';
   position: absolute;
+  right: 0;
   bottom: -1px;
   left: 0;
-  width: 100%;
-  height: 2px;
-  background-color: var(--primary-teal);
+  height: 3px;
+  background: var(--accent);
 }
 
+/* ---- Panels -------------------------------------------------------------- */
+
 .info-modal-content {
+  flex: 1 1 auto;
+  min-height: 0;
   padding: 0;
   overflow-y: auto;
-  flex: 1;
 }
 
 .info-modal-panel {
   display: none;
-  padding: 0 1.5rem 1.5rem;
-  animation: fadeIn 0.3s ease;
+  padding: var(--sp-2) var(--sp-4) var(--sp-5);
 }
 
 .info-modal-panel.active {
@@ -181,298 +150,273 @@
 }
 
 .info-modal-panel h2 {
-  font-size: 1.3rem;
-  color: var(--primary-teal);
-  margin: 1.5rem 0 1rem;
-  font-weight: 600;
-  border-bottom: 1px solid var(--primary-teal-light);
-  padding-bottom: 0.5rem;
+  margin: var(--sp-4) 0 var(--sp-3);
+  padding: 0;
+  border: 0;
+  color: var(--ink);
+  font-size: var(--fs-4);
+  font-weight: var(--fw-regular);
+  line-height: 1.25;
 }
 
-.info-modal-panel h3 {
-  font-size: 1.2rem;
-  color: var(--text-secondary);
-  margin: 1.2rem 0 0.7rem;
-  font-weight: 600;
+/* Section titles use the small uppercase label of the control groups. */
+.info-modal-panel h3,
+.info-step h3,
+.info-feature h3 {
+  margin: var(--sp-4) 0 var(--sp-2);
+  color: var(--ink-2);
+  font-size: var(--fs-1);
+  font-weight: var(--fw-regular);
+  letter-spacing: 0.08em;
+  line-height: 18px;
+  text-transform: uppercase;
 }
 
 .info-modal-panel p {
-  margin: 0 0 1rem;
-  line-height: 1.6;
-  font-size: 1rem;
+  margin: 0 0 var(--sp-3);
+  color: var(--ink);
+  font-size: var(--fs-3);
+  line-height: 1.55;
 }
 
-/* About Tab */
+.info-modal-panel a {
+  color: var(--accent-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Blocks are separated by a hairline, not boxed. */
+.info-section-block {
+  margin: 0;
+  padding: var(--sp-3) 0;
+  border: 0;
+  border-top: var(--stroke) solid var(--line);
+  border-radius: 0;
+  background: transparent;
+}
+
+.info-section-block h3 {
+  margin-top: 0;
+}
+
 .info-section-list {
-  padding-left: 1.5rem;
-  margin: 0.8rem 0;
+  margin: 0 0 var(--sp-3);
+  padding-left: var(--sp-5);
 }
 
 .info-section-list li {
-  margin-bottom: 0.7rem;
+  margin-bottom: var(--sp-2);
+  font-size: var(--fs-3);
   line-height: 1.5;
-  font-size: 1rem;
 }
 
-/* How to Use Tab */
+/* ---- How to use ----------------------------------------------------------- */
+
 .info-steps {
-  margin: 1.5rem 0;
+  margin: var(--sp-4) 0;
 }
 
 .info-step {
   display: flex;
-  margin-bottom: 1.5rem;
   align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-3) 0;
+  border-top: var(--stroke) solid var(--line);
 }
 
 .step-number {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  background: var(--primary-teal);
-  color: white;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: var(--stroke-select) solid var(--accent-ink);
   border-radius: 50%;
-  font-weight: bold;
-  margin-right: 1rem;
-  flex-shrink: 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: transparent;
+  color: var(--ink);
+  font-size: var(--fs-2);
+  font-weight: var(--fw-bold);
 }
 
 .info-step h3 {
-  font-size: 1.1rem;
-  color: var(--text-secondary);
-  margin: 0 0 0.4rem;
-  font-weight: 600;
+  margin-top: 0;
 }
 
 .info-step p {
   margin: 0;
-  font-size: 0.95rem;
-  color: var(--text-secondary);
+  color: var(--ink-2);
+  font-size: var(--fs-2);
 }
 
 .info-tip {
   display: flex;
   align-items: flex-start;
-  padding: 1rem 1.2rem;
-  background: var(--primary-teal-ultra-light);
-  border-left: 3px solid var(--primary-teal);
-  border-radius: 6px;
-  margin-top: 1.5rem;
+  gap: var(--sp-2);
+  margin-top: var(--sp-4);
+  padding: var(--sp-3) 0;
+  border: 0;
+  border-top: var(--stroke) solid var(--line);
+  border-radius: 0;
+  background: transparent;
 }
 
 .info-tip-icon {
-  font-size: 1.2rem;
-  margin-right: 0.8rem;
+  flex: 0 0 auto;
+  margin: 0;
 }
 
 .info-tip-icon .interface-icon {
   width: 20px;
   height: 20px;
-  color: var(--text-secondary);
+  color: var(--ink-2);
 }
 
 .info-tip p {
   margin: 0;
-  font-size: 0.95rem;
+  color: var(--ink-2);
+  font-size: var(--fs-2);
 }
 
-/* Features Tab */
+/* ---- Features ------------------------------------------------------------- */
+
 .info-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 1.2rem;
-  margin-top: 1.5rem;
+  gap: 0 var(--sp-5);
+  margin-top: var(--sp-4);
 }
 
-/* Shortcuts Tab */
+.info-feature {
+  padding: var(--sp-3) 0;
+  border: 0;
+  border-top: var(--stroke) solid var(--line);
+  border-radius: 0;
+  background: transparent;
+}
+
+.info-feature h3 {
+  margin-top: 0;
+}
+
+.info-feature p {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: var(--fs-2);
+  line-height: 1.5;
+}
+
+/* ---- Shortcuts and beat types --------------------------------------------- */
+
 .shortcuts-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 0.8rem;
-  padding-left: 0;
-  list-style-type: none;
-  margin: 1.5rem 0;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--sp-2) var(--sp-5);
+  margin: var(--sp-4) 0;
+  padding: 0;
+  list-style: none;
 }
 
 .shortcuts-list li {
   display: flex;
   align-items: center;
-  font-size: 0.95rem;
+  font-size: var(--fs-2);
 }
 
 .key {
   display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  background: var(--neutral-bg-light, var(--surface-canvas));
-  border: 1px solid var(--neutral-border);
-  border-radius: 4px;
-  padding: 0.2rem 0.5rem;
-  margin-right: 0.8rem;
-  font-family: monospace;
-  font-weight: bold;
-  min-width: 1.2rem;
-  font-size: 0.9rem;
+  min-width: 28px;
+  margin-right: var(--sp-3);
+  padding: var(--sp-1) var(--sp-2);
+  border: var(--stroke) solid var(--line-strong);
+  border-radius: var(--r-control);
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: var(--fs-1);
+  font-weight: var(--fw-bold);
+  line-height: 1.2;
 }
 
 .beat-types {
   display: flex;
-  flex-wrap: wrap;
-  gap: 1.2rem;
-  margin: 1rem 0 2rem;
+  flex-direction: column;
+  margin: var(--sp-2) 0 var(--sp-5);
 }
 
 .beat-type {
   display: flex;
   align-items: center;
-  margin-right: 1rem;
+  gap: var(--sp-3);
+  min-height: var(--touch);
+  padding: var(--sp-2) 0;
+  border-top: var(--stroke) solid var(--line);
+  font-size: var(--fs-2);
 }
 
-.beat-indicator {
-  width: 1rem;
-  height: 1rem;
-  border-radius: 3px;
-  margin-right: 0.5rem;
+.beat-type strong {
+  display: block;
+  color: var(--ink);
+  font-size: var(--fs-3);
 }
 
-.beat-indicator.muted {
-  background-color: var(--beat-muted, #e0e0e0);
-  border: 1px solid #ddd;
+.beat-type span {
+  color: var(--ink-2);
 }
 
-.beat-indicator.normal {
-  background-color: var(--beat-normal, #a0a0a0);
-  border: 1px solid #ddd;
-}
-
-.beat-indicator.accent {
-  background-color: var(--beat-accent, #ffcc44);
-  border: 1px solid #ddd;
-}
-
-.beat-indicator.first {
-  background-color: var(--beat-first, #ff6644);
-  border: 1px solid #ddd;
+/* The mark itself is in instrument-system.css; reserve its room here. */
+.beat-type .beat-indicator {
+  flex: 0 0 auto;
+  margin: 0 var(--sp-1);
 }
 
 .version-info {
-  margin-top: 2rem;
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  text-align: center;
+  margin-top: var(--sp-5);
+  color: var(--ink-2);
+  font-size: var(--fs-1);
+  text-align: left;
 }
 
-.version-info a {
-  color: var(--primary-teal);
-  text-decoration: none;
+.version-info p {
+  font-size: var(--fs-1);
 }
 
-.version-info a:hover {
-  text-decoration: underline;
-}
+/* ---- Phone: the sheet fills the screen ------------------------------------ */
 
-.info-feature {
-  padding: 1.2rem;
-  border-radius: 6px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.info-feature:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
-  border-bottom-color: var(--primary-teal);
-}
-
-.info-feature h3 {
-  font-size: 1.1rem;
-  color: var(--text-secondary);
-  margin: 0 0 0.6rem;
-  font-weight: 600;
-}
-
-.info-feature p {
-  margin: 0;
-  font-size: 0.95rem;
-  color: var(--text-secondary);
-  line-height: 1.5;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
+@media (max-width: 600px) {
   .info-modal {
-    width: 95%;
-    max-height: 90vh;
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    border: 0;
+    border-radius: 0;
   }
-  
-  .info-modal-panel {
-    padding: 1.2rem;
+
+  .info-modal-header {
+    padding: calc(var(--sp-4) + env(safe-area-inset-top, 0px)) var(--sp-4) 0;
   }
-  
+
   .info-modal-tab {
-    padding: 0.8rem 0.6rem;
-    font-size: 0.9rem;
-    gap: 4px;
+    padding: 0 var(--sp-2);
   }
 
   .info-modal-tab .interface-icon {
-    width: 16px;
-    height: 16px;
+    display: none;
   }
-  
-  .info-modal-panel h2 {
-    font-size: 1.3rem;
-  }
-  
-  .info-modal-panel h3 {
-    font-size: 1.1rem;
-  }
-  
-  .info-feature {
-    padding: 1rem;
-  }
-  
+
   .info-grid {
     grid-template-columns: 1fr;
   }
 }
 
-@media (max-width: 480px) {
-  .info-modal {
-    width: 100%;
-    height: 100%;
-    max-height: 100%;
-    border-radius: 0;
+@media (hover: hover) {
+  .info-modal-close:hover {
+    background: var(--surface);
   }
 
-  .info-modal-header {
-    padding: calc(1rem + env(safe-area-inset-top, 0px)) 1rem 0;
-  }
-
-  .info-modal-header h1 {
-    font-size: 1.35rem;
-  }
-
-  .info-modal-close {
-    top: calc(8px + env(safe-area-inset-top, 0px));
-  }
-
-  .info-modal-panel {
-    padding: 1rem;
-  }
-  
-  .info-modal-panel h2 {
-    font-size: 1.2rem;
-  }
-  
-  .info-section-block {
-    padding: 1rem;
-  }
-  
-  .step-number {
-    width: 1.8rem;
-    height: 1.8rem;
+  .info-modal-tab:not(.active):hover {
+    color: var(--ink);
   }
 }

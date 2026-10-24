@@ -47,17 +47,15 @@ const InfoModal = ({ isOpen, onClose }) => {
 
   return (
     <div className="info-modal-overlay">
-      {/* Close button placed outside the modal for guaranteed visibility */}
-      <button 
-        className="info-modal-close" 
-        onClick={onClose} 
-        aria-label="Close guide"
-        title="Close guide (ESC)"
-      >
-        <InterfaceIcon name="close" size={24} />
-      </button>
-      
       <div className="info-modal" ref={modalRef} role="dialog" aria-modal="true" aria-labelledby="info-modal-title">
+        <button
+          className="info-modal-close"
+          onClick={onClose}
+          aria-label="Close guide"
+          title="Close guide (ESC)"
+        >
+          <InterfaceIcon name="close" size={24} />
+        </button>
         <div className="info-modal-header">
           <h1 id="info-modal-title">Metronome Guide</h1>
           <div className="info-modal-tabs" role="tablist" aria-label="Guide sections">
@@ -248,20 +246,24 @@ const InfoModal = ({ isOpen, onClose }) => {
             <h3>Beat Types</h3>
             <div className="beat-types">
               <div className="beat-type">
-                <div className="beat-indicator muted"></div>
-                <span>Muted Beat</span>
+                <div className="beat-indicator normal" aria-hidden="true"></div>
+                <span><strong>Normal beat</strong> Plain (grey) ring</span>
               </div>
               <div className="beat-type">
-                <div className="beat-indicator normal"></div>
-                <span>Normal Beat</span>
+                <div className="beat-indicator accent" aria-hidden="true"></div>
+                <span><strong>Accented beat</strong> Accent (teal) ring</span>
               </div>
               <div className="beat-type">
-                <div className="beat-indicator accent"></div>
-                <span>Accented Beat</span>
+                <div className="beat-indicator first" aria-hidden="true"></div>
+                <span><strong>First beat</strong> Accent ring with a dot</span>
               </div>
               <div className="beat-type">
-                <div className="beat-indicator first"></div>
-                <span>First Beat</span>
+                <div className="beat-indicator muted" aria-hidden="true"></div>
+                <span><strong>Muted beat</strong> Dashed ring</span>
+              </div>
+              <div className="beat-type">
+                <div className="beat-indicator current" aria-hidden="true"></div>
+                <span><strong>Current beat</strong> Filled while it sounds</span>
               </div>
             </div>
             

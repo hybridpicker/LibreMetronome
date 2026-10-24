@@ -187,7 +187,7 @@ const TrainingActiveContainer = ({
           <div className="training-active-status-box training">
             <div className="status-icon"><InterfaceIcon name="training" /></div>
             <div className="status-info">
-              <span className="status-label">Training Active</span>
+              <span className="status-label status-label--quiet">Training Active</span>
               {editingParam === 'measuresUntilMute' ? (
                 <div className="parameter-edit">
                   <div className="parameter-edit-header">Play Phase Duration</div>
@@ -303,7 +303,7 @@ const TrainingActiveContainer = ({
                     }}
                   >
                     Play: {measuresUntilMute} measures
-                  </button>,
+                  </button>,{' '}
                   <button
                     type="button"
                     className="editable-param"
@@ -454,7 +454,7 @@ const TrainingActiveContainer = ({
                 </div>
               ) : speedMode === 1 ? (
                 <>
-                  <span className="status-label">Auto Speed Increase</span>
+                  <span className="status-label status-label--quiet">Auto Speed Increase</span>
                   <span className="counter-text">
                     <button
                       type="button"
@@ -465,7 +465,7 @@ const TrainingActiveContainer = ({
                       }}
                     >
                       Every {measuresUntilSpeedUp} measures
-                    </button>, tempo increases by
+                    </button>, tempo increases by{' '}
                     <button
                       type="button"
                       className="editable-param"
@@ -480,9 +480,9 @@ const TrainingActiveContainer = ({
                 </>
               ) : (
                 <>
-                  <span className="status-label">Manual Speed Increase</span>
+                  <span className="status-label status-label--quiet">Manual Speed Increase</span>
                   <span className="counter-text">
-                    Press "Accelerate" to increase tempo by 
+                    Press "Accelerate" to increase tempo by{' '}
                     <button
                       type="button"
                       className="editable-param"
@@ -491,7 +491,7 @@ const TrainingActiveContainer = ({
                         setEditValue(tempoIncreasePercent.toString());
                       }}
                     >
-                      {" " + tempoIncreasePercent}%
+                      {tempoIncreasePercent}%
                     </button>
                   </span>
                 </>

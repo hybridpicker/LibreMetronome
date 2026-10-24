@@ -9,7 +9,7 @@
   background: transparent;
   color: var(--accent-ink);
   font: inherit;
-  text-decoration: underline;
+  text-decoration: none;
   cursor: pointer;
 }
 

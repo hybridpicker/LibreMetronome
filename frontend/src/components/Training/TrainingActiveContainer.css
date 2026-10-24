@@ -1,606 +1,344 @@
-/* src/components/Training/TrainingActiveContainer.css */
+/*
+ * Training panel: a slim strip docked to the bottom edge of the dial plate
+ * (placement and the hairline top rule come from layout.css). It uses the
+ * same token re-map as the plate, so it reads as part of it. Running: one or
+ * two lines. Editing: the strip grows up to the plate height and scrolls, with
+ * Save/Cancel pinned. Tokens only; state is carried by text and shape.
+ */
 
 .training-active-container {
-  margin: 20px auto;
-  padding: 16px;
-  border-radius: 10px;
-  background-color: var(--text-light);
-  border: 1px solid var(--neutral-border);
-  max-width: 350px;
-  text-align: left;
-  font-family: 'Lato', sans-serif;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  color: var(--text-primary);
-  transition: all 0.3s ease;
-}
-
-.training-active-header {
+  --bg: var(--dial-bg);
+  --surface: var(--dial-bg);
+  --ink: var(--dial-ink);
+  --ink-2: var(--dial-ink-2);
+  --ink-3: var(--dial-ink-3);
+  --line: var(--dial-line);
+  --line-strong: var(--dial-line-strong);
+  --accent: var(--dial-accent);
+  --accent-ink: var(--dial-accent);
+  --accent-wash: var(--dial-accent-wash);
+  --on-accent: var(--dial-on-accent);
+  --focus: var(--dial-focus);
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  margin-bottom: 14px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--neutral-border-light);
+  gap: 0 var(--sp-3);
+  padding: var(--sp-1) var(--sp-3) var(--sp-2);
+  color: var(--ink);
+  font-family: var(--font);
+  text-align: left;
 }
 
-.training-active-indicator {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background-color: var(--primary-teal);
-  margin-right: 10px;
-}
-
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(0, 160, 160, 0.6);
-  }
-  70% {
-    box-shadow: 0 0 0 8px rgba(0, 160, 160, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(0, 160, 160, 0);
-  }
+/* The title line is for screen readers; the strip names its sections itself. */
+.training-active-header {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .training-active-title {
   margin: 0;
-  color: var(--primary-teal);
-  font-size: 16px;
-  font-weight: bold;
+  font-size: var(--fs-1);
 }
 
+/* One section = one wrapping line: label, mode key, sentence. */
 .training-active-section {
-  margin-bottom: 16px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--neutral-border-light);
-}
-
-.training-active-section:last-of-type {
-  border-bottom: none;
-}
-
-.training-active-section-header {
   display: flex;
-  justify-content: space-between;
+  flex: 1 1 100%;
+  flex-wrap: wrap;
   align-items: center;
-  margin-bottom: 10px;
+  gap: 0 var(--sp-3);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.training-active-section + .training-active-section {
+  border-top: var(--stroke) solid var(--line);
+}
+
+.training-active-section-header,
+.training-active-status-box,
+.status-info {
+  display: contents;
 }
 
 .training-active-section-title {
-  font-weight: bold;
-  color: var(--text-primary);
-  font-size: 14px;
+  color: var(--ink-2);
+  font-size: var(--fs-1);
+  font-weight: var(--fw-regular);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.training-active-section-type {
-  font-size: 13px;
-  color: var(--primary-teal);
-  background-color: var(--primary-teal-ultra-light);
-  padding: 4px 12px;
-  border-radius: 20px;
-  border: 1px solid rgba(0, 160, 160, 0.2);
-  font-weight: 500;
-}
-
-.training-active-section-type.clickable {
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.training-active-section-type.clickable:hover {
-  background-color: var(--primary-teal-light);
-  color: white;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 5px rgba(0, 160, 160, 0.2);
-}
-
-.training-active-section-type.clickable:active {
-  transform: translateY(0);
-}
-
-.training-active-section-type.clickable:after {
-  content: "";
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%);
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.training-active-section-type.clickable:hover:after {
-  opacity: 1;
-}
-
-.training-active-status-box {
-  display: flex;
+/* The mode toggle is a quiet text key: no box, a hairline underline. */
+.training-active-section-type,
+button.training-active-section-type {
+  display: inline-flex;
   align-items: center;
-  background-color: var(--neutral-bg-alt);
-  border-radius: 8px;
-  padding: 12px;
-  margin-top: 10px;
-  transition: all 0.3s ease;
+  min-height: var(--touch);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-2);
+  font-weight: var(--fw-regular);
+  text-decoration: underline;
+  text-decoration-thickness: var(--stroke);
+  text-underline-offset: 3px;
+  cursor: pointer;
 }
 
-.training-active-status-box.silent {
-  background-color: #ffeaea;
-  border-left: 4px solid var(--error);
+.status-icon {
+  display: none;
 }
 
-.training-active-status-box.playing {
-  background-color: var(--primary-teal-ultra-light);
-  border-left: 4px solid var(--primary-teal);
+.status-label {
+  display: block;
+  flex: 1 1 100%;
+  margin: 0;
+  color: var(--ink);
+  font-size: var(--fs-2);
+  font-weight: var(--fw-bold);
 }
 
-.training-active-status-box.training {
-  background-color: var(--primary-teal-ultra-light);
-  border-left: 4px solid var(--primary-teal);
+/* Sentence: one wrapping line; values are hairline keys. */
+.status-label.status-label--quiet {
+  display: none;
 }
 
-.training-active-status-box.speed {
-  background-color: var(--secondary-gold-ultra-light);
-  border-left: 4px solid var(--secondary-gold);
+.counter-text {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--ink-2);
+  font-size: var(--fs-2);
+  line-height: var(--touch);
 }
 
 .counter-text.current-phase {
-  margin-top: 4px;
-  font-weight: bold;
+  color: var(--ink);
+  font-weight: var(--fw-bold);
 }
 
+button.editable-param,
 .editable-param {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+  margin: 0;
+  padding: 0 var(--sp-2);
+  border: var(--stroke) solid var(--line-strong);
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-2);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  vertical-align: middle;
   cursor: pointer;
-  color: var(--primary-teal);
-  background-color: rgba(0, 160, 160, 0.08);
-  border: 1px solid rgba(0, 160, 160, 0.2);
-  border-radius: 6px;
-  transition: all 0.2s ease;
-  display: inline-block;
-  padding: 3px 8px;
-  margin: 2px;
-  position: relative;
-  font-weight: 500;
 }
 
-.editable-param:hover, .editable-param:active {
-  background-color: rgba(0, 160, 160, 0.15);
-  border-color: var(--primary-teal-light);
-  box-shadow: 0 1px 3px rgba(0, 160, 160, 0.2);
-  color: var(--primary-teal-dark);
-}
+/* ---- Editing: the strip grows, Save/Cancel stay visible ----------------- */
 
-/* Desktop styles */
-@media (min-width: 1025px) {
-}
-
-/* Tablet styles */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .editable-param {
-    padding: 3px 8px;
-    margin: 2px;
-  }
-  
-  .editable-param:after {
-    opacity: 0.6;
-    font-size: 12px;
-    top: -6px;
-    right: -4px;
-  }
-  
-  .editable-param:hover:after {
-    opacity: 1;
-  }
-  
-  .parameter-edit-buttons {
-    display: flex;
-  }
-  
-  .parameter-edit-hint {
-    display: block;
-  }
-}
-
-/* Mobile styles */
-@media (max-width: 768px) {
-  .editable-param {
-    padding: 4px 10px;
-    margin: 3px 2px;
-    display: block;
-    margin-bottom: 8px;
-  }
-  
-  .editable-param:after {
-    opacity: 1;
-    top: 50%;
-    right: 8px;
-    transform: translateY(-50%);
-  }
-  
-  .counter-text {
-    display: flex;
-    flex-direction: column;
-  }
+.training-active-container:has(.parameter-edit) {
+  display: block;
 }
 
 .parameter-edit {
   display: flex;
   flex-direction: column;
-  margin: 8px 0;
-  background-color: rgba(0, 160, 160, 0.06);
-  padding: 12px;
-  border-radius: 8px;
-  border-left: 3px solid var(--primary-teal);
-  box-shadow: 0 2px 6px rgba(0, 160, 160, 0.1);
+  gap: var(--sp-2);
+  margin: 0;
+  padding: var(--sp-2) 0 0;
+  border: 0;
+  background: transparent;
 }
 
 .parameter-edit-header {
-  font-size: 14px;
-  font-weight: bold;
-  color: var(--primary-teal);
-  margin-bottom: 8px;
-  border-bottom: 1px solid rgba(0, 160, 160, 0.1);
-  padding-bottom: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: var(--ink-2);
+  font-size: var(--fs-1);
+  font-weight: var(--fw-regular);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .parameter-edit-controls {
   display: flex;
   align-items: center;
+  gap: var(--sp-2);
 }
 
 .parameter-edit input {
-  width: 60px;
-  padding: 8px 12px;
-  border: 1px solid var(--primary-teal-light);
-  border-radius: 6px;
-  margin-right: 10px;
-  font-size: 15px;
+  -webkit-appearance: none;
+  appearance: none;
+  -moz-appearance: textfield;
+  width: 88px;
+  min-height: var(--touch);
+  margin: 0;
+  padding: 0 var(--sp-2);
+  border: 0;
+  border-bottom: var(--stroke) solid var(--line-strong);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: var(--fs-3);
+  font-variant-numeric: tabular-nums;
   text-align: center;
-  box-shadow: 0 2px 4px rgba(0, 160, 160, 0.1);
-  color: var(--primary-teal-dark);
-  font-weight: 500;
 }
 
-.parameter-edit input:focus {
+.parameter-edit input::-webkit-inner-spin-button,
+.parameter-edit input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.parameter-edit input:focus,
+.parameter-edit input:focus-visible {
   outline: none;
-  border-color: var(--primary-teal);
-  box-shadow: 0 0 0 2px rgba(0, 160, 160, 0.15);
+  border-bottom: var(--stroke-select) solid var(--accent-ink);
 }
 
 .parameter-edit span {
-  font-size: 13px;
-  color: var(--text-secondary);
-  font-weight: 500;
+  color: var(--ink-2);
+  font-size: var(--fs-2);
 }
 
 .parameter-edit-hint {
-  font-size: 11px;
-  color: var(--text-secondary);
-  margin-top: 8px;
-  font-style: italic;
   display: none;
-  opacity: 0.8;
-  text-align: center;
 }
 
 .parameter-edit-buttons {
+  position: sticky;
+  bottom: 0;
   display: flex;
-  margin-top: 12px;
-  gap: 10px;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: var(--sp-2) 0 0;
+  background: var(--bg);
 }
 
 .parameter-edit-button {
-  padding: 6px 14px;
-  border-radius: 6px;
-  border: none;
-  font-size: 13px;
-  font-weight: bold;
+  flex: 1 1 0;
+  min-height: var(--touch);
+  padding: 0 var(--sp-3);
+  border: var(--stroke) solid var(--line-strong);
+  border-radius: var(--r-control);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: var(--fs-2);
+  font-weight: var(--fw-regular);
   cursor: pointer;
-  transition: all 0.2s ease;
-  flex: 1;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .parameter-edit-save {
-  background-color: var(--primary-teal);
-  color: white;
+  border-color: var(--accent-ink);
+  background: var(--accent-ink);
+  color: var(--on-accent);
+  font-weight: var(--fw-bold);
 }
 
-.parameter-edit-save:hover, .parameter-edit-save:active {
-  background-color: var(--primary-teal-dark);
-  transform: translateY(-1px);
-  box-shadow: 0 3px 6px rgba(0, 160, 160, 0.2);
-}
-
-.parameter-edit-cancel {
-  background-color: var(--neutral-bg);
-  color: var(--text-secondary);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.parameter-edit-cancel:hover, .parameter-edit-cancel:active {
-  background-color: var(--beat-muted);
-  transform: translateY(-1px);
-}
-
-@media (min-width: 1025px) {
-  .parameter-edit-hint {
-    display: block;
-  }
-  
-  .parameter-edit-buttons {
-    display: none;
-  }
-}
-
-.status-icon {
-  font-size: 20px;
-  margin-right: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 24px;
-}
-
-.status-icon .interface-icon {
-  width: 22px;
-  height: 22px;
-  color: currentColor;
-}
-
-.status-info {
-  flex: 1;
-}
-
-.status-label {
-  display: block;
-  font-size: 14px;
-  font-weight: 500;
-  margin-bottom: 6px;
-  color: var(--text-primary);
-}
+/* ---- Progress and beat dots (multi-circle panel) ------------------------ */
 
 .progress-container {
-  height: 8px;
-  background-color: rgba(0, 0, 0, 0.08);
-  border-radius: 4px;
-  overflow: hidden;
-  margin-bottom: 6px;
   position: relative;
+  flex: 1 1 100%;
+  height: 4px;
+  margin: 0 0 var(--sp-1);
+  overflow: hidden;
+  background: var(--line-strong);
 }
 
-.progress-bar {
+.progress-bar,
+.playing .progress-bar,
+.speed .progress-bar {
   height: 100%;
-  background-color: var(--primary-teal);
+  background: var(--accent);
   transition: width 0.3s ease-out;
 }
 
-/* No animations for progress bar */
-
 .silent .progress-bar {
-  background-color: var(--error);
+  background: var(--ink-2);
 }
 
-.playing .progress-bar {
-  background-color: var(--primary-teal);
+.training-active-container .beat-indicator {
+  display: inline-block;
+  box-sizing: border-box;
+  width: 10px;
+  height: 10px;
+  margin: 0 var(--sp-1) 0 0;
+  border: var(--stroke-viz) solid var(--ink-3);
+  border-radius: 50%;
+  background: transparent;
 }
 
-.speed .progress-bar {
-  background-color: var(--secondary-gold-dark);
+.training-active-container .beat-indicator.active,
+.silent .beat-indicator.active,
+.playing .beat-indicator.active,
+.speed .beat-indicator.active {
+  border-color: var(--accent);
+  background: var(--accent);
 }
 
-.counter-text {
-  font-size: 13px;
-  color: var(--text-secondary);
-  font-weight: 500;
+.beat-indicators {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  margin-top: var(--sp-1);
 }
 
 .training-active-tip {
   display: flex;
+  flex: 1 1 100%;
   align-items: flex-start;
-  background-color: var(--training-tip-bg);
-  border-radius: 8px;
-  padding: 12px;
-  margin-top: 8px;
-  font-size: 13px;
-  border-left: 3px solid var(--secondary-gold);
-}
-
-.tip-icon {
-  margin-right: 10px;
-  font-size: 16px;
-}
-
-.tip-icon .interface-icon {
-  width: 18px;
-  height: 18px;
-  color: var(--secondary-gold-dark);
+  gap: var(--sp-2);
+  margin: var(--sp-1) 0 0;
+  padding: var(--sp-1) 0 0;
+  border: 0;
+  background: transparent;
+  font-size: var(--fs-2);
 }
 
 .tip-text {
-  color: var(--text-secondary);
+  color: var(--ink-2);
   line-height: 1.4;
 }
 
 .tip-title {
-  font-weight: bold;
-  color: var(--text-primary);
-  margin-bottom: 4px;
   display: block;
+  color: var(--ink);
+  font-weight: var(--fw-bold);
 }
 
-/* Keyboard shortcut hint */
+/* The keycap hint is dropped: the Guide lists the shortcut. */
 .keyboard-hint {
-  margin-top: 12px;
-  font-size: 12px;
-  color: var(--text-tertiary);
-  text-align: center;
-  padding: 6px;
-  background-color: var(--neutral-bg);
-  border-radius: 4px;
+  display: none;
 }
 
-.keyboard-hint kbd {
-  background-color: var(--text-light);
-  border: 1px solid var(--neutral-border);
-  border-radius: 3px;
-  box-shadow: 0 1px 1px rgba(0,0,0,0.2);
-  padding: 2px 5px;
-  margin: 0 3px;
-  font-family: monospace;
-}
+@media (hover: hover) {
+  .training-active-section-type:hover {
+    text-decoration-thickness: var(--stroke-select);
+  }
 
-button.training-active-section-type,
-button.editable-param {
-  border: 0;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-}
+  .editable-param:hover,
+  .parameter-edit-button:not(.parameter-edit-save):hover {
+    border-color: var(--ink-2);
+  }
 
-button.training-active-section-type {
-  min-height: 44px;
-}
-
-button.editable-param {
-  padding: 3px 5px;
-  border-radius: 5px;
-  background: var(--teal-wash);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-/* Status indicators */
-.beat-indicator {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin: 0 2px;
-  background-color: var(--beat-muted);
-}
-
-.beat-indicator.active {
-  background-color: var(--primary-teal);
-}
-
-.silent .beat-indicator.active {
-  background-color: var(--error);
-}
-
-.playing .beat-indicator.active {
-  background-color: var(--primary-teal);
-}
-
-.speed .beat-indicator.active {
-  background-color: var(--secondary-gold-dark);
-}
-
-/* Beat indicators container */
-.beat-indicators {
-  display: flex;
-  justify-content: flex-start;
-  margin-top: 6px;
-  flex-wrap: wrap;
-}
-
-/* Tablet adjustments */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .training-active-container {
-    max-width: 400px;
-    padding: 16px;
-    margin: 20px auto;
-  }
-  
-  .training-active-section-type {
-    padding: 4px 12px;
-  }
-  
-  /* Tablet parameter edit improvements */
-  .parameter-edit {
-    padding: 10px;
-  }
-  
-  .parameter-edit-header {
-    font-size: 14px;
-  }
-  
-  .parameter-edit input {
-    width: 70px;
-    padding: 7px 10px;
-    font-size: 15px;
-  }
-  
-  .parameter-edit-button {
-    padding: 6px 12px;
-    font-size: 13px;
-  }
-}
-
-/* Mobile adjustments */
-@media (max-width: 768px) {
-  .training-active-container {
-    max-width: 330px;
-    padding: 14px;
-    margin: 15px auto;
-  }
-  
-  .training-active-title {
-    font-size: 15px;
-  }
-  
-  .training-active-section-title {
-    font-size: 13px;
-  }
-  
-  .training-active-section-type {
-    font-size: 12px;
-    padding: 5px 10px;
-  }
-  
-  .status-label {
-    font-size: 13px;
-    margin-bottom: 10px;
-  }
-  
-  .counter-text {
-    font-size: 12px;
-  }
-  
-  .training-active-tip {
-    font-size: 12px;
-  }
-  
-  .keyboard-hint {
-    display: none; /* Hide keyboard shortcuts on mobile */
-  }
-  
-  /* Mobile parameter edit improvements */
-  .parameter-edit {
-    padding: 12px;
-  }
-  
-  .parameter-edit-header {
-    font-size: 14px;
-    margin-bottom: 10px;
-  }
-  
-  .parameter-edit-controls {
-    margin-bottom: 8px;
-  }
-  
-  .parameter-edit input {
-    width: 80px;
-    padding: 8px 12px;
-    font-size: 16px; /* Larger for touch */
-    border-radius: 6px;
-  }
-  
-  .parameter-edit-button {
-    padding: 8px 12px;
-    font-size: 14px;
-    border-radius: 6px;
+  .parameter-edit-save:hover {
+    background: var(--ink);
+    border-color: var(--ink);
   }
 }

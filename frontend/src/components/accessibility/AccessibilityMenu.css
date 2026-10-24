@@ -1,42 +1,23 @@
+/* Accessibility dialog overlay and sheet. Tokens only. */
+
 .accessibility-container {
   position: fixed;
-  top: max(10px, env(safe-area-inset-top));
+  top: max(var(--sp-2), env(safe-area-inset-top));
   right: max(70px, calc(env(safe-area-inset-right) + 70px));
   z-index: 1000;
 }
 
 .accessibility-toggle {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background-color: var(--primary-teal);
-  color: var(--text-light);
-  border: none;
-  box-shadow: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
+  width: var(--touch);
+  height: var(--touch);
   padding: 0;
-  transition: all 0.2s ease;
-}
-
-.accessibility-toggle:hover {
-  background-color: var(--primary-teal-dark);
-  transform: none;
-  box-shadow: none;
-}
-
-.accessibility-toggle:focus {
-  outline: 3px solid var(--primary-teal);
-  outline-offset: 3px;
-  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.2);
-}
-
-body.high-contrast .accessibility-toggle:focus {
-  outline: 3px solid white;
-  outline-offset: 3px;
-  box-shadow: 0 0 0 5px black;
+  border: var(--stroke) solid var(--line-strong);
+  border-radius: var(--r-control);
+  background: var(--bg);
+  color: var(--ink);
+  cursor: pointer;
 }
 
 .accessibility-icon {
@@ -46,52 +27,48 @@ body.high-contrast .accessibility-toggle:focus {
 
 .settings-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  z-index: 1001;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1001;
+  background: var(--overlay-bg);
 }
 
 .settings-container {
-  max-width: 90%;
-  max-height: 90%;
-  overflow-y: auto;
-  background-color: var(--surface-raised);
-  border: 1px solid var(--line-subtle);
-  border-radius: var(--radius-panel);
-  box-shadow: none;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 90%;
+  max-width: 640px;
+  max-height: 88vh;
+  overflow: hidden;
+  border: var(--stroke) solid var(--line-strong);
+  border-radius: var(--r-surface);
+  background: var(--bg);
 }
 
-/* High contrast overrides */
-body.high-contrast .accessibility-toggle {
-  background-color: #fff;
-  color: #000;
-  border: 2px solid #00c8c8;
-}
-
-body.high-contrast .accessibility-toggle:hover {
-  background-color: #00c8c8;
-  color: #000;
-}
-
-body.high-contrast .settings-overlay {
-  background-color: rgba(0, 0, 0, 0.8);
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .accessibility-toggle {
-    width: 48px;
-    height: 48px;
+@media (max-width: 600px) {
+  .settings-container {
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
   }
-  
-  .accessibility-icon {
-    width: 18px;
-    height: 18px;
+}
+
+@media (hover: hover) {
+  .accessibility-toggle:hover {
+    background: var(--surface);
   }
+}
+
+/* The focus-trap wrapper sits between the sheet and the scrolling content. */
+.settings-container > *:not(.accessibility-settings) {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
 }

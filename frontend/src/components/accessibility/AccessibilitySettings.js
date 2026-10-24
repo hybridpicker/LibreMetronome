@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './AccessibilitySettings.css';
 import { playAudioFeedback, announceToScreenReader } from '../../utils/accessibility/accessibilityUtils';
 import FocusTrap from './FocusTrap';
+import InterfaceIcon from '../common/InterfaceIcon';
 
 const AccessibilitySettings = ({ onClose, triggerRef }) => {
   const [highContrast, setHighContrast] = useState(
@@ -184,6 +185,15 @@ const AccessibilitySettings = ({ onClose, triggerRef }) => {
   return (
     <FocusTrap isActive={true} triggerRef={triggerRef} onEscape={onClose}>
       <div className="accessibility-settings" role="dialog" aria-modal="true" aria-labelledby="a11y-title">
+        <button
+          type="button"
+          className="a11y-close-button"
+          onClick={onClose}
+          aria-label="Close accessibility settings"
+          title="Close (ESC)"
+        >
+          <InterfaceIcon name="close" size={22} />
+        </button>
         <h2 id="a11y-title">Accessibility Settings</h2>
         
         <div className="settings-group">
