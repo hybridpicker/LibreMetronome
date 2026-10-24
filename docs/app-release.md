@@ -371,3 +371,13 @@ Eine Quelle (Tester A), Nachrichten plus zwei Screenshots von einem echten Andro
 - Der Menü-Umbau ist nur per Browser-Vorschau und Testsuite geprüft; Fokus-Rückgabe nach Schließen von Accessibility/Guide nicht manuell getestet.
 - `versionCode` 2: vor dem Upload im Bundle Explorer prüfen, dass Play ihn nicht schon kennt (bisher nur Code 1 hochgeladen).
 - Teilnahme-Link-Fehler (13.4) weiterhin nicht geklärt.
+
+### 14.1 Nachtrag: Scrollen auf dem Handy (Build 0.6.2, versionCode 3)
+
+Tester A: „sehr viel scrollen“. Ursache: Überlänge der Hauptseite gegenüber dem Bildschirm, gemessen mit einem Headless-Browser (Skript nicht im Repo) bei 412×805, 360×740 und 393×780: **455 bis 943 px je Modus** (Sequence am meisten).
+
+- Änderung: kompaktes Handy-Layout (nur Breite < 600 px, Desktop unverändert): einzeilige Kopfzeile, einzeilige Mode-Leiste, höhenabhängige Größe der Visualisierung (`frontend/src/utils/phoneLayout.js`), Beats und Noten nebeneinander, Tempo/Lautstärke/Swing als einzeilige Regler, schmale Fußzeile (`frontend/src/styles/phone-compact.css`).
+- Nachweis: Überlänge nach der Änderung **0 px in allen 15 Kombinationen** (5 Modi × 3 Größen), nichts unterhalb des Bildschirmrands. Tests 36 Suites / 195 Tests grün. Zwei Prüf-Durchgänge anhand der Screenshots (Bedienbarkeit, Optik), 2 Runden Umbau.
+- Bekannte Schwächen: Regler-Spuren sind in den Zweier-Zeilen kurz (bei 360 px etwa 100–110 px, Polyrhythm-Tempo am kürzesten); Beat-Zahlen in Polyrhythm bei 360 px am Mindestmaß 40 px; in Analog und Grid bleibt Leerraum unten. Die Fußzeile mit Spendenknopf gibt es nur in der Web-Version; im App-Build entfällt sie (mehr Platz), das wurde nicht eigens gemessen.
+- Nicht geprüft: echtes Gerät (Samsung), Gesten-Leiste und große Systemschrift, App-Build im Emulator (Anzeige instabil), Hintergrund-Audio und Latenz.
+- Vor dem Upload: versionCode 3 in der Play Console frei (Release 2 / 0.6.1 nur hochgeladen, falls du es bereits getan hast; sonst darf 0.6.2 den Code 2 überspringen).
