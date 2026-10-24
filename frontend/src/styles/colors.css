@@ -1,136 +1,174 @@
-/* 
- * LibreMetronome Color Palette
- * A cohesive color scheme to enhance visual hierarchy and user experience
- * Updated according to the new color scheme documentation
+/*
+ * LibreMetronome design tokens: the single source for colour, type, space,
+ * radius and size on every device (web, Android, iOS/macOS shell).
+ *
+ * Almost monochrome, like a measuring instrument. Exactly one accent colour
+ * (teal) marks the active state, the current beat and the Start button.
+ * Gold appears only as a thin contour or a small dot on accented beats,
+ * never as a surface. No shadows, no gradients, hairlines instead of frames.
+ *
+ * Components use these tokens only. The "legacy" block at the end keeps the
+ * old variable names alive for dialogs that were not redesigned; they now map
+ * onto the same neutral palette.
  */
 
 :root {
-  /* Phone "instrument card" tokens (used by phone-modern.css) */
-  --app-bg: #F4F8F8;
-  --card-bg: #FFFFFF;
-  --seg-track: #E3EEEE;
-  --chip-rest: #F1F6F6;
-  --slider-track: #E6EDED;
-  --divider: #EDF2F2;
-  --text-tertiary-aa: #5f7070;   /* small tertiary text, passes AA on white and --app-bg */
-  --ring-rest: #DCE6E6;
-  --card-shadow: 0 2px 10px rgba(24, 54, 56, 0.07), 0 1px 2px rgba(24, 54, 56, 0.05);
+  /* ---- Colour -------------------------------------------------------- */
+  --bg: #ffffff;
+  --surface: #f6f7f7;
+  --ink: #111111;
+  --ink-2: #6b7072;          /* secondary text; 4.9:1 on white, 4.6:1 on --surface */
+  --ink-3: #868c8e;          /* graphics only (rings, filled cells), never text; 3.4:1 on white */
+  --line: #e3e6e6;           /* hairlines and resting borders */
+  --line-strong: #c7cccd;    /* outlined controls, resting beat rings */
 
-  /* Primary Colors */
-  --primary-teal: #00A0A0;       /* Main brand color - vibrant teal specified */
-  --primary-teal-dark: #008585;  /* Darker variant for hover states */
-  --primary-teal-light: #B3E0E0; /* Lighter variant for backgrounds, borders */
-  --primary-teal-ultra-light: #E6F5F5; /* Very light teal for subtle backgrounds */
+  --accent: #00a0a0;         /* the brand teal: fills, current beat, thumb */
+  --accent-ink: #00797a;     /* teal as text or small icon on light surfaces (5.2:1) */
+  --accent-wash: #e6f5f5;    /* very light teal, selected-state tint */
+  --on-accent: #ffffff;
 
-  /* Secondary Colors */
-  --secondary-gold: #F8D38D;     /* Secondary brand color - golden color specified */
-  --secondary-gold-dark: #EABF70; /* Darker gold for first beats, important elements */
-  --secondary-gold-light: #FAE0AD; /* Lighter gold for normal beats, subtle highlights */
-  --secondary-gold-ultra-light: #FFF8E6; /* Very light gold for subtle backgrounds */
+  --gold: #b98a12;           /* contour or dot only (3.2:1 on white) */
 
-  /* Neutral Colors */
-  --neutral-bg: #ffffff;         /* White app canvas */
-  --neutral-bg-alt: #ffffff;     /* White control and dialog surfaces */
-  --neutral-border: #d7d7ca;     /* Low-contrast instrument rule */
-  --neutral-border-light: #e9e5db; /* Subtle dividers on ivory */
+  --focus: #00797a;
+  --danger: #b3261e;
 
-  /* Text Colors */
-  --text-primary: #183638;       /* Deep teal-black for stage readability */
-  --text-secondary: #4f6262;     /* Secondary instrument labels */
-  --text-tertiary: #798585;      /* Supporting and disabled text */
-  --text-light: #ffffff;         /* Light text color for dark backgrounds */
+  /* ---- Type: one family (Lato, bundled, so metrics match on every device) */
+  --font: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --fs-1: 12px;              /* captions, units, footer */
+  --fs-2: 14px;              /* labels, secondary text */
+  --fs-3: 17px;              /* values, buttons, body */
+  --fs-4: 22px;              /* Start label, section titles */
+  --fs-5: 44px;              /* BPM */
+  --fw-regular: 400;
+  --fw-bold: 700;
 
-  /* Beat State Colors */
-  --beat-muted: #e8e8e8;         /* Muted beat color */
-  --beat-normal: var(--secondary-gold-light); /* Normal beat color */
-  --beat-accent: var(--secondary-gold); /* Accented beat color */
-  --beat-first: var(--primary-teal); /* First beat color */
-  --beat-inner: #FAE0AD;         /* Inner beat color for polyrhythm (aligned with secondary-gold-light) */
-  --beat-outer: #F8D38D;         /* Outer beat color for polyrhythm (aligned with secondary-gold) */
+  /* ---- Space (4 px grid) --------------------------------------------- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
 
-  /* Semantic Colors */
-  --success: #00A0A0;            /* Success color - aligned with teal palette */
-  --warning: #F8D38D;            /* Warning color - aligned with gold palette */
-  --error: #E67B73;              /* Error color */
-  --info: #73B5E6;               /* Info color */
-  --highlight: #00B3B3;          /* Highlight color for beat sync line */
+  /* ---- Shape ---------------------------------------------------------- */
+  --r-control: 10px;         /* buttons and fields */
+  --r-surface: 12px;         /* flat surfaces; 0 where a hairline is enough */
+  --stroke: 1px;
+  --stroke-viz: 1.5px;       /* lines inside visualisations (2px max) */
+  --stroke-select: 2px;      /* selected and focused outlines */
 
-  /* Overlay Colors */
-  --overlay-bg: rgba(0, 0, 0, 0.7); /* Dark overlay background */
-  --modal-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Shadow for modals */
+  /* ---- Size ----------------------------------------------------------- */
+  --touch: 44px;             /* 40 px on short screens, set in layout.css */
+  --content-max: 1200px;
 
-  /* Training Mode Colors */
-  --training-tip-bg: var(--secondary-gold-ultra-light); /* Background for training tips */
-  --training-overview-bg: var(--primary-teal-ultra-light); /* Background for training overview */
+  /* ---- Motion --------------------------------------------------------- */
+  --t-fast: 120ms ease;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  /* ---- Beat marks (shared by Beat, Sequence, Polyrhythm, Grid) --------- */
+  --beat-ring: var(--line-strong);
+  --beat-accent-ring: var(--gold);
+  --beat-now: var(--accent);
+  --beat-muted-ring: var(--line);
 
-  /* Transitions */
-  --transition-fast: 150ms ease;
-  --transition-normal: 300ms ease;
-  --transition-slow: 500ms ease;
+  /* ====================================================================
+   * Legacy names, kept so untouched dialogs resolve. Do not use in new code.
+   * ==================================================================== */
+  --app-bg: var(--bg);
+  --card-bg: var(--bg);
+  --seg-track: var(--surface);
+  --chip-rest: var(--surface);
+  --slider-track: var(--line);
+  --divider: var(--line);
+  --text-tertiary-aa: var(--ink-2);
+  --ring-rest: var(--line-strong);
+  --card-shadow: none;
 
-  /* Borders */
+  --primary-teal: var(--accent);
+  --primary-teal-dark: var(--accent-ink);
+  --primary-teal-light: #b3e0e0;
+  --primary-teal-ultra-light: var(--accent-wash);
+
+  --secondary-gold: var(--line);
+  --secondary-gold-dark: var(--line-strong);
+  --secondary-gold-light: var(--surface);
+  --secondary-gold-ultra-light: var(--surface);
+
+  --neutral-bg: var(--bg);
+  --neutral-bg-alt: var(--bg);
+  --neutral-border: var(--line-strong);
+  --neutral-border-light: var(--line);
+
+  --text-primary: var(--ink);
+  --text-secondary: var(--ink-2);
+  --text-tertiary: var(--ink-2);
+  --text-light: #ffffff;
+
+  --beat-muted: var(--line);
+  --beat-normal: var(--bg);
+  --beat-accent: var(--bg);
+  --beat-first: var(--bg);
+  --beat-inner: var(--bg);
+  --beat-outer: var(--bg);
+
+  --success: var(--accent-ink);
+  --warning: var(--gold);
+  --error: var(--danger);
+  --info: var(--accent-ink);
+  --highlight: var(--accent);
+
+  --overlay-bg: rgba(17, 17, 17, 0.55);
+  --modal-shadow: none;
+
+  --training-tip-bg: var(--surface);
+  --training-overview-bg: var(--surface);
+
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --button-shadow: none;
+
+  --transition-fast: var(--t-fast);
+  --transition-normal: 200ms ease;
+  --transition-slow: 300ms ease;
+  --transition-standard: 150ms ease;
+
   --border-radius-sm: 4px;
-  --border-radius-md: 8px;
-  --border-radius-lg: 12px;
+  --border-radius-md: var(--r-control);
+  --border-radius-lg: var(--r-surface);
   --border-width: 1px;
   --border-width-thick: 2px;
 
-  /* Precision instrument design system */
-  --surface-canvas: var(--neutral-bg);
-  --surface-raised: var(--neutral-bg-alt);
-  --surface-selected: var(--primary-teal-ultra-light);
-  --line-subtle: rgba(24, 54, 56, 0.14);
-  --line-strong: rgba(0, 133, 133, 0.58);
-  --teal-wash: rgba(0, 160, 160, 0.10);
-  --teal-pressed: rgba(0, 133, 133, 0.16);
-  --gold-wash: rgba(248, 211, 141, 0.30);
-  --muted-wash: rgba(24, 54, 56, 0.06);
-  --focus-ring: rgba(0, 133, 133, 0.34);
-  --danger-wash: rgba(230, 123, 115, 0.14);
+  --surface-canvas: var(--bg);
+  --surface-raised: var(--bg);
+  --surface-selected: var(--accent-wash);
+  --line-subtle: var(--line);
+  --teal-wash: var(--accent-wash);
+  --teal-pressed: var(--accent-wash);
+  --gold-wash: var(--surface);
+  --muted-wash: var(--surface);
+  --focus-ring: var(--focus);
+  --danger-wash: var(--surface);
 
-  --font-ui: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-numeric: 'Lato', ui-monospace, 'SFMono-Regular', monospace;
-  --text-xs: 0.75rem;
-  --text-sm: 0.875rem;
-  --text-md: 1rem;
-  --text-lg: 1.25rem;
-  --text-xl: clamp(1.75rem, 4vw, 3rem);
+  --font-ui: var(--font);
+  --font-numeric: var(--font);
+  --text-xs: var(--fs-1);
+  --text-sm: var(--fs-2);
+  --text-md: var(--fs-3);
+  --text-lg: var(--fs-4);
+  --text-xl: var(--fs-5);
 
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 24px;
-  --space-6: 32px;
+  --space-1: var(--sp-1);
+  --space-2: var(--sp-2);
+  --space-3: var(--sp-3);
+  --space-4: var(--sp-4);
+  --space-5: var(--sp-5);
+  --space-6: var(--sp-6);
   --space-7: 48px;
 
-  --radius-control: 10px;
-  --radius-panel: 18px;
-  --radius-round: 999px;
-  --touch-target: 48px;
+  --radius-control: var(--r-control);
+  --radius-panel: var(--r-surface);
+  --radius-round: 50%;
+  --touch-target: var(--touch);
   --stroke-hairline: 1px;
   --stroke-control: 2px;
 }
-
-/* Dark Mode Theming (Uncomment if implementing dark mode)
-@media (prefers-color-scheme: dark) {
-  :root {
-    --neutral-bg: #222222;
-    --neutral-bg-alt: #2a2a2a;
-    --neutral-border: #444444;
-    --neutral-border-light: #555555;
-    
-    --text-primary: #f5f5f5;
-    --text-secondary: #c0c0c0;
-    --text-tertiary: #999999;
-    
-    /* Other dark mode adjustments as needed */
-/*
-  }
-}
-*/
