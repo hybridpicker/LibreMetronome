@@ -1,9 +1,9 @@
 /*
  * Accessibility modes as token overrides. The main screen and every dialog
  * read the tokens in colors.css, so a mode only has to redefine them:
- *   high contrast   black canvas, white lines and text, cyan active, yellow gold
+ *   high contrast   black canvas, white lines and text, cyan active, yellow focus
  *   large text      the type scale steps up one size (layout absorbs it)
- *   colour blind    accent and gold move to the Okabe-Ito palette; shapes
+ *   colour blind    accent moves to the Okabe-Ito palette; shapes
  *                   (ring + dot for the first beat, dashed muted ring) already
  *                   carry the meaning without colour.
  */
@@ -22,7 +22,6 @@ body.high-contrast {
   --accent-ink: #00ffff;
   --accent-wash: #000000;
   --on-accent: #000000;
-  --gold: #ffff00;
   --focus: #ffff00;
   --danger: #ff8a80;
   background: #000000;
@@ -37,7 +36,7 @@ body.high-contrast .mode-option.active,
 body.high-contrast .subdivision-choice[aria-pressed='true'],
 body.high-contrast .note-selector-button[aria-pressed='true'],
 body.high-contrast .polyrhythm-choice[aria-pressed='true'] {
-  border: 3px solid var(--gold);
+  border: 3px solid var(--focus);
   color: var(--ink);
 }
 
@@ -83,21 +82,18 @@ body.deuteranopia {
   --accent: #0072b2;
   --accent-ink: #005a8d;
   --accent-wash: #e3f0f8;
-  --gold: #a86c00;
 }
 
 body.tritanopia {
   --accent: #c24d00;
   --accent-ink: #a13f00;
   --accent-wash: #fbece3;
-  --gold: #6a4c93;
 }
 
 body.monochromacy {
   --accent: #111111;
   --accent-ink: #111111;
   --accent-wash: #eeeeee;
-  --gold: #111111;
 }
 
 /* Large text on short phones: tighter rows, the footer keeps to one line. */

@@ -12,10 +12,10 @@ describe('design tokens', () => {
   test('one accent teal, near-monochrome neutrals', () => {
     expect(tokens.accent.toLowerCase()).toBe('#00a0a0');
     expect(tokens.bg).toBe('#ffffff');
-    expect(tokens.surface.toLowerCase()).toBe('#f6f7f7');
+    expect(tokens.surface.toLowerCase()).toBe('#eff6f6');
     expect(tokens.ink).toBe('#111111');
-    expect(tokens['ink-2'].toLowerCase()).toBe('#6b7072');
-    expect(tokens.line.toLowerCase()).toBe('#e3e6e6');
+    expect(tokens['ink-2'].toLowerCase()).toBe('#5c6e6e');
+    expect(tokens.line.toLowerCase()).toBe('#dbe7e7');
   });
 
   test('type scale, radius and touch size', () => {

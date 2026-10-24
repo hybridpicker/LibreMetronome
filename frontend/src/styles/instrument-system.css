@@ -5,7 +5,7 @@
  *
  * Rules of the look: no shadows, no gradients, hairlines instead of frames,
  * radius 10 px on controls, teal only for the active state / current beat /
- * Start, gold only as a contour or a small dot on accented beats.
+ * Start; accented beats are teal rings.
  */
 
 /* ---- Base ------------------------------------------------------------- */
@@ -323,8 +323,8 @@ body.reduced-motion *::after {
 }
 
 /* ---- Beat marks: Beat, Sequence, Polyrhythm share one vocabulary --------
- * current beat: teal fill | normal: grey ring | accent: gold ring |
- * first beat: gold ring with a gold dot | muted: pale dashed ring.        */
+ * current beat: teal fill | normal: grey ring | accent: teal ring |
+ * first beat: teal ring with a teal dot | muted: pale dashed ring.        */
 
 .beat-control {
   position: absolute;
@@ -358,7 +358,7 @@ body.reduced-motion *::after {
 .beat-mark[data-state='first'],
 .beat-dot.accent-beat,
 .beat-dot.first-beat {
-  border-color: var(--gold);
+  border-color: var(--accent);
 }
 
 .beat-mark[data-state='first']::after,
@@ -371,7 +371,7 @@ body.reduced-motion *::after {
   height: 6px;
   margin: -3px 0 0 -3px;
   border-radius: 50%;
-  background: var(--gold);
+  background: var(--accent);
 }
 
 .beat-mark[data-state='muted'] {
@@ -449,7 +449,7 @@ body.reduced-motion *::after {
 
 .grid-cell.grid-square-accent,
 .grid-cell.grid-square-first-beat {
-  outline: var(--stroke-select) solid var(--gold);
+  outline: var(--stroke-select) solid var(--accent);
   outline-offset: -1px;
 }
 
@@ -703,8 +703,7 @@ body.reduced-motion *::after {
 }
 
 .control-sub {
-  display: inline;
-  margin-left: var(--sp-2);
+  display: block;
   font-size: var(--fs-1);
   font-weight: var(--fw-regular);
 }
@@ -1027,7 +1026,7 @@ input[type='range']:disabled {
 
 .info-modal .beat-indicator.muted { border: var(--stroke-viz) dashed var(--ink-3); background: transparent; }
 .info-modal .beat-indicator.accent,
-.info-modal .beat-indicator.first { border-color: var(--gold); }
+.info-modal .beat-indicator.first { border-color: var(--accent); }
 
 .info-modal .beat-indicator.first::after {
   content: '';
@@ -1038,5 +1037,27 @@ input[type='range']:disabled {
   height: 6px;
   margin: -3px 0 0 -3px;
   border-radius: 50%;
-  background: var(--gold);
+  background: var(--accent);
+}
+
+/* Beat mode: a watch bezel of 60 hairline ticks just outside the beat ring. */
+.dial-ticks {
+  position: absolute;
+  top: -22px;
+  left: -22px;
+  width: calc(100% + 44px);
+  height: calc(100% + 44px);
+  overflow: visible;
+  pointer-events: none;
+}
+
+.dial-ticks line {
+  stroke: var(--line-strong);
+  stroke-width: 0.35;
+  stroke-linecap: round;
+}
+
+.dial-ticks line.is-major {
+  stroke: var(--accent);
+  stroke-width: 0.5;
 }

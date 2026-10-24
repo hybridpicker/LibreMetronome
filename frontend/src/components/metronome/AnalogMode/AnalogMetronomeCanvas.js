@@ -30,6 +30,7 @@ export default function AnalogMetronomeCanvas({
     const ctx = canvas.getContext('2d');
     const colors = {
       ink: readToken('--ink-2', '#6b7072'),
+      tick: readToken('--line-strong', '#bdd0d0'),
       weightIdle: readToken('--ink-3', '#9aa0a2'),
       weightLive: readToken('--accent', '#00a0a0')
     };
@@ -44,16 +45,31 @@ export default function AnalogMetronomeCanvas({
       // Longest rod that keeps the weight inside the area at full swing.
       const armLength = Math.max(
         60,
-        Math.min((w / 2 - weightR - 8) / Math.sin(MAX_ANGLE_RAD), h - 2 * weightR - hubR - 16)
+        Math.min((w / 2 - weightR - 30) / Math.sin(MAX_ANGLE_RAD), h - 2 * weightR - hubR - 52)
       );
-      const contentH = armLength + weightR + hubR;
-      const pivotY = (h - contentH) / 2 + weightR + armLength;
+      const scaleH = weightR + 20; // the tick scale reaches past the rod
+      const contentH = armLength + scaleH + hubR;
+      const pivotY = (h - contentH) / 2 + scaleH + armLength;
 
       ctx.save();
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
       ctx.translate(w / 2, pivotY);
       ctx.lineCap = 'round';
+      // Hairline scale: ticks every 7.5 degrees on an arc, the centre one in teal.
+      for (let deg = -45; deg <= 45; deg += 7.5) {
+        const a = (deg * Math.PI) / 180;
+        const major = deg % 15 === 0;
+        const r1 = armLength + weightR + 10;
+        const r2 = r1 + (major ? 10 : 5);
+        ctx.beginPath();
+        ctx.moveTo(Math.sin(a) * r1, -Math.cos(a) * r1);
+        ctx.lineTo(Math.sin(a) * r2, -Math.cos(a) * r2);
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = deg === 0 ? colors.weightLive : colors.tick;
+        ctx.stroke();
+      }
+
       ctx.rotate(angleRad);
 
       ctx.beginPath();

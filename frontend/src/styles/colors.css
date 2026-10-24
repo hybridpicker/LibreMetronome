@@ -2,10 +2,9 @@
  * LibreMetronome design tokens: the single source for colour, type, space,
  * radius and size on every device (web, Android, iOS/macOS shell).
  *
- * Almost monochrome, like a measuring instrument. Exactly one accent colour
- * (teal) marks the active state, the current beat and the Start button.
- * Gold appears only as a thin contour or a small dot on accented beats,
- * never as a surface. No shadows, no gradients, hairlines instead of frames.
+ * Calm, like a measuring instrument, with one colour only: teal. Neutrals
+ * carry a faint teal tint so the screen feels warm rather than sterile. Teal
+ * marks the active state, the current beat, accents and the Start button. No shadows, no gradients, hairlines instead of frames.
  *
  * Components use these tokens only. The "legacy" block at the end keeps the
  * old variable names alive for dialogs that were not redesigned; they now map
@@ -15,19 +14,18 @@
 :root {
   /* ---- Colour -------------------------------------------------------- */
   --bg: #ffffff;
-  --surface: #f6f7f7;
+  --surface: #eff6f6;
   --ink: #111111;
-  --ink-2: #6b7072;          /* secondary text; 4.9:1 on white, 4.6:1 on --surface */
-  --ink-3: #868c8e;          /* graphics only (rings, filled cells), never text; 3.4:1 on white */
-  --line: #e3e6e6;           /* hairlines and resting borders */
-  --line-strong: #c7cccd;    /* outlined controls, resting beat rings */
+  --ink-2: #5c6e6e;          /* secondary text; 5.5:1 on white, 4.9:1 on --surface */
+  --ink-3: #7b9090;          /* graphics only (rings, filled cells), never text; 3.4:1 on white */
+  --line: #dbe7e7;           /* hairlines and resting borders */
+  --line-strong: #bdd0d0;    /* outlined controls, resting beat rings */
 
   --accent: #00a0a0;         /* the brand teal: fills, current beat, thumb */
   --accent-ink: #00797a;     /* teal as text or small icon on light surfaces (5.2:1) */
   --accent-wash: #e6f5f5;    /* very light teal, selected-state tint */
   --on-accent: #ffffff;
 
-  --gold: #b98a12;           /* contour or dot only (3.2:1 on white) */
 
   --focus: #00797a;
   --danger: #b3261e;
@@ -66,7 +64,7 @@
 
   /* ---- Beat marks (shared by Beat, Sequence, Polyrhythm, Grid) --------- */
   --beat-ring: var(--line-strong);
-  --beat-accent-ring: var(--gold);
+  --beat-accent-ring: var(--accent);
   --beat-now: var(--accent);
   --beat-muted-ring: var(--line);
 
@@ -111,7 +109,7 @@
   --beat-outer: var(--bg);
 
   --success: var(--accent-ink);
-  --warning: var(--gold);
+  --warning: var(--accent-ink);
   --error: var(--danger);
   --info: var(--accent-ink);
   --highlight: var(--accent);
@@ -144,7 +142,6 @@
   --line-subtle: var(--line);
   --teal-wash: var(--accent-wash);
   --teal-pressed: var(--accent-wash);
-  --gold-wash: var(--surface);
   --muted-wash: var(--surface);
   --focus-ring: var(--focus);
   --danger-wash: var(--surface);
