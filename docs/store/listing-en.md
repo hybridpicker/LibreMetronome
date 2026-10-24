@@ -66,7 +66,7 @@ Before publishing, check every claim against the final build. Open points:
 
 | Asset | Size | Status |
 |---|---|---|
-| Icon | 512 x 512 PNG, 32 bit | open |
+| Icon | 512 x 512 PNG, 32 bit | created: docs/store/icon-512.png (pendulum, no alpha); check in Console |
 | Feature graphic | 1024 x 500 PNG/JPEG, no alpha | open |
 | Phone screenshots | min. 4, 1080 x 1920 or larger, from the Android emulator, invented example values only | open |
 | Modes to show | Beat, Analog, Grid, Sequencer, Polyrhythm | open |

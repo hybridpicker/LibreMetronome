@@ -342,3 +342,32 @@ Gemeinsame Testgruppe (Google Group) mit Guitar Positions ist möglich; der Test
 - **Teilnahme-Link (intern, nur für Konten aus der Liste):** `https://play.google.com/apps/internaltest/4701428133926911851`. Auf dem Telefon öffnen, „Tester werden“, dann bei Google Play installieren. Der Name lautet bis zur Prüfung „com.libremetronome (unreviewed)“. Bei bezahlten Apps installieren interne Tester kostenlos.
 - **Beobachtung 2026-10-24:** Der Link zeigte auf dem Telefon „Nicht gefunden“, obwohl Track aktiv und Liste gespeichert waren. Mögliche Ursachen, noch nicht geklärt: (1) auf dem Telefon ist ein anderes Google-Konto aktiv als in der Liste (am häufigsten), (2) falsche Adresse in der Liste (muss die Google-Konto-Adresse sein), (3) Wartezeit nach dem ersten Veröffentlichen einer neuen App (Minuten bis Stunden), (4) Link unvollständig kopiert. Prüfreihenfolge 1 → 4. Ergebnis hier nachtragen.
 - **Geschlossener Test (später):** eigene Liste mit mind. 12 Google-Konten, 14 Tage ununterbrochen, dazu *Konto verwalten → Einstellungen für Google Play-Apps → Einstellungen für die Monetarisierung → Lizenztest*, damit Tester nicht zahlen.
+
+## 14. Auswertung Tester-Feedback und Build 0.6.1 (2026-10-24)
+
+### Feedback (ohne personenbezogene Daten)
+
+Eine Quelle (Tester A), Nachrichten plus zwei Screenshots von einem echten Android-Telefon (Gerätetyp und Android-Version nicht genannt).
+
+| Nr. | Beobachtung | Art | Schwere | Reproduziert | Maßnahme |
+|---|---|---|---|---|---|
+| 1 | Icons nicht einheitlich; gewünscht: das Pendel-Icon der Mac-App überall | Design | stört | Ja (Quelltext): Android nutzte ein altes „LM“-Logo, iOS/macOS das Pendel | Android (adaptiv, Legacy, rund), Favicon, Touch-/PWA-Icons, `desktop/icon.png` aus der iOS-Vorlage neu erzeugt; Store-Icon `docs/store/icon-512.png` |
+| 2 | Guide: Design-Fehler im Menü | Fehler (Layout) | stört | Ja (Browser, 375 px): Tabs umbrachen/überlappten | Tabs einzeilig und scrollbar, Titel und Schließen-Taste ohne Überlappung, Safe-Area; im App-Build kein „online“/„free“/Support-Kürzel |
+| 3 | Zu viele Menü-Icons (drei) | Bedienung | stört | Ja (Screenshot, Quelltext) | Ein Menü-Button; „Accessibility“ und „Guide“ sind Einträge im Menü (Kürzel I unverändert) |
+| 4 | Viel Scrollen | Bedienung | stört | Ja (Screenshot, Messung) | Header oben schmaler, Visualisierung höchstens ca. 34 % der Bildschirmhöhe, engere Abstände |
+| 5 | „Generell mehr verbessern“ | Wunsch | unklar | nicht prüfbar | offen, Rückfrage an Tester A |
+
+### Nachweise
+
+- `CI=true npm test`: 36 Suites, 195 Tests grün; `npm run build` ok.
+- Messung im Browser (412 × 800): Unterkante Tempo-Regler 883 → 800 px, Seitenhöhe 1390 → 1283 px. Das Layout wurde nur als Web-Ansicht in der Browser-Vorschau geprüft.
+- Signierte AAB `frontend/android/app/build/outputs/bundle/release/app-release.aab` (5,2 MB), aus committetem Stand, versionCode 2, versionName 0.6.1; `jarsigner -verify` meldet „verifiziert“.
+- APK (`assembleRelease`): keine Berechtigung außer der internen Empfängerberechtigung, **kein INTERNET**.
+
+### Nicht geprüft / offen
+
+- **Emulator:** APK installiert, Prozess startet, keine Absturzmeldung im Log, aber der Bildschirm blieb schwarz (Emulator-Anzeige instabil wie in Abschnitt 12). **Der Start ist daher nicht sichtbar bestätigt.** Android-Icon (Beschnitt in Launcher-Masken) und Layout im App-Build nicht auf dem Gerät gesehen.
+- Echtes Telefon: Klick-Latenz, Taktstabilität, Hintergrund-Audio weiterhin **nicht gemessen** (Abschnitt 12). Tester A hat dazu nichts gemeldet.
+- Der Menü-Umbau ist nur per Browser-Vorschau und Testsuite geprüft; Fokus-Rückgabe nach Schließen von Accessibility/Guide nicht manuell getestet.
+- `versionCode` 2: vor dem Upload im Bundle Explorer prüfen, dass Play ihn nicht schon kennt (bisher nur Code 1 hochgeladen).
+- Teilnahme-Link-Fehler (13.4) weiterhin nicht geklärt.
