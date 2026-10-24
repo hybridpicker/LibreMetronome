@@ -329,3 +329,9 @@ Gemeinsame Testgruppe (Google Group) mit Guitar Positions ist möglich; der Test
 - Signierte AAB gebaut aus dem committed Stand: `frontend/android/app/build/outputs/bundle/release/app-release.aab`, 4,2 MB, `jarsigner -verify` meldet „verifiziert“. Zertifikat SHA-256 (öffentlich, zum Abgleich in der Play Console): `71:0C:AA:D6:BE:18:D0:49:B0:F7:8E:C1:62:9B:C6:66:E3:AA:CC:DE:FC:A1:D7:62:AB:55:BA:6E:09:6B:E6:67`.
 - `versionCode` 1, `versionName` 0.6.0. Für jeden weiteren Upload `buildNumber` erhöhen.
 - Nicht hochgeladen. Der Upload ist Tor 3 und wird vom Eigentümer per Drag and Drop gemacht.
+
+### 13.3 Interner Test (2026-10-24)
+
+- Eigentümer hat die AAB selbst hochgeladen (Tor 3) und den Release 1 (0.6.0, versionCode 1) im internen Test veröffentlicht: „Für interne Tester verfügbar“, 24. Okt. 07:12, Status „Nicht überprüft“. Console zeigt vorläufigen Namen „com.libremetronome (unreviewed)“, das ist normal.
+- Der Track steht noch auf „Inaktiv“, weil noch keine Tester eingetragen sind (Reiter „Tester“). Offen: E-Mail-Liste anlegen, Teilnahme-Link verschicken, auf dem Telefon installieren und messen (Abschnitt 12).
+- Nächster Upload braucht `buildNumber` 2.
