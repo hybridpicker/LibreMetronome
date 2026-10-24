@@ -92,27 +92,27 @@ body.deuteranopia {
   --accent: #0072b2;
   --accent-ink: #005a8d;
   --accent-wash: #e3f0f8;
-  --dial-accent: #56b4e9;
-  --dial-accent-wash: #10303f;
-  --dial-focus: #9bd3f2;
+  --dial-accent: #005a8d;
+  --dial-accent-wash: #e3f0f8;
+  --dial-focus: #005a8d;
 }
 
 body.tritanopia {
   --accent: #c24d00;
   --accent-ink: #a13f00;
   --accent-wash: #fbece3;
-  --dial-accent: #e69f00;
-  --dial-accent-wash: #3a2c0b;
-  --dial-focus: #f5c860;
+  --dial-accent: #a13f00;
+  --dial-accent-wash: #fbece3;
+  --dial-focus: #a13f00;
 }
 
 body.monochromacy {
   --accent: #111111;
   --accent-ink: #111111;
   --accent-wash: #eeeeee;
-  --dial-accent: #ffffff;
-  --dial-accent-wash: #1c4141;
-  --dial-focus: #ffffff;
+  --dial-accent: #111111;
+  --dial-accent-wash: #eeeeee;
+  --dial-focus: #111111;
 }
 
 /* Large text on short phones: tighter rows, the footer keeps to one line. */
