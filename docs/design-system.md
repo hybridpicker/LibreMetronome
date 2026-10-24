@@ -4,13 +4,14 @@ One calm, precise look for every output: web (desktop and phone browser),
 the paid, ad-free, offline Android app, and the iOS/macOS shell. One token
 base, one set of components; only the arrangement changes with the width.
 
-Updated October 24, 2026 (build 0.8.0, design round 2: "Linienblatt" with a dark dial plate).
+Updated October 24, 2026 (build 0.8.0, design round 2: "Linienblatt"; the
+first draft with a dark plate was dropped after the owner's feedback).
 
 ## Principles
 
 1. **A measuring instrument.** A light page of hairlines and small uppercase
-   labels, with the visualisation on one dark teal-black *dial plate*. No
-   framed cards.
+   labels; the visualisation sits on a plate outlined by one hairline. No
+   dark surfaces, no tinted cards.
 2. **One colour: teal.** It marks the active state, the current beat, accented
    beats (ring) and the Start button. There is no gold. Neutrals carry a faint
    teal tint so the screen feels warm, not sterile.
@@ -22,7 +23,7 @@ Updated October 24, 2026 (build 0.8.0, design round 2: "Linienblatt" with a dark
    760 px). Text is never below 12 px.
 6. **Character from proportion and line.** The BPM numeral is large (64 px) in
    the regular cut; keys are square (2 px); labels are small, uppercase and
-   tracked; the plate carries a hairline frame, a 60-tick dial (Beat) or a
+   tracked; the plate carries a hairline outline, a 60-tick dial (Beat) or a
    3.75-degree scale with baseline (Analog). The current beat is a larger
    filled mark with a halo; a calm 120 ms transition, none under reduced motion.
 
@@ -39,17 +40,17 @@ Updated October 24, 2026 (build 0.8.0, design round 2: "Linienblatt" with a dark
 | Accent | `--accent` | `#00a0a0` (fills, current beat, thumb) |
 | Accent as text | `--accent-ink` | `#00797a` (5.2:1) |
 | Type scale | `--fs-1` … `--fs-5` | 12 / 14 / 17 / 22 / 64 px (large text 14 / 17 / 20 / 24 / 72; 56 on short screens) |
-| Dial plate | `--dial-bg`, `--dial-ink`, `--dial-ink-2`, `--dial-ink-3`, `--dial-line`, `--dial-line-strong`, `--dial-accent`, `--dial-focus` | `#0b2626`, `#e8f4f4`, `#9bb7b7`, `#5f8585`, `#1c4141`, `#4a7a7a`, `#2ec4c4`, `#7ee6e6` |
+| Dial plate | `--dial-bg`, `--dial-ink`, `--dial-ink-2`, `--dial-ink-3`, `--dial-line`, `--dial-line-strong`, `--dial-accent`, `--dial-focus` | `#ffffff`, `#111111`, `#5c6e6e`, `#7b9090`, `#dbe7e7`, `#bdd0d0`, `#00797a`, `#00797a` |
 | Radius | `--r-control`, `--r-surface` | 2 px (square keys), 4 px (plate) |
 | Space | `--sp-1` … `--sp-6` | 4 / 8 / 12 / 16 / 24 / 32 px |
 | Touch | `--touch` | 44 px (40 px when the window is shorter than 760 px) |
 
 **The dial plate.** `.viz-card`, the training strip and the controls laid over
 the plate (circle stepper, ratio, swap, Accelerate) re-map the normal token
-names (`--bg`, `--ink`, `--accent`, ...) to the `--dial-*` values, so every
-component works on both surfaces without its own colour. Accessibility modes
-override the `--dial-*` tokens too (high contrast: black plate, white lines,
-cyan accent; colour blind: Okabe-Ito sky blue / orange; monochrome: white).
+names (`--bg`, `--ink`, `--accent`, ...) to the `--dial-*` values. The plate is
+white today, but it stays a separate token set so it can change on its own.
+Accessibility modes override the `--dial-*` tokens too (high contrast: black
+plate, white lines, cyan accent; colour blind and monochrome follow the accent).
 Canvas drawing (Analog) reads its colours from the canvas element, so it picks
 up the plate and the modes.
 
