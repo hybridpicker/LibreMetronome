@@ -390,3 +390,42 @@ Auf dem Samsung (Screenshots Tester A/Eigentümer) sichtbar: Sequence mit 4 Krei
 - Verhaltensänderung: „Beats pro Takt“ ist auf Handys ein −/+-Zähler statt 1–9-Direktwahl (ab 520 px Breite bleiben die Felder). Sequence erlaubt auf Handys höchstens 4 Kreise.
 - Bekannte Schwächen: Kreise in Sequence mit 4 Kreisen nur etwa 104 px; Mode-Beschriftungen 12 px; Fußzeile auf Handys eine Zeile; Großschrift/Hoher Kontrast nur an wenigen Fällen geprüft; App-Build (Capacitor) nicht im Emulator gestartet, Guide-Fußzeilentext dort nicht sichtbar bestätigt.
 - Offen: Prüfung auf dem Samsung, Latenz/Takt/Hintergrund-Audio weiterhin ungemessen.
+
+## 15. Redesign: ein Design für alle Geräte (Build 0.7.0, versionCode 5)
+
+### Ziel
+
+Das 0.6.3-Handydesign war zu verspielt, und Desktop/Tablet sahen anders aus als das Handy. Jetzt gilt eine Gestaltung, eine Token-Basis, ein Komponenten-Satz für Web, Android-App und iOS-/macOS-Hülle; nur die Anordnung folgt der Breite. Regeln und Tokens: `docs/design-system.md`. Vorher/Nachher: `docs/redesign-before-after.png`.
+
+### Änderungen
+
+- Fast monochrom (Weiß, `#F6F7F7`, `#111`, Haarlinien); ein Akzent (Teal) nur für aktiven Zustand, aktuellen Schlag und Start; Gold nur als Kontur oder Punkt. Keine Schatten, Verläufe, Pillen, Karten mit Rahmen, Legenden-Punkte. Eine Schrift (Lato, mitgeliefert, damit die Maße auf jedem Gerät gleich sind), Skala 12/14/17/22/44.
+- Ein Raster für alle Breiten (`styles/layout.css`): Handy einspaltig, Tablet hoch wie Handy, Tablet quer und Desktop zweispaltig (Inhalt höchstens 1200 px). `phone-compact.css`, `phone-modern.css`, `App.css` und mehrere tote Stylesheets entfielen; `phoneLayout.js` heißt jetzt `utils/layoutSize.js` und gilt für alle Breiten.
+- Modi (Hoher Kontrast, Großschrift, Farbenblind) sind jetzt Token-Überschreibungen (`styles/accessibility-modes.css`) statt 1000 Zeilen Sonderregeln.
+- Analog nur Stab, Drehpunkt, Gewicht; Polyrhythm ohne gestrichelte Außenbahn; Grid mit Rasterlinien; Mode-Wahl nur Text; Logo einfarbig; Menü-Icon ohne Rahmen; Footer eine Zeile (nur Web, mit Donate-Link; im App-Build kein Footer).
+- Tests: `ThemeSystem.test.js` und `BasicThemeTest.test.js` prüften die alte Gold-Palette und sind durch `DesignTokens.test.js` ersetzt.
+
+### Messwerte
+
+`frontend/scripts/measure-layout.mjs` (Headless Chrome, playwright-core, nur Dev). Überlänge der Hauptseite in px:
+
+| Fall | 412×805 | 393×780 | 360×740 | 768×1024 | 1024×768 | 1280×800 | 1440×900 |
+|---|---|---|---|---|---|---|---|
+| Analog | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| Beat | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| Grid | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| Sequence | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| Sequence, 4 Kreise | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| Polyrhythm | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+
+Das sind 42 von 42 Fällen ohne Überlänge, keine Touch-Fläche unter 40 px, kein Text unter 12 px (Skript, Endlauf mit `--strict`). Modi (alle 6 Ansichten): Hoher Kontrast und Farbenblind bei 412×805 und 1280×800, Großschrift bei 360×740, 393×780, 412×805 und 1280×800, jeweils 0 px. `CI=true npm test`: 35 Suites, 187 Tests grün. `npm run build` ok. Signierte AAB (versionCode 5, versionName 0.7.0): `jarsigner` verifiziert, im APK (`aapt`) keine Berechtigung INTERNET.
+
+Prüfung: drei getrennte Prüfer (Optik, Handy-Daumen, Desktop/Tablet) auf Basis der Screenshots, eine Runde mit Nachbesserungen; danach keine zweite Prüfrunde.
+
+### Nicht geprüft
+
+- Echtes Gerät (Samsung), iOS, macOS; App-Build im Emulator; Latenz, Takt, Hintergrund-Audio weiterhin ungemessen.
+- Training-Panel (liegt jetzt als Überlagerung über der Visualisierung) und die Dialoge (Menü, Guide, Barrierefreiheit) nur grob angesehen (412 und 1280 px).
+- Hoher Kontrast, Großschrift und Farbenblind nicht in allen Größen.
+- Kontrast nur nach Augenmaß und Token-Werten (ink-2 4,9:1, accent-ink 5,2:1), nicht mit einem Werkzeug über alle Zustände gemessen. Start-Label (22 px fett auf Teal `#00A0A0`, 3,2:1) erfüllt AA nur als großer Text.
+- Web: noch nicht gepusht; Server-Build und Kopieren der Icons nach `static_cdn/assets` stehen aus.
