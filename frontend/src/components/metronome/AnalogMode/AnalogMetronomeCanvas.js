@@ -3,9 +3,11 @@ import React, { useEffect, useRef } from 'react';
 const MAX_ANGLE_RAD = (45 * Math.PI) / 180;
 const MAX_DPR = 3;
 
-const readToken = (name, fallback) =>
-  (typeof window !== 'undefined' &&
-    window.getComputedStyle(document.documentElement).getPropertyValue(name).trim()) ||
+// Read from the canvas itself, so the dial-plate and accessibility-mode
+// overrides (set on .viz-card and body) apply.
+const readToken = (el, name, fallback) =>
+  (typeof window !== 'undefined' && el &&
+    window.getComputedStyle(el).getPropertyValue(name).trim()) ||
   fallback;
 
 /**
@@ -29,10 +31,10 @@ export default function AnalogMetronomeCanvas({
     if (!canvas) return undefined;
     const ctx = canvas.getContext('2d');
     const colors = {
-      ink: readToken('--ink-2', '#6b7072'),
-      tick: readToken('--line-strong', '#bdd0d0'),
-      weightIdle: readToken('--ink-3', '#9aa0a2'),
-      weightLive: readToken('--accent', '#00a0a0')
+      ink: readToken(canvas, '--ink-2', '#9bb7b7'),
+      tick: readToken(canvas, '--line-strong', '#bdd0d0'),
+      weightLive: readToken(canvas, '--accent', '#00a0a0'),
+      plate: readToken(canvas, '--bg', '#0b2626')
     };
     let animationId;
     let prevAngle = 0;
@@ -57,7 +59,15 @@ export default function AnalogMetronomeCanvas({
       ctx.translate(w / 2, pivotY);
       ctx.lineCap = 'round';
       // Hairline scale: ticks every 7.5 degrees on an arc, the centre one in teal.
-      for (let deg = -45; deg <= 45; deg += 7.5) {
+      // A baseline through the pivot, then the scale: fine ticks every 3.75
+      // degrees, longer ones every 15.
+      ctx.beginPath();
+      ctx.moveTo(-armLength * 0.5, 0);
+      ctx.lineTo(armLength * 0.5, 0);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = colors.tick;
+      ctx.stroke();
+      for (let deg = -45; deg <= 45; deg += 3.75) {
         const a = (deg * Math.PI) / 180;
         const major = deg % 15 === 0;
         const r1 = armLength + weightR + 10;
@@ -81,8 +91,17 @@ export default function AnalogMetronomeCanvas({
 
       ctx.beginPath();
       ctx.arc(0, -armLength * 0.78, weightR, 0, Math.PI * 2);
-      ctx.fillStyle = isPaused ? colors.weightIdle : colors.weightLive;
-      ctx.fill();
+      // Idle: an open teal ring like the beat marks; running: filled.
+      if (isPaused) {
+        ctx.fillStyle = colors.plate;
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = colors.weightLive;
+        ctx.stroke();
+      } else {
+        ctx.fillStyle = colors.weightLive;
+        ctx.fill();
+      }
 
       ctx.rotate(-angleRad);
       ctx.beginPath();

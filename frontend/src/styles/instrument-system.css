@@ -4,8 +4,9 @@
  * where things sit for a given width; this file decides what they look like.
  *
  * Rules of the look: no shadows, no gradients, hairlines instead of frames,
- * radius 10 px on controls, teal only for the active state / current beat /
- * Start; accented beats are teal rings.
+ * square keys (2 px radius), one colour (teal) for the active state, the
+ * current beat and Start; accented beats are teal rings. The visualisation
+ * sits on a dark teal-black dial plate; the rest is light.
  */
 
 /* ---- Base ------------------------------------------------------------- */
@@ -152,7 +153,7 @@ body.reduced-motion *::after {
   }
 }
 
-/* ---- Mode selector: plain segmented control, text only ----------------- */
+/* ---- Mode selector: text on a hairline, the active mode is underlined ---- */
 
 .mode-selector {
   display: grid;
@@ -161,9 +162,9 @@ body.reduced-motion *::after {
   gap: 0;
   width: 100%;
   margin: 0;
-  padding: 3px;
-  border-radius: var(--r-control);
-  background: var(--surface);
+  padding: 0;
+  border-bottom: var(--stroke) solid var(--line);
+  background: transparent;
 }
 
 .mode-option {
@@ -172,28 +173,29 @@ body.reduced-motion *::after {
   height: var(--touch);
   padding: 0;
   border: 0;
-  border-radius: calc(var(--r-control) - 3px);
+  border-radius: 0;
   background: transparent;
   color: var(--ink-2);
   font-size: var(--fs-1);
-  font-weight: var(--fw-bold);
+  font-weight: var(--fw-regular);
+  letter-spacing: 0.02em;
   line-height: 1;
   white-space: nowrap;
   cursor: pointer;
 }
 
 .mode-option.active {
-  background: var(--bg);
-  color: var(--accent-ink);
+  color: var(--ink);
+  font-weight: var(--fw-bold);
 }
 
 .mode-option.active::after {
   content: '';
   position: absolute;
-  right: 24%;
-  bottom: 5px;
-  left: 24%;
-  height: 2px;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 3px;
   background: var(--accent);
 }
 
@@ -208,7 +210,7 @@ body.reduced-motion *::after {
 .transport-row {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-  gap: var(--sp-3);
+  gap: var(--sp-4);
 }
 
 .transport-button {
@@ -217,7 +219,7 @@ body.reduced-motion *::after {
   align-items: center;
   justify-content: center;
   gap: var(--sp-2);
-  height: 56px;
+  height: 60px;
   min-width: 0;
   padding: 0 var(--sp-3);
   border: var(--stroke) solid transparent;
@@ -236,8 +238,8 @@ body.reduced-motion *::after {
 }
 
 .transport-play {
-  border-color: var(--accent);
-  background: var(--accent);
+  border-color: var(--accent-ink);
+  background: var(--accent-ink);
   color: var(--on-accent);
 }
 
@@ -247,18 +249,19 @@ body.reduced-motion *::after {
 }
 
 .transport-play.is-playing {
-  border: var(--stroke-select) solid var(--accent);
+  border: var(--stroke-select) solid var(--accent-ink);
   background: var(--bg);
   color: var(--accent-ink);
 }
 
 .transport-tap {
-  border-color: var(--line-strong);
+  border-color: var(--accent-ink);
   background: var(--bg);
   color: var(--ink);
 }
 
 .transport-tap .transport-label {
+  color: var(--accent-ink);
   font-size: var(--fs-3);
   line-height: 1;
 }
@@ -273,8 +276,8 @@ body.reduced-motion *::after {
 }
 
 .transport-play:active:not(:disabled) {
-  background: var(--accent-ink);
-  border-color: var(--accent-ink);
+  background: var(--ink);
+  border-color: var(--ink);
   color: var(--on-accent);
 }
 
@@ -293,7 +296,38 @@ body.reduced-motion *::after {
   min-height: 0;
   overflow: hidden;
   border-radius: var(--r-surface);
-  background: var(--surface);
+  background: var(--dial-bg);
+}
+
+/* The dial plate: everything on it (and the controls laid over it) reads the
+   same token names as the light page, re-mapped to the dial palette. */
+.viz-card,
+.app-container .multi-mode-shell > .circle-actions,
+.app-container .polyrhythm-mode-shell .ratio-display,
+.app-container .polyrhythm-mode-shell .switch-circles-button,
+.app-container .accelerate-button-container {
+  --bg: var(--dial-bg);
+  --surface: var(--dial-bg);
+  --ink: var(--dial-ink);
+  --ink-2: var(--dial-ink-2);
+  --ink-3: var(--dial-ink-3);
+  --line: var(--dial-line);
+  --line-strong: var(--dial-line-strong);
+  --accent: var(--dial-accent);
+  --accent-ink: var(--dial-accent);
+  --accent-wash: var(--dial-accent-wash);
+  --on-accent: var(--dial-on-accent);
+  --focus: var(--dial-focus);
+}
+
+/* A hairline frame inside the plate, like the bezel of a gauge. */
+.viz-card::after {
+  content: '';
+  position: absolute;
+  inset: var(--sp-2);
+  border: var(--stroke) solid var(--dial-line);
+  border-radius: 0;
+  pointer-events: none;
 }
 
 .metronome-container {
@@ -352,6 +386,7 @@ body.reduced-motion *::after {
   border: var(--stroke-select) solid var(--ink-3);
   border-radius: 50%;
   background: var(--bg);
+  transition: background-color var(--t-fast), border-color var(--t-fast), transform var(--t-fast);
 }
 
 .beat-mark[data-state='accent'],
@@ -557,8 +592,10 @@ body.reduced-motion *::after {
 .circle-actions-label {
   margin-right: auto;
   color: var(--ink-2);
-  font-size: var(--fs-2);
-  font-weight: var(--fw-bold);
+  font-size: var(--fs-1);
+  font-weight: var(--fw-regular);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .circle-actions-count {
@@ -673,13 +710,17 @@ body.reduced-motion *::after {
 
 .circle-badge {
   color: var(--ink-2);
-  font-size: var(--fs-2);
+  font-size: var(--fs-1);
   font-weight: var(--fw-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .circle-beat-count {
   color: var(--ink-2);
   font-size: var(--fs-1);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .polyrhythm-buttons {
@@ -696,8 +737,10 @@ body.reduced-motion *::after {
 .control-group > h3 {
   margin: 0;
   color: var(--ink-2);
-  font-size: var(--fs-2);
-  font-weight: var(--fw-bold);
+  font-size: var(--fs-1);
+  font-weight: var(--fw-regular);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   line-height: 18px;
   text-align: left;
 }
@@ -856,8 +899,10 @@ body.reduced-motion *::after {
 
 .slider-label-name {
   color: var(--ink-2);
-  font-size: var(--fs-2);
-  font-weight: var(--fw-bold);
+  font-size: var(--fs-1);
+  font-weight: var(--fw-regular);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .slider-label-value {
@@ -907,46 +952,44 @@ input[type='range'] {
 }
 
 input[type='range']::-webkit-slider-runnable-track {
-  height: 4px;
-  border-radius: 2px;
+  height: 2px;
   background: linear-gradient(
     to right,
     var(--accent) var(--slider-progress, 0%),
-    var(--line) var(--slider-progress, 0%)
+    var(--line-strong) var(--slider-progress, 0%)
   );
 }
 
 input[type='range']::-moz-range-track {
-  height: 4px;
-  border-radius: 2px;
-  background: var(--line);
+  height: 2px;
+  background: var(--line-strong);
 }
 
 input[type='range']::-moz-range-progress {
-  height: 4px;
-  border-radius: 2px;
+  height: 2px;
   background: var(--accent);
 }
 
+/* A small rectangular index mark, like the slider of a mixing desk. */
 input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   box-sizing: border-box;
-  width: 22px;
-  height: 22px;
-  margin-top: -9px;
-  border: var(--stroke-select) solid var(--accent);
-  border-radius: 50%;
-  background: var(--bg);
+  width: 12px;
+  height: 28px;
+  margin-top: -13px;
+  border: 0;
+  border-radius: var(--r-control);
+  background: var(--accent-ink);
 }
 
 input[type='range']::-moz-range-thumb {
   box-sizing: border-box;
-  width: 22px;
-  height: 22px;
-  border: var(--stroke-select) solid var(--accent);
-  border-radius: 50%;
-  background: var(--bg);
+  width: 12px;
+  height: 28px;
+  border: 0;
+  border-radius: var(--r-control);
+  background: var(--accent-ink);
 }
 
 input[type='range']:disabled {
@@ -986,16 +1029,27 @@ input[type='range']:disabled {
 /* BPM in the regular cut, tightly tracked: an airy number like a watch face. */
 .slider-value-number {
   font-weight: var(--fw-regular);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.03em;
 }
 
-.mode-option { letter-spacing: 0.02em; }
+/* Wide enough for it, the mode names are set in small capitals. */
+@media (min-width: 600px) {
+  body:not(.large-text) .mode-option {
+    font-size: var(--fs-2);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+}
 
 /* The current beat gets a hairline halo (an outline, not a shadow). */
 .beat-control.is-current .beat-mark,
 .beat-dot.active {
   outline: var(--stroke-viz) solid var(--accent);
   outline-offset: 3px;
+}
+
+.beat-control.is-current .beat-mark {
+  transform: scale(1.25);
 }
 
 /* Beat mode: a faint dial ring behind the polygon. */
@@ -1027,6 +1081,13 @@ input[type='range']:disabled {
 .info-modal .beat-indicator.muted { border: var(--stroke-viz) dashed var(--ink-3); background: transparent; }
 .info-modal .beat-indicator.accent,
 .info-modal .beat-indicator.first { border-color: var(--accent); }
+
+.info-modal .beat-indicator.current {
+  border-color: var(--accent);
+  background: var(--accent);
+  outline: var(--stroke-viz) solid var(--accent);
+  outline-offset: 2px;
+}
 
 .info-modal .beat-indicator.first::after {
   content: '';
