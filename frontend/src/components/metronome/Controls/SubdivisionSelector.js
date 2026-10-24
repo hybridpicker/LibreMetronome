@@ -1,6 +1,5 @@
 // src/components/metronome/Controls/SubdivisionSelector.js
 import React from 'react';
-import './SubdivisionSelector.css';
 
 /**
  * SubdivisionSelector Component:

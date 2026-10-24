@@ -1,13 +1,5 @@
 // src/components/ModeSelector.js
 import React, { useState, useEffect } from 'react';
-import './ModeSelector.css';
-
-// Import SVG icons directly - corrected path
-import AnalogIcon from '../assets/svg/modeIcon/Analog.svg';
-import CircleIcon from '../assets/svg/modeIcon/Circle.svg';
-import GridIcon from '../assets/svg/modeIcon/Grid.svg';
-import MultiIcon from '../assets/svg/modeIcon/Multi.svg';
-import PolyIcon from '../assets/svg/modeIcon/Poly.svg';
 
 const ModeSelector = ({ mode, setMode }) => {
   // State for hover removed as it's not used
@@ -42,31 +34,26 @@ const ModeSelector = ({ mode, setMode }) => {
     {
       id: "analog",
       name: "Analog",
-      icon: AnalogIcon,
       description: "Classic pendulum-style metronome with realistic motion"
     },
     {
       id: "circle",
       name: "Beat",
-      icon: CircleIcon,
       description: "Interactive circular beat visualization with customizable accents"
     },
     {
       id: "grid",
       name: "Grid",
-      icon: GridIcon,
       description: "Visual grid pattern for creating and visualizing complex rhythms"
     },
     {
       id: "multi",
       name: "Sequence",
-      icon: MultiIcon,
       description: "A repeating sequence of bars, played one after another"
     },
     {
       id: "polyrhythm",
       name: "Polyrhythm",
-      icon: PolyIcon,
       description: "Two rhythmic patterns played simultaneously for advanced practice"
     }
   ];
@@ -117,18 +104,7 @@ const ModeSelector = ({ mode, setMode }) => {
             aria-pressed={mode === modeConfig.id}
             aria-label={`${modeConfig.name} mode`}
           >
-            <div className="mode-icon-container">
-              <img 
-                src={modeConfig.icon} 
-                alt=""
-                aria-hidden="true"
-                className="mode-icon"
-              />
-              {mode === modeConfig.id && (
-                <div className="active-indicator" aria-hidden="true"></div>
-              )}
-            </div>
-            <div className="mode-name">{modeConfig.name}</div>
+            <span className="mode-name">{modeConfig.name}</span>
           </button>
         ))}
         
@@ -139,10 +115,7 @@ const ModeSelector = ({ mode, setMode }) => {
             onClick={() => setShowAllModes(true)}
             aria-label="Show all metronome modes"
           >
-            <div className="mode-icon-container">
-              <div className="more-icon">•••</div>
-            </div>
-            <div className="mode-name">More</div>
+            <span className="mode-name">More</span>
           </button>
         )}
       </div>

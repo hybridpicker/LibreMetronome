@@ -1,7 +1,5 @@
 // src/components/metronome/Controls/EditableSliderInput.js
 import React, { useState } from 'react';
-import './editable-slider.css';
-import './slider-styles.css';
 
 const EditableSliderInput = ({ 
   label, 

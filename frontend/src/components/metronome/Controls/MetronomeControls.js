@@ -5,7 +5,7 @@ import NoteSelector from './NoteSelector';
 import EditableSliderInput from './EditableSliderInput';
 
 const MetronomeControls = ({
-  mode,       // "analog", "circle", "grid", "multi"
+  mode,       // "analog", "circle", "grid"
   beatMode,
   setBeatMode,
   subdivisions,
@@ -21,8 +21,8 @@ const MetronomeControls = ({
     <>
       {/* Render Note Selector if mode is not "multi" */}
       {mode !== "multi" && (
-        <div className="control-group" style={{ marginBottom: "20px", textAlign: "center" }}>
-          <h3><span className="lbl-full">Notes</span><span className="lbl-phone">Note value</span></h3>
+        <div className="control-group control-note">
+          <h3>Note value</h3>
           <NoteSelector 
             beatMode={beatMode}
             onSelect={(mode) => setBeatMode(mode)}
@@ -32,8 +32,8 @@ const MetronomeControls = ({
       
       {/* Render Subdivision Selector for all modes except analog */}
       {mode !== "analog" && mode !== "multi" && (
-        <div className="control-group" style={{ marginBottom: "20px", textAlign: "center" }}>
-          <h3><span className="lbl-full">Beats per Bar</span><span className="lbl-phone">Beats / bar</span></h3>
+        <div className="control-group control-beats">
+          <h3>Beats per bar</h3>
           <SubdivisionSelector
             subdivisions={subdivisions}
             onSelect={(num) => setSubdivisions(num)}

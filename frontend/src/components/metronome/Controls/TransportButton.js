@@ -5,12 +5,10 @@ const TAP_FEEDBACK_DURATION_MS = 150;
 
 /**
  * Shared, text-first transport control used by every metronome mode.
- * The visible label is intentionally retained on touch layouts so that an
- * unavailable SVG can never leave an unexplained control surface.
+ * The visible label is always shown; the play / pause glyph is decoration.
  */
 const TransportButton = ({
   kind,
-  icon,
   label,
   onClick,
   disabled = false,
@@ -66,13 +64,12 @@ const TransportButton = ({
       aria-label={label}
       {...pressedProps}
     >
-      {icon && kind !== 'tap' && (
-        <img
-          src={icon}
-          alt=""
-          aria-hidden="true"
-          className="transport-icon"
-        />
+      {kind === 'play' && (
+        <svg className="transport-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+          {pressed
+            ? <path d="M4 3h4v14H4zM12 3h4v14h-4z" />
+            : <path d="M5 2.5v15l12-7.5z" />}
+        </svg>
       )}
       <span className="transport-label">{label}</span>
     </button>

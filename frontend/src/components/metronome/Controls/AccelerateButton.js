@@ -1,6 +1,5 @@
 // src/components/metronome/Controls/AccelerateButton.js
 import React from 'react';
-import './AccelerateButton.css';
 import InterfaceIcon from '../../common/InterfaceIcon';
 
 /**
