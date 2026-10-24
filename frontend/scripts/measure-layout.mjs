@@ -96,8 +96,18 @@ const measure = () => {
     }
     const interactive = el.matches('button, input, select, a[href], [role="button"], [role="slider"], [role="radio"]');
     if (interactive && el.type !== 'range') {
-      const sz = Math.min(r.width, r.height);
-      if (sz < 40) small.push(`${el.tagName.toLowerCase()}.${(el.className || '').toString().split(' ')[0]}:${Math.round(r.width)}x${Math.round(r.height)}`);
+      // A ::before that extends the hit area counts towards the target size.
+      const pb = getComputedStyle(el, '::before');
+      let w = r.width;
+      let h = r.height;
+      if (pb.content !== 'none' && pb.position === 'absolute') {
+        const px = (v) => (Number.isFinite(parseFloat(v)) ? parseFloat(v) : 0);
+        const ext = (a, b) => (a === 'auto' || b === 'auto' ? 0 : Math.max(0, -px(a)) + Math.max(0, -px(b)));
+        w += ext(pb.left, pb.right);
+        h += ext(pb.top, pb.bottom);
+      }
+      const sz = Math.min(w, h);
+      if (sz < 40) small.push(`${el.tagName.toLowerCase()}.${(el.className || '').toString().split(' ')[0]}:${Math.round(w)}x${Math.round(h)}`);
     }
     if (el.childNodes.length && [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) {
       const fs = parseFloat(cs.fontSize);
@@ -114,38 +124,33 @@ const measure = () => {
   };
 };
 
-async function applyAccessibilityMode(page) {
-  if (modeName === 'normal') return;
-  await page.evaluate((m) => {
-    const cls = { contrast: 'high-contrast', large: 'large-text', colorblind: 'protanopia' }[m];
-    document.documentElement.classList.add(cls);
-    document.body.classList.add(cls);
-    try {
-      const s = JSON.parse(localStorage.getItem('accessibilitySettings') || '{}');
-      if (m === 'contrast') s.highContrast = true;
-      if (m === 'large') s.largeText = true;
-      if (m === 'colorblind') s.colorBlindMode = 'protanopia';
-      localStorage.setItem('accessibilitySettings', JSON.stringify(s));
-    } catch (e) { /* ignore */ }
-  }, modeName);
-}
+// Accessibility modes are read from localStorage on start-up.
+const MODE_STORAGE = {
+  contrast: { 'accessibility-high-contrast': 'true' },
+  large: { 'accessibility-large-text': 'true' },
+  colorblind: { 'accessibility-color-blind-mode': 'deuteranopia' }
+};
 
 const rows = [];
 for (const [w, h] of VIEWPORTS) {
   if (only && only !== `${w}x${h}`) continue;
   const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1, hasTouch: w < 1024 });
   const page = await ctx.newPage();
+  const storage = MODE_STORAGE[modeName] || {};
+  await page.addInitScript((entries) => {
+    for (const [k, v] of Object.entries(entries)) localStorage.setItem(k, v);
+  }, storage);
   await page.goto(base, { waitUntil: 'load' });
-  await applyAccessibilityMode(page);
   await page.waitForSelector('.mode-selector', { timeout: 10000 });
+  const count = async () => parseInt((await page.locator('.circle-actions-count').innerText()).trim(), 10);
   for (const view of VIEWS) {
     if (onlyView && onlyView !== view.id) continue;
     await page.getByRole('button', { name: `${view.mode} mode`, exact: true }).click();
     await page.waitForTimeout(250);
     if (view.circles) {
       const add = page.getByRole('button', { name: 'Add rhythm circle' });
-      for (let i = 0; i < view.circles - 1; i += 1) {
-        if (await add.isEnabled()) await add.click();
+      while ((await count()) < view.circles && (await add.isEnabled())) {
+        await add.click();
         await page.waitForTimeout(80);
       }
       await page.waitForTimeout(250);
@@ -157,8 +162,8 @@ for (const [w, h] of VIEWPORTS) {
     // Leave Sequence with a single circle again so the next case starts clean.
     if (view.circles) {
       const rm = page.getByRole('button', { name: /^Remove circle/ });
-      for (let i = 0; i < view.circles - 1; i += 1) {
-        if (await rm.isEnabled()) await rm.click();
+      while ((await count()) > 2 && (await rm.isEnabled())) {
+        await rm.click();
         await page.waitForTimeout(60);
       }
     }

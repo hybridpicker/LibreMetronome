@@ -1,7 +1,7 @@
 {
   "name": "frontend",
-  "version": "0.6.3",
-  "buildNumber": 4,
+  "version": "0.7.0",
+  "buildNumber": 5,
   "private": true,
   "dependencies": {
     "@capacitor/android": "^8.4.2",
