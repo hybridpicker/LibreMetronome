@@ -54,12 +54,7 @@ const CircleRenderer = ({
           height: containerSize,
           top: 0,
           left: 0,
-          boxShadow: activeCircle === 'outer' ? 
-              "0 0 0 3px #00A0A0, 0 0 10px rgba(0, 160, 160, 0.6)" : 
-              "none",
-          borderStyle: activeCircle === 'outer' ? 'solid' : 'dashed',
-          opacity: isTransitioning ? 0.8 : 1,
-          transition: 'all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.2s ease'
+          opacity: isTransitioning ? 0.8 : 1
         }}
         onClick={() => !isTransitioning && setActiveCircle('outer')}
         disabled={isTransitioning}
@@ -90,12 +85,7 @@ const CircleRenderer = ({
           height: innerRadius * 2,
           top: outerRadius - innerRadius,
           left: outerRadius - innerRadius,
-          boxShadow: activeCircle === 'inner' ? 
-              "0 0 0 3px #00A0A0, 0 0 10px rgba(0, 160, 160, 0.6)" : 
-              "none",
-          borderStyle: activeCircle === 'inner' ? 'solid' : 'dashed',
-          opacity: isTransitioning ? 0.8 : 1,
-          transition: 'all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.2s ease'
+          opacity: isTransitioning ? 0.8 : 1
         }}
         onClick={() => !isTransitioning && setActiveCircle('inner')}
         disabled={isTransitioning}

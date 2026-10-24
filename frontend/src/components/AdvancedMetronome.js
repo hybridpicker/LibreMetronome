@@ -1,17 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { useVizCardSize } from '../utils/phoneLayout';
+import { useVizCardSize } from '../utils/layoutSize';
 import useMetronomeLogic from "../hooks/useMetronomeLogic";
 
-import firstBeat from "../assets/svg/firstBeat.svg";
-import firstBeatActive from "../assets/svg/firstBeatActive.svg";
-import normalBeat from "../assets/svg/normalBeat.svg";
-import normalBeatActive from "../assets/svg/normalBeatActive.svg";
-import accentedBeat from "../assets/svg/accentedBeat.svg";
-import accentedBeatActive from "../assets/svg/accentedBeatActive.svg";
-
-import playIcon from "../assets/svg/play.svg";
-import pauseIcon from "../assets/svg/pause.svg";
-import tapButtonIcon from "../assets/svg/tap.svg";
 import TransportButton from "./metronome/Controls/TransportButton";
 
 import AnalogMetronomeCanvas from "./metronome/AnalogMode/AnalogMetronomeCanvas";
@@ -21,7 +11,10 @@ import { manualTempoAcceleration } from "../hooks/useMetronomeLogic/trainingLogi
 
 // Unused imports removed
 
-import "./AdvancedMetronome.css";
+
+// Room kept between the ring and the edge of the visualisation area.
+const RING_MARGIN = 28;
+const MAX_RING = 520;
 
 export function AdvancedMetronomeWithCircle({
   tempo,
@@ -84,28 +77,6 @@ export function AdvancedMetronomeWithCircle({
   );
   const effectiveToggleAccent = toggleAccent || localToggleAccent;
 
-  const [pulseStates, setPulseStates] = useState(() =>
-    new Array(subdivisions).fill(false)
-  );
-
-  const handleSubTriggered = useCallback(
-    (subIndex) => {
-      setPulseStates((prev) => {
-        const arr = [...prev];
-        arr[subIndex] = true;
-        return arr;
-      });
-      setTimeout(() => {
-        setPulseStates((prev) => {
-          const arr = [...prev];
-          arr[subIndex] = false;
-          return arr;
-        });
-      }, 200);
-    },
-    []
-  );
-
   const logic = useMetronomeLogic({
     tempo,
     setTempo,
@@ -131,8 +102,7 @@ export function AdvancedMetronomeWithCircle({
     muteProbability,
     tempoIncreasePercent,
     measuresUntilSpeedUp,
-    beatMultiplier: currentBeatMultiplier,
-    onAnySubTrigger: handleSubTriggered
+    beatMultiplier: currentBeatMultiplier
   });
 
   useEffect(() => {
@@ -293,43 +263,17 @@ export function AdvancedMetronomeWithCircle({
     };
   }, [logic, registerTapTempo]);
 
-  const getContainerSize = () => {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    const hasCoarsePointer = window.matchMedia?.('(pointer: coarse)').matches;
-    if (hasCoarsePointer) {
-      const portrait = window.matchMedia?.('(orientation: portrait)').matches;
-      return Math.min(w - 72, h * (portrait ? 0.34 : 0.43), portrait ? 430 : 440);
-    }
-    if (w < 1024) return Math.min(w - 72, h * 0.44, 400);
-    return Math.min(w * 0.30, h * 0.48, 400);
-  };
-
-  const [baseContainerSize, setContainerSize] = useState(getContainerSize());
-  // Phones: the visualisation card is sized by CSS; scale the beats to it.
+  // The visualisation area is sized by CSS (layout.css); the beats scale to it.
   const [vizRef, vizSize] = useVizCardSize();
-  let phoneContainerSize = 0;
-  if (vizSize.height > 0) {
-    phoneContainerSize = analogMode
-      ? Math.min(vizSize.width - 20, vizSize.height - 20)
-      // Beat icons overhang the circle by half their icon; the legend owns the
-      // bottom 34px of the card.
-      : Math.min(300, vizSize.width - 20 - 24, vizSize.height - 44 - 24);
-    phoneContainerSize = Math.max(120, Math.floor(phoneContainerSize));
-  }
-  const containerSize = phoneContainerSize || baseContainerSize * (analogMode ? 1 : 0.8);
-  // Phone pendulum: the canvas fills the whole visualisation card.
-  const analogPhoneBox = analogMode && vizSize.height > 0
-    ? { width: Math.max(160, vizSize.width - 20), height: Math.max(160, vizSize.height - 20) }
+  const vizReady = vizSize.width > 0 && vizSize.height > 0;
+  // Beat marks sit on the ring and overhang it by half a mark; keep that room.
+  const ringSize = vizReady
+    ? Math.max(120, Math.floor(Math.min(MAX_RING, vizSize.width - 2 * RING_MARGIN, vizSize.height - 2 * RING_MARGIN)))
+    : 0;
+  const containerSize = ringSize;
+  const analogBox = analogMode && vizReady
+    ? { width: vizSize.width, height: vizSize.height }
     : null;
-  useEffect(() => {
-    const handleResize = () => setContainerSize(getContainerSize());
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [analogMode]);
-
   const radius = containerSize / 2;
 
   const beatData = Array.from({ length: subdivisions }, (_, i) => {
@@ -362,31 +306,14 @@ export function AdvancedMetronomeWithCircle({
           className="line-connection"
           style={{
             width: dist,
-            height: 1,
-            backgroundColor: "var(--primary-teal)",
-            position: "absolute",
-            pointerEvents: "none",
             left: `calc(50% + ${mx}px - ${dist / 2}px)`,
             top: `calc(50% + ${my}px)`,
-            transform: `rotate(${angleDeg}deg)`,
-            transformOrigin: "center center",
-            boxShadow: "none",
-            transition: "all 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)"
+            transform: `rotate(${angleDeg}deg)`
           }}
         />
       );
     });
   }
-
-  // isMobile variable removed as it's unused
-  useEffect(() => {
-    const handleResize = () => {
-      // Resize handler kept for potential future use 
-      // but without the unused state update
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   useEffect(() => {
     if (logic && logic.audioCtx && logic.audioBuffers) {
@@ -556,99 +483,63 @@ export function AdvancedMetronomeWithCircle({
   }, [logic]);
 
   const beatStateLabels = ["Muted", "Normal", "Accent", "First beat"];
+  const markStates = ["muted", "normal", "accent", "first"];
 
   return (
-    <div className={analogMode ? "analog-visual" : "beat-visual"} style={{ position: "relative", textAlign: "center" }}>
+    <div className={analogMode ? "analog-visual" : "beat-visual"}>
       <div className="viz-card" ref={vizRef}>
-      <div
-        className="metronome-container"
-        style={{
-          position: "relative",
-          width: analogPhoneBox ? analogPhoneBox.width : containerSize,
-          height: analogPhoneBox ? analogPhoneBox.height : containerSize,
-          margin: "0 auto"
-        }}
-      >
-        {analogMode ? (
-          <AnalogMetronomeCanvas
-            modern={!!analogPhoneBox}
-            width={analogPhoneBox ? analogPhoneBox.width : containerSize}
-            height={analogPhoneBox ? analogPhoneBox.height : containerSize}
-            isPaused={isPaused}
-            tempo={tempo}
-            audioCtxCurrentTime={() => logic.audioCtx?.currentTime || 0}
-            currentSubIndex={logic.currentSubdivision}
-            beatMultiplier={currentBeatMultiplier}
-          />
-        ) : (
-          <>
-            {lineConnections}
-            {beatData.map((bd) => {
-              const state = effectiveAccents[bd.i];
-              const isActive = bd.i === logic.currentSubdivision && !isPaused;
-              const isPulsing = pulseStates[bd.i];
-
-              if (state === 0) {
-                return (
-                  <button
-                    type="button"
-                    key={bd.i}
-                    onClick={() => effectiveToggleAccent(bd.i)}
-                    className="beat-control is-muted"
-                    aria-label={`Beat ${bd.i + 1}: muted. Activate to change accent.`}
-                    style={{
-                      left: `calc(50% + ${bd.xPos}px - 22px)`,
-                      top: `calc(50% + ${bd.yPos}px - 22px)`
-                    }}
-                  />
-                );
-              }
-
-              let icon;
-              switch (state) {
-                case 1:
-                  icon = isActive ? normalBeatActive : normalBeat;
-                  break;
-                case 2:
-                  icon = isActive ? accentedBeatActive : accentedBeat;
-                  break;
-                case 3:
-                  icon = isActive ? firstBeatActive : firstBeat;
-                  break;
-                default:
-                  icon = isActive ? normalBeatActive : normalBeat;
-              }
-
-              return (
-                <button
-                  type="button"
-                  key={bd.i}
-                  className={`beat-control ${isActive ? 'is-current' : ''}`}
-                  onClick={() => effectiveToggleAccent(bd.i)}
-                  aria-label={`Beat ${bd.i + 1}: ${beatStateLabels[state]}. Activate to change accent.`}
-                  aria-pressed={state === 2 || state === 3}
-                  style={{
-                    left: `calc(50% + ${bd.xPos}px - 22px)`,
-                    top: `calc(50% + ${bd.yPos}px - 22px)`,
-                    animation: isPulsing ? "pulse-beat 0.2s ease-out" : "none"
-                  }}
-                >
-                  <img src={icon} alt="" aria-hidden="true" />
-                </button>
-              );
-            })}
-          </>
-        )}
-      </div>
+        <div
+          className="metronome-container"
+          style={{
+            width: analogBox ? analogBox.width : containerSize,
+            height: analogBox ? analogBox.height : containerSize
+          }}
+        >
+          {analogMode ? (
+            analogBox && (
+              <AnalogMetronomeCanvas
+                width={analogBox.width}
+                height={analogBox.height}
+                isPaused={isPaused}
+                tempo={tempo}
+                beatMultiplier={currentBeatMultiplier}
+              />
+            )
+          ) : (
+            vizReady && (
+              <>
+                {lineConnections}
+                {beatData.map((bd) => {
+                  const state = effectiveAccents[bd.i];
+                  const isActive = bd.i === logic.currentSubdivision && !isPaused;
+                  return (
+                    <button
+                      type="button"
+                      key={bd.i}
+                      className={`beat-control ${state === 0 ? 'is-muted' : ''} ${isActive ? 'is-current' : ''}`}
+                      onClick={() => effectiveToggleAccent(bd.i)}
+                      aria-label={`Beat ${bd.i + 1}: ${state === 0 ? 'muted' : beatStateLabels[state]}. Activate to change accent.`}
+                      aria-pressed={state === 2 || state === 3}
+                      style={{
+                        left: `calc(50% + ${bd.xPos}px - 22px)`,
+                        top: `calc(50% + ${bd.yPos}px - 22px)`
+                      }}
+                    >
+                      <span className="beat-mark" data-state={markStates[state] || 'normal'} aria-hidden="true" />
+                    </button>
+                  );
+                })}
+              </>
+            )
+          )}
+        </div>
       </div>
 
-      {/* Accelerate Button positioned directly after the metronome canvas */}
       <AccelerateButton onClick={handleAccelerate} speedMode={speedMode} />
 
       <div className="transport-row">
         <TransportButton
           kind="play"
-          icon={isPaused ? playIcon : pauseIcon}
           label={isPaused ? "Start" : "Pause"}
           onClick={handlePlayPause}
           pressed={!isPaused}
@@ -656,94 +547,27 @@ export function AdvancedMetronomeWithCircle({
         />
         <TransportButton
           kind="tap"
-          icon={tapButtonIcon}
           label="Tap Tempo"
           feedbackVolume={volume}
           className="tap-button"
           onClick={() => {
-          console.log("[AdvancedMetronome] Tap button clicked");
-          
-          // Try multiple approaches to handle tap tempo
-          const currentLogic = logicRef.current;
-          
-          if (currentLogic && typeof currentLogic.tapTempo === "function") {
-            console.log("[AdvancedMetronome] Using current logic tapTempo");
-            currentLogic.tapTempo();
-          } else if (window.tapTempoRef && typeof window.tapTempoRef.current === 'function') {
-            console.log("[AdvancedMetronome] Using window.tapTempoRef.current");
-            window.tapTempoRef.current();
-          } else if (window.handleGlobalTapTempo) {
-            console.log("[AdvancedMetronome] Using window.handleGlobalTapTempo");
-            window.handleGlobalTapTempo();
-          } else {
-            console.log("[AdvancedMetronome] No handler found, dispatching event");
-            const now = performance.now();
-            window.dispatchEvent(
-              new CustomEvent("metronome-tap-tempo", {
-                detail: { timestamp: now }
-              })
-            );
-          }
+            const currentLogic = logicRef.current;
+            if (currentLogic && typeof currentLogic.tapTempo === "function") {
+              currentLogic.tapTempo();
+            } else if (window.tapTempoRef && typeof window.tapTempoRef.current === 'function') {
+              window.tapTempoRef.current();
+            } else if (window.handleGlobalTapTempo) {
+              window.handleGlobalTapTempo();
+            } else {
+              window.dispatchEvent(
+                new CustomEvent("metronome-tap-tempo", {
+                  detail: { timestamp: performance.now() }
+                })
+              );
+            }
           }}
         />
       </div>
-
-      {!analogMode && (
-        <div className="beat-state-legend viz-legend" style={{ marginTop: "15px" }}>
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <div
-              style={{
-                width: "12px",
-                height: "12px",
-                backgroundColor: "var(--beat-muted)",
-                borderRadius: "50%",
-                marginRight: "5px",
-                border: "1px solid var(--line-subtle)"
-              }}
-            ></div>
-            Mute
-          </div>
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <div
-              style={{
-                width: "12px",
-                height: "12px",
-                backgroundColor: "var(--beat-normal)",
-                borderRadius: "50%",
-                marginRight: "5px",
-                border: "1px solid var(--line-subtle)"
-              }}
-            ></div>
-            Normal Beat
-          </div>
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <div
-              style={{
-                width: "12px",
-                height: "12px",
-                backgroundColor: "var(--beat-accent)",
-                borderRadius: "50%",
-                marginRight: "5px",
-                border: "1px solid var(--line-subtle)"
-              }}
-            ></div>
-            Accent
-          </div>
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <div
-              style={{
-                width: "12px",
-                height: "12px",
-                backgroundColor: "var(--beat-first)",
-                borderRadius: "50%",
-                marginRight: "5px",
-                border: "1px solid var(--line-subtle)"
-              }}
-            ></div>
-            First Beat
-          </div>
-        </div>
-      )}
     </div>
   );
 }

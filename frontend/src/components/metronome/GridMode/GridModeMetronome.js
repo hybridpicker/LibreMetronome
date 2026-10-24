@@ -1,18 +1,19 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import useMetronomeLogic from '../../../hooks/useMetronomeLogic';
-import playIcon from '../../../assets/svg/play.svg';
-import pauseIcon from '../../../assets/svg/pause.svg';
-import tapButtonIcon from '../../../assets/svg/tap.svg';
 import TransportButton from '../Controls/TransportButton';
-import './GridAnimation.css';
 import withTrainingContainer from '../../Training/withTrainingContainer';
-import { isPhoneViewport, useVizCardSize } from '../../../utils/phoneLayout';
+import { useVizCardSize } from '../../../utils/layoutSize';
 import useWindowDimensions from '../../../hooks/useWindowDimensions';
 import AccelerateButton from '../Controls/AccelerateButton';
 import { manualTempoAcceleration } from '../../../hooks/useMetronomeLogic/trainingLogic';
 
+// Room around the grid and height of the beat-number row, in CSS pixels.
+const GRID_MARGIN = 16;
+const GRID_NUMBER_HEIGHT = 28;
+const MAX_CELL = 64;
+
 const GridModeMetronome = (props) => {
-  // Re-render on resize/rotation so the phone square size follows the width.
+  // Re-render on resize/rotation so the cell size follows the window.
   useWindowDimensions();
   // Initialize grid configuration based on current subdivisions
   const [gridConfig, setGridConfig] = useState(
@@ -277,44 +278,14 @@ const GridModeMetronome = (props) => {
     };
   }, [props.isPaused, animateCurrentBeat]);
 
-  // Square size, gap, and color configuration
-  const phone = isPhoneViewport();
-  // Phones: the grid fills its visualisation card. A cell is as wide as the
-  // card allows (max 60px), and three rows plus the beat number must fit the
-  // card height under the legend.
+  // The grid fills its visualisation area: a cell is as wide as the area allows
+  // and three rows plus the beat number must fit its height.
   const [vizRef, vizSize] = useVizCardSize();
-  const phoneGap = 4;
-  let squareSize = 50;
-  if (phone) {
-    const fromWidth = Math.floor((vizSize.width - 28 - props.subdivisions * phoneGap) / props.subdivisions);
-    // card padding 10+34 (legend), beat number 25, row gaps 12
-    const fromHeight = Math.floor((vizSize.height - 44 - 25 - 12) / 3);
-    squareSize = vizSize.height > 0
-      ? Math.max(24, Math.min(72, fromWidth, fromHeight))
-      : Math.max(24, Math.min(60, Math.floor((window.innerWidth - 32 - props.subdivisions * phoneGap) / props.subdivisions)));
-  }
-  const gapSize = phone ? phoneGap : 8;
-  
-  const colors = {
-    inactive: "var(--muted-wash)",
-    level1: "var(--secondary-gold-light)",
-    level2: "var(--secondary-gold)",
-    level3: "var(--secondary-gold-dark)",
-    muted: "var(--beat-muted)",
-    teal: "var(--primary-teal-light)",
-    tealDark: "var(--primary-teal)"
-  };
-  
-  const firstBeatColors = {
-    inactive: "var(--muted-wash)",
-    level1: "var(--secondary-gold-light)",
-    level2: "var(--secondary-gold)",
-    level3: "var(--primary-teal)",
-    muted: "var(--beat-muted)",
-    teal: "var(--primary-teal-light)",
-    tealDark: "var(--primary-teal)"
-  };
-  
+  const vizReady = vizSize.width > 0 && vizSize.height > 0;
+  const fromWidth = Math.floor((vizSize.width - 2 * GRID_MARGIN) / props.subdivisions);
+  const fromHeight = Math.floor((vizSize.height - 2 * GRID_MARGIN - GRID_NUMBER_HEIGHT) / 3);
+  const squareSize = vizReady ? Math.max(24, Math.min(MAX_CELL, fromWidth, fromHeight)) : 0;
+
   // Responsive behavior for mobile devices and tablets (modified threshold)
   // Handler for manual tempo acceleration
   const handleAccelerate = useCallback(() => {
@@ -327,170 +298,68 @@ const GridModeMetronome = (props) => {
     }
   }, [props.isPaused, props.tempo, props.tempoIncreasePercent, props.setTempo]);
 
-  // Render grid squares
+  // A column is three stacked cells; the level fills them from the bottom.
+  // Level 1 normal, 2 accent (middle cell gets a gold contour), 3 first beat.
   const renderGridSquares = () => {
     return Array.from({ length: props.subdivisions }, (_, colIndex) => {
       const isCurrentBeat = colIndex === animationFrame && !props.isPaused;
-      const isFirstBeat = colIndex === 0;
       const columnLevel = gridConfig[colIndex];
-      const colorSet = isFirstBeat ? firstBeatColors : colors;
-      
-      if (columnLevel === 0) {
-        return (
-          <button
-            type="button"
-            key={colIndex}
-            onClick={() => handleColumnClick(colIndex)}
-            className="grid-beat-control"
-            aria-label={`Beat ${colIndex + 1}: muted. Activate to change accent.`}
-            style={{
-              display: 'inline-block',
-              verticalAlign: 'top',
-              marginRight: `${gapSize}px`,
-              cursor: 'pointer',
-              width: `${squareSize}px`,
-              textAlign: 'center',
-              border: 0,
-              padding: 0,
-              background: 'transparent'
-            }}
-          >
-            <div style={{ 
-              height: `${3 * squareSize + 8}px`,
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center'
-            }}>
-              <div style={{ 
-                width: '20px', 
-                height: '20px', 
-                border: '1px dashed #ddd',
-                borderRadius: '50%',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                color: '#ccc',
-                fontSize: '14px'
-              }}>
-                +
-              </div>
-            </div>
-            <div style={{ 
-              fontSize: '12px', 
-              marginTop: '8px', 
-              color: phone ? (colIndex === 0 ? "var(--primary-teal-dark)" : "var(--text-tertiary-aa)") : (colIndex === 0 ? "#f5bc5e" : "#999"),
-              fontWeight: colIndex === 0 ? "500" : "normal"
-            }}>
-              {colIndex + 1}
-            </div>
-          </button>
-        );
-      }
-      
-      const activeRows = columnLevel === 0 ? [] : 
-                          columnLevel === 1 ? [2] : 
-                          columnLevel === 2 ? [1, 2] : 
+      const activeRows = columnLevel === 0 ? [] :
+                          columnLevel === 1 ? [2] :
+                          columnLevel === 2 ? [1, 2] :
                           [0, 1, 2];
-      
+      const levelLabel = columnLevel === 3 ? 'first beat' : columnLevel === 2 ? 'accent' : 'normal';
+
       return (
         <button
           type="button"
           key={colIndex}
           onClick={() => handleColumnClick(colIndex)}
-          className="grid-beat-control"
-          aria-label={`Beat ${colIndex + 1}: ${columnLevel === 3 ? 'first beat' : columnLevel === 2 ? 'accent' : 'normal'}. Activate to change accent.`}
+          className={`grid-beat-control${colIndex === 0 ? ' is-first' : ''}${isCurrentBeat ? ' is-current' : ''}`}
+          aria-label={columnLevel === 0
+            ? `Beat ${colIndex + 1}: muted. Activate to change accent.`
+            : `Beat ${colIndex + 1}: ${levelLabel}. Activate to change accent.`}
           aria-pressed={columnLevel > 1}
-          style={{
-            display: 'inline-block',
-            verticalAlign: 'top',
-            marginRight: `${gapSize}px`,
-            cursor: 'pointer',
-            width: `${squareSize}px`,
-            textAlign: 'center',
-            border: 0,
-            padding: 0,
-            background: 'transparent'
-          }}
+          style={{ width: `${squareSize}px` }}
         >
-          {Array.from({ length: 3 }, (_, rowIndex) => {
+          {[0, 1, 2].map((rowIndex) => {
             const isActive = activeRows.includes(rowIndex);
-            const isHighlighted = isCurrentBeat && isActive;
-            
             let squareType = '';
             if (isActive) {
-              if (rowIndex === 0 && columnLevel === 3) {
-                squareType = 'first-beat';
-              } else if (rowIndex === 1 && columnLevel >= 2) {
-                squareType = 'accent';
-              } else {
-                squareType = 'normal';
-              }
+              if (rowIndex === 0 && columnLevel === 3) squareType = 'first-beat';
+              else if (rowIndex === 1 && columnLevel >= 2) squareType = 'accent';
+              else squareType = 'normal';
             }
-            
-            let fillColor = colors.inactive;
-            if (isActive) {
-              if (rowIndex === 0 && columnLevel === 3) {
-                fillColor = colorSet.level3;
-              } else if (rowIndex === 1 && columnLevel >= 2) {
-                fillColor = colorSet.level2;
-              } else {
-                fillColor = colorSet.level1;
-              }
-            }
-            
             const classNames = [
-              'grid-square',
-              isActive ? 'grid-square-active' : '',
-              isHighlighted ? 'grid-square-playing' : '',
+              'grid-cell',
+              isActive ? 'is-on' : '',
               squareType ? `grid-square-${squareType}` : ''
             ].filter(Boolean).join(' ');
-            
             return (
-              <div
+              <span
                 key={rowIndex}
                 className={classNames}
-                style={{
-                  width: `${squareSize}px`,
-                  height: `${squareSize}px`,
-                  backgroundColor: fillColor,
-                  marginBottom: '4px',
-                  opacity: isActive ? 1 : 0.4
-                }}
+                aria-hidden="true"
+                style={{ width: `${squareSize}px`, height: `${squareSize}px` }}
               />
             );
           })}
-          <div style={{ 
-            fontSize: '12px', 
-            marginTop: '8px', 
-            color: phone ? (colIndex === 0 ? "var(--primary-teal-dark)" : "var(--text-tertiary-aa)") : (colIndex === 0 ? "#f5bc5e" : "#999"),
-            fontWeight: colIndex === 0 ? "500" : "normal"
-          }}>
-            {colIndex + 1}
-          </div>
+          <span className="grid-number" aria-hidden="true">{colIndex + 1}</span>
         </button>
       );
     });
   };
 
   return (
-    <div 
-      style={{ textAlign: 'center', padding: phone ? '0' : '20px 0' }}
+    <div
       className={`grid-visual ${!props.isPaused ? 'metronome-active' : ''} ${isFirstBeatPlaying ? 'first-beat-playing' : ''}`}
     >
       <div className="viz-card" ref={vizRef}>
-      <div className="grid-columns" style={{ 
-        margin: '0 auto',
-        padding: phone ? '0 0 4px' : '20px',
-        maxWidth: '100%',
-        overflowX: 'auto', 
-        overflowY: 'visible',
-        whiteSpace: 'nowrap'
-      }}>
-        {renderGridSquares()}
+        <div className="grid-columns">
+          {vizReady && renderGridSquares()}
+        </div>
       </div>
-      </div>
-      
+
       <AccelerateButton 
         onClick={handleAccelerate} 
         speedMode={props.speedMode}
@@ -499,7 +368,6 @@ const GridModeMetronome = (props) => {
       <div className="transport-row">
         <TransportButton
           kind="play"
-          icon={props.isPaused ? playIcon : pauseIcon}
           label={props.isPaused ? 'Start' : 'Pause'}
           onClick={handlePlayPause}
           pressed={!props.isPaused}
@@ -507,7 +375,6 @@ const GridModeMetronome = (props) => {
         />
         <TransportButton
           kind="tap"
-          icon={tapButtonIcon}
           label="Tap Tempo"
           feedbackVolume={props.volume}
           className="tap-button"
@@ -521,64 +388,6 @@ const GridModeMetronome = (props) => {
           }}
         />
       </div>
-
-      <div className="viz-legend" style={{ 
-        marginTop: phone ? '4px' : '20px', 
-        marginBottom: phone ? '0' : '20px',
-        display: 'flex', 
-        justifyContent: 'center', 
-        gap: '15px',
-        flexWrap: 'wrap',
-        fontSize: '12px',
-        color: 'var(--text-secondary)'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <div style={{ 
-            width: '12px', 
-            height: '12px', 
-            backgroundColor: colors.inactive, 
-            borderRadius: '2px',
-            marginRight: '5px',
-            border: '1px solid var(--neutral-border)'
-          }}></div>
-          Mute
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <div style={{ 
-            width: '12px', 
-            height: '12px', 
-            backgroundColor: colors.level1, 
-            borderRadius: '2px',
-            marginRight: '5px',
-            border: '1px solid var(--neutral-border)'
-          }}></div>
-          Normal Beat
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <div style={{ 
-            width: '12px', 
-            height: '12px', 
-            backgroundColor: colors.level2, 
-            borderRadius: '2px',
-            marginRight: '5px',
-            border: '1px solid var(--neutral-border)'
-          }}></div>
-          Accent
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <div style={{ 
-            width: '12px', 
-            height: '12px', 
-            backgroundColor: colors.level3, 
-            borderRadius: '2px',
-            marginRight: '5px',
-            border: '1px solid var(--neutral-border)'
-          }}></div>
-          First Beat
-        </div>
-
-      </div>
-
     </div>
   );
 };

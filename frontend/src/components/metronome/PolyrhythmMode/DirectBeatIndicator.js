@@ -198,7 +198,7 @@ export const DirectBeatIndicator = ({
             x2={centerX}
             y2={centerY - outerRadius}
             stroke="var(--primary-teal)"
-            strokeWidth={3}
+            strokeWidth={1.5}
             strokeLinecap="round"
             className="beat-indicator-line"
           />
