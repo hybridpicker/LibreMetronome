@@ -6,6 +6,7 @@ import TrainingContent from './TrainingContent';
 import SettingsContent from './SettingsContent';
 import { SupportPage } from '../Support';
 import InterfaceIcon from '../common/InterfaceIcon';
+import { IS_NATIVE_APP } from '../../nativeApp';
 
 /**
  * Unified MainMenu Component
@@ -66,7 +67,7 @@ const MainMenu = ({
       } else if (event.key === 'S' || event.key === 's') {
         setIsVisible(true);
         setActiveTab('settings');
-      } else if (event.key === 'D' || event.key === 'd') {
+      } else if (!IS_NATIVE_APP && (event.key === 'D' || event.key === 'd')) {
         setIsVisible(true);
         setActiveTab('support');
       }
@@ -104,7 +105,7 @@ const MainMenu = ({
           />
         );
       case 'support':
-        return <SupportPage />;
+        return IS_NATIVE_APP ? null : <SupportPage />;
       default:
         return <TrainingContent 
           trainingSettings={trainingSettings}
@@ -168,6 +169,7 @@ const MainMenu = ({
                 <InterfaceIcon name="settings" />
                 <span>Settings</span>
               </button>
+              {!IS_NATIVE_APP && (
               <button 
                 className={`menu-tab support-tab ${activeTab === 'support' ? 'active' : ''}`}
                 onClick={() => setActiveTab('support')}
@@ -177,6 +179,7 @@ const MainMenu = ({
                 <InterfaceIcon name="support" />
                 <span>Support</span>
               </button>
+              )}
             </div>
             
             {/* Content Area */}

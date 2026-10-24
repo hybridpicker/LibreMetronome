@@ -72,3 +72,6 @@ backend/staticfiles/
 *.jks
 *.keystore
 .venv/
+
+# Android release signing (keep outside the repo, see docs/app-release.md)
+key.properties
