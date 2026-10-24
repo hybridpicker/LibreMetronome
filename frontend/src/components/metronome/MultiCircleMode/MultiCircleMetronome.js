@@ -1,4 +1,5 @@
 // src/components/metronome/MultiCircleMode/MultiCircleMetronome.js
+import { PHONE_MAX_WIDTH, getPhoneVisualSize } from '../../../utils/phoneLayout';
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import useMultiCircleMetronomeLogic from "./hooks/useMultiCircleMetronomeLogic";
 import CircleRenderer from "./CircleRenderer";
@@ -77,7 +78,7 @@ function MultiCircleMetronome(props) {
   }, [measureCountRef, muteMeasureCountRef, isSilencePhaseRef]);
 
   const getContainerSize = () => {
-    if (window.innerWidth < 600) return Math.min(window.innerWidth - 40, 300, Math.max(200, window.innerHeight * 0.34));
+    if (window.innerWidth < PHONE_MAX_WIDTH) return getPhoneVisualSize('sequence');
     if (window.innerWidth < 1024) return Math.min(window.innerWidth - 40, 400);
     if (window.matchMedia?.('(orientation: landscape)').matches) return 210;
     return 300;

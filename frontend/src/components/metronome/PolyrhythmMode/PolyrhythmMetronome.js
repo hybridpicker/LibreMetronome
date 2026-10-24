@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { PHONE_MAX_WIDTH, getPhoneVisualSize } from '../../../utils/phoneLayout';
 import usePolyrhythmLogic from "./usePolyrhythmLogic";
 import { initAudioContext, resumeAudioContext } from "../../../hooks/useMetronomeLogic/audioBuffers";
 import playIcon from "../../../assets/svg/play.svg";
@@ -84,7 +85,7 @@ const PolyrhythmMetronome = (props) => {
   }, [outerBeats]);
 
   const getContainerSize = () => {
-    if (window.innerWidth < 600) return Math.min(window.innerWidth - 40, 300, Math.max(200, window.innerHeight * 0.34));
+    if (window.innerWidth < PHONE_MAX_WIDTH) return getPhoneVisualSize('polyrhythm');
     if (window.innerWidth < 1024) return Math.min(window.innerWidth - 40, 400);
     return 300;
   };

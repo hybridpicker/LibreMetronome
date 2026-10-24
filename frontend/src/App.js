@@ -24,6 +24,7 @@ import './styles/accessibility.css';
 import './styles/high-contrast.css';
 import './styles/large-text.css';
 import './styles/color-blindness.css';
+import './styles/phone-compact.css';
 import { IS_NATIVE_APP } from './nativeApp';
 // StyleGuide component removed
 
