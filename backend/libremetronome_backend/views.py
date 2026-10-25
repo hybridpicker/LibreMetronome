@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.http import HttpResponseRedirect, Http404
+from django.http import Http404, HttpResponseRedirect
 
 """
 LibreMetronome - Open Source Metronome
@@ -24,7 +24,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 def dev_redirect(request):
     """
     Redirects to the React development server only if DEBUG is True.
-    
+
     In production (DEBUG=False), this endpoint is disabled and returns a 404 response.
     """
     if settings.DEBUG:

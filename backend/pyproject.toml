@@ -1,0 +1,43 @@
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+extend-exclude = ["migrations", "db.sqlite3"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "C4", "C90", "SIM", "S", "RUF", "BLE"]
+# Django's `class Meta` attributes are read by the framework, never mutated.
+ignore = ["RUF012"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.per-file-ignores]
+# Deployment-specific overrides are star-imported from an optional, untracked module.
+"libremetronome_backend/settings.py" = ["F403", "SIM105"]
+"**/tests/**" = ["S101", "S105", "S106"]
+"**/test_*.py" = ["S101", "S105", "S106"]
+
+[tool.mypy]
+python_version = "3.12"
+plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main"]
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+check_untyped_defs = true
+exclude = ["migrations/"]
+
+[tool.django-stubs]
+django_settings_module = "libremetronome_backend.test_settings"
+
+[tool.coverage.run]
+branch = true
+source = ["metronome_api", "libremetronome_backend"]
+omit = ["*/migrations/*", "*/tests/*", "*/test_*.py", "libremetronome_backend/dev_settings.py"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+
+[tool.bandit]
+# Tests use throwaway SECRET_KEY values, which bandit flags as hardcoded passwords (B106).
+exclude_dirs = ["tests", ".venv", "migrations"]
