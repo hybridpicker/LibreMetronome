@@ -7,3 +7,5 @@ djangorestframework-stubs
 bandit
 pip-audit
 mutmut
+pytest
+pytest-django
