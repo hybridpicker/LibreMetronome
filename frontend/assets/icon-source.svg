@@ -1,30 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-  <rect width="1024" height="1024" fill="#ffffff"/>
-  <g transform="translate(0 20)">
-  <line x1="128" y1="470" x2="896" y2="470" stroke="#dbe0e6" stroke-width="7"/>
-  <line x1="128" y1="516" x2="896" y2="516" stroke="#dbe0e6" stroke-width="7"/>
-  <line x1="128" y1="562" x2="896" y2="562" stroke="#dbe0e6" stroke-width="7"/>
-  <line x1="128" y1="608" x2="896" y2="608" stroke="#dbe0e6" stroke-width="7"/>
-  <line x1="128" y1="654" x2="896" y2="654" stroke="#dbe0e6" stroke-width="7"/>
-  <line x1="128" y1="467" x2="128" y2="657" stroke="#111111" stroke-width="9"/>
-  <line x1="868" y1="467" x2="868" y2="657" stroke="#111111" stroke-width="9"/>
-  <rect x="882" y="467" width="16" height="190" fill="#111111"/>
-  <path d="M95.8 425.3A560 560 0 0 1 928.2 425.3" fill="none" stroke="#dbe0e6" stroke-width="9"/>
-  <line x1="111.8" y1="399.8" x2="84.9" y2="372.9" stroke="#768593" stroke-width="12" stroke-linecap="round"/>
-  <line x1="167.4" y1="351.0" x2="144.3" y2="320.8" stroke="#768593" stroke-width="12" stroke-linecap="round"/>
-  <line x1="229.0" y1="309.8" x2="210.0" y2="276.9" stroke="#768593" stroke-width="12" stroke-linecap="round"/>
-  <line x1="295.4" y1="277.1" x2="280.9" y2="242.0" stroke="#768593" stroke-width="12" stroke-linecap="round"/>
-  <line x1="365.5" y1="253.3" x2="355.7" y2="216.6" stroke="#768593" stroke-width="12" stroke-linecap="round"/>
-  <line x1="438.1" y1="238.8" x2="433.2" y2="201.2" stroke="#768593" stroke-width="12" stroke-linecap="round"/>
-  <line x1="512.0" y1="234.0" x2="512.0" y2="162.0" stroke="#0072b2" stroke-width="22" stroke-linecap="round"/>
-  <line x1="585.9" y1="238.8" x2="590.8" y2="201.2" stroke="#768593" stroke-width="12" stroke-linecap="round"/>
-  <line x1="658.5" y1="253.3" x2="668.3" y2="216.6" stroke="#768593" stroke-width="12" stroke-linecap="round"/>
-  <line x1="728.6" y1="277.1" x2="743.1" y2="242.0" stroke="#768593" stroke-width="12" stroke-linecap="round"/>
-  <line x1="795.0" y1="309.8" x2="814.0" y2="276.9" stroke="#768593" stroke-width="12" stroke-linecap="round"/>
-  <line x1="856.6" y1="351.0" x2="879.7" y2="320.8" stroke="#768593" stroke-width="12" stroke-linecap="round"/>
-  <line x1="912.2" y1="399.8" x2="939.1" y2="372.9" stroke="#768593" stroke-width="12" stroke-linecap="round"/>
-  <line x1="512" y1="800" x2="317.2" y2="317.9" stroke="#111111" stroke-width="26" stroke-linecap="round"/>
-  <ellipse cx="367.9" cy="443.2" rx="118" ry="82" transform="rotate(-20 367.9 443.2)" fill="#0072b2"/>
-  <circle cx="512" cy="800" r="38" fill="#111111"/>
-  </g>
+  <rect width="1024" height="1024" fill="#0072b2"/>
+  <path d="M300 830 L724 830 L604 210 L420 210 Z" fill="#ffffff" stroke="#ffffff" stroke-width="28" stroke-linejoin="round"/>
+  <line x1="512" y1="730" x2="432" y2="300" stroke="#0072b2" stroke-width="24" stroke-linecap="round"/>
+  <ellipse cx="461" cy="456" rx="63" ry="44" transform="rotate(-18 461 456)" fill="#0072b2"/>
+  <circle cx="512" cy="730" r="28" fill="#0072b2"/>
 </svg>
