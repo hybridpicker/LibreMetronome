@@ -16,12 +16,12 @@ const strokeFor = (k) => Math.min(2.5, Math.max(1.2, 1.5 * k)).toFixed(2);
 
 /**
  * One beat as a mark of notation, drawn into an SVG. Shape carries the state:
- *   normal  a hollow notehead with a stem
+ *   normal  a quarter note (filled head, stem; a flag makes it an eighth)
  *   accent  the same with ">" under the staff
  *   first   the same with "^" under the staff
  *   muted   a quarter rest
- * "Current" is not a shape: the parent adds .is-current and the stylesheet
- * fills the head with blue (see score.css).
+ * "Current": the parent adds .is-current and the stylesheet turns the note
+ * blue and a little larger (see score.css), so it reads without colour too.
  *
  * cx, cy      centre of the notehead (the rest is centred on the same point)
  * k           scale, 1 = a staff space of 12 px
@@ -50,7 +50,7 @@ export const BeatMark = ({ cx, cy, k = 1, state = 'normal', stem, eighth = false
       </g>
     );
   }
-  const stemX = cx + 6.4 * k;
+  const stemX = cx + 6.6 * k;
   const stemTop = cy - stemLen;
   const half = 7 * k;
   const art = artY == null ? cy + 20 * k : artY;
@@ -69,9 +69,9 @@ export const BeatMark = ({ cx, cy, k = 1, state = 'normal', stem, eighth = false
         className="score-head"
         cx={cx}
         cy={cy}
-        rx={7.2 * k}
-        ry={5 * k}
-        transform={`rotate(-20 ${cx} ${cy})`}
+        rx={7.6 * k}
+        ry={4.8 * k}
+        transform={`rotate(-24 ${cx} ${cy})`}
         strokeWidth={sw}
       />
       {state === 'accent' && artY !== false && (
