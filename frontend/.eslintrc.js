@@ -3,7 +3,10 @@ module.exports = {
   extends: ['react-app', 'react-app/jest', 'plugin:security/recommended-legacy'],
   rules: {
     // Indexing with computed keys is pervasive and flagged without any taint information.
-    'security/detect-object-injection': 'off'
+    'security/detect-object-injection': 'off',
+    // Ratchet: the most complex function today (App.js desktop command effect) scores 22.
+    // Lower this number whenever a hotspot is refactored; never raise it.
+    complexity: ['error', 22]
   },
   overrides: [
     {
