@@ -182,7 +182,7 @@ for (const [w, h] of VIEWPORTS) {
       if (view.mode === 'Sequence') {
         const circles = page.locator('.circle-select-button');
         for (let i = 0; i < (await circles.count()); i += 1) {
-          await circles.nth(i).click();
+          await circles.nth(i).dispatchEvent('click');
           await setBeats(page, beats);
         }
       } else {

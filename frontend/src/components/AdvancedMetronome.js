@@ -5,16 +5,11 @@ import useMetronomeLogic from "../hooks/useMetronomeLogic";
 import TransportButton from "./metronome/Controls/TransportButton";
 
 import AnalogMetronomeCanvas from "./metronome/AnalogMode/AnalogMetronomeCanvas";
+import BeatStaff from "./metronome/Score/BeatStaff";
 import withTrainingContainer from "./Training/withTrainingContainer";
 import AccelerateButton from "./metronome/Controls/AccelerateButton";
 import { manualTempoAcceleration } from "../hooks/useMetronomeLogic/trainingLogic";
 
-// Unused imports removed
-
-
-// Room kept between the ring and the edge of the visualisation area.
-const RING_MARGIN = 28;
-const MAX_RING = 520;
 
 export function AdvancedMetronomeWithCircle({
   tempo,
@@ -263,57 +258,10 @@ export function AdvancedMetronomeWithCircle({
     };
   }, [logic, registerTapTempo]);
 
-  // The visualisation area is sized by CSS (layout.css); the beats scale to it.
+  // The visualisation area is sized by CSS (layout.css); the staff and the
+  // pendulum fill it.
   const [vizRef, vizSize] = useVizCardSize();
   const vizReady = vizSize.width > 0 && vizSize.height > 0;
-  // Beat marks sit on the ring and overhang it by half a mark; keep that room.
-  const ringSize = vizReady
-    ? Math.max(120, Math.floor(Math.min(MAX_RING, vizSize.width - 2 * RING_MARGIN, vizSize.height - 2 * RING_MARGIN)))
-    : 0;
-  const containerSize = ringSize;
-  const analogBox = analogMode && vizReady
-    ? { width: vizSize.width, height: vizSize.height }
-    : null;
-  const radius = containerSize / 2;
-
-  const beatData = Array.from({ length: subdivisions }, (_, i) => {
-    if (subdivisions === 1) {
-      return { i, xPos: 0, yPos: 0 };
-    } else {
-      const angle = (2 * Math.PI * i) / subdivisions - Math.PI / 2;
-      return {
-        i,
-        xPos: radius * Math.cos(angle),
-        yPos: radius * Math.sin(angle)
-      };
-    }
-  });
-
-  let lineConnections = null;
-  if (!analogMode && subdivisions > 1) {
-    lineConnections = beatData.map((bd, index) => {
-      const nextIndex = (index + 1) % subdivisions;
-      const bd2 = beatData[nextIndex];
-      const dx = bd2.xPos - bd.xPos;
-      const dy = bd2.yPos - bd.yPos;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      const mx = (bd.xPos + bd2.xPos) / 2;
-      const my = (bd.yPos + bd2.yPos) / 2;
-      const angleDeg = (Math.atan2(dy, dx) * 180) / Math.PI;
-      return (
-        <div
-          key={`line-${index}`}
-          className="line-connection"
-          style={{
-            width: dist,
-            left: `calc(50% + ${mx}px - ${dist / 2}px)`,
-            top: `calc(50% + ${my}px)`,
-            transform: `rotate(${angleDeg}deg)`
-          }}
-        />
-      );
-    });
-  }
 
   useEffect(() => {
     if (logic && logic.audioCtx && logic.audioBuffers) {
@@ -482,68 +430,36 @@ export function AdvancedMetronomeWithCircle({
     };
   }, [logic]);
 
-  const beatStateLabels = ["Muted", "Normal", "Accent", "First beat"];
-  const markStates = ["muted", "normal", "accent", "first"];
-
   return (
     <div className={analogMode ? "analog-visual" : "beat-visual"}>
       <div className="viz-card" ref={vizRef}>
         <div
           className="metronome-container"
           style={{
-            width: analogBox ? analogBox.width : containerSize,
-            height: analogBox ? analogBox.height : containerSize
+            width: vizReady ? vizSize.width : 0,
+            height: vizReady ? vizSize.height : 0
           }}
         >
-          {analogMode ? (
-            analogBox && (
-              <AnalogMetronomeCanvas
-                width={analogBox.width}
-                height={analogBox.height}
-                isPaused={isPaused}
-                tempo={tempo}
-                beatMultiplier={currentBeatMultiplier}
-              />
-            )
+          {vizReady && (analogMode ? (
+            <AnalogMetronomeCanvas
+              width={vizSize.width}
+              height={vizSize.height}
+              isPaused={isPaused}
+              tempo={tempo}
+              beatMultiplier={currentBeatMultiplier}
+            />
           ) : (
-            vizReady && (
-              <>
-                <svg className="dial-ticks" viewBox="-50 -50 100 100" aria-hidden="true" focusable="false">
-                  {Array.from({ length: 60 }, (_, i) => (
-                    <line
-                      key={i}
-                      className={i % 5 === 0 ? 'is-major' : undefined}
-                      x1="0" x2="0"
-                      y1={i % 5 === 0 ? -49 : -49}
-                      y2={i % 5 === 0 ? -45.5 : -47}
-                      transform={`rotate(${i * 6})`}
-                    />
-                  ))}
-                </svg>
-                {lineConnections}
-                {beatData.map((bd) => {
-                  const state = effectiveAccents[bd.i];
-                  const isActive = bd.i === logic.currentSubdivision && !isPaused;
-                  return (
-                    <button
-                      type="button"
-                      key={bd.i}
-                      className={`beat-control ${state === 0 ? 'is-muted' : ''} ${isActive ? 'is-current' : ''}`}
-                      onClick={() => effectiveToggleAccent(bd.i)}
-                      aria-label={`Beat ${bd.i + 1}: ${state === 0 ? 'muted' : beatStateLabels[state]}. Activate to change accent.`}
-                      aria-pressed={state === 2 || state === 3}
-                      style={{
-                        left: `calc(50% + ${bd.xPos}px - 22px)`,
-                        top: `calc(50% + ${bd.yPos}px - 22px)`
-                      }}
-                    >
-                      <span className="beat-mark" data-state={markStates[state] || 'normal'} aria-hidden="true" />
-                    </button>
-                  );
-                })}
-              </>
-            )
-          )}
+            <BeatStaff
+              width={vizSize.width}
+              height={vizSize.height}
+              beats={subdivisions}
+              accents={effectiveAccents}
+              current={!isPaused ? logic.currentSubdivision : -1}
+              eighth={currentBeatMultiplier === 2}
+              tempo={tempo}
+              onToggle={effectiveToggleAccent}
+            />
+          ))}
         </div>
       </div>
 
