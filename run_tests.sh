@@ -12,7 +12,8 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MODE="${1:-all}"
-PYTHON="${PYTHON:-$ROOT/.venv/bin/python}"
+if [ -x "$ROOT/.venv/bin/python" ]; then DEFAULT_PYTHON="$ROOT/.venv/bin/python"; else DEFAULT_PYTHON="python3"; fi
+PYTHON="${PYTHON:-$DEFAULT_PYTHON}"
 export SECRET_KEY="${SECRET_KEY:-test-only-secret-key}"
 export DJANGO_SETTINGS_MODULE="libremetronome_backend.test_settings"
 

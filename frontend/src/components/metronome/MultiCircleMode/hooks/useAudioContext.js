@@ -1,14 +1,7 @@
 // src/components/metronome/MultiCircleMode/hooks/useAudioContext.js
 import { useCallback } from 'react';
-import { initAudioContext, loadClickBuffers } from '../../../../hooks/useMetronomeLogic/audioBuffers';
+import { initAudioContext, loadClickBuffers, DEFAULT_SOUND_PATHS } from '../../../../hooks/useMetronomeLogic/audioBuffers';
 import { getActiveSoundSet } from '../../../../services/soundSetService';
-
-// Bundled clicks used when neither the API nor the default loader delivered a buffer
-const DIRECT_SOUND_PATHS = {
-  normal: '/assets/audio/click_new.wav',
-  accent: '/assets/audio/click_new_accent.wav',
-  first: '/assets/audio/click_new_first.wav'
-};
 
 /**
  * Resume a suspended context; a failure is logged and otherwise ignored.
@@ -42,17 +35,12 @@ async function loadDirectSound(audioCtx, path) {
  * Fill every empty buffer ref straight from the bundled clicks.
  */
 async function loadMissingDirectSounds(audioCtx, { normalBufferRef, accentBufferRef, firstBufferRef }) {
-  if (!normalBufferRef.current) {
-    console.log("[MultiCircle] Loading normal click directly");
-    normalBufferRef.current = await loadDirectSound(audioCtx, DIRECT_SOUND_PATHS.normal);
-  }
-  if (!accentBufferRef.current) {
-    console.log("[MultiCircle] Loading accent click directly");
-    accentBufferRef.current = await loadDirectSound(audioCtx, DIRECT_SOUND_PATHS.accent);
-  }
-  if (!firstBufferRef.current) {
-    console.log("[MultiCircle] Loading first click directly");
-    firstBufferRef.current = await loadDirectSound(audioCtx, DIRECT_SOUND_PATHS.first);
+  const targets = [['normal', normalBufferRef], ['accent', accentBufferRef], ['first', firstBufferRef]];
+  for (const [name, bufferRef] of targets) {
+    if (!bufferRef.current) {
+      console.log(`[MultiCircle] Loading ${name} click directly`);
+      bufferRef.current = await loadDirectSound(audioCtx, DEFAULT_SOUND_PATHS[name]);
+    }
   }
 }
 

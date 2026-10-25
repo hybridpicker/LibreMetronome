@@ -1,4 +1,4 @@
-import { TEMPO_MIN, TEMPO_MAX } from '../hooks/useMetronomeLogic/constants';
+import { clampTempo } from '../hooks/useMetronomeLogic/constants';
 
 // Built-in tap tempo used when no metronome component registered a handler.
 // Taps are kept in window._tapTempoTimes; the tempo is applied after four valid taps.
@@ -83,7 +83,7 @@ export function applyFallbackTap(event, setTempo) {
     }
     
     // Clamp tempo to valid range
-    const clampedTempo = Math.min(Math.max(newTempo, TEMPO_MIN), TEMPO_MAX);
+    const clampedTempo = clampTempo(newTempo);
     console.log(`[APP] Calculated tempo: ${clampedTempo} BPM`);
     
     // Only actually set the tempo after we have enough taps for accuracy

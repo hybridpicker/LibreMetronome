@@ -6,7 +6,12 @@ import { createFakeAudioContext } from '../../helpers/multicircle-audio';
 
 jest.mock('../../../hooks/useMetronomeLogic/audioBuffers', () => ({
   initAudioContext: jest.fn(),
-  loadClickBuffers: jest.fn()
+  loadClickBuffers: jest.fn(),
+  DEFAULT_SOUND_PATHS: {
+    normal: '/assets/audio/click_new.wav',
+    accent: '/assets/audio/click_new_accent.wav',
+    first: '/assets/audio/click_new_first.wav'
+  }
 }));
 jest.mock('../../../services/soundSetService', () => ({ getActiveSoundSet: jest.fn() }));
 

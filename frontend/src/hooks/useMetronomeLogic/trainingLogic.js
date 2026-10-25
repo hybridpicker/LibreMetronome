@@ -98,46 +98,20 @@ export function shouldMuteThisBeat({ macroMode, isSilencePhaseRef, muteProbabili
 }
 
 /**
- * Enter the silence phase of fixed-interval macro timing.
+ * Switch the silence phase of fixed-interval macro timing on or off and announce it
+ * immediately (a critical state change: the UI must not wait for the next poll).
  */
-function startSilencePhase(isSilencePhaseRef, muteMeasureCountRef) {
-  console.log(`[Training] 🔇 STARTING SILENCE PHASE 🔇`);
+function setSilencePhase(isSilencePhaseRef, silent) {
+  console.log(silent ? `[Training] 🔇 STARTING SILENCE PHASE 🔇` : `[Training] 🔊 ENDING SILENCE PHASE 🔊`);
 
   const prevState = isSilencePhaseRef.current;
-  isSilencePhaseRef.current = true;
+  isSilencePhaseRef.current = silent;
   window.isSilencePhaseRef = isSilencePhaseRef;
 
-  if (muteMeasureCountRef) {
-    muteMeasureCountRef.current = 0;
-  }
-
-  // A critical state change: update the UI immediately
   forceTrainingUpdate({
-    event: 'silence-start',
+    event: silent ? 'silence-start' : 'silence-end',
     prevState,
-    newState: true
-  });
-}
-
-/**
- * Leave the silence phase and restart both measure counters.
- */
-function endSilencePhase(isSilencePhaseRef, muteMeasureCountRef, measureCountRef) {
-  console.log(`[Training] 🔊 ENDING SILENCE PHASE 🔊`);
-
-  const prevState = isSilencePhaseRef.current;
-  isSilencePhaseRef.current = false;
-  window.isSilencePhaseRef = isSilencePhaseRef;
-
-  muteMeasureCountRef.current = 0;
-  if (measureCountRef) {
-    measureCountRef.current = 0;
-  }
-
-  forceTrainingUpdate({
-    event: 'silence-end',
-    prevState,
-    newState: false
+    newState: silent
   });
 }
 
@@ -156,7 +130,10 @@ function advanceFixedSilence({
 
   if (!isSilencePhaseRef.current) {
     if (measureCountRef && measureCountRef.current >= measuresUntilMute) {
-      startSilencePhase(isSilencePhaseRef, muteMeasureCountRef);
+      if (muteMeasureCountRef) {
+        muteMeasureCountRef.current = 0;
+      }
+      setSilencePhase(isSilencePhaseRef, true);
     }
     return false;
   }
@@ -165,7 +142,11 @@ function advanceFixedSilence({
   if (!muteMeasureCountRef) return false;
   muteMeasureCountRef.current += 1;
   if (muteMeasureCountRef.current >= muteDurationMeasures) {
-    endSilencePhase(isSilencePhaseRef, muteMeasureCountRef, measureCountRef);
+    muteMeasureCountRef.current = 0;
+    if (measureCountRef) {
+      measureCountRef.current = 0;
+    }
+    setSilencePhase(isSilencePhaseRef, false);
   }
   return true;
 }
