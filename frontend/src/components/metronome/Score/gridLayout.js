@@ -1,12 +1,12 @@
 // src/components/metronome/Score/gridLayout.js
 // Geometry of the Grid view: one column per beat, three cells per column,
-// the accent mark above and the beat number below. When the columns would
+// the beat number below. When the columns would
 // get narrower than a finger the bar wraps onto a second block of columns
 // (cells then get flatter). Pure function, tested without a DOM.
 
 export const GRID_MARGIN = 16;
 export const MARGIN_Y = 12;
-export const MARK_H = 18; // room for ">" or "^" above a column
+export const MARK_H = 0; // the grid carries no accent marks
 export const NUMBER_H = 26; // beat number row
 export const BLOCK_GAP = 8;
 export const MAX_CELL = 120;

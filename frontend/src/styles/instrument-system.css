@@ -450,13 +450,6 @@ body.reduced-motion *::after {
   transition: background-color var(--t-in);
 }
 
-/* The accent mark sits above the column: ">" accent, "^" first beat. */
-.grid-mark {
-  display: grid;
-  place-items: center;
-  width: 100%;
-}
-
 .grid-number {
   margin-top: var(--sp-2);
   color: var(--ink-2);

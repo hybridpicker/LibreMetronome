@@ -6,7 +6,6 @@ import { useVizCardSize } from '../../../utils/layoutSize';
 import useWindowDimensions from '../../../hooks/useWindowDimensions';
 import AccelerateButton from '../Controls/AccelerateButton';
 import { manualTempoAcceleration } from '../../../hooks/useMetronomeLogic/trainingLogic';
-import { AccentGlyph } from '../ScoreGlyphs';
 import gridLayout from '../Score/gridLayout';
 
 
@@ -298,8 +297,8 @@ const GridModeMetronome = (props) => {
   }, [props.isPaused, props.tempo, props.tempoIncreasePercent, props.setTempo]);
 
   // A column is three stacked cells; the level fills them from the bottom.
-  // Level 1 normal, 2 accent (">" above, two cells), 3 first beat ("^" above,
-  // three cells), 0 muted (no cell filled).
+  // Level 1 normal (one cell), 2 accent (two), 3 first beat (three), 0 muted
+  // (none). The level is the state; the grid carries no other mark.
   const renderColumn = (colIndex) => {
     const { cellW, cellH } = layout;
     const isCurrentBeat = colIndex === animationFrame && !props.isPaused;
@@ -319,10 +318,6 @@ const GridModeMetronome = (props) => {
         aria-pressed={columnLevel > 1}
         style={{ width: `${cellW}px` }}
       >
-        <span className="grid-mark" aria-hidden="true" style={{ height: layout.markH }}>
-          {columnLevel === 3 && <AccentGlyph kind="first" size={16} />}
-          {columnLevel === 2 && <AccentGlyph kind="accent" size={16} />}
-        </span>
         {[0, 1, 2].map((rowIndex) => {
           // rowIndex 2 is the bottom cell; the fill grows upwards.
           const isOn = rowIndex >= 3 - filled;

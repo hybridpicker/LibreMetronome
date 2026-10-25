@@ -76,8 +76,8 @@ const BeatVisualizer = ({
                 k={k}
                 state={states[accentValue] || 'normal'}
                 stem={0}
-                restK={k * 0.7}
-                artY={size / 2 - (5 * k + 6)}
+                restK={k * 0.6}
+                artY={size / 2 - (9.5 * k + 4)}
               />
             </svg>
           </button>
