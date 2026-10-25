@@ -57,7 +57,7 @@ select:focus-visible,
 textarea:focus-visible,
 [tabindex]:focus-visible {
   outline: var(--stroke-select) solid var(--focus);
-  outline-offset: 2px;
+  outline-offset: 3px;
 }
 
 .sr-status {
@@ -335,7 +335,7 @@ body.reduced-motion *::after {
   gap: var(--sp-2);
   min-height: var(--touch);
   padding: 0 var(--sp-3);
-  border: var(--stroke) solid var(--line-strong);
+  border: var(--stroke) solid var(--ink-2);
   border-radius: var(--r-control);
   background: var(--bg);
   color: var(--ink);
@@ -605,7 +605,7 @@ body.reduced-motion *::after {
   width: var(--touch);
   height: var(--touch);
   padding: 0;
-  border: var(--stroke) solid var(--line-strong);
+  border: var(--stroke) solid var(--ink-2);
   border-radius: var(--r-control);
   background: var(--bg);
   color: var(--ink);
@@ -613,7 +613,7 @@ body.reduced-motion *::after {
 }
 
 .circle-actions button:disabled {
-  opacity: 0.35;
+  opacity: 0.45;
 }
 
 /* ---- Polyrhythm --------------------------------------------------------- */
@@ -674,7 +674,7 @@ body.reduced-motion *::after {
   width: var(--touch);
   height: var(--touch);
   padding: 0;
-  border: var(--stroke) solid var(--line-strong);
+  border: var(--stroke) solid var(--ink-2);
   border-radius: var(--r-control);
   background: var(--bg);
   color: var(--ink);
@@ -762,7 +762,7 @@ body.reduced-motion *::after {
   max-width: 48px;
   height: var(--touch);
   padding: 0;
-  border: var(--stroke) solid var(--line-strong);
+  border: var(--stroke) solid var(--ink-2);
   border-radius: var(--r-control);
   background: var(--bg);
   color: var(--ink);
@@ -780,9 +780,9 @@ body.reduced-motion *::after {
 
 .subdivision-choice[aria-pressed='true'],
 .polyrhythm-choice[aria-pressed='true'] {
-  border: var(--stroke-select) solid var(--accent);
-  background: var(--accent-wash);
-  color: var(--accent-ink);
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 .subdivision-stepper,
@@ -799,7 +799,7 @@ body.reduced-motion *::after {
   width: var(--touch);
   height: var(--touch);
   padding: 0;
-  border: var(--stroke) solid var(--line-strong);
+  border: var(--stroke) solid var(--ink-2);
   border-radius: var(--r-control);
   background: var(--bg);
   color: var(--ink);
@@ -811,7 +811,7 @@ body.reduced-motion *::after {
 
 .stepper-button:disabled,
 .slider-step:disabled {
-  opacity: 0.35;
+  opacity: 0.45;
 }
 
 .stepper-count {
@@ -834,7 +834,7 @@ body.reduced-motion *::after {
   width: var(--touch);
   height: var(--touch);
   padding: 0;
-  border: var(--stroke) solid var(--line-strong);
+  border: var(--stroke) solid var(--ink-2);
   border-radius: var(--r-control);
   background: var(--bg);
   color: var(--ink-2);
@@ -842,9 +842,9 @@ body.reduced-motion *::after {
 }
 
 .note-selector-button[aria-pressed='true'] {
-  border: var(--stroke-select) solid var(--accent);
-  background: var(--accent-wash);
-  color: var(--accent-ink);
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 .note-icon {
@@ -862,10 +862,24 @@ body.reduced-motion *::after {
   .circle-actions button:not(:disabled):hover,
   .switch-circles-button:not(:disabled):hover,
   .accelerate-button:hover,
+  .back-button:hover,
   .transport-tap:not(:disabled):hover {
-    border-color: var(--ink-2);
+    border-color: var(--ink);
   }
 }
+
+/* A pressed key sinks to the surface tone (flat: no offset, no shadow). */
+.subdivision-choice:not([aria-pressed='true']):active,
+.polyrhythm-choice:not([aria-pressed='true']):active,
+.note-selector-button:not([aria-pressed='true']):active,
+.stepper-button:not(:disabled):active,
+.slider-step:not(:disabled):active,
+.circle-actions button:not(:disabled):active,
+.switch-circles-button:not(:disabled):active,
+.back-button:active {
+  background: var(--surface);
+}
+
 
 /* ---- Sliders ------------------------------------------------------------ */
 
@@ -921,7 +935,7 @@ body.reduced-motion *::after {
   width: 100%;
   height: var(--touch);
   padding: 0 var(--sp-3);
-  border: var(--stroke-select) solid var(--accent);
+  border: var(--stroke-select) solid var(--accent-ink);
   border-radius: var(--r-control);
   background: var(--bg);
   color: var(--ink);
@@ -1007,7 +1021,7 @@ input[type='range']:disabled {
   gap: var(--sp-2);
   min-height: var(--touch);
   padding: 0 var(--sp-4);
-  border: var(--stroke) solid var(--line-strong);
+  border: var(--stroke) solid var(--ink-2);
   border-radius: var(--r-control);
   background: var(--bg);
   color: var(--ink);
