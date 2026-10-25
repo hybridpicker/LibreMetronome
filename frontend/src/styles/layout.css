@@ -22,7 +22,7 @@
 .app-container {
   --touch: 44px;
   --pad-x: var(--sp-4);
-  --row-pad: var(--sp-2);
+  --row-pad: calc(var(--sp-3) / 2); /* two rows are 12 px apart */
   --control-w: 100%;
   --bpm-size: var(--fs-5);
   position: relative;
@@ -64,7 +64,7 @@ html.capacitor-native #root {
 @media (max-height: 759px) {
   .app-container {
     --touch: 40px;
-    --row-pad: var(--sp-1);
+    --row-pad: var(--sp-1); /* short screens: rows 8 px apart */
     --bpm-size: var(--fs-5-short);
   }
 }
@@ -220,7 +220,7 @@ html.capacitor-native #root {
   display: contents;
 }
 
-/* Every row of the controls is separated by a hairline. */
+/* The rows of the controls are 12 px apart; there are no lines between them. */
 .app-container .practice-controls > .control-group,
 .app-container .multi-controls-panel > .control-group,
 .app-container .tempo-slider,
@@ -229,10 +229,9 @@ html.capacitor-native #root {
 .app-container .polyrhythm-mode-shell > .sliders-container > .editable-slider,
 .app-container .polyrhythm-mode-shell > .polyrhythm-controls {
   padding: var(--row-pad) 0;
-  border-top: var(--stroke) solid var(--line);
 }
 
-.app-container .tempo-slider { grid-row: 1; grid-column: 1 / -1; border-top: 0; }
+.app-container .tempo-slider { grid-row: 1; grid-column: 1 / -1; }
 .app-container .control-beats { grid-row: 2; grid-column: 1 / -1; }
 .app-container .control-note { grid-row: 3; grid-column: 1 / -1; }
 .app-container .volume-slider { grid-row: 4; grid-column: 1; }
@@ -272,31 +271,41 @@ html.capacitor-native #root {
   .app-container .subdivision-stepper { display: flex; }
 }
 
-/* Tempo: the big number, minus, slider, plus on one line. */
-.app-container .tempo-slider {
+/* Tempo: the tempo mark "♩ = 120 bpm" on its own line, minus, slider and
+   plus below it (the grid places the four children by itself: the label spans
+   the row, the other three fill the next one). */
+.app-container .tempo-slider,
+.app-container .polyrhythm-mode-shell > .sliders-container > .editable-slider:nth-child(1) {
   display: grid;
-  grid-template-columns: auto var(--touch) minmax(0, 1fr) var(--touch);
+  grid-template-columns: var(--touch) minmax(0, 1fr) var(--touch);
   align-items: center;
   column-gap: var(--sp-1);
+  row-gap: var(--sp-1);
 }
 
-.app-container .tempo-slider .slider-label {
+.app-container .tempo-slider > .slider-label,
+.app-container .tempo-slider > .editable-input,
+.app-container .polyrhythm-mode-shell > .sliders-container > .editable-slider:nth-child(1) > .slider-label,
+.app-container .polyrhythm-mode-shell > .sliders-container > .editable-slider:nth-child(1) > .editable-input {
+  grid-column: 1 / -1;
+}
+
+.app-container .tempo-slider .slider-label,
+.app-container .polyrhythm-mode-shell > .sliders-container > .editable-slider:nth-child(1) .slider-label {
   min-width: 0;
-  height: var(--touch);
-  padding-right: var(--sp-2);
+  min-height: var(--touch);
   align-items: center;
+  justify-content: flex-start;
 }
 
-.app-container .tempo-slider .slider-label-name { display: none; }
+.app-container .tempo-slider .slider-label-name,
+.app-container .polyrhythm-mode-shell > .sliders-container > .editable-slider:nth-child(1) .slider-label-name { display: none; }
 
-.app-container .tempo-slider .slider-label-value {
+.app-container .tempo-slider .slider-label-value,
+.app-container .polyrhythm-mode-shell > .sliders-container > .editable-slider:nth-child(1) .slider-label-value {
   display: flex;
   align-items: baseline;
   gap: var(--sp-1);
-}
-
-.app-container .tempo-slider .editable-input {
-  grid-column: 1 / -1;
 }
 
 /* Volume and swing: label and value above a slider. */
@@ -337,24 +346,6 @@ html.capacitor-native #root {
   grid-row: 5;
   grid-column: 1;
   margin-top: var(--sp-2);
-  display: grid;
-  grid-template-columns: auto var(--touch) minmax(0, 1fr) var(--touch);
-  align-items: center;
-  column-gap: var(--sp-1);
-}
-
-.app-container .polyrhythm-mode-shell > .sliders-container > .editable-slider:nth-child(1) .slider-label {
-  height: var(--touch);
-  padding-right: var(--sp-2);
-  align-items: center;
-}
-
-.app-container .polyrhythm-mode-shell > .sliders-container > .editable-slider:nth-child(1) .slider-label-name { display: none; }
-
-.app-container .polyrhythm-mode-shell > .sliders-container > .editable-slider:nth-child(1) .slider-label-value {
-  display: flex;
-  align-items: baseline;
-  gap: var(--sp-1);
 }
 
 .app-container .polyrhythm-mode-shell > .sliders-container > .editable-slider:nth-child(2) {
@@ -414,7 +405,6 @@ html.capacitor-native .app-container .transport-row {
 @media (min-width: 600px) {
   .app-container {
     --pad-x: var(--sp-5);
-    --row-pad: var(--sp-3);
   }
 
   .app-container .header-logo { height: 28px; }
@@ -422,6 +412,20 @@ html.capacitor-native .app-container .transport-row {
   .app-container .viz-card { margin-top: var(--sp-4); }
   .app-container .transport-button { height: 60px; }
   .app-container .transport-row { margin-top: var(--sp-4); }
+}
+
+/* Tablet portrait: the numeral, minus, slider and plus share one line. */
+@media (min-width: 600px) and (max-width: 1023px) and (orientation: portrait) {
+  .app-container .tempo-slider,
+  .app-container .polyrhythm-mode-shell > .sliders-container > .editable-slider:nth-child(1) {
+    grid-template-columns: auto var(--touch) minmax(0, 1fr) var(--touch);
+  }
+
+  .app-container .tempo-slider > .slider-label,
+  .app-container .polyrhythm-mode-shell > .sliders-container > .editable-slider:nth-child(1) > .slider-label {
+    grid-column: auto;
+    padding-right: var(--sp-3);
+  }
 }
 
 /* ---- Two columns: tablet landscape and desktop ------------------------- */
@@ -479,7 +483,7 @@ html.capacitor-native .app-container .transport-row {
   }
 
   /* Same order as every other mode: tempo first, then the pickers, volume. */
-  .app-container .polyrhythm-mode-shell > .sliders-container > .editable-slider:nth-child(1) { grid-row: 4; border-top: 0; }
+  .app-container .polyrhythm-mode-shell > .sliders-container > .editable-slider:nth-child(1) { grid-row: 4; }
   .app-container .polyrhythm-mode-shell > .polyrhythm-controls { grid-row: 5; }
   .app-container .polyrhythm-mode-shell > .sliders-container > .editable-slider:nth-child(2) { grid-row: 6; }
 

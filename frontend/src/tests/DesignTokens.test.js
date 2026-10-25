@@ -32,9 +32,8 @@ const t = (k) => tokens[k].toLowerCase();
 // Stylesheets that must be written against tokens only. Grows as the redesign
 // reaches more of the app (dialogs join in step 5 of round 3).
 const TOKEN_ONLY = ['layout.css', 'instrument-system.css'].map((f) => ['styles', f]);
-// The slider track still draws its progress with a gradient until step 3
-// replaces it with a 1.5 px progress element; instrument-system.css joins then.
-const NO_GRADIENT = ['layout.css'].map((f) => ['styles', f]);
+// Slider progress is its own 1.5 px element (RangeInput), never a gradient.
+const NO_GRADIENT = ['layout.css', 'instrument-system.css'].map((f) => ['styles', f]);
 
 describe('design tokens: Score palette', () => {
   test('white page, blue pair as the only accent', () => {
