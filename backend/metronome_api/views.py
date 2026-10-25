@@ -43,22 +43,8 @@ def json_errors_as_500(view):
     return wrapper
 
 
-class ReactAppView(TemplateView):
-    """Serves the React frontend's index.html for every frontend route."""
-
-    template_name = "index.html"
-
-
-# Create a single instance of the view
-index_view = never_cache(ReactAppView.as_view())
-
-
-def serve_react(request, path=None):
-    """
-    View function to serve the React frontend application.
-    This function serves the index.html template for all frontend routes.
-    """
-    return index_view(request)
+# Serves index.html for every frontend route; the browser must never cache the shell
+serve_react = never_cache(TemplateView.as_view(template_name="index.html"))
 
 
 def find_sound_file(filename):

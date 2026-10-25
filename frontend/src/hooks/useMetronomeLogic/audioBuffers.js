@@ -148,6 +148,13 @@ export async function resumeSharedAudioContexts() {
   return contexts.length > 0 && results.every(Boolean);
 }
 
+// Bundled clicks, also the fallback when a custom sound cannot be loaded
+export const DEFAULT_SOUND_PATHS = {
+  normal: '/assets/audio/click_new.wav',
+  accent: '/assets/audio/click_new_accent.wav',
+  first: '/assets/audio/click_new_first.wav'
+};
+
 const SOUND_FETCH_TIMEOUT_MS = 10000;
 // Anything smaller cannot be a valid encoded audio file
 const MIN_AUDIO_BYTES = 100;
@@ -171,9 +178,9 @@ function resolveSoundUrl(url) {
 
 /** Bundled click that stands in for a backend sound which cannot be loaded. */
 function fallbackClickPath(url) {
-  if (url.includes('first_')) return '/assets/audio/click_new_first.wav';
-  if (url.includes('accent_') || url.includes('second_')) return '/assets/audio/click_new_accent.wav';
-  return '/assets/audio/click_new.wav';
+  if (url.includes('first_')) return DEFAULT_SOUND_PATHS.first;
+  if (url.includes('accent_') || url.includes('second_')) return DEFAULT_SOUND_PATHS.accent;
+  return DEFAULT_SOUND_PATHS.normal;
 }
 
 async function fetchSound(fetchUrl) {
@@ -305,12 +312,6 @@ function getActiveSoundSetIdFromCookie() {
   }
   return cookieValue;
 }
-
-const DEFAULT_SOUND_PATHS = {
-  normal: '/assets/audio/click_new.wav',
-  accent: '/assets/audio/click_new_accent.wav',
-  first: '/assets/audio/click_new_first.wav'
-};
 
 // Built-in sound sets that are selectable by cookie without an API record
 const BUILT_IN_SOUND_SETS = {

@@ -24,7 +24,7 @@ import './styles/layout.css';
 import './styles/accessibility-modes.css';
 import { IS_NATIVE_APP } from './nativeApp';
 import { applyFallbackTap } from './utils/tapTempoFallback';
-import { TEMPO_MIN, TEMPO_MAX } from './hooks/useMetronomeLogic/constants';
+import { TEMPO_MIN, TEMPO_MAX, clampTempo } from './hooks/useMetronomeLogic/constants';
 // StyleGuide component removed
 
 // The click samples are mastered to their safe peak already. Starting below
@@ -391,10 +391,10 @@ function App() {
           if (!playStateRef.current && togglePlayRef.current) togglePlayRef.current();
           break;
         case 'adjustTempo':
-          setTempo(prev => Math.min(Math.max(prev + Number(value || 0), TEMPO_MIN), TEMPO_MAX));
+          setTempo(prev => clampTempo(prev + Number(value || 0)));
           break;
         case 'setTempo':
-          setTempo(Math.min(Math.max(Math.round(Number(value) || 0), TEMPO_MIN), TEMPO_MAX));
+          setTempo(clampTempo(Math.round(Number(value) || 0)));
           break;
         case 'tapTempo':
           if (tapTempoRef.current) tapTempoRef.current();
