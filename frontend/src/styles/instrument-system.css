@@ -315,7 +315,8 @@ body.reduced-motion *::after {
   --line: var(--dial-line);
   --line-strong: var(--dial-line-strong);
   --accent: var(--dial-accent);
-  --accent-ink: var(--dial-accent);
+  --accent-ink: var(--dial-accent-ink);
+  --accent-deep: var(--dial-accent-ink);
   --accent-wash: var(--dial-accent-wash);
   --on-accent: var(--dial-on-accent);
   --focus: var(--dial-focus);
@@ -904,7 +905,7 @@ body.reduced-motion *::after {
 }
 
 .slider-value-number {
-  font-size: var(--fs-5);
+  font-size: var(--bpm-size, var(--fs-5));
   font-weight: var(--fw-bold);
   font-variant-numeric: tabular-nums;
   line-height: 1;

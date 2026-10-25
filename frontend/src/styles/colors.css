@@ -2,55 +2,66 @@
  * LibreMetronome design tokens: the single source for colour, type, space,
  * radius and size on every device (web, Android, iOS/macOS shell).
  *
- * Calm, like a measuring instrument, with one colour only: teal. Neutrals
- * carry a faint teal tint so the screen feels warm rather than sterile. Teal
- * marks the active state, the current beat, accents and the Start button. No shadows, no gradients, hairlines instead of frames.
+ * Direction "Score": a bar of music on white. Flat: no 3D, no relief edges,
+ * no shadows, no gradients. One accent, the Okabe-Ito blue pair (safe for
+ * protanopia and deuteranopia): --accent-ink as text, links and accent marks,
+ * --accent as fill for the current beat, Start, active keys, progress and the
+ * mode underline. Neutrals carry a faint blue tint to sit under the accent.
+ *
+ * Alternative neutrals, should the owner switch back to the teal tint of 0.8.0:
+ *   surface #eff6f6, line #dbe7e7, line-strong #7b9090, ink-2 #5c6e6e.
  *
  * Components use these tokens only. The "legacy" block at the end keeps the
- * old variable names alive for dialogs that were not redesigned; they now map
- * onto the same neutral palette.
+ * old variable names alive for dialogs that were not redesigned yet; they map
+ * onto the same palette.
  */
 
 :root {
   /* ---- Colour -------------------------------------------------------- */
   --bg: #ffffff;
-  --surface: #eff6f6;
+  --surface: #f2f5f8;        /* pressed keys, tapping; 5.4:1 with ink-2 */
   --ink: #111111;
-  --ink-2: #5c6e6e;          /* secondary text; 5.5:1 on white, 4.9:1 on --surface */
-  --ink-3: #7b9090;          /* graphics only (rings, filled cells), never text; 3.4:1 on white */
-  --line: #dbe7e7;           /* hairlines and resting borders */
-  --line-strong: #bdd0d0;    /* outlined controls, resting beat rings */
+  --ink-2: #5a6672;          /* secondary text, key outlines; 5.9:1 on white, 5.4:1 on --surface */
+  --ink-3: var(--line-strong); /* graphics only, never text (legacy name) */
+  --line: #dbe0e6;           /* hairlines, staff lines, dialog sections */
+  --line-strong: #768593;    /* slider track, circle rings, grid cells; 3.8:1 on white, graphics only */
 
-  --accent: #00a0a0;         /* the brand teal: fills, current beat, thumb */
-  --accent-ink: #00797a;     /* teal as text or small icon on light surfaces (5.2:1) */
-  --accent-wash: #e6f5f5;    /* very light teal, selected-state tint */
-  --on-accent: #ffffff;
+  --accent: #0072b2;         /* blue fill: current beat, Start, active keys, progress; 5.2:1 */
+  --accent-ink: #005a8d;     /* blue as text, links, Tap label, accent marks; 7.4:1 */
+  --accent-deep: #004b78;    /* pressed Start only */
+  --accent-wash: #e6f1f7;    /* selected-row tint */
+  --on-accent: #ffffff;      /* 5.2:1 on --accent */
 
-  /* The dial plate: the visualisation sits on its own plate, drawn on the white
-     page with hairlines. Components inside it read the same token names; the
-     plate re-maps them (see .viz-card in instrument-system.css). Today the
-     plate is as light as the page; modes (high contrast) can change it. */
+  /* The plate holds the visualisation. It is as light as the page; components
+     on it read the same token names, re-mapped (see .viz-card). Modes (high
+     contrast) can change it. */
   --dial-bg: #ffffff;
   --dial-ink: #111111;
-  --dial-ink-2: #5c6e6e;
-  --dial-ink-3: #7b9090;     /* graphics only */
-  --dial-line: #dbe7e7;
-  --dial-line-strong: #bdd0d0;
-  --dial-accent: #00797a;    /* teal on the plate: current beat, accents, text */
-  --dial-accent-wash: #e6f5f5;
+  --dial-ink-2: #5a6672;
+  --dial-ink-3: #768593;     /* graphics only */
+  --dial-line: #dbe0e6;
+  --dial-line-strong: #768593;
+  --dial-accent: #0072b2;
+  --dial-accent-ink: #005a8d;
+  --dial-accent-wash: #e6f1f7;
   --dial-on-accent: #ffffff;
-  --dial-focus: #00797a;
+  --dial-focus: #005a8d;
 
-  --focus: #00797a;
+  --focus: #005a8d;
   --danger: #b3261e;
 
   /* ---- Type: one family (Lato, bundled, so metrics match on every device) */
   --font: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --fs-1: 12px;              /* captions, units, footer */
-  --fs-2: 14px;              /* labels, secondary text */
+  --fs-2: 13px;              /* labels (sentence case), secondary text */
   --fs-3: 17px;              /* values, buttons, body */
-  --fs-4: 22px;              /* Start label, section titles */
-  --fs-5: 64px;              /* BPM */
+  --fs-4: 22px;              /* section titles, counts */
+  --fs-5: 80px;              /* BPM numeral on a phone */
+  --fs-5-short: 64px;        /* BPM on short phones (< 760 px high) */
+  --fs-5-wide: 104px;        /* BPM on the two-column desktop layout */
+  --fs-title: 28px;          /* dialog titles, Light */
+  --fs-title-lg: 32px;       /* support page title, Light */
+  --fw-light: 300;           /* the BPM numeral and titles */
   --fw-regular: 400;
   --fw-bold: 700;
 
@@ -63,11 +74,12 @@
   --sp-6: 32px;
 
   /* ---- Shape ---------------------------------------------------------- */
-  --r-control: 2px;          /* square keys: buttons and fields */
-  --r-surface: 4px;          /* the dial plate; 0 where a hairline is enough */
-  --stroke: 1px;
-  --stroke-viz: 1.5px;       /* lines inside visualisations (2px max) */
-  --stroke-select: 2px;      /* selected and focused outlines */
+  --r-control: 0px;          /* square keys: buttons, fields, checkboxes */
+  --r-surface: 0px;          /* plate and dialog sheet: a hairline is enough */
+  --stroke: 1px;             /* outlines, staff lines, tracks */
+  --stroke-viz: 1.5px;       /* stems, progress, selected circle (2px max) */
+  --stroke-select: 2px;      /* focus ring, active underline, playing outline */
+  --stroke-final: 3px;       /* the final bar line */
 
   /* ---- Size ----------------------------------------------------------- */
   --touch: 44px;             /* 40 px on short screens, set in layout.css */
@@ -75,10 +87,12 @@
 
   /* ---- Motion --------------------------------------------------------- */
   --t-fast: 120ms ease;
+  --t-in: 90ms ease-out;     /* a beat fills */
+  --t-out: 160ms ease-out;   /* and empties; none under reduced motion */
 
   /* ---- Beat marks (shared by Beat, Sequence, Polyrhythm, Grid) --------- */
   --beat-ring: var(--line-strong);
-  --beat-accent-ring: var(--accent);
+  --beat-accent-ring: var(--accent-ink);
   --beat-now: var(--accent);
   --beat-muted-ring: var(--line);
 
@@ -97,7 +111,7 @@
 
   --primary-teal: var(--accent);
   --primary-teal-dark: var(--accent-ink);
-  --primary-teal-light: #b3e0e0;
+  --primary-teal-light: var(--accent-wash);
   --primary-teal-ultra-light: var(--accent-wash);
 
   --secondary-gold: var(--line);
@@ -113,7 +127,7 @@
   --text-primary: var(--ink);
   --text-secondary: var(--ink-2);
   --text-tertiary: var(--ink-2);
-  --text-light: #ffffff;
+  --text-light: var(--on-accent);
 
   --beat-muted: var(--line);
   --beat-normal: var(--bg);
@@ -128,7 +142,7 @@
   --info: var(--accent-ink);
   --highlight: var(--accent);
 
-  --overlay-bg: rgba(11, 38, 38, 0.72);
+  --overlay-bg: rgba(255, 255, 255, 0.82); /* the page fades, it does not go dark */
   --modal-shadow: none;
 
   --training-tip-bg: var(--surface);
