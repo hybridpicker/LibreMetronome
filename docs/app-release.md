@@ -494,7 +494,7 @@ Nachweis wie in 16: 42 von 42 Fälle in jedem Modus und mit neun Schlägen ohne 
 
 ## 17. Release 0.8.0: Score auf allen Geräten (Build 7, Stand 2026-10-25)
 
-Version 0.8.0, `buildNumber` 8. `versionCode` 7 war in der Play Console schon vergeben (Upload abgelehnt am 2026-10-25), daher 8; ob 8 frei ist, zeigt der nächste Upload. Am 2026-10-25 auf `origin/main` gepusht (bis `aff6f60`, einschließlich der Runde-3-Commits); nichts deployt, nichts hochgeladen.
+Version 0.8.0, `buildNumber` 8. `versionCode` 7 war in der Play Console schon vergeben (Upload abgelehnt am 2026-10-25), daher 8; 8 wurde von der Play Console akzeptiert. Am 2026-10-25 auf `origin/main` gepusht (bis `aff6f60`, einschließlich der Runde-3-Commits); nichts deployt, nichts hochgeladen.
 
 ### Nachweise je Ziel
 
@@ -541,4 +541,4 @@ Nachweis: 37 Suiten grün, `measure-layout.mjs` 42 von 42 ohne Überlänge, AAB 
 
 ### Offen beim Eigentümer
 
-- Server-Deploy (Tor b), Play-Upload der AAB und Freigabe (Tor c), `versionCode` prüfen, Samsung anschließen, Simulator-Zugriff freigeben.
+- Play (Tor c): AAB mit `versionCode` 8 am 2026-10-25 vom Eigentümer hochgeladen, gespeichert und veröffentlicht (interner Test). Noch offen: Update auf dem Samsung installieren und prüfen, Samsung anschließen, Simulator-Zugriff freigeben, Manifest auf dem Server prüfen.

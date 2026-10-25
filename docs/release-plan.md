@@ -6,7 +6,7 @@ Updated October 25, 2026.
 
 | Target | Verified state | Next step |
 | --- | --- | --- |
-| Android (Play internal test) | 0.8.0, versionCode 7 (assumed, owner checks Bundle Explorer): signed AAB and APK built, no INTERNET permission; not yet run on a device | Owner uploads the AAB; install and check on the Samsung |
+| Android (Play internal test) | 0.8.0, versionCode 8 (7 was already used): signed AAB uploaded and published to the internal test by the owner on 2026-10-25; no INTERNET permission; not yet checked on a device | Update on the Samsung and check |
 | iPad development app | Debug build with the 0.8.0 Score design installed and launched on the iPad; simulator screenshot (portrait, Analog) only | Look at all modes and both orientations on the device |
 | Public website | 0.8.0 with the new icon is live (auto-deploy on push); manifest icon paths fixed in 7bce1f7, live state not re-checked | Confirm manifest.json serves absolute icon paths and the 7 icons return 200 |
 | macOS app | 0.8.0 with the new icon built, installed to /Applications, ad-hoc signed; new Dock icon confirmed by the owner | Check Dock badge, menu, global shortcut |
