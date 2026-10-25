@@ -272,7 +272,7 @@ const AccessibilitySettings = ({ onClose, triggerRef }) => {
               <option value="tritanopia">Tritanopia (Blue-Blind)</option>
               <option value="monochromacy">Monochromacy (Full Color Blindness)</option>
             </select>
-            <p id="color-blind-desc" className="setting-description">Adjusts colors for different types of color vision deficiency</p>
+            <p id="color-blind-desc" className="setting-description">Adjusts colors for different types of color vision deficiency. The standard blue is already safe for red and green blindness, so Protanopia and Deuteranopia keep it.</p>
           </div>
         </div>
         

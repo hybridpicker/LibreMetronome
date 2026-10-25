@@ -11,7 +11,7 @@
 //
 // Options:
 //   --out DIR        PNG directory (default: scripts/.shots/latest)
-//   --mode NAME      normal | contrast | large | colorblind | tritanopia (default: normal)
+//   --mode NAME      normal | contrast | large | colorblind | tritanopia | monochromacy (default: normal)
 //                    colorblind is an alias of tritanopia: protanopia and
 //                    deuteranopia use the normal blue and need no run of their own
 //   --beats N        set beats per bar to N (1-9) in Beat, Grid and every Sequence
@@ -135,7 +135,8 @@ const MODE_STORAGE = {
   contrast: { 'accessibility-high-contrast': 'true' },
   large: { 'accessibility-large-text': 'true' },
   colorblind: { 'accessibility-color-blind-mode': 'tritanopia' },
-  tritanopia: { 'accessibility-color-blind-mode': 'tritanopia' }
+  tritanopia: { 'accessibility-color-blind-mode': 'tritanopia' },
+  monochromacy: { 'accessibility-color-blind-mode': 'monochromacy' }
 };
 
 // Beats per bar: nine chips from 520 px, a stepper below that.
