@@ -12,7 +12,8 @@ const BeatVisualizer = ({
   beatType = 'inner', // kept for callers; inner and outer look the same
   silenceModeActive = false,
   isTransitioning = false,
-  colorSwapped = false // kept for callers; no colour to swap in the Score look
+  colorSwapped = false, // kept for callers; no colour to swap in the Score look
+  disabled = false
 }) => {
   // Keep track of previous subdivision to detect changes
   const prevSubdivisionRef = useRef(currentSubdivision);
@@ -43,39 +44,43 @@ const BeatVisualizer = ({
   // A notehead is 14.4 k wide: about 20 px on a small ring, 25 px on a large one.
   const k = Math.min(1.7, Math.max(1.4, radius / 120));
   const states = ['muted', 'normal', 'accent', 'first'];
+  const names = ['muted', 'normal', 'accent', 'first beat'];
+  // The key shrinks on crowded rings so neighbouring beats stay separately tappable.
+  const spacing = (2 * Math.PI * radius) / Math.max(beats, 1);
+  const hit = Math.round(Math.min(44, Math.max(28, spacing)));
+  const size = hit;
 
   return (
     <>
       {beatPositions.map((position, i) => {
         const { x, y } = position;
-
-        // Determine if this beat is currently active
         const isActive = i === currentSubdivision && !isPaused && !isTransitioning;
-
-        // Accent value: 0=muted (a rest), 1=normal, 2=accent (>), 3=first (^)
+        // 0 = muted (a rest), 1 = normal, 2 = accent (>), 3 = first (^)
         const accentValue = i < accents.length ? accents[i] : 1;
-        const size = Math.ceil(14.4 * k) + 6;
 
         return (
-          <svg
+          <button
+            type="button"
             key={i}
-            className={`beat-note${isActive ? ' is-current' : ''}${isTransitioning ? ' transitioning' : ''}`}
-            width={size}
-            height={size}
-            aria-hidden="true"
-            focusable="false"
-            style={{ left: `${x}px`, top: `${y}px` }}
+            className={`beat-control beat-note${isActive ? ' is-current' : ''}${accentValue === 0 ? ' is-muted' : ''}${isTransitioning ? ' transitioning' : ''}`}
+            onClick={() => handleToggleAccent && handleToggleAccent(i)}
+            disabled={disabled}
+            aria-label={`${beatType === 'inner' ? 'Inner' : 'Outer'} rhythm, beat ${i + 1}: ${names[accentValue]}. Activate to change accent.`}
+            aria-pressed={accentValue === 0 ? undefined : accentValue > 1}
+            style={{ left: `${x - hit / 2}px`, top: `${y - hit / 2}px`, width: hit, height: hit }}
           >
-            <BeatMark
-              cx={size / 2}
-              cy={size / 2}
-              k={k}
-              state={states[accentValue] || 'normal'}
-              stem={0}
-              restK={k * 0.7}
-              artY={size / 2 + 5 * k + 6}
-            />
-          </svg>
+            <svg width={size} height={size} aria-hidden="true" focusable="false">
+              <BeatMark
+                cx={size / 2}
+                cy={size / 2}
+                k={k}
+                state={states[accentValue] || 'normal'}
+                stem={0}
+                restK={k * 0.7}
+                artY={size / 2 - (5 * k + 6)}
+              />
+            </svg>
+          </button>
         );
       })}
     </>

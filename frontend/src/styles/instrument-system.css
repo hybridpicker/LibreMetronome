@@ -388,13 +388,8 @@ body.reduced-motion *::after {
   outline-offset: 0;
 }
 
-/* Polyrhythm beats are marks without a button; they sit on the circle. */
-.beat-note {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-}
-
+/* Polyrhythm beats are keys like every other beat; the ring's select key
+   lies under them (.circle-select-button). */
 .beat-note.transitioning {
   opacity: 0.7;
 }
@@ -616,7 +611,11 @@ body.reduced-motion *::after {
   border: var(--stroke) solid var(--line-strong);
   border-radius: 50%;
   background: transparent;
-  cursor: pointer;
+}
+
+.inner-circle.transitioning,
+.outer-circle.transitioning {
+  opacity: 0.8;
 }
 
 .inner-circle.active,

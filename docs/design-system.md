@@ -117,10 +117,11 @@ The page is one grid that fills the window and never scrolls
   blue, ">" or "^" sits above the column, a muted column is empty. Nine
   columns wrap onto two blocks on a phone.
 - **Sequence, Polyrhythm:** rings of 1 px, the selected one 1.5 px blue; each
-  beat is a notehead on the ring with its accent mark under it (towards the
-  centre, as under a staff), muted beats are rests. On small rings (four
-  circles on a phone) the number stands alone in the centre; the heads already
-  count the beats.
+  beat is a notehead on the ring with its accent mark above it, muted beats
+  are rests. On small rings (four circles on a phone) the number stands alone
+  in the centre; the heads already count the beats. In every mode a beat is a
+  key: each click steps muted, normal, accent, first beat (Polyrhythm beats
+  were not clickable before round 3).
 - **Controls:** no lines between rows, rows 12 px apart (8 px on short screens);
   labels 13 px Regular, values 17 px Bold; the tempo reads "♩ = 120 bpm" in a
   Light numeral. Sliders have a 1 px track, a 1.5 px blue progress line and a

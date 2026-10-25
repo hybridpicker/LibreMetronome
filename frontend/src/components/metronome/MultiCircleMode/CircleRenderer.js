@@ -51,7 +51,7 @@ const CircleRenderer = ({
     const accents = settings.accents || [];
     const beatState = i < accents.length ? accents[i] : (i === 0 ? 3 : 1);
     
-    // The accent mark sits under the head, as it does on the staff.
+    // The accent mark sits above the head (the owner's call for the rings).
     const artDist = 5 * markK + 6;
     const isMuted = beatState === 0;
     const markState = ['muted', 'normal', 'accent', 'first'][beatState] || 'normal';
@@ -79,7 +79,7 @@ const CircleRenderer = ({
             k={markK}
             state={markState}
             stem={0}
-            artY={hit / 2 + artDist}
+            artY={hit / 2 - artDist}
           />
         </svg>
       </button>
