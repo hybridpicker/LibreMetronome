@@ -28,7 +28,7 @@ WHAT YOU GET FOR EUR 1.99
 • Free updates and bug fixes
 
 FIVE WAYS TO SEE AND FEEL THE BEAT
-• Beat mode: clear beat display with tempo, time signature and subdivisions
+• Beat mode: quarter notes on a staff, with tempo, beats per bar and note value
 • Analog mode: a pendulum metronome on screen
 • Grid mode: shape rhythms on a grid and hear them looped
 • Sequencer mode: program your own pattern step by step
@@ -67,9 +67,10 @@ Before publishing, check every claim against the final build. Open points:
 | Asset | Size | Status |
 |---|---|---|
 | Icon | 512 x 512 PNG, 32 bit | created: docs/store/icon-512.png (pendulum, no alpha); check in Console |
-| Feature graphic | 1024 x 500 PNG/JPEG, no alpha | open |
-| Phone screenshots | min. 4, 1080 x 1920 or larger, from the Android emulator, invented example values only | open |
-| Modes to show | Beat, Analog, Grid, Sequencer, Polyrhythm | open |
+| Feature graphic | 1024 x 500 PNG/JPEG, no alpha | created: docs/store/feature-graphic-1024x500.png (white, icon, name, no shadows) |
+| Phone screenshots | min. 4, 1080 x 1920 or larger, invented example values only | created: docs/store/screenshots/phone-1..5 (1236 x 2415, app UI of the store build rendered in Chrome at 412 x 805 @3x; no emulator or device frame) |
+| Tablet screenshots | min. 2 | created: docs/store/screenshots/tablet-1-beat.png, tablet-2-sequence.png (1536 x 2048) |
+| Modes to show | Beat, Analog, Grid, Sequencer, Polyrhythm | all five in the phone set |
 
 ## Forms (declarations are made by the owner)
 
