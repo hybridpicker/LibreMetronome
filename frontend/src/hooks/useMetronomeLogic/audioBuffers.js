@@ -317,6 +317,114 @@ function getActiveSoundSetIdFromCookie() {
   return cookieValue;
 }
 
+const DEFAULT_SOUND_PATHS = {
+  normal: '/assets/audio/click_new.wav',
+  accent: '/assets/audio/click_new_accent.wav',
+  first: '/assets/audio/click_new_first.wav'
+};
+
+// Built-in sound sets that are selectable by cookie without an API record
+const BUILT_IN_SOUND_SETS = {
+  'default-woodblock': { label: 'woodblock', prefix: 'wood' },
+  woodblock: { label: 'woodblock', prefix: 'wood' },
+  'default-drums': { label: 'drum', prefix: 'drum' },
+  drums: { label: 'drum', prefix: 'drum' }
+};
+
+const builtInSoundPaths = (prefix) => ({
+  normal: `/metronome_sounds/${prefix}_normal_sound.mp3`,
+  accent: `/metronome_sounds/${prefix}_accent_sound.mp3`,
+  first: `/metronome_sounds/${prefix}_first_sound.mp3`
+});
+
+const soundSetPaths = (soundSet) => ({
+  normal: soundSet.normal_beat_sound_url || DEFAULT_SOUND_PATHS.normal,
+  accent: soundSet.accent_sound_url || DEFAULT_SOUND_PATHS.accent,
+  first: soundSet.first_beat_sound_url || DEFAULT_SOUND_PATHS.first
+});
+
+/**
+ * Decide which three sound files to load. A cookie preference wins over the
+ * provided sound set; without either the bundled clicks are used.
+ */
+function resolveSoundPaths(soundSet, cookieSoundSetId) {
+  if (cookieSoundSetId) {
+    const cookieId = cookieSoundSetId.toString();
+    const matchesProvidedSet = Boolean(soundSet && soundSet.id) && soundSet.id.toString() === cookieId;
+
+    if (soundSet && soundSet.id && !matchesProvidedSet) {
+      console.log(`Cookie sound set ID (${cookieId}) doesn't match provided sound set (${soundSet.id}), using cookie preference`);
+    }
+
+    const builtIn = BUILT_IN_SOUND_SETS[cookieId];
+    if (builtIn) {
+      console.log(`Using ${builtIn.label} sounds from cookie preference`);
+      return builtInSoundPaths(builtIn.prefix);
+    }
+    if (matchesProvidedSet) {
+      console.log(`Using sound set (${soundSet.name}) from API that matches cookie ID: ${cookieId}`);
+      return soundSetPaths(soundSet);
+    }
+    // Cookie refers to a custom sound set but we don't have its details:
+    // try the standard API paths directly
+    console.log(`Using direct path construction for cookie sound set ID: ${cookieId}`);
+    return {
+      normal: `/api/sound-sets/${cookieId}/normal-beat-sound/`,
+      accent: `/api/sound-sets/${cookieId}/accent-sound/`,
+      first: `/api/sound-sets/${cookieId}/first-beat-sound/`
+    };
+  }
+
+  if (soundSet) {
+    console.log(`Loading sound set from API: ${soundSet.name}`);
+    return soundSetPaths(soundSet);
+  }
+  return { ...DEFAULT_SOUND_PATHS };
+}
+
+const PROCEDURAL_CLICK_SECONDS = 0.045;
+const PROCEDURAL_CLICK_DECAY = 95;
+// Frequency (Hz) and amplitude of the synthesized fallback clicks
+const PROCEDURAL_CLICKS = {
+  normal: { frequency: 1650, amplitude: 0.64 },
+  accent: { frequency: 2150, amplitude: 0.78 },
+  first: { frequency: 2700, amplitude: 0.9 }
+};
+
+function createProceduralClick(audioCtx, frequency, amplitude) {
+  const frameCount = Math.ceil(audioCtx.sampleRate * PROCEDURAL_CLICK_SECONDS);
+  const buffer = audioCtx.createBuffer(1, frameCount, audioCtx.sampleRate);
+  const channel = buffer.getChannelData(0);
+  for (let frame = 0; frame < frameCount; frame += 1) {
+    const time = frame / audioCtx.sampleRate;
+    const envelope = Math.exp(-time * PROCEDURAL_CLICK_DECAY);
+    channel[frame] = amplitude * envelope * (
+      0.82 * Math.sin(2 * Math.PI * frequency * time) +
+      0.18 * Math.sin(2 * Math.PI * frequency * 2.03 * time)
+    );
+  }
+  return buffer;
+}
+
+/**
+ * The bundled samples should always be available, but a procedural click
+ * prevents a professional practice session from failing silently if WebKit
+ * cannot fetch or decode an asset.
+ */
+function loadProceduralClicks(audioCtx, normalBufferRef, accentBufferRef, firstBufferRef) {
+  try {
+    const { normal, accent, first } = PROCEDURAL_CLICKS;
+    normalBufferRef.current = createProceduralClick(audioCtx, normal.frequency, normal.amplitude);
+    accentBufferRef.current = createProceduralClick(audioCtx, accent.frequency, accent.amplitude);
+    firstBufferRef.current = createProceduralClick(audioCtx, first.frequency, first.amplitude);
+    console.warn('Using procedural metronome clicks as an audio fallback');
+    return true;
+  } catch (fallbackError) {
+    console.error('Unable to create procedural fallback clicks:', fallbackError);
+    return false;
+  }
+}
+
 /**
  * Loads your standard metronome click buffers (normal, accent, first).
  * Supports custom sound sets from the API with enhanced error handling.
@@ -336,59 +444,11 @@ export async function loadClickBuffers({
     return false;
   }
 
-  // Default paths (fallback)
-  let normalPath = '/assets/audio/click_new.wav';
-  let accentPath = '/assets/audio/click_new_accent.wav';
-  let firstPath = '/assets/audio/click_new_first.wav';
-
   // Check cookie first for most consistent sound selection
   const cookieSoundSetId = ignorePreferences ? null : getActiveSoundSetIdFromCookie();
   if (ignorePreferences) soundSet = null;
-  
-  // If we have a cookie set, ensure our sound set matches it
-  // This is vital for proper sound reloading with cookies
-  if (cookieSoundSetId) {
-    const cookieId = cookieSoundSetId.toString();
-    
-    if (soundSet && soundSet.id && soundSet.id.toString() !== cookieId) {
-      console.log(`Cookie sound set ID (${cookieId}) doesn't match provided sound set (${soundSet.id}), using cookie preference`);
-      // We'll continue and handle this in the path selection below
-    }
-    
-    // Cookie-based sound set selection
-    if (cookieId === 'default-woodblock' || cookieId === 'woodblock') {
-      console.log('Using woodblock sounds from cookie preference');
-      normalPath = '/metronome_sounds/wood_normal_sound.mp3';
-      accentPath = '/metronome_sounds/wood_accent_sound.mp3';
-      firstPath = '/metronome_sounds/wood_first_sound.mp3';
-    } else if (cookieId === 'default-drums' || cookieId === 'drums') {
-      console.log('Using drum sounds from cookie preference');
-      normalPath = '/metronome_sounds/drum_normal_sound.mp3';
-      accentPath = '/metronome_sounds/drum_accent_sound.mp3';
-      firstPath = '/metronome_sounds/drum_first_sound.mp3';
-    } else if (soundSet && soundSet.id && soundSet.id.toString() === cookieId) {
-      // Use the provided sound set if it matches the cookie
-      console.log(`Using sound set (${soundSet.name}) from API that matches cookie ID: ${cookieId}`);
-      normalPath = soundSet.normal_beat_sound_url || normalPath;
-      accentPath = soundSet.accent_sound_url || accentPath;
-      firstPath = soundSet.first_beat_sound_url || firstPath;
-    } else {
-      // Cookie refers to a custom sound set but we don't have its details
-      // We'll try to load it directly from standard API paths
-      console.log(`Using direct path construction for cookie sound set ID: ${cookieId}`);
-      // Typically each sound set has its own directory structure
-      normalPath = `/api/sound-sets/${cookieId}/normal-beat-sound/`;
-      accentPath = `/api/sound-sets/${cookieId}/accent-sound/`;
-      firstPath = `/api/sound-sets/${cookieId}/first-beat-sound/`;
-    }
-  } else if (soundSet) {
-    // No cookie set, use the provided sound set
-    console.log(`Loading sound set from API: ${soundSet.name}`);
-    normalPath = soundSet.normal_beat_sound_url || normalPath;
-    accentPath = soundSet.accent_sound_url || accentPath;
-    firstPath = soundSet.first_beat_sound_url || firstPath;
-  }
-  
+
+  const { normal: normalPath, accent: accentPath, first: firstPath } = resolveSoundPaths(soundSet, cookieSoundSetId);
   console.log(`Sound paths:`, { normalPath, accentPath, firstPath });
 
   try {
@@ -414,11 +474,7 @@ export async function loadClickBuffers({
     
     // Make the loaded buffers available for the debug helper
     if (window.metronomeDebug) {
-      window.metronomeDebug.audioBuffers = {
-        normal: normal,
-        accent: accent,
-        first: first
-      };
+      window.metronomeDebug.audioBuffers = { normal, accent, first };
       window.metronomeDebug.audioContext = audioCtx;
     }
     
@@ -445,34 +501,6 @@ export async function loadClickBuffers({
         return false;
       }
     }
-    // The bundled samples should always be available, but a procedural click
-    // prevents a professional practice session from failing silently if WebKit
-    // cannot fetch or decode an asset.
-    try {
-      const createClick = (frequency, amplitude) => {
-        const duration = 0.045;
-        const frameCount = Math.ceil(audioCtx.sampleRate * duration);
-        const buffer = audioCtx.createBuffer(1, frameCount, audioCtx.sampleRate);
-        const channel = buffer.getChannelData(0);
-        for (let frame = 0; frame < frameCount; frame += 1) {
-          const time = frame / audioCtx.sampleRate;
-          const envelope = Math.exp(-time * 95);
-          channel[frame] = amplitude * envelope * (
-            0.82 * Math.sin(2 * Math.PI * frequency * time) +
-            0.18 * Math.sin(2 * Math.PI * frequency * 2.03 * time)
-          );
-        }
-        return buffer;
-      };
-
-      normalBufferRef.current = createClick(1650, 0.64);
-      accentBufferRef.current = createClick(2150, 0.78);
-      firstBufferRef.current = createClick(2700, 0.9);
-      console.warn('Using procedural metronome clicks as an audio fallback');
-      return true;
-    } catch (fallbackError) {
-      console.error('Unable to create procedural fallback clicks:', fallbackError);
-      return false;
-    }
+    return loadProceduralClicks(audioCtx, normalBufferRef, accentBufferRef, firstBufferRef);
   }
 }
