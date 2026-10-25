@@ -302,12 +302,12 @@ body.reduced-motion *::after {
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  border: var(--stroke) solid var(--dial-line-strong);
+  border: 0;
   border-radius: var(--r-surface);
   background: var(--dial-bg);
 }
 
-/* The dial plate: everything on it (and the controls laid over it) reads the
+/* The plate: everything on it (and the controls laid over it) reads the
    same token names as the light page, re-mapped to the dial palette. */
 .viz-card,
 .app-container .multi-mode-shell > .circle-actions,
@@ -433,14 +433,6 @@ body.reduced-motion *::after {
   .beat-control:not(:disabled):hover .beat-mark {
     border-color: var(--ink-2);
   }
-}
-
-.line-connection {
-  position: absolute;
-  height: var(--stroke-viz);
-  background: var(--line-strong);
-  pointer-events: none;
-  transform-origin: center center;
 }
 
 /* ---- Grid: hairline cells, filled cells grey, current column teal -------- */
@@ -1093,20 +1085,6 @@ input[type='range']:focus-visible::-moz-range-thumb {
   transform: scale(1.25);
 }
 
-/* Beat mode: a faint dial ring behind the polygon. */
-.beat-visual .metronome-container::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border: var(--stroke) solid var(--line);
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.beat-visual .metronome-container {
-  border-radius: 50%;
-}
-
 /* Guide: the beat types use the same marks as the instrument. */
 .info-modal .beat-indicator {
   position: relative;
@@ -1140,26 +1118,4 @@ input[type='range']:focus-visible::-moz-range-thumb {
   margin: -3px 0 0 -3px;
   border-radius: 50%;
   background: var(--accent);
-}
-
-/* Beat mode: a watch bezel of 60 hairline ticks just outside the beat ring. */
-.dial-ticks {
-  position: absolute;
-  top: -22px;
-  left: -22px;
-  width: calc(100% + 44px);
-  height: calc(100% + 44px);
-  overflow: visible;
-  pointer-events: none;
-}
-
-.dial-ticks line {
-  stroke: var(--line-strong);
-  stroke-width: 0.35;
-  stroke-linecap: round;
-}
-
-.dial-ticks line.is-major {
-  stroke: var(--accent);
-  stroke-width: 0.5;
 }

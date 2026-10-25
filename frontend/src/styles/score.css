@@ -1,0 +1,141 @@
+/*
+ * The staff and its marks (Beat view; Grid, Sequence and Polyrhythm reuse the
+ * marks). Flat: hairlines and ink, no relief, no shadow. The current beat
+ * fills with blue (90 ms in, 160 ms out; none under reduced motion, which the
+ * global rule in instrument-system.css enforces). State is shape, not colour:
+ * hollow head, ">" accent, "^" first beat, rest = muted.
+ */
+
+.score {
+  position: relative;
+  overflow: hidden;
+  color: var(--ink);
+  font-family: var(--font);
+}
+
+.score-system {
+  position: absolute;
+  left: 0;
+}
+
+.score-staff {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+}
+
+.score-line {
+  stroke: var(--line);
+  stroke-width: var(--stroke);
+  shape-rendering: crispEdges;
+}
+
+.score-bar {
+  stroke: var(--ink);
+  stroke-width: var(--stroke);
+  shape-rendering: crispEdges;
+}
+
+.score-final {
+  fill: var(--ink);
+  shape-rendering: crispEdges;
+}
+
+.score-time {
+  fill: var(--ink);
+  font-family: var(--font);
+  font-weight: var(--fw-bold);
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.score-tempo {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  height: 18px;
+  color: var(--ink);
+  font-size: var(--fs-2);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.score-tempo-word {
+  font-weight: var(--fw-bold);
+  margin-right: var(--sp-1);
+}
+
+.score .score-tempo-note {
+  width: 8px;
+  height: 17px;
+}
+
+.score-tempo-eq {
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* One beat: a transparent key as tall as the staff, as wide as the beat. */
+.staff-beat {
+  position: absolute;
+  top: 0;
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  z-index: 2;
+}
+
+.staff-beat svg {
+  display: block;
+  overflow: visible;
+}
+
+.staff-beat:focus-visible {
+  outline-offset: -2px;
+}
+
+.score-head {
+  fill: var(--bg);
+  stroke: var(--ink);
+  transition: fill var(--t-out), stroke var(--t-out);
+}
+
+.score-stem,
+.score-flag,
+.score-rest {
+  stroke: var(--ink);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke var(--t-out);
+}
+
+.score-art {
+  stroke: var(--accent-ink);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The current beat: filled blue head and stem. */
+.is-current .score-head {
+  fill: var(--accent);
+  stroke: var(--accent);
+  transition: fill var(--t-in), stroke var(--t-in);
+}
+
+.is-current .score-stem,
+.is-current .score-flag,
+.is-current .score-rest {
+  stroke: var(--accent);
+  transition: stroke var(--t-in);
+}
+
+@media (hover: hover) {
+  .staff-beat:hover .score-head {
+    stroke: var(--accent-ink);
+  }
+}

@@ -37,6 +37,7 @@ const t = (k) => tokens[k].toLowerCase();
 const SHIPPED_STYLESHEETS = [
   'styles/layout.css',
   'styles/instrument-system.css',
+  'styles/score.css',
   'styles/accessibility.css',
   'components/Menu/mainMenu.css',
   'components/InfoSection/InfoModal.css',

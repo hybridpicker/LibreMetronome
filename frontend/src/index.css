@@ -2,6 +2,7 @@
 @import './styles/colors.css';
 @import './styles/utilities.css';
 @import './styles/instrument-system.css';
+@import './styles/score.css';
 
 @font-face {
   font-family: 'Lato';
