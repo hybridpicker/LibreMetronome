@@ -1,6 +1,7 @@
 // src/components/Menu/TrainingContent.js
 import React, { useState, useEffect } from 'react';
 import InterfaceIcon from '../common/InterfaceIcon';
+import RangeInput from '../metronome/Controls/RangeInput';
 
 const TrainingContent = ({ 
   trainingSettings, 
@@ -133,8 +134,7 @@ const TrainingContent = ({
             </div>
             <label className="training-input-label">
               <span>Mute probability:</span>
-              <input
-                type="range"
+              <RangeInput
                 min="0"
                 max="1"
                 step="0.05"
@@ -199,8 +199,7 @@ const TrainingContent = ({
             
             <label className="training-input-label">
               <span>Tempo increase (%):</span>
-              <input
-                type="range"
+              <RangeInput
                 min="1"
                 max="20"
                 value={localSettings.tempoIncreasePercent}

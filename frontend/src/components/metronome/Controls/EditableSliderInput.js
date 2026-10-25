@@ -1,5 +1,7 @@
 // src/components/metronome/Controls/EditableSliderInput.js
 import React, { useState } from 'react';
+import RangeInput from './RangeInput';
+import { TempoNote } from '../ScoreGlyphs';
 
 const EditableSliderInput = ({ 
   label, 
@@ -61,12 +63,12 @@ const EditableSliderInput = ({
     setValue(Math.round(next * 100) / 100);
   };
 
-  // "120 BPM" is drawn as a large number with a small unit; the text stays whole.
+  // "120 BPM" is drawn as a tempo mark: a quarter note, "=", the number and a
+  // small unit. Any other "<number> <unit>" keeps the number large, the unit small.
   const formatted = String(formatter(value));
   const unitMatch = /^(\S+)\s+([A-Za-z]+)$/.exec(formatted);
+  const isTempo = unitMatch && unitMatch[2].toUpperCase() === 'BPM';
 
-  const progress = max === min ? 0 : ((value - min) / (max - min)) * 100;
-  
   return (
     <div className={`editable-slider ${className || ''} ${disabled ? 'disabled' : ''}`}>
       {isEditing ? (
@@ -94,8 +96,14 @@ const EditableSliderInput = ({
           <span className="slider-label-name">{label}</span>
           {unitMatch ? (
             <span className="slider-label-value">
+              {isTempo && (
+                <>
+                  <TempoNote />
+                  <span className="tempo-eq" aria-hidden="true">=</span>
+                </>
+              )}
               <span className="slider-value-number">{unitMatch[1]}</span>{' '}
-              <span className="slider-value-unit">{unitMatch[2]}</span>
+              <span className="slider-value-unit">{isTempo ? unitMatch[2].toLowerCase() : unitMatch[2]}</span>
             </span>
           ) : (
             <span className="slider-label-value">{formatted}</span>
@@ -114,8 +122,7 @@ const EditableSliderInput = ({
           <span aria-hidden="true">&minus;</span>
         </button>
       )}
-      <input
-        type="range"
+      <RangeInput
         min={min}
         max={max}
         step={step}
@@ -123,7 +130,6 @@ const EditableSliderInput = ({
         onChange={handleSliderChange}
         className={`slider ${disabled ? 'disabled' : ''}`}
         aria-label={label}
-        style={{ '--slider-progress': `${Math.max(0, Math.min(100, progress))}%` }}
         disabled={disabled}
       />
       {stepButtons && (

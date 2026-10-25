@@ -584,10 +584,9 @@ body.reduced-motion *::after {
 .circle-actions-label {
   margin-right: auto;
   color: var(--ink-2);
-  font-size: var(--fs-1);
+  font-size: var(--fs-2);
   font-weight: var(--fw-regular);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .circle-actions-count {
@@ -702,17 +701,15 @@ body.reduced-motion *::after {
 
 .circle-badge {
   color: var(--ink-2);
-  font-size: var(--fs-1);
+  font-size: var(--fs-2);
   font-weight: var(--fw-bold);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .circle-beat-count {
   color: var(--ink-2);
-  font-size: var(--fs-1);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: var(--fs-2);
+  letter-spacing: 0.02em;
 }
 
 .polyrhythm-buttons {
@@ -729,10 +726,9 @@ body.reduced-motion *::after {
 .control-group > h3 {
   margin: 0;
   color: var(--ink-2);
-  font-size: var(--fs-1);
+  font-size: var(--fs-2);
   font-weight: var(--fw-regular);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
   line-height: 18px;
   text-align: left;
 }
@@ -905,10 +901,9 @@ body.reduced-motion *::after {
 
 .slider-label-name {
   color: var(--ink-2);
-  font-size: var(--fs-1);
+  font-size: var(--fs-2);
   font-weight: var(--fw-regular);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .slider-label-value {
@@ -918,17 +913,36 @@ body.reduced-motion *::after {
   font-variant-numeric: tabular-nums;
 }
 
+/* The tempo mark "♩ = 120 bpm": a Light numeral, the quarter note and the
+   equals sign scale with it (--bpm-size: 64 / 80 / 104 px). */
 .slider-value-number {
   font-size: var(--bpm-size, var(--fs-5));
-  font-weight: var(--fw-bold);
+  font-weight: var(--fw-light);
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
   line-height: 1;
 }
 
 .slider-value-unit {
   color: var(--ink-2);
   font-size: var(--fs-1);
-  font-weight: var(--fw-bold);
+  font-weight: var(--fw-regular);
+}
+
+.tempo-note {
+  align-self: center;
+  flex: 0 0 auto;
+  width: calc(var(--bpm-size, var(--fs-5)) * 0.18);
+  height: calc(var(--bpm-size, var(--fs-5)) * 0.38);
+  color: var(--ink);
+}
+
+.tempo-eq {
+  align-self: center;
+  color: var(--ink-2);
+  font-size: calc(var(--bpm-size, var(--fs-5)) * 0.35);
+  font-weight: var(--fw-light);
+  line-height: 1;
 }
 
 .editable-input {
@@ -943,9 +957,34 @@ body.reduced-motion *::after {
   font-variant-numeric: tabular-nums;
 }
 
+.range-field {
+  position: relative;
+  display: block;
+  min-width: 0;
+  height: var(--touch);
+}
+
+/* The progress runs from the left end to the centre of the notehead thumb
+   (16 px wide, so 8 px in from both ends of the track). */
+.range-progress {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: calc(8px + (100% - 16px) * var(--range-p, 0));
+  height: var(--stroke-viz);
+  margin-top: calc(var(--stroke-viz) / -2);
+  background: var(--accent);
+  pointer-events: none;
+}
+
+.range-field.is-disabled {
+  opacity: 0.45;
+}
+
 input[type='range'] {
   -webkit-appearance: none;
   appearance: none;
+  position: relative;
   display: block;
   width: 100%;
   height: var(--touch);
@@ -958,48 +997,52 @@ input[type='range'] {
 }
 
 input[type='range']::-webkit-slider-runnable-track {
-  height: 2px;
-  background: linear-gradient(
-    to right,
-    var(--accent) var(--slider-progress, 0%),
-    var(--line-strong) var(--slider-progress, 0%)
-  );
-}
-
-input[type='range']::-moz-range-track {
-  height: 2px;
+  height: var(--stroke);
   background: var(--line-strong);
 }
 
-input[type='range']::-moz-range-progress {
-  height: 2px;
-  background: var(--accent);
+input[type='range']::-moz-range-track {
+  height: var(--stroke);
+  background: var(--line-strong);
 }
 
-/* A small rectangular index mark, like the slider of a mixing desk. */
+/* The thumb is a notehead, 16 x 11, tilted like the heads on the staff. */
 input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   box-sizing: border-box;
-  width: 12px;
-  height: 28px;
-  margin-top: -13px;
+  width: 16px;
+  height: 11px;
+  margin-top: -5px;
   border: 0;
-  border-radius: var(--r-control);
-  background: var(--accent-ink);
+  border-radius: 50%;
+  background: var(--accent);
+  transform: rotate(-20deg);
 }
 
 input[type='range']::-moz-range-thumb {
   box-sizing: border-box;
-  width: 12px;
-  height: 28px;
+  width: 16px;
+  height: 11px;
   border: 0;
-  border-radius: var(--r-control);
-  background: var(--accent-ink);
+  border-radius: 50%;
+  background: var(--accent);
+  transform: rotate(-20deg);
 }
 
-input[type='range']:disabled {
-  opacity: 0.45;
+/* The focus ring wraps the notehead, not the whole 44 px strip. */
+input[type='range']:focus-visible {
+  outline: none;
+}
+
+input[type='range']:focus-visible::-webkit-slider-thumb {
+  outline: var(--stroke-select) solid var(--focus);
+  outline-offset: 3px;
+}
+
+input[type='range']:focus-visible::-moz-range-thumb {
+  outline: var(--stroke-select) solid var(--focus);
+  outline-offset: 3px;
 }
 
 /* ---- Web-only support page bar ----------------------------------------- */
@@ -1031,12 +1074,6 @@ input[type='range']:disabled {
 }
 
 /* ---- Finishing touches: quiet, precise, a little poetic ------------------ */
-
-/* BPM in the regular cut, tightly tracked: an airy number like a watch face. */
-.slider-value-number {
-  font-weight: var(--fw-regular);
-  letter-spacing: -0.03em;
-}
 
 /* Wide enough for it, the mode names are set in small capitals. */
 @media (min-width: 600px) {

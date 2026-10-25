@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getAllSoundSets, setActiveSoundSet, getActiveSoundSetIdFromCookie } from '../../services/soundSetService';
 import InterfaceIcon from '../common/InterfaceIcon';
+import RangeInput from '../metronome/Controls/RangeInput';
 import firstBeatIcon from '../../assets/svg/firstBeat.svg';
 import accentedBeatIcon from '../../assets/svg/accentedBeat.svg';
 import normalBeatIcon from '../../assets/svg/normalBeat.svg';
@@ -348,8 +349,7 @@ const SettingsContent = ({
           <div className="settings-row">
             <label>
               <span>Master Volume: {Math.round(localVolume * 100)}%</span>
-              <input
-                type="range"
+              <RangeInput
                 min="0"
                 max="1"
                 step="0.01"
