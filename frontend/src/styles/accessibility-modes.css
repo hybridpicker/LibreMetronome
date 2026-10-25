@@ -47,12 +47,17 @@ body.high-contrast .viz-card {
   border: var(--stroke-select) solid var(--line);
 }
 
-body.high-contrast .mode-option.active,
+body.high-contrast .mode-option.active {
+  border: 3px solid var(--focus);
+  color: var(--ink);
+}
+
+/* Active keys are filled cyan with black; the yellow edge keeps them apart. */
 body.high-contrast .subdivision-choice[aria-pressed='true'],
 body.high-contrast .note-selector-button[aria-pressed='true'],
 body.high-contrast .polyrhythm-choice[aria-pressed='true'] {
   border: 3px solid var(--focus);
-  color: var(--ink);
+  color: var(--on-accent);
 }
 
 body.high-contrast .transport-play,
