@@ -438,3 +438,42 @@ Build 0.7.0 (versionCode 5) wurde vom Eigentümer im internen Test veröffentlic
 - Mehr Charakter innerhalb der Regeln: Beat-Modus mit Zifferblatt-Ring und 60 Haarlinien-Strichen (Fünferstriche teal), Analog mit Haarlinien-Skala über dem Pendel, Halo um den aktuellen Schlag.
 - Nachweis: 42 von 42 Fälle Überlänge 0 px; Modi (Kontrast, Großschrift, Farbenblind) bei 412×805, 360×740, 1280×800 je 0 px; 187 Tests grün.
 - Nicht geprüft: wie vorher (echtes Gerät, iOS, macOS); Kontrast der neuen Töne nur nach Token-Werten.
+
+## 16. Design-Runde 3: „Score“ (nicht veröffentlicht, Version unverändert 0.7.1)
+
+Die Versionsnummer und der `versionCode` wurden nicht angehoben; das entscheidet die Veröffentlichung. Vorher/nachher: `docs/redesign-before-after-round3.png`. Die Gestaltung steht in `docs/design-system.md`.
+
+### Entscheidungen des Eigentümers
+
+- Richtung „Score“: flach, kein 3D, keine Schatten; die Beat-Ansicht ist ein Takt auf einer fünfzeiligen Notenzeile. Weiße Seite, Akzent ist das Okabe-Ito-Paar `#005a8d` (Text) und `#0072b2` (Füllung), `#004b78` nur für gedrücktes Start; blaugetönte Neutraltöne. Teal ist kein Akzent mehr.
+- Icon B (Pendel mit Notenkopf-Gewicht); Tempowort („Allegro“) nur über der Notenzeile; Lato Light statt Thin im Bundle.
+
+### Änderungen (ein Commit je Schritt, 1 bis 10)
+
+1. Tokens und `DesignTokens.test.js` (maßgeblich, prüft jetzt auch Kontrast, Schriftschnitte, Modi und alle ausgelieferten Stylesheets); Lato Light; `measure-layout.mjs` mit Tritanopie, Monochrom und `--beats N`.
+2. Tasten: quadratisch, 1 px `ink-2`, aktiv blau gefüllt, Fokusring 2 px mit 3 px Abstand.
+3. Tempozeile „♩ = 120 bpm“ (Ziffer Light 64/80/104 px), Regler mit 1,5-px-Fortschritt und Notenkopf-Griff (`RangeInput`), Labels in Satzschreibung, keine Linien zwischen den Zeilen.
+4. Modusleiste, Start (56 px, „Pause“ umrandet) und Tap.
+5. Dialoge, Trainingsleiste, Support-Seite; Reste von Schatten und rohen Farben aus `accessibility.css` und den Hilfe-Knöpfen entfernt.
+6. Beat als Notenzeile (`Score/BeatStaff.js`, `staffLayout.js`); bei zu engen Schlägen bricht der Takt auf eine zweite Zeile um. Die Darstellung folgt weiter nur `currentSubdivision`, es gibt keine neuen Zeitgeber.
+7. Notenköpfe in Grid (bricht bei neun Spalten auf zwei Blöcke um), Sequence, Polyrhythm (stumme Schläge als Pause) und im Guide.
+8. Analog: Pendel über der Notenzeile, Notenkopf-Gewicht, Tempoangabe.
+9. Modi geprüft; Protanopie und Deuteranopie brauchen keinen Ersatz (Hinweis im Dialog), Tritanopie `#a13f00`/`#c24d00`, Monochrom Tinte.
+10. Icon, Store-Grafik, Manifest (`theme_color` `#0072b2`, Hintergrund `#ffffff`), Doku.
+
+### Messwerte
+
+`measure-layout.mjs`, Build mit `CI=false`: **42 von 42 Fällen ohne Überlänge, keine Touch-Fläche unter 40 px, kein Text unter 12 px** in jedem dieser Läufe: normal, Hoher Kontrast, Großschrift, Tritanopie, Monochrom, und jeweils zusätzlich mit neun Schlägen pro Takt. Tests: 37 Suiten, alle grün (darunter neu `BeatStaff`, `GridLayout`, `DesignTokens`).
+
+Beim Neun-Schläge-Lauf zeigte der alte Stand des Grids Spalten unter 40 px Breite (32 px bei 360×740); das Grid bricht jetzt um.
+
+### Nicht geprüft
+
+- Echtes Gerät (Android, iOS, macOS), App-Build im Emulator; iOS-Simulator, Android-Adaptive-Icon und Splash nur als erzeugte Dateien, nicht gestartet.
+- Der Beat-Zeitgeber und das Audio wurden nicht angefasst und nicht neu gemessen.
+- Kontrast nach Token-Werten berechnet (Test), nicht mit einem Werkzeug über alle Zustände gemessen; Staff-Linien (`--line`, 1,3:1) sind bewusst Dekor.
+- Bildschirmleser nicht ausprobiert; die Namen der Beat-Tasten sind unverändert.
+- Tastatur: nur die Reihenfolge der Beat-Tasten im DOM ist getestet, nicht die Tab-Reihenfolge im Browser; eine Pfeiltasten-Steuerung gibt es nicht.
+- Hoher Kontrast: Staff-Linien sind weiß und 1 px; nur im Screenshot gesehen.
+- Web: nicht gepusht; Server-Build und Kopieren der Icons nach `static_cdn/assets` stehen aus.
+- Der Android-Build wurde nicht gebaut; `capacitor-assets` hat die Ressourcen neu geschrieben (61 Android-Dateien, 4 iOS).
