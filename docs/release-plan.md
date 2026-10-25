@@ -1,14 +1,17 @@
 # Web and App Store Release
 
-Updated September 5, 2026.
+Updated October 25, 2026.
 
 ## Release status
 
 | Target | Verified state | Next step |
 | --- | --- | --- |
-| iPad development app | Signed Debug build installed and launched | Continue device validation |
-| Public website | Local production build passes; live site unchanged by this work | Transfer reviewed changes and deploy from AlmaLinux |
-| TestFlight / App Store | No paid developer membership confirmed; no upload performed | Complete enrollment, then prepare distribution build and metadata |
+| Android (Play internal test) | 0.8.0, versionCode 7 (assumed, owner checks Bundle Explorer): signed AAB and APK built, no INTERNET permission; not yet run on a device | Owner uploads the AAB; install and check on the Samsung |
+| iPad development app | Debug build with the 0.8.0 Score design installed and launched on the iPad; simulator screenshot (portrait, Analog) only | Look at all modes and both orientations on the device |
+| Public website | Local production build of 0.8.0 passes; live site unchanged; release commit not pushed | Push (owner), then deploy from an AlmaLinux session |
+| macOS app | 0.8.0 built, installed to /Applications, ad-hoc signed, running | Check Dock badge, menu, global shortcut |
+| Linux desktop | `icon.png` and build path read; nothing built | Run `desktop/install.sh` on a Linux host |
+| TestFlight / App Store | No upload; membership activation not verified | Owner confirms membership, then App Store Connect record |
 
 ## Product direction
 

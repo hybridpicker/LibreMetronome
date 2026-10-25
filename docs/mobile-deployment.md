@@ -1,6 +1,15 @@
 # Mobile Deployment
 
-## Current Status — September 5, 2026
+## Current Status — October 25, 2026
+
+Release 0.8.0 (build 7) carries the "Score" design to every target. Signed
+Android AAB and APK are built (no INTERNET permission). The iPad Debug build
+was installed and launched, the macOS app was installed to `/Applications`.
+Not yet done: device checks on the Samsung, full iPad screen review, web
+deployment, Play upload. Details and the list of unchecked items are in
+`docs/app-release.md` section 17.
+
+## Earlier Status — September 5, 2026
 
 Web and Capacitor iPad builds share the React application in `frontend/`.
 The latest signed Debug build was installed and launched on the connected

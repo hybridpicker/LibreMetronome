@@ -490,3 +490,39 @@ Beim Neun-Schläge-Lauf zeigte der alte Stand des Grids Spalten unter 40 px Brei
 - Notenköpfe sind schlanker und stärker geneigt (Verhältnis 1,58, 24°), damit sie nicht als Kreise gelesen werden.
 
 Nachweis wie in 16: 42 von 42 Fälle in jedem Modus und mit neun Schlägen ohne Überlänge; alle Tests grün.
+
+
+## 17. Release 0.8.0: Score auf allen Geräten (Build 7, Stand 2026-10-25)
+
+Version 0.8.0, `buildNumber` 7. **Der `versionCode` 7 ist angenommen**; ob er in der Play Console frei ist, prüft der Eigentümer im Bundle Explorer. Ist er belegt, `buildNumber` erhöhen und AAB neu bauen. Nichts gepusht, nichts deployt, nichts hochgeladen.
+
+### Nachweise je Ziel
+
+| Ziel | Befehl | Ergebnis |
+|---|---|---|
+| Tests | `CI=true npx react-scripts test --watchAll=false` | 37 Suiten, 262 Tests grün |
+| Layout | `node scripts/measure-layout.mjs --strict --mode M` für normal, contrast, large, colorblind, tritanopia, monochromacy, dazu `--beats 9` | je 42 von 42 Fälle ohne Überlänge |
+| Web (lokal) | `REACT_APP_BACKEND_URL=https://libremetronome.com CI=false npm --prefix frontend run build` | läuft durch, `main.5baffe33.js` (107 kB gzip), `main.9d947f7a.css`; bekannte Lint-Warnung in `AccessibilityMenu.js` unverändert |
+| Android Build | `npm run mobile:sync`; `./gradlew assembleRelease bundleRelease` (JDK 21, Schlüssel über `LIBREMETRONOME_KEY_PROPERTIES`) | BUILD SUCCESSFUL |
+| Android AAB | `jarsigner -verify` | „JAR-Datei verifiziert“; 4 044 322 Byte; `versionName` 0.8.0 aus dem AAB-Manifest |
+| Android APK | `aapt2 dump badging/permissions` | `versionCode` 7, `versionName` 0.8.0; einzige Berechtigung ist die app-eigene `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`, **kein INTERNET**; 4 246 448 Byte |
+| Store-Grafiken | Playwright/Chrome, App im Store-Modus (`androidBridge` gesetzt, keine Donate-Links) | `docs/store/feature-graphic-1024x500.png`; `docs/store/screenshots/` mit 5 Telefon- (1236 x 2415) und 2 Tablet-Bildern (1536 x 2048) |
+| iOS (Gerät) | `xcodebuild … -destination id=<iPad> -allowProvisioningUpdates` mit freiem Personal Team; `devicectl device install app`, `process launch` | BUILD SUCCEEDED, Installation und Start gemeldet |
+| iOS (Simulator) | `xcodebuild` für iPad Air 13" (M4), `simctl install/launch/io screenshot` | läuft, Hochformat, Analog: `docs/release-0.8.0/ios-ipad-sim-analog-portrait.png` |
+| macOS | `macos/build.sh --install --dock` | gebaut, ad hoc signiert, nach `/Applications` installiert, Dock-Eintrag war schon da, Version 0.8.0, Prozess läuft. Dock-Icon-Quelle ist `AppIcon-512@2x.png` aus Commit `c56ea99` (neues Icon); `make-icon.swift` musste nicht geändert werden |
+| Linux | nur gelesen | `desktop/icon.png` (512 px) stammt aus `c56ea99`; `main.js` lädt `build/`, das `install.sh` frisch aus `frontend/` baut |
+
+### Nicht geprüft
+
+- **Android auf dem Samsung:** kein Gerät per adb verbunden (`adb devices` leer). Der Emulator `GP_Test` stürzte in dieser Umgebung beim Start ab (Exit 139). Damit fehlen: Installation, Screenshots der fünf Modi und des Dialogs, Homescreen-Icon, Splash, Statusleiste weiß, Tasten 44 px, Lato Light im App-Build, kein Scrollen. Die Telefon-Store-Bilder stammen aus Chrome (412 x 805), nicht vom Gerät.
+- `versionCode` direkt aus der AAB gelesen: nicht möglich (`aapt2` öffnet keine AAB, kein `bundletool`); der Wert 7 stammt aus der APK desselben Gradle-Laufs.
+- **iPad:** App wurde installiert und gestartet, die Bildschirminhalte auf dem Gerät konnte ich nicht ansehen (kein Screenshot-Weg vom Gerät). Der Zugriff auf das Simulator-Panel war nicht freigegeben, daher gibt es nur einen Simulator-Screenshot im Hochformat, Modus Analog; Modi, Querformat, Statusleiste und Scrollen sind offen. In diesem Screenshot ist die Analog-Ansicht im iPad-Hochformat links unten angeordnet, rechts oben die Bedienung, viel freie Fläche dazwischen: kein Fehler gemeldet, aber ein Punkt zum Ansehen (Design nicht geändert).
+- **TestFlight/App Store:** nicht geprüft und nichts angelegt. Xcode listet neben dem Personal Team ein Team vom Typ „Individual“; ob die Mitgliedschaft aktiv ist, lässt sich von hier nicht bestätigen.
+- **macOS:** Dock-Badge, Menü, globaler Shortcut und Icon im Dock nicht geprüft; `screencapture` lieferte kein Bild („could not create image from display“), also kein Screenshot. Keine Notarisierung (nicht Teil des Auftrags).
+- **Linux:** Paket nicht gebaut, App nicht gestartet.
+- **Web live:** nicht deployt; Asset-Hashes, Favicon, `manifest.json`, Audio-Start, Tap Tempo, Tastatur und Fokusring auf dem Server offen.
+- Beat-Planung und Audio nicht angefasst, nicht neu gemessen.
+
+### Offen beim Eigentümer
+
+- Push (Tor a), Server-Deploy (Tor b), Play-Upload der AAB und Freigabe (Tor c), `versionCode` prüfen, Samsung anschließen, Simulator-Zugriff freigeben.
