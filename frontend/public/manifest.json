@@ -49,6 +49,6 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "any",
-  "theme_color": "#008b8b",
-  "background_color": "#f7f3eb"
+  "theme_color": "#0072b2",
+  "background_color": "#ffffff"
 }
