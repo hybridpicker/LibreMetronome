@@ -89,7 +89,7 @@ Frontend per area (lines / branches, before any change):
 | 1 Safety net | Vacuous tests removed (see "Test quality"); characterization tests for the timing engine, the three schedulers, keyboard/tap tempo, services, App/AdvancedMetronome |
 | 2 Coverage | backend 100 % lines and branches; frontend 98.9 % lines / 95.7 % branches (gates in `frontend/package.json` and `.github/workflows/ci.yml`) |
 | 3 Static quality | ruff, mypy (django-stubs), bandit, ESLint with `eslint-plugin-security`, all at zero findings; dependency audits clean for shipped code |
-| 4 Refactoring | 34 + 11 unreachable/test-only files removed, keyboard handler, training boundary, sound loading, accessibility utilities and sequence audio hook restructured; ESLint `complexity` ratchet at 22 (was 67) |
+| 4 Refactoring | 34 unreachable files and 12 test-only files removed, keyboard handler, training boundary, sound loading, accessibility utilities and sequence audio hook restructured; ESLint `complexity` ratchet at 22 (was 67) |
 | 5 Docs and DX | `docs/ARCHITECTURE.md`, `CONTRIBUTING.md`, README test section, corrected backend README, `run_tests.sh` as single entry point, PR workflow |
 
 ## Metrics before -> after
@@ -98,7 +98,7 @@ Frontend per area (lines / branches, before any change):
 | --- | --- | --- |
 | Backend tests | 17 | 89 |
 | Backend coverage (lines + branches) | 55 % | 100 % |
-| Frontend tests | 262 in 37 suites (many vacuous) | 1720 in 72 suites |
+| Frontend tests | 262 in 37 suites (many vacuous) | 1720 in 75 suites |
 | Frontend lines / branches / functions | 26.7 % / 21.2 % / 27.0 % (tests counted in the denominator) | 98.9 % / 95.7 % / 98.7 % (tests excluded) |
 | ruff | 48 findings (global user config) | 0 with the project rule set (`E F W I B UP C4 C90 SIM S RUF BLE`) |
 | mypy | not configured | 0 errors in 32 files |
