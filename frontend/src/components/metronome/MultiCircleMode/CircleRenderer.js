@@ -1,4 +1,5 @@
 import React from 'react';
+import { BeatMark } from '../ScoreGlyphs';
 
 const CircleRenderer = ({
   settings,
@@ -24,6 +25,8 @@ const CircleRenderer = ({
   // The mark grows with the ring (16-22px); its touch target shrinks on crowded
   // rings so neighbouring beats stay separately tappable.
   const markSize = Math.round(Math.min(22, Math.max(16, ring * 0.2)));
+  // One notehead is 14.4 k wide; k follows the mark size.
+  const markK = markSize / 14.4;
   const beatCountForSpacing = settings.subdivisions || 4;
   const spacing = (2 * Math.PI * actualRadius) / Math.max(beatCountForSpacing, 1);
   const hit = Math.round(Math.min(44, Math.max(28, spacing)));
@@ -48,6 +51,10 @@ const CircleRenderer = ({
     const accents = settings.accents || [];
     const beatState = i < accents.length ? accents[i] : (i === 0 ? 3 : 1);
     
+    // The accent mark sits on the outer side of the ring (above a beat in the
+    // upper half, below one in the lower half) so it never meets the centre.
+    const upper = Math.sin(angle) <= 0.01;
+    const artDist = 5 * markK + 9;
     const isMuted = beatState === 0;
     const markState = ['muted', 'normal', 'accent', 'first'][beatState] || 'normal';
 
@@ -67,7 +74,16 @@ const CircleRenderer = ({
           height: hit
         }}
       >
-        <span className="beat-mark" data-state={markState} aria-hidden="true" />
+        <svg width={hit} height={hit} aria-hidden="true" focusable="false">
+          <BeatMark
+            cx={hit / 2}
+            cy={hit / 2}
+            k={markK}
+            state={markState}
+            stem={0}
+            artY={hit / 2 + (upper ? -artDist : artDist)}
+          />
+        </svg>
       </button>
     );
   });

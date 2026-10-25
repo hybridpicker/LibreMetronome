@@ -68,7 +68,6 @@ body.high-contrast .transport-play.is-playing {
 body.high-contrast .transport-play { color: var(--on-accent); }
 body.high-contrast .transport-play.is-playing { color: var(--accent); }
 
-body.high-contrast .grid-cell.is-on::after { background: var(--ink); }
 
 /* ---- Large text --------------------------------------------------------- */
 

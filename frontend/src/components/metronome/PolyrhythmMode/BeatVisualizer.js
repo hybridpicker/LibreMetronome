@@ -1,5 +1,6 @@
 // src/components/metronome/PolyrhythmMode/BeatVisualizer.js
 import React, { useMemo, useRef, useEffect } from 'react';
+import { BeatMark } from '../ScoreGlyphs';
 
 const BeatVisualizer = ({
   beats,
@@ -8,10 +9,10 @@ const BeatVisualizer = ({
   currentSubdivision,
   isPaused,
   handleToggleAccent,
-  beatType = 'inner',
+  beatType = 'inner', // kept for callers; inner and outer look the same
   silenceModeActive = false,
   isTransitioning = false,
-  colorSwapped = false // New prop to handle color swapping
+  colorSwapped = false // kept for callers; no colour to swap in the Score look
 }) => {
   // Keep track of previous subdivision to detect changes
   const prevSubdivisionRef = useRef(currentSubdivision);
@@ -39,75 +40,42 @@ const BeatVisualizer = ({
     });
   }, [beats, radius]);
 
+  // A notehead is 14.4 k wide: about 20 px on a small ring, 25 px on a large one.
+  const k = Math.min(1.7, Math.max(1.4, radius / 120));
+  const states = ['muted', 'normal', 'accent', 'first'];
+
   return (
     <>
       {beatPositions.map((position, i) => {
         const { x, y } = position;
-        
+
         // Determine if this beat is currently active
         const isActive = i === currentSubdivision && !isPaused && !isTransitioning;
-        
-        // Get accent value: 0=muted, 1=normal, 2=accent, 3=first
-        // Safely access accent value with fallback
+
+        // Accent value: 0=muted (a rest), 1=normal, 2=accent (>), 3=first (^)
         const accentValue = i < accents.length ? accents[i] : 1;
-        
-        // Skip rendering if muted
-        if (accentValue === 0) {
-          return null;
-        }
-        
-        // Determine CSS classes based on beat type and accent value
-        let beatClasses = ['beat-dot'];
-        
-        if (isActive) beatClasses.push('active');
-        if (isTransitioning) beatClasses.push('transitioning');
-        
-        // Determine styling based on accent value and swap state
-        // First beat always uses the first-beat style regardless of swapping
-        if (accentValue === 3) {
-          beatClasses.push('first-beat');
-        } else {
-          // For normal and accent beats, apply the swapped class if needed
-          if (colorSwapped) {
-            // Swap inner and outer beat colors
-            beatClasses.push(beatType === 'inner' ? 'outer-beat' : 'inner-beat');
-          } else {
-            // Use default colors (not swapped)
-            beatClasses.push(beatType === 'inner' ? 'inner-beat' : 'outer-beat');
-          }
-          
-          // Add accent class if needed
-          if (accentValue === 2) {
-            beatClasses.push('accent-beat');
-          }
-        }
-        
-        // Less dramatic scale for subtler, quicker pulses
-        const scaleValue = isActive ? 1.3 : 1;
-        
-        // Enhanced styles with faster animation properties
-        const styles = {
-          left: `${x}px`,
-          top: `${y}px`,
-          opacity: isTransitioning ? 0.8 : 1, // No special silence opacity
-          transform: `translate(-50%, -50%) scale(${scaleValue})`,
-          // Much faster animation for active beats, standard for inactive
-          transition: isActive 
-            ? "transform 40ms cubic-bezier(0.175, 0.885, 0.32, 1.275)" // Faster, less bouncy
-            : "transform 100ms cubic-bezier(0.25, 0.1, 0.25, 1), opacity 100ms ease, left 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), top 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)",
-          willChange: "transform", // Performance hint for browser
-          WebkitBackfaceVisibility: "hidden", // Additional GPU acceleration
-          backfaceVisibility: "hidden",
-          cursor: 'default' // Changed from pointer to default
-        };
+        const size = Math.ceil(14.4 * k) + 6;
 
         return (
-          <div
+          <svg
             key={i}
-            className={beatClasses.join(' ')}
-            style={styles}
-            // No onClick handler since beats should not be clickable
-          />
+            className={`beat-note${isActive ? ' is-current' : ''}${isTransitioning ? ' transitioning' : ''}`}
+            width={size}
+            height={size}
+            aria-hidden="true"
+            focusable="false"
+            style={{ left: `${x}px`, top: `${y}px` }}
+          >
+            <BeatMark
+              cx={size / 2}
+              cy={size / 2}
+              k={k}
+              state={states[accentValue] || 'normal'}
+              stem={0}
+              restK={k * 0.7}
+              artY={size / 2 + (Math.sin(position.angle) <= 0.01 ? -1 : 1) * (5 * k + 9)}
+            />
+          </svg>
         );
       })}
     </>
