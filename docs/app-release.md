@@ -533,6 +533,12 @@ Version 0.8.0, `buildNumber` 7. **Der `versionCode` 7 ist angenommen**; ob er in
 - **Offen 2:** Das Template lädt `main.js`/`main.css` ohne Hash; Nginx cached JS 7 und CSS 30 Tage, Wiederkehrende sehen bis dahin alte oder gemischte Stände. Fix im Repo: `?v=0.8.0` an beiden Links, bei jedem Release anheben.
 - Nicht geprüft: Audio nur technisch (nicht gehört), Fokusring nur am Skip-Link, keine echten Geräte, kein Safari/iOS.
 
+### 17.1 Nachtrag: neues Icon (Richtung A, 2026-10-25)
+
+Das Icon aus Abschnitt 16 gefiel dem Eigentümer nicht. Moodboard mit sechs Richtungen, gewählt: A (weiße Metronom-Silhouette auf Blau `#0072b2`) mit kleinerem Notenkopf als Gewicht (63 x 44 statt 84 x 58 bei 1024 px). Quelle `frontend/assets/icon-source.svg`; daraus wurden neu erzeugt: iOS-, Android- (Vordergrund Silhouette, Hintergrund Blau), PWA-Sets, Favicons, `desktop/icon.png`, `docs/store/icon-512.png`, Splash und die Feature Graphic. Das Dock-Icon der macOS-App ist ein Cache-Fall gewesen (alte Darstellung trotz neuer `.icns`); App neu registriert, Dock neu gestartet.
+
+Nachweis: 37 Suiten grün, `measure-layout.mjs` 42 von 42 ohne Überlänge, AAB neu gebaut und signiert (4 135 640 Byte), APK `versionCode` 7, weiterhin kein INTERNET. Das Gewicht ist bei 32 px nur noch ein Punkt; auf Gerät nicht gesehen. Die Telefon-Screenshots in `docs/store/` enthalten kein Icon und bleiben gültig. Der Server braucht erneut einen Deploy der Favicons.
+
 ### Offen beim Eigentümer
 
 - Server-Deploy (Tor b), Play-Upload der AAB und Freigabe (Tor c), `versionCode` prüfen, Samsung anschließen, Simulator-Zugriff freigeben.
