@@ -176,12 +176,17 @@ body.reduced-motion *::after {
   border-radius: 0;
   background: transparent;
   color: var(--ink-2);
-  font-size: var(--fs-1);
+  font-size: var(--fs-2);
   font-weight: var(--fw-regular);
   letter-spacing: 0.02em;
   line-height: 1;
   white-space: nowrap;
   cursor: pointer;
+}
+
+/* Five labels share the width of a narrow phone: the 12 px floor. */
+@media (max-width: 399px) {
+  .mode-option { font-size: var(--fs-1); letter-spacing: 0; }
 }
 
 .mode-option.active {
@@ -195,7 +200,7 @@ body.reduced-motion *::after {
   right: 0;
   bottom: -1px;
   left: 0;
-  height: 3px;
+  height: var(--stroke-select);
   background: var(--accent);
 }
 
@@ -205,7 +210,7 @@ body.reduced-motion *::after {
   }
 }
 
-/* ---- Transport: Start (solid teal) and Tap Tempo (grey outline) --------- */
+/* ---- Transport: Start (solid blue) and Tap Tempo (ink outline) ---------- */
 
 .transport-row {
   display: grid;
@@ -219,7 +224,7 @@ body.reduced-motion *::after {
   align-items: center;
   justify-content: center;
   gap: var(--sp-2);
-  height: 60px;
+  height: 56px;
   min-width: 0;
   padding: 0 var(--sp-3);
   border: var(--stroke) solid transparent;
@@ -237,9 +242,10 @@ body.reduced-motion *::after {
   fill: currentColor;
 }
 
+/* Start: filled blue with a white label. Playing: outlined, label "Pause". */
 .transport-play {
-  border-color: var(--accent-ink);
-  background: var(--accent-ink);
+  border-color: var(--accent);
+  background: var(--accent);
   color: var(--on-accent);
 }
 
@@ -249,13 +255,14 @@ body.reduced-motion *::after {
 }
 
 .transport-play.is-playing {
-  border: var(--stroke-select) solid var(--accent-ink);
+  border: var(--stroke-select) solid var(--accent);
   background: var(--bg);
   color: var(--accent-ink);
 }
 
+/* Tap: outlined in ink-2 with a blue label. Tapping: the surface tone. */
 .transport-tap {
-  border-color: var(--accent-ink);
+  border-color: var(--ink-2);
   background: var(--bg);
   color: var(--ink);
 }
@@ -267,7 +274,7 @@ body.reduced-motion *::after {
 }
 
 .transport-tap.is-tapping {
-  border-color: var(--ink-2);
+  border-color: var(--ink);
   background: var(--surface);
 }
 
@@ -276,8 +283,8 @@ body.reduced-motion *::after {
 }
 
 .transport-play:active:not(:disabled) {
-  background: var(--ink);
-  border-color: var(--ink);
+  background: var(--accent-deep);
+  border-color: var(--accent-deep);
   color: var(--on-accent);
 }
 
@@ -1074,15 +1081,6 @@ input[type='range']:focus-visible::-moz-range-thumb {
 }
 
 /* ---- Finishing touches: quiet, precise, a little poetic ------------------ */
-
-/* Wide enough for it, the mode names are set in small capitals. */
-@media (min-width: 600px) {
-  body:not(.large-text) .mode-option {
-    font-size: var(--fs-2);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-}
 
 /* The current beat gets a hairline halo (an outline, not a shadow). */
 .beat-control.is-current .beat-mark,
