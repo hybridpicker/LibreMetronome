@@ -30,11 +30,8 @@ def audio_field(help_text):
 class MetronomeSoundSet(models.Model):
     """A collection of related metronome sounds."""
 
-    def __init__(self, *args, **kwargs):
-        if "is_default" in kwargs:
-            kwargs["is_active"] = kwargs.pop("is_default")
-        super().__init__(*args, **kwargs)
-
+    # `is_default` is the legacy name of `is_active`. Django's Model.__init__ routes keyword
+    # arguments that name a property through its setter, so `MetronomeSoundSet(is_default=True)` works.
     @property
     def is_default(self):
         return self.is_active

@@ -63,7 +63,7 @@ def serve_react(request, path=None):
 
 def find_sound_file(filename):
     """Locate a sound file in MEDIA_ROOT, falling back to its `metronome_sounds` subdirectory."""
-    if Path(filename).name != filename or filename in {".", ".."}:
+    if Path(filename).name != filename or filename == "..":
         return None
     media_root = Path(settings.MEDIA_ROOT)
     for directory in (media_root, media_root / SOUND_SUBDIRECTORY):
@@ -90,7 +90,6 @@ def serve_sound_file(request, filename):
     content_type = sound_content_type(filepath)
     if content_type:
         response["Content-Type"] = content_type
-    response["Content-Disposition"] = f'inline; filename="{filename}"'
     return with_cors(response, "GET, OPTIONS")
 
 

@@ -2,6 +2,7 @@
 
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db.models import FileField
 from django.test import SimpleTestCase, TestCase
 
 from metronome_api.models import MetronomeSoundSet, validate_audio_file
@@ -31,7 +32,10 @@ class ValidateAudioFileTests(SimpleTestCase):
 
     def test_rejects_unsupported_and_missing_extensions(self):
         for name in ("a.txt", "b.flac", "noextension", "archive.wav.zip"):
-            with self.subTest(name=name), self.assertRaises(ValidationError):
+            with (
+                self.subTest(name=name),
+                self.assertRaisesMessage(ValidationError, "Please use WAV, MP3, or OGG files."),
+            ):
                 validate_audio_file(SimpleUploadedFile(name, b"x"))
 
 
@@ -84,6 +88,21 @@ class MetronomeSoundSetTests(TestCase):
         sound_set = make_set("Own")
         self.assertEqual(sound_set.first_beat_sound.name, "Own_first.wav")
 
+    def test_sound_fields_validate_extensions_and_explain_themselves(self):
+        for field_name, help_text in (
+            ("first_beat_sound", "Sound for the first beat of the measure"),
+            ("accent_sound", "Sound for accented beats"),
+            ("normal_beat_sound", "Sound for normal beats"),
+        ):
+            with self.subTest(field=field_name):
+                field = MetronomeSoundSet._meta.get_field(field_name)
+                assert isinstance(field, FileField)
+                self.assertEqual(field.help_text, help_text)
+                self.assertEqual(field.upload_to, "")
+                self.assertIn(validate_audio_file, field.validators)
+                extension_validator = next(v for v in field.validators if hasattr(v, "allowed_extensions"))
+                self.assertEqual(list(extension_validator.allowed_extensions), ["wav", "mp3", "ogg"])
+
     def test_timestamps_are_set_and_updated(self):
         sound_set = make_set()
         created = sound_set.created_at
@@ -116,6 +135,8 @@ class MetronomeSoundSetTests(TestCase):
         self.assertEqual(sound_set.name, "Default Sound Set")
         self.assertEqual(MetronomeSoundSet.objects.count(), 1)
         self.assertEqual(sound_set.first_beat_sound.name, DEFAULTS["first_beat_sound"])
+        self.assertEqual(sound_set.accent_sound.name, DEFAULTS["accent_sound"])
+        self.assertEqual(sound_set.normal_beat_sound.name, DEFAULTS["normal_beat_sound"])
 
     def test_get_active_sound_set_returns_existing_first_by_ordering(self):
         make_set("Zeta")

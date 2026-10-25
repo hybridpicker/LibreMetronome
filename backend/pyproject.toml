@@ -1,7 +1,7 @@
 [tool.ruff]
 target-version = "py310"
 line-length = 120
-extend-exclude = ["migrations", "db.sqlite3"]
+extend-exclude = ["migrations", "db.sqlite3", "mutants"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "C4", "C90", "SIM", "S", "RUF", "BLE"]
@@ -24,7 +24,7 @@ ignore_missing_imports = true
 warn_unused_ignores = true
 warn_redundant_casts = true
 check_untyped_defs = true
-exclude = ["migrations/"]
+exclude = ["migrations/", "mutants/"]
 
 [tool.django-stubs]
 django_settings_module = "libremetronome_backend.test_settings"
@@ -40,4 +40,14 @@ skip_covered = false
 
 [tool.bandit]
 # Tests use throwaway SECRET_KEY values, which bandit flags as hardcoded passwords (B106).
-exclude_dirs = ["tests", ".venv", "migrations"]
+exclude_dirs = ["tests", ".venv", "migrations", "mutants"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "libremetronome_backend.test_settings"
+python_files = ["test_*.py"]
+testpaths = ["metronome_api", "libremetronome_backend"]
+
+[tool.mutmut]
+source_paths = ["metronome_api/views.py", "metronome_api/models.py"]
+pytest_add_cli_args_test_selection = ["metronome_api/tests/", "libremetronome_backend/tests/"]
+also_copy = ["metronome_api", "libremetronome_backend", "manage.py"]
