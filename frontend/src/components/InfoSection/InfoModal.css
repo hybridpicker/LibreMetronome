@@ -1,6 +1,6 @@
 /*
- * Guide dialog. A flat white sheet: hairline-separated sections, text tabs with
- * a 3px underline, no tinted boxes. Tokens only (see colors.css); the
+ * Guide dialog. A flat white sheet over the faded page: a Light title,
+ * hairline-separated sections, text tabs with a 2 px underline, no tinted boxes. Tokens only (see colors.css); the
  * accessibility modes re-map the tokens. The beat marks in the "Beat Types"
  * list are drawn in instrument-system.css (.info-modal .beat-indicator).
  */
@@ -20,7 +20,7 @@
   display: flex;
   flex-direction: column;
   width: 90%;
-  max-width: 640px;
+  max-width: 720px;
   max-height: 88vh;
   overflow: hidden;
   border: var(--stroke) solid var(--line-strong);
@@ -47,7 +47,7 @@
   width: var(--touch);
   height: var(--touch);
   padding: 0;
-  border: var(--stroke) solid var(--line-strong);
+  border: var(--stroke) solid var(--ink-2);
   border-radius: var(--r-control);
   background: var(--bg);
   color: var(--ink);
@@ -71,12 +71,11 @@
   min-height: var(--touch);
   margin: 0 calc(var(--touch) + var(--sp-3)) var(--sp-3) 0;
   color: var(--ink);
-  font-size: var(--fs-2);
-  font-weight: var(--fw-regular);
-  letter-spacing: 0.08em;
-  line-height: 1.2;
+  font-size: var(--fs-title);
+  font-weight: var(--fw-light);
+  letter-spacing: 0;
+  line-height: 1.15;
   text-align: left;
-  text-transform: uppercase;
 }
 
 .info-modal-tabs {
@@ -127,7 +126,7 @@
   right: 0;
   bottom: -1px;
   left: 0;
-  height: 3px;
+  height: var(--stroke-select);
   background: var(--accent);
 }
 
@@ -159,17 +158,16 @@
   line-height: 1.25;
 }
 
-/* Section titles use the small uppercase label of the control groups. */
+/* Section titles use the label style of the control groups. */
 .info-modal-panel h3,
 .info-step h3,
 .info-feature h3 {
   margin: var(--sp-4) 0 var(--sp-2);
   color: var(--ink-2);
-  font-size: var(--fs-1);
+  font-size: var(--fs-2);
   font-weight: var(--fw-regular);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.02em;
   line-height: 18px;
-  text-transform: uppercase;
 }
 
 .info-modal-panel p {
@@ -231,7 +229,7 @@
   width: 28px;
   height: 28px;
   border: var(--stroke-select) solid var(--accent-ink);
-  border-radius: 50%;
+  border-radius: var(--r-control);
   background: transparent;
   color: var(--ink);
   font-size: var(--fs-2);
@@ -330,7 +328,7 @@
   min-width: 28px;
   margin-right: var(--sp-3);
   padding: var(--sp-1) var(--sp-2);
-  border: var(--stroke) solid var(--line-strong);
+  border: var(--stroke) solid var(--ink-2);
   border-radius: var(--r-control);
   background: var(--bg);
   color: var(--ink);

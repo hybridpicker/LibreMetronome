@@ -15,7 +15,7 @@
   --line: var(--dial-line);
   --line-strong: var(--dial-line-strong);
   --accent: var(--dial-accent);
-  --accent-ink: var(--dial-accent);
+  --accent-ink: var(--dial-accent-ink);
   --accent-wash: var(--dial-accent-wash);
   --on-accent: var(--dial-on-accent);
   --focus: var(--dial-focus);
@@ -71,10 +71,9 @@
 
 .training-active-section-title {
   color: var(--ink-2);
-  font-size: var(--fs-1);
+  font-size: var(--fs-2);
   font-weight: var(--fw-regular);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 /* The mode toggle is a quiet text key: no box, a hairline underline. */
@@ -136,7 +135,7 @@ button.editable-param,
   min-height: var(--touch);
   margin: 0;
   padding: 0 var(--sp-2);
-  border: var(--stroke) solid var(--line-strong);
+  border: var(--stroke) solid var(--ink-2);
   border-radius: var(--r-control);
   background: transparent;
   color: var(--ink);
@@ -169,10 +168,9 @@ button.editable-param,
   padding: 0;
   border: 0;
   color: var(--ink-2);
-  font-size: var(--fs-1);
+  font-size: var(--fs-2);
   font-weight: var(--fw-regular);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .parameter-edit-controls {
@@ -190,7 +188,7 @@ button.editable-param,
   margin: 0;
   padding: 0 var(--sp-2);
   border: 0;
-  border-bottom: var(--stroke) solid var(--line-strong);
+  border-bottom: var(--stroke) solid var(--ink-2);
   border-radius: 0;
   background: transparent;
   color: var(--ink);
@@ -234,7 +232,7 @@ button.editable-param,
   flex: 1 1 0;
   min-height: var(--touch);
   padding: 0 var(--sp-3);
-  border: var(--stroke) solid var(--line-strong);
+  border: var(--stroke) solid var(--ink-2);
   border-radius: var(--r-control);
   background: var(--bg);
   color: var(--ink);
@@ -244,8 +242,8 @@ button.editable-param,
 }
 
 .parameter-edit-save {
-  border-color: var(--accent-ink);
-  background: var(--accent-ink);
+  border-color: var(--accent);
+  background: var(--accent);
   color: var(--on-accent);
   font-weight: var(--fw-bold);
 }

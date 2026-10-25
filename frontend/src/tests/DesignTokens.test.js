@@ -29,11 +29,25 @@ const ratio = (a, b) => {
 };
 const t = (k) => tokens[k].toLowerCase();
 
-// Stylesheets that must be written against tokens only. Grows as the redesign
-// reaches more of the app (dialogs join in step 5 of round 3).
-const TOKEN_ONLY = ['layout.css', 'instrument-system.css'].map((f) => ['styles', f]);
-// Slider progress is its own 1.5 px element (RangeInput), never a gradient.
-const NO_GRADIENT = ['layout.css', 'instrument-system.css'].map((f) => ['styles', f]);
+// Every stylesheet that ships with the app is written against tokens only.
+// Not listed on purpose: colors.css and accessibility-modes.css (they define
+// the tokens), utilities.css (its shadow classes resolve to "none"), and the
+// components nobody imports (FeedbackOverlay, InfoOverlay, TrainingOverlay,
+// StyleGuide, BaseMetronomeLayout).
+const SHIPPED_STYLESHEETS = [
+  'styles/layout.css',
+  'styles/instrument-system.css',
+  'styles/accessibility.css',
+  'components/Menu/mainMenu.css',
+  'components/InfoSection/InfoModal.css',
+  'components/InfoSection/HelpButton.css',
+  'components/InfoSection/InfoButton.css',
+  'components/accessibility/AccessibilitySettings.css',
+  'components/accessibility/AccessibilityMenu.css',
+  'components/Training/TrainingActiveContainer.css',
+  'components/Support/SupportPage.css',
+  'components/Footer/Footer.css'
+];
 
 describe('design tokens: Score palette', () => {
   test('white page, blue pair as the only accent', () => {
@@ -152,25 +166,27 @@ describe('accessibility modes override tokens only', () => {
 });
 
 describe('stylesheets use tokens, no decoration', () => {
-  test.each(TOKEN_ONLY)('%s/%s: no raw colours, no shadows, no gradients', (...p) => {
-    const css = read(...p);
+  test.each(SHIPPED_STYLESHEETS)('%s: no raw colours, shadows or gradients', (file) => {
+    const css = read(...file.split('/'));
     expect(css).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
     expect(css).not.toMatch(/rgba?\(/);
+    expect(css).not.toMatch(/gradient\(/);
     const shadows = css.match(/box-shadow:[^;]+;/g) || [];
     shadows.forEach((s) => expect(s).toMatch(/none/));
     expect(css).not.toMatch(/text-shadow:\s*(?!none)/);
     expect(css).not.toMatch(/drop-shadow\(/);
   });
 
-  test.each(NO_GRADIENT)('%s/%s: no gradients', (...p) => {
-    expect(read(...p)).not.toMatch(/gradient\(/);
+  test.each(SHIPPED_STYLESHEETS)('%s: radii are 0 or from tokens', (file) => {
+    const css = read(...file.split('/'));
+    for (const m of css.matchAll(/border-radius:\s*([^;]+);/g)) {
+      expect(m[1].trim()).toMatch(/^(0|var\(--r-(control|surface)\)|50%)$/);
+    }
   });
 
-  test.each(TOKEN_ONLY)('%s/%s: radii are 0 or from tokens (never above 12 px)', (...p) => {
-    const css = read(...p);
-    for (const m of css.matchAll(/border-radius:\s*([^;]+);/g)) {
-      const v = m[1].trim();
-      expect(v).toMatch(/^(0|var\(--r-(control|surface)\)|50%)$/);
-    }
+  test.each(SHIPPED_STYLESHEETS)('%s: labels are sentence case, not tracked capitals', (file) => {
+    const css = read(...file.split('/'));
+    expect(css).not.toMatch(/text-transform:\s*uppercase/);
+    expect(css).not.toMatch(/letter-spacing:\s*0\.0[68]em/);
   });
 });
