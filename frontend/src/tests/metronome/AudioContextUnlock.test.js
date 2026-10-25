@@ -2,6 +2,7 @@ describe('iOS audio context unlocking', () => {
   const originalAudioContext = window.AudioContext;
 
   beforeEach(() => {
+    jest.spyOn(console, 'log').mockImplementation(() => {});
     jest.resetModules();
     delete window._audioContext;
     delete window._audioContextInit;
@@ -9,6 +10,7 @@ describe('iOS audio context unlocking', () => {
   });
 
   afterEach(() => {
+    jest.restoreAllMocks();
     window.AudioContext = originalAudioContext;
     delete window._audioContext;
     delete window._audioContextInit;
