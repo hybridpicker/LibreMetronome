@@ -23,10 +23,10 @@ import './styles/accessibility.css';
 import './styles/layout.css';
 import './styles/accessibility-modes.css';
 import { IS_NATIVE_APP } from './nativeApp';
+import { applyFallbackTap } from './utils/tapTempoFallback';
+import { TEMPO_MIN, TEMPO_MAX } from './hooks/useMetronomeLogic/constants';
 // StyleGuide component removed
 
-const TEMPO_MIN = 15;
-const TEMPO_MAX = 240;
 // The click samples are mastered to their safe peak already. Starting below
 // unity gain made the web app quieter than the selected device level even
 // before the user touched the volume control.
@@ -256,103 +256,7 @@ function App() {
       // Fallback to built-in implementation
       console.log("[APP] No tap tempo handler registered, using fallback implementation");
       
-      // Constants for tempo calculation
-      const MIN_TAP_INTERVAL = 200; // Milliseconds
-      const MAX_TAP_INTERVAL = 2000; // Milliseconds
-      const COMMON_TEMPOS = [60, 90, 100, 120, 140, 160, 180]; // Common tempos for stability
-      
-      // Store timestamp for future tap tempo calculation
-      window._tapTempoTimes = window._tapTempoTimes || [];
-      
-      // Get the current timestamp
-      const now = event.detail.timestamp || performance.now();
-      
-      // Check if this tap is too close to the previous one (debounce)
-      if (window._tapTempoTimes.length > 0) {
-        const lastTap = window._tapTempoTimes[window._tapTempoTimes.length - 1];
-        if (now - lastTap < MIN_TAP_INTERVAL) {
-          console.log(`[APP] Tap too soon after previous (${Math.round(now - lastTap)}ms), ignoring`);
-          return;
-        }
-        
-        // Reset if too long between taps
-        if (now - lastTap > MAX_TAP_INTERVAL) {
-          console.log(`[APP] Too long since last tap (${Math.round(now - lastTap)}ms), resetting`);
-          window._tapTempoTimes = [now];
-          return;
-        }
-      }
-      
-      // Add the current tap time
-      window._tapTempoTimes.push(now);
-      console.log(`[APP] Tap recorded: ${window._tapTempoTimes.length} total taps`);
-      
-      // Keep only the last 6 taps
-      while (window._tapTempoTimes.length > 6) {
-        window._tapTempoTimes.shift();
-      }
-      
-      // Need at least 3 taps for a stable tempo
-      if (window._tapTempoTimes.length >= 3) {
-        // Calculate intervals between consecutive taps
-        let intervals = [];
-        for (let i = 1; i < window._tapTempoTimes.length; i++) {
-          const interval = window._tapTempoTimes[i] - window._tapTempoTimes[i-1];
-          if (interval >= MIN_TAP_INTERVAL && interval <= MAX_TAP_INTERVAL) {
-            intervals.push(interval);
-            console.log(`[APP] Interval ${i}: ${Math.round(interval)}ms`);
-          }
-        }
-        
-        // Need at least one valid interval
-        if (intervals.length === 0) {
-          console.log("[APP] No valid intervals");
-          return;
-        }
-        
-        // Remove outliers (intervals that are too far from median)
-        if (intervals.length >= 3) {
-          intervals.sort((a, b) => a - b);
-          const median = intervals[Math.floor(intervals.length / 2)];
-          const filteredIntervals = intervals.filter(i => Math.abs(i - median) / median < 0.4);
-          
-          // Only use filtered intervals if we have enough
-          if (filteredIntervals.length >= 2) {
-            intervals = filteredIntervals;
-          }
-        }
-        
-        // Calculate average interval
-        const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
-        let newTempo = Math.round(60000 / avgInterval);
-        
-        // Snap to common tempos if close
-        for (const commonTempo of COMMON_TEMPOS) {
-          const percentDifference = Math.abs(newTempo - commonTempo) / commonTempo;
-          if (percentDifference < 0.05) {
-            console.log(`[APP] Snapping from ${newTempo} to ${commonTempo} BPM (common tempo)`);
-            newTempo = commonTempo;
-            break;
-          }
-        }
-        
-        // Clamp tempo to valid range
-        const clampedTempo = Math.min(Math.max(newTempo, TEMPO_MIN), TEMPO_MAX);
-        console.log(`[APP] Calculated tempo: ${clampedTempo} BPM`);
-        
-        // Only actually set the tempo after we have enough taps for accuracy
-        if (window._tapTempoTimes.length >= 4) {
-          console.log(`[APP] Setting tempo to ${clampedTempo} BPM`);
-          setTempo(clampedTempo);
-          
-          // Reset for next sequence after successfully setting tempo
-          window._tapTempoTimes = [];
-        } else {
-          console.log(`[APP] Need ${4 - window._tapTempoTimes.length} more tap(s) to confirm tempo`);
-        }
-      } else {
-        console.log(`[APP] Need ${3 - window._tapTempoTimes.length} more tap(s) to calculate tempo`);
-      }
+      applyFallbackTap(event, setTempo);
     };
     
     // Handle the 'register-tap-tempo' event (from any metronome component)
