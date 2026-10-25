@@ -259,6 +259,10 @@ Contributions to Libre Metronome are welcome! Please feel free to:
 - Integration with recording capabilities
 - MIDI/hardware metronome sync options
 
+## Status
+
+Version 0.8.0 ("Score" design: white interface, one blue accent, notation-style beat display) is built for web, Android, iPad, macOS and Linux desktop. The web deployment, the Google Play upload and the App Store release are pending. See `docs/app-release.md`, section 17, for what is verified and what is not.
+
 ## License
 
 This project is licensed under the GNU General Public License v3.0. See the [LICENSE](LICENSE) file for details or visit [https://www.gnu.org/licenses/gpl-3.0.html](https://www.gnu.org/licenses/gpl-3.0.html).
