@@ -24,6 +24,7 @@
   --pad-x: var(--sp-4);
   --row-pad: var(--sp-2);
   --control-w: 100%;
+  --bpm-size: var(--fs-5);
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -64,6 +65,7 @@ html.capacitor-native #root {
   .app-container {
     --touch: 40px;
     --row-pad: var(--sp-1);
+    --bpm-size: var(--fs-5-short);
   }
 }
 
@@ -428,6 +430,7 @@ html.capacitor-native .app-container .transport-row {
   .app-container {
     --pad-x: var(--sp-5);
     --control-w: clamp(400px, 34vw, 460px);
+    --bpm-size: var(--fs-5-wide);
     grid-template-columns: minmax(0, 1fr) var(--control-w);
     /* header, modes, 4 control rows (top-aligned, so they never jump between
        modes), filler, footer */
@@ -527,4 +530,9 @@ html.capacitor-native .app-container .transport-row {
   .app-container .polyrhythm-mode-shell .poly-stepper { display: none; }
   .app-container .polyrhythm-mode-shell .circle-header { margin-bottom: var(--sp-2); }
   .app-container .polyrhythm-mode-shell .polyrhythm-config + .polyrhythm-config { margin-top: var(--sp-3); }
+}
+
+/* Short screens win over the wide layout: the numeral must fit the height. */
+@media (max-height: 759px) {
+  .app-container { --bpm-size: var(--fs-5-short); }
 }

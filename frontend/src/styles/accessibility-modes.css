@@ -3,9 +3,11 @@
  * read the tokens in colors.css, so a mode only has to redefine them:
  *   high contrast   black canvas, white lines and text, cyan active, yellow focus
  *   large text      the type scale steps up one size (layout absorbs it)
- *   colour blind    accent moves to the Okabe-Ito palette; shapes
- *                   (ring + dot for the first beat, dashed muted ring) already
- *                   carry the meaning without colour.
+ *   colour blind    the accent is already the Okabe-Ito blue, which protanopia
+ *                   and deuteranopia read well, so they need no override.
+ *                   Tritanopia swaps it for vermilion, monochromacy for ink.
+ *                   Shapes (hollow head, accent mark, rest) carry the meaning
+ *                   without colour in every mode.
  */
 
 /* ---- High contrast ------------------------------------------------------ */
@@ -20,8 +22,10 @@ body.high-contrast {
   --line-strong: #ffffff;
   --accent: #00ffff;
   --accent-ink: #00ffff;
+  --accent-deep: #00ffff;
   --accent-wash: #000000;
   --on-accent: #000000;
+  --overlay-bg: rgba(0, 0, 0, 0.82);
   --dial-bg: #000000;
   --dial-ink: #ffffff;
   --dial-ink-2: #ffffff;
@@ -29,6 +33,7 @@ body.high-contrast {
   --dial-line: #ffffff;
   --dial-line-strong: #ffffff;
   --dial-accent: #00ffff;
+  --dial-accent-ink: #00ffff;
   --dial-accent-wash: #000000;
   --dial-on-accent: #000000;
   --dial-focus: #ffff00;
@@ -64,10 +69,14 @@ body.high-contrast .grid-cell.is-on::after { background: var(--ink); }
 
 body.large-text {
   --fs-1: 14px;
-  --fs-2: 17px;
-  --fs-3: 20px;
+  --fs-2: 16px;
+  --fs-3: 19px;
   --fs-4: 24px;
-  --fs-5: 72px;
+  --fs-5: 96px;
+  --fs-5-short: 72px;
+  --fs-5-wide: 120px;
+  --fs-title: 32px;
+  --fs-title-lg: 36px;
 }
 
 /* Dialogs and guide text scale with the root size. */
@@ -87,37 +96,34 @@ body.large-text .accessibility-settings {
 
 /* ---- Colour blind ------------------------------------------------------- */
 
-body.protanopia,
-body.deuteranopia {
-  --accent: #0072b2;
-  --accent-ink: #005a8d;
-  --accent-wash: #e3f0f8;
-  --dial-accent: #005a8d;
-  --dial-accent-wash: #e3f0f8;
-  --dial-focus: #005a8d;
-}
+/* Protanopia and deuteranopia: no override. The accent is the Okabe-Ito blue. */
 
 body.tritanopia {
   --accent: #c24d00;
   --accent-ink: #a13f00;
+  --accent-deep: #7d3000;
   --accent-wash: #fbece3;
-  --dial-accent: #a13f00;
+  --dial-accent: #c24d00;
+  --dial-accent-ink: #a13f00;
   --dial-accent-wash: #fbece3;
   --dial-focus: #a13f00;
+  --focus: #a13f00;
 }
 
 body.monochromacy {
   --accent: #111111;
   --accent-ink: #111111;
+  --accent-deep: #000000;
   --accent-wash: #eeeeee;
   --dial-accent: #111111;
+  --dial-accent-ink: #111111;
   --dial-accent-wash: #eeeeee;
   --dial-focus: #111111;
+  --focus: #111111;
 }
 
 /* Large text on short phones: tighter rows, the footer keeps to one line. */
 @media (max-height: 759px) {
-  body.large-text { --fs-5: 56px; }
   body.large-text .app-container { --row-pad: 0px; }
   body.large-text .footer-line { flex-wrap: nowrap; white-space: nowrap; }
 }

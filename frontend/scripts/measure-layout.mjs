@@ -7,10 +7,15 @@
 //
 //   node scripts/measure-layout.mjs --out /tmp/shots/before
 //   node scripts/measure-layout.mjs --out /tmp/shots/after --mode contrast --only 412x805
+//   node scripts/measure-layout.mjs --beats 9     # worst case: nine beats per bar
 //
 // Options:
 //   --out DIR        PNG directory (default: scripts/.shots/latest)
-//   --mode NAME      normal | contrast | large | colorblind (default: normal)
+//   --mode NAME      normal | contrast | large | colorblind | tritanopia (default: normal)
+//                    colorblind is an alias of tritanopia: protanopia and
+//                    deuteranopia use the normal blue and need no run of their own
+//   --beats N        set beats per bar to N (1-9) in Beat, Grid and every Sequence
+//                    circle before measuring (Analog and Polyrhythm are left alone)
 //   --only WxH       restrict to one viewport
 //   --view NAME      restrict to one view (analog|circle|grid|multi|multi4|polyrhythm)
 //   --chrome PATH    Chrome executable (default: macOS Google Chrome)
@@ -35,6 +40,7 @@ const only = opt('only', null);
 const onlyView = opt('view', null);
 const chromePath = opt('chrome', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome');
 const strict = args.includes('--strict');
+const beats = opt('beats', null) ? parseInt(opt('beats', '0'), 10) : null;
 
 const VIEWPORTS = [
   [412, 805], [393, 780], [360, 740],
@@ -128,7 +134,24 @@ const measure = () => {
 const MODE_STORAGE = {
   contrast: { 'accessibility-high-contrast': 'true' },
   large: { 'accessibility-large-text': 'true' },
-  colorblind: { 'accessibility-color-blind-mode': 'deuteranopia' }
+  colorblind: { 'accessibility-color-blind-mode': 'tritanopia' },
+  tritanopia: { 'accessibility-color-blind-mode': 'tritanopia' }
+};
+
+// Beats per bar: nine chips from 520 px, a stepper below that.
+const setBeats = async (page, n) => {
+  const chip = page.getByRole('button', { name: `${n} ${n === 1 ? 'beat' : 'beats'} per bar`, exact: true });
+  if (await chip.isVisible().catch(() => false)) {
+    await chip.click();
+  } else {
+    const count = async () => parseInt((await page.locator('.stepper-count:visible').first().innerText()).trim(), 10);
+    const more = page.getByRole('button', { name: 'More beats per bar', exact: true });
+    const fewer = page.getByRole('button', { name: 'Fewer beats per bar', exact: true });
+    for (let i = 0; i < 12 && (await count()) !== n; i += 1) {
+      await ((await count()) < n ? more : fewer).click();
+    }
+  }
+  await page.waitForTimeout(120);
 };
 
 const rows = [];
@@ -155,8 +178,20 @@ for (const [w, h] of VIEWPORTS) {
       }
       await page.waitForTimeout(250);
     }
+    if (beats && view.id !== 'analog' && view.id !== 'polyrhythm') {
+      if (view.mode === 'Sequence') {
+        const circles = page.locator('.circle-select-button');
+        for (let i = 0; i < (await circles.count()); i += 1) {
+          await circles.nth(i).click();
+          await setBeats(page, beats);
+        }
+      } else {
+        await setBeats(page, beats);
+      }
+      await page.waitForTimeout(200);
+    }
     const m = await page.evaluate(measure);
-    const file = `${w}x${h}-${view.id}.png`;
+    const file = `${w}x${h}-${view.id}${beats ? `-b${beats}` : ''}.png`;
     await page.screenshot({ path: path.join(outDir, file) });
     rows.push({ vp: `${w}x${h}`, view: view.id, ...m });
     // Leave Sequence with a single circle again so the next case starts clean.
@@ -174,7 +209,7 @@ await browser.close();
 server.close();
 
 let bad = 0;
-console.log(`mode=${modeName}  out=${outDir}`);
+console.log(`mode=${modeName}${beats ? `  beats=${beats}` : ''}  out=${outDir}`);
 console.log('viewport   view         overY overX  small-targets / tiny-text');
 for (const r of rows) {
   if (r.overflowY > 0 || r.overflowX > 0) bad += 1;
