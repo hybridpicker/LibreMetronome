@@ -1,8 +1,7 @@
-// MultiCircleControls (live) and CircleControls (legacy, re-exported only) with the real selectors.
+// MultiCircleControls with the real selectors.
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import MultiCircleControls from '../../../components/metronome/MultiCircleMode/MultiCircleControls';
-import CircleControls from '../../../components/metronome/MultiCircleMode/CircleControls';
 
 const bar = (subdivisions, beatMode = 'quarter') => ({
   subdivisions, beatMode, accents: Array.from({ length: subdivisions }, (_, i) => (i === 0 ? 3 : 1))
@@ -172,81 +171,5 @@ describe('MultiCircleControls', () => {
       fireEvent.keyDown(input, { key: 'Enter' });
       expect(setSwing).toHaveBeenCalledWith(0.25);
     });
-  });
-});
-
-describe('CircleControls (legacy)', () => {
-  const setup = (props = {}) => {
-    const circle = props.currentSettings || bar(4);
-    const setCircleSettings = stateSetter([bar(4), bar(3)]);
-    const handleSetSubdivisions = jest.fn();
-    const handlers = { setTempo: jest.fn(), setVolume: jest.fn(), setSwing: jest.fn() };
-    render(
-      <CircleControls
-        currentSettings={circle} setCircleSettings={setCircleSettings} activeCircle={1}
-        handleSetSubdivisions={handleSetSubdivisions} tempo={100} volume={0.5} swing={0.2}
-        isPaused handlePlayPause={jest.fn()} {...handlers} {...props}
-      />
-    );
-    return { setCircleSettings, handleSetSubdivisions, ...handlers };
-  };
-
-  test('headings carry the 1-based circle number', () => {
-    setup();
-    expect(screen.getByRole('heading', { name: 'Notes (Circle 2)' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Beats per Bar (Circle 2)' })).toBeInTheDocument();
-  });
-
-  test('the note selector writes the beat mode of the active circle', () => {
-    const { setCircleSettings } = setup();
-    fireEvent.click(screen.getByRole('button', { name: 'Eighth Notes' }));
-    const next = setCircleSettings.resultFor(0);
-    expect(next[0]).toEqual(bar(4));
-    expect(next[1].beatMode).toBe('eighth');
-  });
-
-  test('the beat chooser is delegated to handleSetSubdivisions', () => {
-    const { handleSetSubdivisions } = setup();
-    fireEvent.click(screen.getByRole('button', { name: '7 beats per bar' }));
-    expect(handleSetSubdivisions).toHaveBeenCalledWith(7);
-  });
-
-  test('swing is only offered for even beat counts', () => {
-    setup({ currentSettings: bar(4) });
-    expect(screen.getByRole('slider', { name: 'Swing' })).toBeInTheDocument();
-  });
-
-  test('swing is hidden for odd beat counts', () => {
-    setup({ currentSettings: bar(3) });
-    expect(screen.queryByRole('slider', { name: 'Swing' })).toBeNull();
-    expect(screen.getByRole('slider', { name: 'Tempo' })).toBeInTheDocument();
-  });
-
-  test('sliders and edit fields report values like the live controls', () => {
-    const { setTempo, setVolume, setSwing } = setup();
-    fireEvent.change(screen.getByRole('slider', { name: 'Tempo' }), { target: { value: '80' } });
-    fireEvent.change(screen.getByRole('slider', { name: 'Volume' }), { target: { value: '0.9' } });
-    fireEvent.change(screen.getByRole('slider', { name: 'Swing' }), { target: { value: '0.4' } });
-    expect(setTempo).toHaveBeenCalledWith(80);
-    expect(setVolume).toHaveBeenCalledWith(0.9);
-    expect(setSwing).toHaveBeenCalledWith(0.4);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Edit Tempo' }));
-    let input = screen.getByTestId('editable-input');
-    fireEvent.change(input, { target: { value: '5 BPM' } });
-    fireEvent.keyDown(input, { key: 'Enter' });
-    expect(setTempo).toHaveBeenLastCalledWith(15);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Edit Volume' }));
-    input = screen.getByTestId('editable-input');
-    fireEvent.change(input, { target: { value: '40%' } });
-    fireEvent.keyDown(input, { key: 'Enter' });
-    expect(setVolume).toHaveBeenLastCalledWith(0.4);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Edit Swing' }));
-    input = screen.getByTestId('editable-input');
-    fireEvent.change(input, { target: { value: '100%' } });
-    fireEvent.keyDown(input, { key: 'Enter' });
-    expect(setSwing).toHaveBeenLastCalledWith(0.5);
   });
 });

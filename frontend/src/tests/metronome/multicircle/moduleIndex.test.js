@@ -56,13 +56,9 @@ describe('MultiCircleMode module initialisation', () => {
     expect(mod.default).toBeDefined();
   });
 
-  test('exports the Sequence mode component as default plus its building blocks', () => {
+  test('exports only the Sequence mode component', () => {
     const mod = loadIndex({ init: jest.fn(() => null) });
-    expect(Object.keys(mod).sort()).toEqual([
-      'AddCircleButton', 'BeatVisualizer', 'CircleControls', 'CircleRenderer', 'PlayButton',
-      'TrainingStatus', 'default', 'useMultiCircleLogic'
-    ]);
+    expect(Object.keys(mod)).toEqual(['default']);
     expect(typeof mod.default).toBe('function');
-    expect(typeof mod.useMultiCircleLogic).toBe('function');
   });
 });
