@@ -539,6 +539,12 @@ Das Icon aus Abschnitt 16 gefiel dem Eigentümer nicht. Moodboard mit sechs Rich
 
 Nachweis: 37 Suiten grün, `measure-layout.mjs` 42 von 42 ohne Überlänge, AAB neu gebaut und signiert (4 135 640 Byte), APK `versionCode` 7, weiterhin kein INTERNET. Das Gewicht ist bei 32 px nur noch ein Punkt; auf Gerät nicht gesehen. Die Telefon-Screenshots in `docs/store/` enthalten kein Icon und bleiben gültig. Der Server deployt bei jedem Push automatisch (Webhook, `test-webhook.txt`); die Pushes von `b834582` und `b53d639` haben das Live-Deploy ausgelöst, Tor (b) war damit faktisch mit dem Push verbunden. Ergebnis laut Server-Bericht: neues Icon, Template-Links und `?v=0.8.0` live, Favicon und `theme_color` korrekt, fünf Modi, Audio-Start, Leertaste und Fokusring bestanden. Die sieben Manifest-Icons lieferten 404, weil `manifest.json` relative Pfade hatte und unter `/assets/` ausgeliefert wird (schon vor 0.8.0 so). Fix `7bce1f7` (absolute Pfade) ist gepusht; beim letzten Abruf war das Manifest live noch nicht aktualisiert, danach nicht neu geprüft.
 
+### 17.2 Nachtrag: Play-Store-Eintrag vorbereitet (2026-10-25)
+
+Per Browser (Chrome, angemeldete Play Console) wurde der Standard-Store-Eintrag en-US als **Entwurf** gespeichert; nichts eingereicht oder veröffentlicht. Eingetragen: Name, Kurz- und Langbeschreibung (ohne die ungeprüfte Zeile zum Hintergrundbetrieb; „Sequence“ statt „Sequencer“), Icon, Feature Graphic, 5 Telefon-Screenshots, je 2 Tablet-Screenshots für 7" und 10". Tablet-Screenshots müssen 16:9 oder 9:16 sein; die ersten (3:4) wurden neu mit 1536 x 2730 gerendert. Deklarationen, Kategorie, Kontaktdaten und Preis sind nicht gesetzt (Eigentümer; ein bezahltes App lässt sich später nicht kostenlos stellen). Antworten und offene Punkte: `docs/store/play-console-checklist.md`.
+
+Blocker für die Veröffentlichung: (1) privates Konto, daher geschlossener Test mit mindestens 12 Testern (Stand Console: 0) vor dem Produktionszugriff; (2) `https://libremetronome.com/privacy` liefert 200, enthält aber keinen Datenschutztext (vermutlich Startseite), die Datenschutzerklärung `docs/store/privacy-policy.md` muss zuerst auf dem Server erscheinen.
+
 ### Offen beim Eigentümer
 
 - Play (Tor c): AAB mit `versionCode` 8 am 2026-10-25 vom Eigentümer hochgeladen, gespeichert und veröffentlicht (interner Test). Noch offen: Update auf dem Samsung installieren und prüfen, Samsung anschließen, Simulator-Zugriff freigeben, Manifest auf dem Server prüfen.
