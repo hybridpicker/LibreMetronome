@@ -484,8 +484,8 @@ Beim Neun-Schläge-Lauf zeigte der alte Stand des Grids Spalten unter 40 px Brei
 
 - Pendel: das Gewicht ist wieder eine Scheibe (hohl in Ruhe, blau im Lauf), kein Notenkopf; die Notenzeile dahinter bleibt.
 - Notenwerte: Schläge sind Viertelnoten (gefüllter Kopf), im Achtelmodus Achtelnoten mit Fähnchen; hohle Köpfe lasen sich als halbe Noten. Der aktuelle Schlag wird blau und 18 % größer, damit er auch in Monochrom erkennbar bleibt.
-- Grid: wieder gefüllte Quadrate (aktuelle Spalte blau), der Umbruch bei neun Spalten bleibt.
-- Akzentzeichen: bei Sequence und Polyrhythm stehen „>“ und „^“ über dem Kopf (zweite Rückmeldung; die erste Fassung hatte sie unter dem Kopf zur Mitte hin). Auf kleinen Ringen steht die Kreisnummer allein in der Mitte.
+- Grid: wieder gefüllte Quadrate (aktuelle Spalte blau) und keine Akzentzeichen mehr; die Stufe (ein, zwei, drei Quadrate) ist der Zustand. Der Umbruch bei neun Spalten bleibt.
+- Akzentzeichen: bei Sequence und Polyrhythm stehen „>“ und „^“ mit 4 px Luft über dem Kopf (zweite und dritte Rückmeldung; die erste Fassung hatte sie unter dem Kopf, die zweite ohne Abstand). Pausen sind auf den Ringen kleiner. Auf kleinen Ringen steht die Kreisnummer allein in der Mitte.
 - Klick auf einen Schlag schaltet in jedem Modus dieselben Zustände durch (stumm, normal, Akzent, erster Schlag). In Polyrhythm waren die Schläge bisher nicht klickbar; die Ringe sind jetzt Flächen mit einer Auswahltaste darunter, jeder Schlag eine eigene Taste mit Namen für den Screenreader.
 - Notenköpfe sind schlanker und stärker geneigt (Verhältnis 1,58, 24°), damit sie nicht als Kreise gelesen werden.
 

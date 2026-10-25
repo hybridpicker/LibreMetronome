@@ -17,7 +17,7 @@ const PHONE_MAX_WIDTH = 600;
 // Room around the circles, the stepper row above them, and the mark size range.
 const SEQ_PAD = 12;
 const SEQ_HEADER = 56;
-const SEQ_ART = 12; // room above and below the rings for the accent marks
+const SEQ_ART = 20; // room above and below the rings for the accent marks
 const SEQ_MARK_MIN = 16;
 const SEQ_MARK_MAX = 22;
 const SEQ_RING_MAX = 260;

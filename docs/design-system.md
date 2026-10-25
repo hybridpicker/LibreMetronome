@@ -114,11 +114,12 @@ The page is one grid that fills the window and never scrolls
   every 7.5° (the middle one blue), the weight is a plain disc (a hollow ring
   at rest, blue while it swings), the tempo mark top left.
 - **Grid:** hairline cells; "on" is a filled square, the current column turns
-  blue, ">" or "^" sits above the column, a muted column is empty. Nine
-  columns wrap onto two blocks on a phone.
+  blue. The level is the state (one square normal, two accent, three first
+  beat, none muted); the grid carries no other mark. Nine columns wrap onto
+  two blocks on a phone.
 - **Sequence, Polyrhythm:** rings of 1 px, the selected one 1.5 px blue; each
-  beat is a notehead on the ring with its accent mark above it, muted beats
-  are rests. On small rings (four circles on a phone) the number stands alone
+  beat is a notehead on the ring with its accent mark 4 px above the head,
+  muted beats are rests scaled to the ring. On small rings (four circles on a phone) the number stands alone
   in the centre; the heads already count the beats. In every mode a beat is a
   key: each click steps muted, normal, accent, first beat (Polyrhythm beats
   were not clickable before round 3).
