@@ -1,7 +1,6 @@
 /* eslint-disable testing-library/no-node-access -- ring wrappers and the SVG indicator group have no roles; class/structure assertions are unavoidable */
 import React from 'react';
 import { render, screen, fireEvent, act, cleanup } from '@testing-library/react';
-import PolyrhythmEditableSlider from '../../../components/metronome/PolyrhythmMode/PolyrhythmEditableSlider';
 import BeatVisualizer from '../../../components/metronome/PolyrhythmMode/BeatVisualizer';
 import CircleRenderer from '../../../components/metronome/PolyrhythmMode/CircleRenderer';
 import DirectBeatIndicator, { DirectBeatIndicator as NamedIndicator } from '../../../components/metronome/PolyrhythmMode/DirectBeatIndicator';
@@ -11,91 +10,9 @@ import PolyrhythmMetronome from '../../../components/metronome/PolyrhythmMode/Po
 afterEach(cleanup);
 
 describe('PolyrhythmMode index', () => {
-  test('exports the metronome as default and the renderers by name', () => {
+  test('exports only the metronome, as default', () => {
+    expect(Object.keys(PolyrhythmMode)).toEqual(['default']);
     expect(PolyrhythmMode.default).toBe(PolyrhythmMetronome);
-    expect(PolyrhythmMode.CircleRenderer).toBe(CircleRenderer);
-    expect(PolyrhythmMode.BeatVisualizer).toBe(BeatVisualizer);
-  });
-});
-
-describe('PolyrhythmEditableSlider', () => {
-  const setup = (props = {}) => {
-    const setValue = jest.fn();
-    render(<PolyrhythmEditableSlider label="Tempo" value={100} setValue={setValue} min={30} max={240} step={1} {...props} />);
-    return { setValue };
-  };
-  const edit = text => {
-    fireEvent.click(screen.getByText(/Tempo:/));
-    const input = screen.getByTestId('editable-input');
-    fireEvent.change(input, { target: { value: text } });
-    return input;
-  };
-
-  test('shows label and formatted value', () => {
-    setup({ formatter: v => `${v} BPM`, className: 'extra' });
-    expect(screen.getByText('Tempo: 100 BPM')).toBeInTheDocument();
-    expect(screen.getByText('Tempo: 100 BPM').parentElement).toHaveClass('editable-slider', 'polyrhythm-slider', 'extra');
-  });
-
-  test('clicking turns the label into an input holding the formatted value', () => {
-    setup({ formatter: v => `${v} BPM` });
-    fireEvent.click(screen.getByText('Tempo: 100 BPM'));
-    expect(screen.getByTestId('editable-input')).toHaveValue('100 BPM');
-  });
-
-  test('Enter commits a parsed value', () => {
-    const { setValue } = setup({ parser: parseFloat });
-    fireEvent.keyDown(edit('150'), { key: 'Enter' });
-    expect(setValue).toHaveBeenCalledWith(150);
-    expect(screen.queryByTestId('editable-input')).not.toBeInTheDocument();
-  });
-
-  test('blur commits too', () => {
-    const { setValue } = setup({ parser: parseFloat });
-    fireEvent.blur(edit('60'));
-    expect(setValue).toHaveBeenCalledWith(60);
-  });
-
-  test.each([[500, 240], [1, 30], [30, 30], [240, 240]])('clamps %s to %s', (typed, expected) => {
-    const { setValue } = setup({ parser: parseFloat });
-    fireEvent.keyDown(edit(String(typed)), { key: 'Enter' });
-    expect(setValue).toHaveBeenCalledWith(expected);
-  });
-
-  test('a non-numeric entry is discarded but closes the editor', () => {
-    const { setValue } = setup({ parser: parseFloat });
-    fireEvent.keyDown(edit('abc'), { key: 'Enter' });
-    expect(setValue).not.toHaveBeenCalled();
-    expect(screen.queryByTestId('editable-input')).not.toBeInTheDocument();
-  });
-
-  test('a throwing parser closes the editor without committing', () => {
-    const { setValue } = setup({ parser: () => { throw new Error('bad'); } });
-    fireEvent.keyDown(edit('1'), { key: 'Enter' });
-    expect(setValue).not.toHaveBeenCalled();
-    expect(screen.queryByTestId('editable-input')).not.toBeInTheDocument();
-  });
-
-  test('Escape cancels without committing; other keys do nothing', () => {
-    const { setValue } = setup({ parser: parseFloat });
-    const input = edit('150');
-    fireEvent.keyDown(input, { key: 'a' });
-    expect(screen.getByTestId('editable-input')).toBeInTheDocument();
-    fireEvent.keyDown(input, { key: 'Escape' });
-    expect(setValue).not.toHaveBeenCalled();
-    expect(screen.queryByTestId('editable-input')).not.toBeInTheDocument();
-  });
-
-  test('the click does not bubble to parents', () => {
-    const parentClick = jest.fn();
-    render(
-      // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
-      <div onClick={parentClick}>
-        <PolyrhythmEditableSlider label="Tempo" value={100} setValue={jest.fn()} min={30} max={240} step={1} />
-      </div>
-    );
-    fireEvent.click(screen.getByText(/Tempo:/));
-    expect(parentClick).not.toHaveBeenCalled();
   });
 });
 
