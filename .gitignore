@@ -84,3 +84,5 @@ coverage/
 .ruff_cache/
 .mutmut-cache/
 mutants/
+.stryker-tmp/
+reports/
