@@ -255,15 +255,15 @@ const InfoModal = ({ isOpen, onClose }) => {
             <div className="beat-types">
               <div className="beat-type">
                 <LegendMark state="normal" />
-                <span><strong>Normal beat</strong> A hollow notehead</span>
+                <span><strong>Normal beat</strong> A quarter note (an eighth note in eighth mode)</span>
               </div>
               <div className="beat-type">
                 <LegendMark state="accent" />
-                <span><strong>Accented beat</strong> A hollow notehead with &gt; under the staff</span>
+                <span><strong>Accented beat</strong> The note with &gt; under the staff</span>
               </div>
               <div className="beat-type">
                 <LegendMark state="first" />
-                <span><strong>First beat</strong> A hollow notehead with ^ under the staff</span>
+                <span><strong>First beat</strong> The note with ^ under the staff</span>
               </div>
               <div className="beat-type">
                 <LegendMark state="muted" />
@@ -271,7 +271,7 @@ const InfoModal = ({ isOpen, onClose }) => {
               </div>
               <div className="beat-type is-current">
                 <LegendMark state="normal" />
-                <span><strong>Current beat</strong> The notehead fills blue while it sounds</span>
+                <span><strong>Current beat</strong> The note turns blue and grows while it sounds</span>
               </div>
             </div>
             

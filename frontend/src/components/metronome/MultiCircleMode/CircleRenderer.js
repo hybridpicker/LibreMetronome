@@ -51,10 +51,8 @@ const CircleRenderer = ({
     const accents = settings.accents || [];
     const beatState = i < accents.length ? accents[i] : (i === 0 ? 3 : 1);
     
-    // The accent mark sits on the outer side of the ring (above a beat in the
-    // upper half, below one in the lower half) so it never meets the centre.
-    const upper = Math.sin(angle) <= 0.01;
-    const artDist = 5 * markK + 9;
+    // The accent mark sits under the head, as it does on the staff.
+    const artDist = 5 * markK + 6;
     const isMuted = beatState === 0;
     const markState = ['muted', 'normal', 'accent', 'first'][beatState] || 'normal';
 
@@ -81,7 +79,7 @@ const CircleRenderer = ({
             k={markK}
             state={markState}
             stem={0}
-            artY={hit / 2 + (upper ? -artDist : artDist)}
+            artY={hit / 2 + artDist}
           />
         </svg>
       </button>
@@ -90,7 +88,7 @@ const CircleRenderer = ({
   
   return (
     <div
-      className={`multi-circle-surface${isActiveUI ? ' is-selected' : ''}${isPlaying ? ' is-playing' : ''}${isSilent ? ' is-silent' : ''}`}
+      className={`multi-circle-surface${isActiveUI ? ' is-selected' : ''}${isPlaying ? ' is-playing' : ''}${isSilent ? ' is-silent' : ''}${ring < 110 ? ' is-small' : ''}`}
       style={{
         width: actualContainerSize,
         height: actualContainerSize,

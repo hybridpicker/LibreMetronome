@@ -15,7 +15,7 @@ const readToken = (el, name, fallback) =>
 /**
  * The pendulum over the staff: the five lines of the Beat view run behind it
  * between two bar lines, a hairline arc with a tick every 7.5 degrees (the
- * middle one blue) is the scale, the weight is a notehead (hollow at rest,
+ * middle one blue) is the scale, the weight is a disc (a hollow ring at rest,
  * blue while it swings) and the tempo mark "Allegro ♩ = 120" sits top left.
  * Colours come from the design tokens. width / height are the CSS pixels of
  * the visualisation area.
@@ -165,8 +165,19 @@ export default function AnalogMetronomeCanvas({
       ctx.strokeStyle = colors.ink;
       ctx.stroke();
 
-      // The weight is a notehead: hollow at rest, filled blue while it swings.
-      drawNote(0, -armLength * 0.78, weightR * 1.15, weightR * 0.82, -0.35, !isPaused, colors.ink, colors.accent);
+      // The weight: a hollow ring at rest, filled blue while it swings.
+      ctx.beginPath();
+      ctx.arc(0, -armLength * 0.78, weightR, 0, Math.PI * 2);
+      if (isPaused) {
+        ctx.fillStyle = colors.bg;
+        ctx.fill();
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = colors.ink;
+        ctx.stroke();
+      } else {
+        ctx.fillStyle = colors.accent;
+        ctx.fill();
+      }
 
       ctx.rotate(-angleRad);
       ctx.beginPath();

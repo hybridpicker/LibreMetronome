@@ -1,9 +1,9 @@
 /*
  * The staff and its marks (Beat view; Grid, Sequence and Polyrhythm reuse the
  * marks). Flat: hairlines and ink, no relief, no shadow. The current beat
- * fills with blue (90 ms in, 160 ms out; none under reduced motion, which the
- * global rule in instrument-system.css enforces). State is shape, not colour:
- * hollow head, ">" accent, "^" first beat, rest = muted.
+ * turns blue and grows a little (90 ms in, 160 ms out; none under reduced
+ * motion, which the global rule in instrument-system.css enforces). State is
+ * shape, not colour: quarter note, ">" accent, "^" first beat, rest = muted.
  */
 
 .score {
@@ -99,8 +99,14 @@
   outline-offset: -2px;
 }
 
+.score-mark {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform var(--t-out);
+}
+
 .score-head {
-  fill: var(--bg);
+  fill: var(--ink);
   stroke: var(--ink);
   transition: fill var(--t-out), stroke var(--t-out);
 }
@@ -120,7 +126,12 @@
   stroke-linejoin: round;
 }
 
-/* The current beat: filled blue head and stem. */
+/* The current beat: blue, and a little larger, so monochrome reads it too. */
+.is-current .score-mark {
+  transform: scale(1.18);
+  transition: transform var(--t-in);
+}
+
 .is-current .score-head {
   fill: var(--accent);
   stroke: var(--accent);
@@ -135,7 +146,9 @@
 }
 
 @media (hover: hover) {
-  .staff-beat:hover .score-head {
+  .staff-beat:hover .score-head,
+  .staff-beat:hover .score-stem {
+    fill: var(--accent-ink);
     stroke: var(--accent-ink);
   }
 }

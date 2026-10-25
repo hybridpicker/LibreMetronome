@@ -12,17 +12,19 @@ and then light plate) are history; before and after are in
 ## Principles
 
 1. **A bar of music.** The Beat view is one bar on a five-line staff; Analog is
-   the pendulum over the same staff; Grid, Sequence and Polyrhythm show every
-   beat as a notehead. The page is white, the lines are hairlines.
+   the pendulum over the same staff; Sequence and Polyrhythm show every beat
+   as a notehead, Grid keeps its filled squares. The page is white, the lines
+   are hairlines.
 2. **Flat.** No 3D, no relief edges, no shadows, no gradients, no framed cards,
    no dark surfaces (high contrast is the one exception). Radius is 0.
 3. **One accent, a blue pair** from the Okabe-Ito palette, which protanopia and
    deuteranopia read well: `--accent-ink` for text, links, the Tap label and
    accent marks; `--accent` for fills (current beat, Start, active keys,
    progress, the mode underline). Neutrals are tinted faintly blue.
-4. **State is shape, not colour.** Hollow notehead = normal, ">" = accent,
-   "^" = first beat, quarter rest = muted, filled blue = current. Plus
-   `aria-pressed` and text names.
+4. **State is shape, not colour.** A quarter note (an eighth note in eighth
+   mode) = normal, ">" under it = accent, "^" = first beat, quarter rest =
+   muted; the current beat turns blue and grows a little, so it reads in
+   monochrome too. Plus `aria-pressed` and text names.
 5. **Touch is deliberate.** Targets are 44 px (40 px on screens shorter than
    760 px). Text is never below 12 px. Beats never come closer than a finger:
    the bar wraps onto a second staff (Beat) or block (Grid) instead.
@@ -101,21 +103,24 @@ The page is one grid that fills the window and never scrolls
   with a 2 px blue underline.
 - **Beat:** one bar on a five-line staff. Time signature N/4 (N/8 with eighth
   notes: flags on the stems), thin bar line left, thin plus 3 px final bar line
-  right, the tempo mark "Allegro ♩ = 120" above. The staff space grows from
+  right, the tempo mark "Allegro ♩ = 120" above. Heads are filled: beats are
+  quarter notes, eighth mode shows eighth notes. The staff space grows from
   12 px on a phone to 28 px on a desktop, the marks with it. When the beats
   would be narrower than a finger, the bar wraps onto a second staff. The tempo
   words come from a fixed table (Grave below 40, Largo 40, Larghetto 60,
   Adagio 66, Andante 76, Moderato 108, Allegro 120, Vivace 156, Presto 176,
   Prestissimo 200).
 - **Analog:** the same staff behind the pendulum, a hairline arc with a tick
-  every 7.5° (the middle one blue), the weight is a notehead (hollow at rest,
-  blue while it swings), the tempo mark top left.
-- **Grid:** hairline cells; "on" is a filled notehead, the current column fills
-  blue, ">" or "^" sits above the column, a muted column shows a rest. Nine
+  every 7.5° (the middle one blue), the weight is a plain disc (a hollow ring
+  at rest, blue while it swings), the tempo mark top left.
+- **Grid:** hairline cells; "on" is a filled square, the current column turns
+  blue, ">" or "^" sits above the column, a muted column is empty. Nine
   columns wrap onto two blocks on a phone.
 - **Sequence, Polyrhythm:** rings of 1 px, the selected one 1.5 px blue; each
-  beat is a notehead on the ring, the accent mark on its outer side, muted beats
-  are rests.
+  beat is a notehead on the ring with its accent mark under it (towards the
+  centre, as under a staff), muted beats are rests. On small rings (four
+  circles on a phone) the number stands alone in the centre; the heads already
+  count the beats.
 - **Controls:** no lines between rows, rows 12 px apart (8 px on short screens);
   labels 13 px Regular, values 17 px Bold; the tempo reads "♩ = 120 bpm" in a
   Light numeral. Sliders have a 1 px track, a 1.5 px blue progress line and a

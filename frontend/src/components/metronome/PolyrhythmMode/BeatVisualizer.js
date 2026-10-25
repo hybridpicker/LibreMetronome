@@ -73,7 +73,7 @@ const BeatVisualizer = ({
               state={states[accentValue] || 'normal'}
               stem={0}
               restK={k * 0.7}
-              artY={size / 2 + (Math.sin(position.angle) <= 0.01 ? -1 : 1) * (5 * k + 9)}
+              artY={size / 2 + 5 * k + 6}
             />
           </svg>
         );

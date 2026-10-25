@@ -477,3 +477,15 @@ Beim Neun-Schläge-Lauf zeigte der alte Stand des Grids Spalten unter 40 px Brei
 - Hoher Kontrast: Staff-Linien sind weiß und 1 px; nur im Screenshot gesehen.
 - Web: nicht gepusht; Server-Build und Kopieren der Icons nach `static_cdn/assets` stehen aus.
 - Der Android-Build wurde nicht gebaut; `capacitor-assets` hat die Ressourcen neu geschrieben (61 Android-Dateien, 4 iOS).
+
+### 16.1 Nachtrag: erste Rückmeldung des Eigentümers
+
+„Das Design ist schon sehr schön“, vier Korrekturen, am selben Tag umgesetzt:
+
+- Pendel: das Gewicht ist wieder eine Scheibe (hohl in Ruhe, blau im Lauf), kein Notenkopf; die Notenzeile dahinter bleibt.
+- Notenwerte: Schläge sind Viertelnoten (gefüllter Kopf), im Achtelmodus Achtelnoten mit Fähnchen; hohle Köpfe lasen sich als halbe Noten. Der aktuelle Schlag wird blau und 18 % größer, damit er auch in Monochrom erkennbar bleibt.
+- Grid: wieder gefüllte Quadrate (aktuelle Spalte blau), der Umbruch bei neun Spalten bleibt.
+- Akzentzeichen: bei Sequence und Polyrhythm stehen „>“ und „^“ jetzt immer unter dem Kopf wie auf der Notenzeile, nicht mehr außen über dem Ring. Auf kleinen Ringen steht die Kreisnummer allein in der Mitte.
+- Notenköpfe sind schlanker und stärker geneigt (Verhältnis 1,58, 24°), damit sie nicht als Kreise gelesen werden.
+
+Nachweis wie in 16: 42 von 42 Fälle in jedem Modus und mit neun Schlägen ohne Überlänge; alle Tests grün.

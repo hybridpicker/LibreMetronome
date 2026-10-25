@@ -399,7 +399,7 @@ body.reduced-motion *::after {
   opacity: 0.7;
 }
 
-/* ---- Grid: hairline cells, filled noteheads, current column blue --------- */
+/* ---- Grid: hairline cells, filled squares, current column blue ------------ */
 
 .grid-blocks {
   display: flex;
@@ -437,27 +437,22 @@ body.reduced-motion *::after {
   margin-bottom: -1px;
 }
 
-.grid-cell svg {
+/* "On" is a filled square (ink) inside the cell; the current column is blue. */
+.grid-cell.is-on::after {
+  content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  display: block;
-  overflow: visible;
+  top: 50%;
+  left: 50%;
+  width: calc(var(--cell-min, 44px) * 0.62);
+  height: calc(var(--cell-min, 44px) * 0.62);
+  transform: translate(-50%, -50%);
+  background: var(--ink);
+  transition: background-color var(--t-out);
 }
 
-/* "On" is a filled notehead (ink); the current column fills blue. */
-.grid-cell .score-head {
-  fill: var(--ink);
-  stroke: var(--ink);
-}
-
-.grid-beat-control.is-current .score-head {
-  fill: var(--accent);
-  stroke: var(--accent);
-}
-
-.grid-beat-control.is-current .score-rest {
-  stroke: var(--accent);
+.grid-beat-control.is-current .grid-cell.is-on::after {
+  background: var(--accent);
+  transition: background-color var(--t-in);
 }
 
 /* The accent mark sits above the column: ">" accent, "^" first beat. */
@@ -537,7 +532,17 @@ body.reduced-motion *::after {
   font-weight: var(--fw-bold);
   font-variant-numeric: tabular-nums;
   line-height: 24px;
-  transform: translateY(-9px);
+  transform: translateY(-6px);
+}
+
+/* Small rings (four circles on a phone): the heads already count the beats,
+   so the number stands alone, centred, clear of the accent marks. */
+.multi-circle-surface.is-small .sequence-position {
+  transform: none;
+}
+
+.multi-circle-surface.is-small .sequence-beat-count {
+  display: none;
 }
 
 .multi-circle-surface.is-selected .sequence-position {
@@ -548,7 +553,7 @@ body.reduced-motion *::after {
    neighbouring circle, a beat mark or the stepper. */
 .sequence-beat-count {
   position: absolute;
-  top: calc(50% + 8px);
+  top: calc(50% + 10px);
   left: 50%;
   transform: translateX(-50%);
   color: var(--ink-2);
