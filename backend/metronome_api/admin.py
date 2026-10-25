@@ -1,32 +1,34 @@
 from django.contrib import admin
-from django.utils.html import format_html
+from django.utils.html import format_html_join
+
 from .models import MetronomeSoundSet
 
-# Register your models here.
+SOUND_PREVIEW_FIELDS = (
+    ("first_beat_sound", "First Beat"),
+    ("accent_sound", "Accent"),
+    ("normal_beat_sound", "Normal Beat"),
+)
+
 
 @admin.register(MetronomeSoundSet)
 class MetronomeSoundSetAdmin(admin.ModelAdmin):
-    list_display = ('name', 'is_active', 'created_at', 'sound_preview')
-    list_editable = ('is_active',)
-    search_fields = ('name', 'description')
-    readonly_fields = ('created_at', 'updated_at')
-    list_filter = ('is_active', 'created_at')
-    
+    list_display = ("name", "is_active", "created_at", "sound_preview")
+    list_editable = ("is_active",)
+    search_fields = ("name", "description")
+    readonly_fields = ("created_at", "updated_at")
+    list_filter = ("is_active", "created_at")
+
+    @admin.display(description="Sound Previews")
     def sound_preview(self, obj):
-        preview_html = ''
-        for field_name, label in [
-            ('first_beat_sound', 'First Beat'),
-            ('accent_sound', 'Accent'),
-            ('normal_beat_sound', 'Normal Beat')
-        ]:
-            sound_file = getattr(obj, field_name)
-            if sound_file:
-                preview_html += format_html(
-                    '<div style="margin: 5px 0;"><strong>{}</strong>: '
-                    '<audio controls style="height: 30px"><source src="{}" type="audio/mpeg">'
-                    'Your browser does not support the audio element.</audio></div>',
-                    label, sound_file.url
-                )
-        return format_html(preview_html)
-    
-    sound_preview.short_description = 'Sound Previews'
+        players = [
+            (label, getattr(obj, field_name).url)
+            for field_name, label in SOUND_PREVIEW_FIELDS
+            if getattr(obj, field_name)
+        ]
+        return format_html_join(
+            "",
+            '<div style="margin: 5px 0;"><strong>{}</strong>: '
+            '<audio controls style="height: 30px"><source src="{}" type="audio/mpeg">'
+            "Your browser does not support the audio element.</audio></div>",
+            players,
+        )

@@ -1,26 +1,57 @@
-from django.views.generic import TemplateView
+import logging
+import mimetypes
+from functools import wraps
+from pathlib import Path
+
+from django.conf import settings
+from django.http import FileResponse, Http404, JsonResponse
 from django.views.decorators.cache import never_cache
-from django.http import Http404
 from django.views.decorators.http import require_POST
+from django.views.generic import TemplateView
+
+from .models import MetronomeSoundSet
+
+logger = logging.getLogger(__name__)
+
+CORS_ALLOWED_HEADERS = "X-Requested-With, Content-Type"
+AUDIO_MIME_TYPES = {".mp3": "audio/mpeg", ".wav": "audio/wav", ".ogg": "audio/ogg"}
+SOUND_SUBDIRECTORY = "metronome_sounds"
 
 
-# Serve React App
-class ReactAppView(TemplateView):
+def with_cors(response, methods):
+    """Allow any origin to call the endpoint with the given HTTP methods."""
+    response["Access-Control-Allow-Origin"] = "*"
+    response["Access-Control-Allow-Methods"] = methods
+    response["Access-Control-Allow-Headers"] = CORS_ALLOWED_HEADERS
+    return response
+
+
+def json_errors_as_500(view):
+    """Turn unexpected exceptions into a JSON 500 instead of an HTML error page.
+
+    The exception details are logged server-side and deliberately not sent to the client.
     """
-    View for serving the React frontend application.
-    Handles all frontend routes by serving index.html.
-    """
-    template_name = 'index.html'
 
-    def get(self, request, *args, **kwargs):
+    @wraps(view)
+    def wrapper(request, *args, **kwargs):
         try:
-            return super().get(request, *args, **kwargs)
-        except Http404:
-            # Always serve index.html for frontend routes
-            return self.render_to_response({})
+            return view(request, *args, **kwargs)
+        except Exception:
+            logger.exception("Unhandled error in %s", view.__name__)
+            return JsonResponse({"error": "Internal server error"}, status=500)
+
+    return wrapper
+
+
+class ReactAppView(TemplateView):
+    """Serves the React frontend's index.html for every frontend route."""
+
+    template_name = "index.html"
+
 
 # Create a single instance of the view
 index_view = never_cache(ReactAppView.as_view())
+
 
 def serve_react(request, path=None):
     """
@@ -29,77 +60,45 @@ def serve_react(request, path=None):
     """
     return index_view(request)
 
-# Add this view to serve sound files
-def serve_sound_file(request, filename):
-    from django.http import FileResponse, Http404
-    from django.conf import settings
-    import os
-    import mimetypes
-    
-    # Construct the path to the sound file
-    filepath = os.path.join(settings.MEDIA_ROOT, filename)
-    
-    # Debug information for troubleshooting
-    print(f"Requested sound file: {filename}")
-    print(f"Looking for file at: {filepath}")
-    print(f"File exists: {os.path.exists(filepath)}")
-    
-    # Check if the file exists
-    if not os.path.exists(filepath):
-        # Try alternative locations
-        alt_filepath = os.path.join(settings.MEDIA_ROOT, 'metronome_sounds', filename)
-        if os.path.exists(alt_filepath):
-            filepath = alt_filepath
-            print(f"Found file at alternative location: {filepath}")
-        else:
-            print("File not found at either location")
-            raise Http404(f"Sound file {filename} not found")
-    
-    # Determine the correct content type
-    content_type, encoding = mimetypes.guess_type(filepath)
-    
-    # For audio files, we need to set the specific MIME type
-    if filename.endswith('.mp3'):
-        content_type = 'audio/mpeg'
-    elif filename.endswith('.wav'):
-        content_type = 'audio/wav'
-    elif filename.endswith('.ogg'):
-        content_type = 'audio/ogg'
-    
-    print(f"Serving file with content-type: {content_type}")
-    
-    # Return the file as a response with the correct content type
-    response = FileResponse(open(filepath, 'rb'))
-    if content_type:
-        response['Content-Type'] = content_type
-    response['Content-Disposition'] = f'inline; filename="{filename}"'
-    
-    # Add CORS headers to allow cross-origin requests
-    response['Access-Control-Allow-Origin'] = '*'  # Allow from any origin
-    response['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
-    response['Access-Control-Allow-Headers'] = 'X-Requested-With, Content-Type'
-    
-    return response
 
-# API endpoints for sound sets
-from django.http import JsonResponse
-from django.conf import settings
-from .models import MetronomeSoundSet
+def find_sound_file(filename):
+    """Locate a sound file in MEDIA_ROOT, falling back to its `metronome_sounds` subdirectory."""
+    if Path(filename).name != filename or filename in {".", ".."}:
+        return None
+    media_root = Path(settings.MEDIA_ROOT)
+    for directory in (media_root, media_root / SOUND_SUBDIRECTORY):
+        candidate = directory / filename
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def sound_content_type(filepath):
+    """Explicit MIME type for the supported audio formats, otherwise the `mimetypes` guess."""
+    explicit = AUDIO_MIME_TYPES.get(filepath.suffix)
+    return explicit or mimetypes.guess_type(filepath)[0]
+
+
+def serve_sound_file(request, filename):
+    """Serve a metronome sound from MEDIA_ROOT."""
+    filepath = find_sound_file(filename)
+    if filepath is None:
+        logger.info("Sound file not found: %s", filename)
+        raise Http404(f"Sound file {filename} not found")
+
+    response = FileResponse(filepath.open("rb"))
+    content_type = sound_content_type(filepath)
+    if content_type:
+        response["Content-Type"] = content_type
+    response["Content-Disposition"] = f'inline; filename="{filename}"'
+    return with_cors(response, "GET, OPTIONS")
+
 
 def get_support_info(request):
     """Return Stripe payment information from settings"""
-    payment_link = getattr(settings, 'STRIPE_PAYMENT_LINK', '')
-    
-    # Add CORS headers to allow cross-origin requests
-    response = JsonResponse({'paymentLink': payment_link})
-    response['Access-Control-Allow-Origin'] = '*'
-    response['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
-    response['Access-Control-Allow-Headers'] = 'X-Requested-With, Content-Type'
-    
-    # Log to help with debugging
-    print(f"Support info requested. Returning payment link: {payment_link}")
-    
-    return response
+    payment_link = getattr(settings, "STRIPE_PAYMENT_LINK", "")
+    return with_cors(JsonResponse({"paymentLink": payment_link}), "GET, OPTIONS")
+
 
 def sound_set_to_dict(sound_set):
     """Convert a MetronomeSoundSet instance to a dictionary for JSON serialization.
@@ -107,100 +106,74 @@ def sound_set_to_dict(sound_set):
     """
     if not sound_set:
         return None
-    
+
     return {
-        'id': sound_set.id,
-        'name': sound_set.name,
-        'description': sound_set.description,
+        "id": sound_set.id,
+        "name": sound_set.name,
+        "description": sound_set.description,
         # Always include is_active for backwards compatibility, but it's not used
-        'is_active': False,  # Default to false since frontend will use cookies now
-        'first_beat_sound_url': sound_set.first_beat_sound.url if sound_set.first_beat_sound else None,
-        'accent_sound_url': sound_set.accent_sound.url if sound_set.accent_sound else None,
-        'normal_beat_sound_url': sound_set.normal_beat_sound.url if sound_set.normal_beat_sound else None,
-        'created_at': sound_set.created_at.isoformat() if sound_set.created_at else None,
-        'updated_at': sound_set.updated_at.isoformat() if sound_set.updated_at else None,
+        "is_active": False,  # Default to false since frontend will use cookies now
+        "first_beat_sound_url": sound_set.first_beat_sound.url if sound_set.first_beat_sound else None,
+        "accent_sound_url": sound_set.accent_sound.url if sound_set.accent_sound else None,
+        "normal_beat_sound_url": sound_set.normal_beat_sound.url if sound_set.normal_beat_sound else None,
+        "created_at": sound_set.created_at.isoformat() if sound_set.created_at else None,
+        "updated_at": sound_set.updated_at.isoformat() if sound_set.updated_at else None,
     }
 
-@require_POST
-def set_active_sound_set_view(request, id):
-    try:
-        # This endpoint no longer updates the is_active flag in the database
-        # Instead, it just validates that the requested sound set exists
-        # and returns it. Selection is handled by cookies in the frontend.
-        sound_set = MetronomeSoundSet.objects.get(id=id)
-        
-        # Just return the requested sound set without modifying is_active
-        response = JsonResponse(sound_set_to_dict(sound_set))
-        
-        # Add CORS headers to allow cross-origin requests if needed
-        response['Access-Control-Allow-Origin'] = '*'
-        response['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
-        response['Access-Control-Allow-Headers'] = 'X-Requested-With, Content-Type'
-        
-        return response
-    except MetronomeSoundSet.DoesNotExist:
-        return JsonResponse({'error': f'Sound set with ID {id} not found'}, status=404)
-    except Exception as e:
-        print(f"Error handling sound set request: {e}")
-        return JsonResponse({'error': str(e)}, status=500)
 
+def _not_found(id):
+    return JsonResponse({"error": f"Sound set with ID {id} not found"}, status=404)
+
+
+def _first_sound_set_response(missing_message):
+    """Response for the first sound set in the database (selection itself is cookie-based)."""
+    sound_set = MetronomeSoundSet.objects.first()
+    if sound_set is None:
+        return JsonResponse({"error": missing_message}, status=404)
+    return with_cors(JsonResponse(sound_set_to_dict(sound_set)), "GET, OPTIONS")
+
+
+@require_POST
+@json_errors_as_500
+def set_active_sound_set_view(request, id):
+    """Validate that the sound set exists and return it.
+
+    The endpoint no longer updates the is_active flag in the database; selection is
+    handled by cookies in the frontend.
+    """
+    try:
+        sound_set = MetronomeSoundSet.objects.get(id=id)
+    except MetronomeSoundSet.DoesNotExist:
+        return _not_found(id)
+    return with_cors(JsonResponse(sound_set_to_dict(sound_set)), "POST, OPTIONS")
+
+
+@json_errors_as_500
 def active_sound_set(request):
     """
     Get a default sound set, not relying on is_active flag.
     This endpoint now just returns the first sound set in the database.
     """
-    try:
-        # Simply get the first sound set
-        sound_set = MetronomeSoundSet.objects.first()
-        
-        if sound_set:
-            response = JsonResponse(sound_set_to_dict(sound_set))
-            # Add CORS headers
-            response['Access-Control-Allow-Origin'] = '*'
-            response['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
-            response['Access-Control-Allow-Headers'] = 'X-Requested-With, Content-Type'
-            return response
-        
-        return JsonResponse({'error': 'No sound sets found'}, status=404)
-    except Exception as e:
-        print(f"Error getting sound set: {e}")
-        return JsonResponse({'error': str(e)}, status=500)
+    return _first_sound_set_response("No sound sets found")
 
+
+@json_errors_as_500
 def default_sound_set(request):
     """Get the default sound set (first one in the database)."""
-    try:
-        # Simply get the first sound set, no longer using is_active
-        sound_set = MetronomeSoundSet.objects.first()
-        
-        if sound_set:
-            response = JsonResponse(sound_set_to_dict(sound_set))
-            # Add CORS headers
-            response['Access-Control-Allow-Origin'] = '*'
-            response['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
-            response['Access-Control-Allow-Headers'] = 'X-Requested-With, Content-Type'
-            return response
-            
-        return JsonResponse({'error': 'No default sound set found'}, status=404)
-    except Exception as e:
-        print(f"Error getting default sound set: {e}")
-        return JsonResponse({'error': str(e)}, status=500)
+    return _first_sound_set_response("No default sound set found")
 
+
+@json_errors_as_500
 def all_sound_sets(request):
     """Get all sound sets."""
-    try:
-        sound_sets = MetronomeSoundSet.objects.all()
-        return JsonResponse([sound_set_to_dict(s) for s in sound_sets], safe=False)
-    except Exception as e:
-        print(f"Error getting all sound sets: {e}")
-        return JsonResponse({'error': str(e)}, status=500)
+    return JsonResponse([sound_set_to_dict(s) for s in MetronomeSoundSet.objects.all()], safe=False)
 
+
+@json_errors_as_500
 def sound_set_detail(request, id):
     """Get a specific sound set by ID."""
     try:
         sound_set = MetronomeSoundSet.objects.get(id=id)
-        return JsonResponse(sound_set_to_dict(sound_set))
     except MetronomeSoundSet.DoesNotExist:
-        return JsonResponse({'error': f'Sound set with ID {id} not found'}, status=404)
-    except Exception as e:
-        print(f"Error getting sound set {id}: {e}")
-        return JsonResponse({'error': str(e)}, status=500)
+        return _not_found(id)
+    return JsonResponse(sound_set_to_dict(sound_set))

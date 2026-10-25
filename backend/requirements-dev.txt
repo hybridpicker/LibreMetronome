@@ -1,0 +1,9 @@
+-r ../requirements.txt
+coverage
+ruff
+mypy
+django-stubs
+djangorestframework-stubs
+bandit
+pip-audit
+mutmut
