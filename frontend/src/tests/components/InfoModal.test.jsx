@@ -1,8 +1,19 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { InfoModal } from '../../components/InfoSection';
+import { getPaymentLink } from '../../utils/supportUtils';
+
+// the guide embeds a SupportButton that would otherwise fetch the payment link
+jest.mock('../../utils/supportUtils', () => ({
+  getPaymentLink: jest.fn()
+}));
 
 describe('InfoModal Component', () => {
+  beforeEach(() => {
+    // never resolves: no late state updates after a test finished
+    getPaymentLink.mockReturnValue(new Promise(() => {}));
+  });
+
   const mockOnClose = jest.fn();
   
   beforeEach(() => {
