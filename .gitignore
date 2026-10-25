@@ -79,10 +79,11 @@ key.properties
 # Quality tooling output
 .coverage
 htmlcov/
-coverage/
+frontend/coverage/
+backend/htmlcov/
 .mypy_cache/
 .ruff_cache/
 .mutmut-cache/
 mutants/
 .stryker-tmp/
-reports/
+frontend/reports/

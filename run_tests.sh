@@ -32,6 +32,8 @@ run_backend() {
     if [ "$with_coverage" = "yes" ]; then
       "$PYTHON" -m coverage run manage.py test
       "$PYTHON" -m coverage report --fail-under=100
+      echo "== backend: dependency audit =="
+      "$PYTHON" -m pip_audit -r "$ROOT/requirements.txt"
     else
       "$PYTHON" manage.py test
     fi
@@ -46,6 +48,8 @@ run_frontend() {
   echo "== frontend: tests =="
   if [ "$with_coverage" = "yes" ]; then
     npm run --silent coverage
+    echo "== frontend: dependency audit (shipped code) =="
+    npm audit --omit=dev
   else
     npm run --silent test:ci
   fi

@@ -6,6 +6,8 @@ const MAX_TRAINING_TEMPO = 180;
 const AUTO_SPEEDUP_MAX_STEP = 5;
 const MANUAL_SPEEDUP_MAX_STEP = 10;
 const DEFAULT_MANUAL_INCREASE_PERCENT = 5;
+// Note: used with `||`, so a configured probability of 0 also falls back to this value (known quirk,
+// pinned by tests, see docs/quality-report.md).
 const DEFAULT_MUTE_PROBABILITY = 0.3;
 
 /**
