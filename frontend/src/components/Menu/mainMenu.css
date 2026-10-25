@@ -1,8 +1,8 @@
 /*
  * Main menu dialog (Training / Settings / Support).
- * A flat sheet on a dim overlay: hairline-separated sections, text tabs with a
- * 3px underline (like the mode selector), 2px outlined keys, one solid primary
- * action. Colour comes from the tokens in colors.css only, so the high-contrast,
+ * One flat sheet over the faded page (no dark scrim): a Light title, hairline-
+ * separated sections, text tabs with a 2 px underline (like the mode bar),
+ * square keys, one solid primary action. Colour comes from the tokens in colors.css only, so the high-contrast,
  * large-text and colour-blind modes work without extra rules.
  */
 
@@ -33,7 +33,7 @@
   display: flex;
   flex-direction: column;
   width: 90%;
-  max-width: 640px;
+  max-width: 720px;
   max-height: 88vh;
   padding: var(--sp-5);
   overflow: hidden;
@@ -50,12 +50,11 @@
   min-height: var(--touch);
   margin: 0 calc(var(--touch) + var(--sp-3)) var(--sp-3) 0;
   color: var(--ink);
-  font-size: var(--fs-2);
-  font-weight: var(--fw-regular);
-  letter-spacing: 0.08em;
-  line-height: 1.2;
+  font-size: var(--fs-title);
+  font-weight: var(--fw-light);
+  letter-spacing: 0;
+  line-height: 1.15;
   text-align: left;
-  text-transform: uppercase;
 }
 
 .menu-close-button {
@@ -68,7 +67,7 @@
   width: var(--touch);
   height: var(--touch);
   padding: 0;
-  border: var(--stroke) solid var(--line-strong);
+  border: var(--stroke) solid var(--ink-2);
   border-radius: var(--r-control);
   background: var(--bg);
   color: var(--ink);
@@ -139,7 +138,7 @@
   right: 0;
   bottom: -1px;
   left: 0;
-  height: 3px;
+  height: var(--stroke-select);
   background: var(--accent);
 }
 
@@ -181,13 +180,12 @@
   border-radius: 0;
   background: transparent;
   color: var(--ink-2);
-  font-size: var(--fs-1);
+  font-size: var(--fs-2);
   font-weight: var(--fw-regular);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.02em;
   text-decoration: underline;
   text-decoration-thickness: var(--stroke);
   text-underline-offset: 4px;
-  text-transform: uppercase;
   cursor: pointer;
 }
 
@@ -270,10 +268,9 @@
 .training-input-label > span:first-child,
 .settings-row label > span:first-child {
   color: var(--ink-2);
-  font-size: var(--fs-1);
+  font-size: var(--fs-2);
   font-weight: var(--fw-regular);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .training-select-label {
@@ -293,7 +290,7 @@
   min-height: var(--touch);
   margin: 0;
   padding: 0 var(--sp-3);
-  border: var(--stroke) solid var(--line-strong);
+  border: var(--stroke) solid var(--ink-2);
   border-radius: var(--r-control);
   background: var(--bg);
   color: var(--ink);
@@ -407,10 +404,9 @@ input[type='number']::-webkit-outer-spin-button {
 .menu-modal .settings-group h3 {
   margin: 0 0 var(--sp-3);
   color: var(--ink-2);
-  font-size: var(--fs-1);
+  font-size: var(--fs-2);
   font-weight: var(--fw-regular);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .settings-row {
@@ -451,7 +447,7 @@ input[type='number']::-webkit-outer-spin-button {
   width: 20px;
   height: 20px;
   margin: 0;
-  accent-color: var(--accent-ink);
+  accent-color: var(--accent);
 }
 
 /* Square key: empty = outline, checked = solid fill plus a tick. */
@@ -472,8 +468,8 @@ input[type='number']::-webkit-outer-spin-button {
 
 .menu-modal input[type='checkbox']:checked,
 .accessibility-settings input[type='checkbox']:checked {
-  border-color: var(--accent-ink);
-  background: var(--accent-ink);
+  border-color: var(--accent);
+  background: var(--accent);
 }
 
 .menu-modal input[type='checkbox']:checked::after,
@@ -489,7 +485,7 @@ input[type='number']::-webkit-outer-spin-button {
   transform: rotate(45deg);
 }
 
-/* Sound sets: hairline rows; the chosen one is bold with a 3px bar. */
+/* Sound sets: hairline rows; the chosen one is bold with a 2 px bar. */
 .sound-sets-list {
   display: flex;
   flex-direction: column;
@@ -505,7 +501,7 @@ input[type='number']::-webkit-outer-spin-button {
   padding: 0 var(--sp-3);
   border: 0;
   border-bottom: var(--stroke) solid var(--line);
-  border-left: 3px solid transparent;
+  border-left: var(--stroke-select) solid transparent;
   border-radius: 0;
   background: transparent;
   cursor: pointer;
@@ -531,7 +527,7 @@ input[type='number']::-webkit-outer-spin-button {
   background: var(--line);
 }
 
-/* Sound preview: three outlined keys; the first beat gets the teal outline. */
+/* Sound preview: three outlined keys; the first beat gets the blue outline. */
 .sound-preview-buttons {
   display: flex;
   flex-wrap: wrap;
@@ -546,7 +542,7 @@ input[type='number']::-webkit-outer-spin-button {
   gap: var(--sp-2);
   min-height: var(--touch);
   padding: 0 var(--sp-3);
-  border: var(--stroke) solid var(--line-strong);
+  border: var(--stroke) solid var(--ink-2);
   border-radius: var(--r-control);
   background: var(--bg);
   color: var(--ink);
@@ -588,7 +584,7 @@ input[type='number']::-webkit-outer-spin-button {
   min-height: var(--touch);
   margin-top: var(--sp-2);
   padding: 0 var(--sp-3);
-  border: var(--stroke) solid var(--line-strong);
+  border: var(--stroke) solid var(--ink-2);
   border-radius: var(--r-control);
   background: var(--bg);
   color: var(--ink);
@@ -606,12 +602,12 @@ input[type='number']::-webkit-outer-spin-button {
 .settings-save-button {
   display: block;
   min-width: 160px;
-  min-height: 60px;
+  min-height: 56px;
   margin: var(--sp-4) 0 0 auto;
   padding: 0 var(--sp-5);
-  border: var(--stroke) solid var(--accent-ink);
+  border: var(--stroke) solid var(--accent);
   border-radius: var(--r-control);
-  background: var(--accent-ink);
+  background: var(--accent);
   color: var(--on-accent);
   font-size: var(--fs-3);
   font-weight: var(--fw-bold);

@@ -15,11 +15,10 @@
 .minimalist-heading {
   margin: 0 0 var(--sp-4);
   color: var(--ink);
-  font-size: var(--fs-2);
-  font-weight: var(--fw-regular);
-  letter-spacing: 0.08em;
-  line-height: 1.2;
-  text-transform: uppercase;
+  font-size: var(--fs-title-lg);
+  font-weight: var(--fw-light);
+  letter-spacing: 0;
+  line-height: 1.15;
   text-align: left;
 }
 
@@ -57,9 +56,9 @@
   min-height: var(--touch);
   margin: 0;
   padding: 0 var(--sp-5);
-  border: var(--stroke) solid var(--accent-ink);
+  border: var(--stroke) solid var(--accent);
   border-radius: var(--r-control);
-  background: var(--accent-ink);
+  background: var(--accent);
   color: var(--on-accent);
   font-family: var(--font);
   font-size: var(--fs-3);
@@ -97,12 +96,11 @@
 .support-features-coming h3 {
   margin: 0 0 var(--sp-3);
   color: var(--ink-2);
-  font-size: var(--fs-1);
+  font-size: var(--fs-2);
   font-weight: var(--fw-regular);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.02em;
   line-height: 18px;
   text-align: left;
-  text-transform: uppercase;
 }
 
 .support-info ul {

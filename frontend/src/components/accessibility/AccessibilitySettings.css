@@ -27,7 +27,7 @@
   height: var(--touch);
   margin: 0 0 calc(-1 * var(--touch)) auto;
   padding: 0;
-  border: var(--stroke) solid var(--line-strong);
+  border: var(--stroke) solid var(--ink-2);
   border-radius: var(--r-control);
   background: var(--bg);
   color: var(--ink);
@@ -42,21 +42,19 @@
   padding: 0;
   border: 0;
   color: var(--ink);
-  font-size: var(--fs-2);
-  font-weight: var(--fw-regular);
-  letter-spacing: 0.08em;
-  line-height: 1.2;
-  text-transform: uppercase;
+  font-size: var(--fs-title);
+  font-weight: var(--fw-light);
+  letter-spacing: 0;
+  line-height: 1.15;
 }
 
 .accessibility-settings h3 {
   margin: 0 0 var(--sp-2);
   color: var(--ink-2);
-  font-size: var(--fs-1);
+  font-size: var(--fs-2);
   font-weight: var(--fw-regular);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.02em;
   line-height: 18px;
-  text-transform: uppercase;
 }
 
 .accessibility-settings .settings-group {
@@ -144,7 +142,7 @@
   appearance: none;
   margin: 0 0 var(--sp-2);
   padding: 0 calc(var(--sp-3) + var(--sp-5)) 0 var(--sp-3);
-  border: var(--stroke) solid var(--line-strong);
+  border: var(--stroke) solid var(--ink-2);
   border-radius: var(--r-control);
   background: var(--bg);
   color: var(--ink);
@@ -199,7 +197,7 @@ kbd {
   min-width: 24px;
   margin: 0 var(--sp-2) 0 0;
   padding: var(--sp-1) var(--sp-2);
-  border: var(--stroke) solid var(--line-strong);
+  border: var(--stroke) solid var(--ink-2);
   border-radius: var(--r-control);
   background: var(--bg);
   color: var(--ink);
@@ -223,11 +221,11 @@ kbd {
 }
 
 .close-button {
-  min-height: 60px;
+  min-height: 56px;
   padding: 0 var(--sp-5);
-  border: var(--stroke) solid var(--accent-ink);
+  border: var(--stroke) solid var(--accent);
   border-radius: var(--r-control);
-  background: var(--accent-ink);
+  background: var(--accent);
   color: var(--on-accent);
   font-size: var(--fs-3);
   font-weight: var(--fw-bold);

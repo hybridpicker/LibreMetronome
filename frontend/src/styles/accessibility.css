@@ -28,16 +28,17 @@
   position: absolute;
   top: -40px;
   left: 0;
-  background: #fff;
-  color: #000;
-  padding: 8px;
+  background: var(--bg);
+  color: var(--ink);
+  padding: var(--sp-2);
   z-index: 100;
-  transition: top 0.2s;
+  transition: top var(--t-fast);
 }
 
 .skip-link:focus {
   top: 0;
-  outline: 3px solid var(--focus);
+  outline: var(--stroke-select) solid var(--focus);
+  outline-offset: 0;
 }
 
 /* Large text mode - moved to large-text.css for more comprehensive styling */
@@ -50,10 +51,11 @@ body.reduced-motion * {
   scroll-behavior: auto !important;
 }
 
-/* Focus outline styles */
+/* Focus outline: 2 px ring, 3 px clear of the control (see also
+   instrument-system.css, which sets the same ring on the keys). */
 :focus {
-  outline: 3px solid var(--focus);
-  outline-offset: 2px;
+  outline: var(--stroke-select) solid var(--focus);
+  outline-offset: 3px;
 }
 
 :focus:not(:focus-visible) {
@@ -61,8 +63,8 @@ body.reduced-motion * {
 }
 
 :focus-visible {
-  outline: 3px solid var(--focus);
-  outline-offset: 2px;
+  outline: var(--stroke-select) solid var(--focus);
+  outline-offset: 3px;
 }
 
 /* Improved form controls for accessibility */
@@ -93,7 +95,7 @@ input[type="reset"] {
 
 /* A strong visualization boundary belongs exclusively to high-contrast mode. */
 body.high-contrast .metronome-container {
-  border: 2px solid var(--border-color);
+  border: var(--stroke-select) solid var(--line);
 }
 
 .play-pause-button:not(.transport-button),
@@ -105,68 +107,6 @@ body.high-contrast .metronome-container {
 
 .play-pause-button:focus-visible,
 .tap-button:focus-visible {
-  outline: 3px solid var(--focus);
-  outline-offset: 2px;
-}
-
-/* Keyboard focus indicators */
-.keyboard-focus-indicator {
-  position: fixed;
-  pointer-events: none;
-  z-index: 9999;
-  border: 3px solid var(--focus);
-  border-radius: 4px;
-  transition: all 0.15s ease;
-  display: none;
-}
-
-/* Visible beat indicator for users who can't see animations */
-.current-beat-indicator {
-  font-weight: bold;
-  font-size: 1.2em;
-  padding: 10px;
-  background-color: var(--secondary-bg, #f5f5f5);
-  border-radius: 4px;
-  margin-top: 10px;
-  text-align: center;
-}
-
-/* Keyboard shortcut tooltip */
-.keyboard-shortcut-hint {
-  display: inline-block;
-  background-color: var(--secondary-bg, #f5f5f5);
-  padding: 2px 5px;
-  border-radius: 3px;
-  margin-left: 5px;
-  font-size: 0.85em;
-  color: var(--text-secondary, #666);
-}
-
-/* Accessibility dialog styles */
-.a11y-dialog {
-  background-color: var(--bg-color, #fff);
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  max-width: 90%;
-  max-height: 90%;
-  overflow-y: auto;
-}
-
-.a11y-dialog h2 {
-  margin-top: 0;
-  color: var(--heading-color, #333);
-}
-
-.a11y-dialog-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1001;
+  outline: var(--stroke-select) solid var(--focus);
+  outline-offset: 3px;
 }

@@ -347,7 +347,7 @@ body.reduced-motion *::after {
   background: var(--bg);
   color: var(--ink);
   font-size: var(--fs-2);
-  font-weight: var(--fw-bold);
+  font-weight: var(--fw-regular);
   cursor: pointer;
 }
 

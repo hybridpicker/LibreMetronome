@@ -1,37 +1,29 @@
+/* Help key: a square key in the corner, like every other key. */
 .help-button {
   position: fixed;
-  bottom: 10px;
-  left: 10px; /* Position in bottom-left corner */
-  width: 40px;
-  height: 40px;
-  background-color: var(--primary-teal);
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  box-shadow: var(--button-shadow, 0 2px 5px rgba(0, 0, 0, 0.1));
+  bottom: var(--sp-2);
+  left: var(--sp-2);
   z-index: 100;
-  transition: var(--transition-standard, all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1));
-  color: white;
-  font-size: 24px;
-  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch);
+  height: var(--touch);
+  border: var(--stroke) solid var(--ink-2);
+  border-radius: var(--r-control);
+  background: var(--bg);
+  color: var(--accent-ink);
+  font-size: var(--fs-4);
+  font-weight: var(--fw-bold);
+  cursor: pointer;
 }
 
-.help-button:hover {
-  transform: scale(1.05);
-  background-color: var(--primary-teal-dark);
+.help-button:active {
+  background: var(--surface);
 }
 
-@media (max-width: 600px) {
-  .help-button {
-    width: 36px;
-    height: 36px;
-  }
-  
-  .help-button svg {
-    width: 20px;
-    height: 20px;
+@media (hover: hover) {
+  .help-button:hover {
+    border-color: var(--ink);
   }
 }

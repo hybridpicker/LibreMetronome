@@ -19,9 +19,8 @@
 .footer .support-button {
   color: var(--accent-ink);
   font-size: var(--fs-1);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   text-decoration: none;
-  text-transform: uppercase;
 }
 
 .footer a:hover,

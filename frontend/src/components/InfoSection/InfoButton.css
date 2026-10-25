@@ -1,31 +1,29 @@
 .info-button {
-  background-color: transparent;
-  color: var(--primary-teal);
-  border: 1px solid var(--primary-teal-light);
-  border-radius: 4px;
-  padding: 6px 14px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: 'Lato', sans-serif;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-2);
+  min-height: var(--touch);
+  padding: 0 var(--sp-3);
+  border: var(--stroke) solid var(--ink-2);
+  border-radius: var(--r-control);
+  background: var(--bg);
+  color: var(--accent-ink);
+  font-family: var(--font);
+  font-size: var(--fs-2);
+  cursor: pointer;
 }
 
-.info-button:hover {
-  background-color: rgba(0, 160, 160, 0.05);
-  transform: translateY(-1px);
+.info-button:active {
+  background: var(--surface);
 }
 
 .info-button-icon {
-  font-size: 1.1rem;
-  font-weight: bold;
+  font-size: var(--fs-3);
+  font-weight: var(--fw-bold);
 }
 
-@media (max-width: 600px) {
-  .info-button {
-    padding: 5px 12px;
-    font-size: 0.85rem;
+@media (hover: hover) {
+  .info-button:hover {
+    border-color: var(--ink);
   }
 }
