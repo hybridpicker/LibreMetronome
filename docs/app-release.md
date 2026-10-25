@@ -523,6 +523,16 @@ Version 0.8.0, `buildNumber` 7. **Der `versionCode` 7 ist angenommen**; ob er in
 - **Web live:** nicht deployt; Asset-Hashes, Favicon, `manifest.json`, Audio-Start, Tap Tempo, Tastatur und Fokusring auf dem Server offen.
 - Beat-Planung und Audio nicht angefasst, nicht neu gemessen.
 
+### Web-Deploy (Server-Session auf almalinux9, 2026-10-25, Bericht des Eigentümers)
+
+- Checkout `libreMetronome/` unter dem App-Ordner, Stand sauber, `main`, HEAD war `45948c4`. Rollback-Kopie vor dem Deploy angelegt (`release-backups/pre-581143e-…`, 9,6 MB); vorher live: `main.0e8aeeb6.js` / `main.c6eee00a.css`.
+- Build erfolgreich, Kopie nach `static_cdn` (assets, js, css, media). Nicht angefasst: sudo, Nginx, Datenbank, Zertifikate, gunicorn, andere Projekte.
+- Per HTTP: `/static/js/main.js` und `/static/css/main.css` entsprechen `main.5baffe33.js` und `main.9d947f7a.css`; `/assets/favicon.ico` neu; `/assets/manifest.json` mit `theme_color` `#0072b2`, alle 7 Icons 200.
+- Headless Chromium gegen die Live-Seite, 412x805 und 1280x800: 24 von 24 Prüfungen bestanden (fünf Modi ohne Scrollen, AudioContext läuft, Leertaste startet und stoppt, Fokusring 2 px, keine Seitenfehler).
+- **Offen 1:** Favicon und Manifest erreichen den Browser nicht, weil das Django-Template `backend/metronome_api/templates/index.html` sie nicht verlinkte (`/favicon.ico` und `/manifest.json` landen bei Django). Fix im Repo (Links, `theme-color`), wirkt erst nach Commit, Pull auf dem Server und gunicorn-Neustart (sudo, Eigentümer).
+- **Offen 2:** Das Template lädt `main.js`/`main.css` ohne Hash; Nginx cached JS 7 und CSS 30 Tage, Wiederkehrende sehen bis dahin alte oder gemischte Stände. Fix im Repo: `?v=0.8.0` an beiden Links, bei jedem Release anheben.
+- Nicht geprüft: Audio nur technisch (nicht gehört), Fokusring nur am Skip-Link, keine echten Geräte, kein Safari/iOS.
+
 ### Offen beim Eigentümer
 
 - Server-Deploy (Tor b), Play-Upload der AAB und Freigabe (Tor c), `versionCode` prüfen, Samsung anschließen, Simulator-Zugriff freigeben.
