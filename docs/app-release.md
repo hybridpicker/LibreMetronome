@@ -494,7 +494,7 @@ Nachweis wie in 16: 42 von 42 Fälle in jedem Modus und mit neun Schlägen ohne 
 
 ## 17. Release 0.8.0: Score auf allen Geräten (Build 7, Stand 2026-10-25)
 
-Version 0.8.0, `buildNumber` 7. **Der `versionCode` 7 ist angenommen**; ob er in der Play Console frei ist, prüft der Eigentümer im Bundle Explorer. Ist er belegt, `buildNumber` erhöhen und AAB neu bauen. Nichts gepusht, nichts deployt, nichts hochgeladen.
+Version 0.8.0, `buildNumber` 7. **Der `versionCode` 7 ist angenommen**; ob er in der Play Console frei ist, prüft der Eigentümer im Bundle Explorer. Ist er belegt, `buildNumber` erhöhen und AAB neu bauen. Am 2026-10-25 auf `origin/main` gepusht (bis `aff6f60`, einschließlich der Runde-3-Commits); nichts deployt, nichts hochgeladen.
 
 ### Nachweise je Ziel
 
@@ -525,4 +525,4 @@ Version 0.8.0, `buildNumber` 7. **Der `versionCode` 7 ist angenommen**; ob er in
 
 ### Offen beim Eigentümer
 
-- Push (Tor a), Server-Deploy (Tor b), Play-Upload der AAB und Freigabe (Tor c), `versionCode` prüfen, Samsung anschließen, Simulator-Zugriff freigeben.
+- Server-Deploy (Tor b), Play-Upload der AAB und Freigabe (Tor c), `versionCode` prüfen, Samsung anschließen, Simulator-Zugriff freigeben.
