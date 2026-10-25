@@ -279,7 +279,7 @@ const useKeyboardShortcuts = ({
       } else if (event.code === 'KeyT') {
         event.preventDefault();
         if (!handleTapKey()) return;
-      } else if (CALLBACK_KEYS[event.code]) {
+      } else if (Object.prototype.hasOwnProperty.call(CALLBACK_KEYS, event.code)) {
         const callback = callbacks[CALLBACK_KEYS[event.code]];
         if (callback) callback();
       } else {
