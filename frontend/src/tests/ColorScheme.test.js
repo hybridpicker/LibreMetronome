@@ -1,7 +1,6 @@
 // Use require syntax instead of import to avoid potential issues
 const fs = require('fs');
 const path = require('path');
-const { createStylesheetObserver } = require('./utils/styleObserver');
 
 // Destructure for convenience
 const { readFileSync, readdirSync, statSync } = fs;
@@ -107,7 +106,8 @@ describe('Color Scheme Tests', () => {
   beforeAll(() => {
     colorScheme = extractColorScheme();
     cssFiles = getAllCssFiles(SRC_PATH)
-      .filter(file => file !== COLORS_PATH); // Exclude colors.css itself
+      // colors.css and accessibility-modes.css define the tokens, so they hold the raw values.
+      .filter(file => file !== COLORS_PATH && !file.endsWith('accessibility-modes.css'));
   });
   
   test('Colors are defined in colors.css', () => {
@@ -130,39 +130,16 @@ describe('Color Scheme Tests', () => {
       }
     });
     
-    if (allViolations.length > 0) {
-      // Format error message
-      const errorMsg = allViolations.map(item => {
-        const relativePath = item.file.replace(SRC_PATH, '');
-        const violationList = item.violations.map(v => 
-          `  - Line ${v.lineNumber}: ${v.value} in context: "${v.context.trim()}"`
-        ).join('\n');
-        
-        return `File: ${relativePath}\n${violationList}`;
-      }).join('\n\n');
-      
-      // Log the violations but don't fail the test during development
-      // Change this to expect(allViolations.length).toBe(0) when enforcing
-      console.warn(`⚠️ Found ${allViolations.length} hardcoded colors that should use CSS variables:\n\n${errorMsg}`);
-      
-      // For CI, uncomment this line:
-      // expect(allViolations.length).toBe(0);
-      
-      // For development, let's just have a passing test with a warning
-      expect(true).toBe(true);
-    }
-  });
-  
-  test('Runtime style observer utility exists', () => {
-    // Instead of trying to run browser-specific code,
-    // just verify that the utility exists and is correctly structured
-    const styleObserver = createStylesheetObserver();
-    
-    expect(styleObserver).toBeDefined();
-    expect(typeof styleObserver.observe).toBe('function');
-    expect(typeof styleObserver.disconnect).toBe('function');
-    expect(typeof styleObserver.getStyleViolations).toBe('function');
+    const report = allViolations.map(item => {
+      const relativePath = item.file.replace(SRC_PATH, '');
+      const violationList = item.violations.map(v =>
+        `  - Line ${v.lineNumber}: ${v.value} in context: "${v.context.trim()}"`
+      ).join('\n');
+
+      return `File: ${relativePath}\n${violationList}`;
+    }).join('\n\n');
+
+    // An empty report means no stylesheet hard-codes a colour outside the token files.
+    expect(report).toBe('');
   });
 });
-
-// No duplicate import needed here

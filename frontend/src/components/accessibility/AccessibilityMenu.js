@@ -25,7 +25,7 @@ const AccessibilityMenu = ({ isOpen = false, onClose, triggerRef }) => {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && showSettings) {
-        setShowSettings(false);
+        if (onClose) onClose();
         if (window.audioFeedbackEnabled) {
           playAudioFeedback('click');
         }
@@ -34,7 +34,7 @@ const AccessibilityMenu = ({ isOpen = false, onClose, triggerRef }) => {
     
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [showSettings]);
+  }, [showSettings, onClose]);
   
   return (
     <div className="accessibility-container">
