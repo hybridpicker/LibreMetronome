@@ -75,3 +75,12 @@ backend/staticfiles/
 
 # Android release signing (keep outside the repo, see docs/app-release.md)
 key.properties
+
+# Quality tooling output
+.coverage
+htmlcov/
+coverage/
+.mypy_cache/
+.ruff_cache/
+.mutmut-cache/
+mutants/
