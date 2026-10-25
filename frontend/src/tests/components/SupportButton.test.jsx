@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { SupportButton } from '../../components/Support';
 import * as supportUtils from '../../utils/supportUtils';
 
@@ -38,9 +38,7 @@ describe('SupportButton Component', () => {
   });
 
   test('renders correctly with loading state and then support text', async () => {
-    await act(async () => {
-      render(<SupportButton />);
-    });
+    render(<SupportButton />);
     
     // Wait for the component to update after API call
     await waitFor(() => {
@@ -49,13 +47,10 @@ describe('SupportButton Component', () => {
   });
 
   test('opens payment link in new tab when clicked', async () => {
-    await act(async () => {
-      render(<SupportButton />);
-    });
+    render(<SupportButton />);
     
-    await waitFor(() => {
-      expect(screen.getByText(/Donate/i)).toBeInTheDocument();
-    });
+    // The button stays disabled until the payment link has been loaded
+    await waitFor(() => expect(screen.getByRole('button')).toBeEnabled());
     
     // Click the button
     fireEvent.click(screen.getByRole('button'));
@@ -65,13 +60,10 @@ describe('SupportButton Component', () => {
   });
 
   test('navigates to internal page when useInternalPage is true', async () => {
-    await act(async () => {
-      render(<SupportButton useInternalPage={true} />);
-    });
+    render(<SupportButton useInternalPage={true} />);
     
-    await waitFor(() => {
-      expect(screen.getByText(/Donate/i)).toBeInTheDocument();
-    });
+    // The button stays disabled until the payment link has been loaded
+    await waitFor(() => expect(screen.getByRole('button')).toBeEnabled());
     
     // Click the button
     fireEvent.click(screen.getByRole('button'));

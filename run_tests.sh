@@ -1,8 +1,67 @@
 #!/bin/bash
-cd frontend
-echo "Running HelpButton test..."
-npx jest src/tests/components/HelpButton.test.jsx
-echo "Running useKeyboardShortcuts test..."
-npx jest src/tests/useKeyboardShortcuts.test.js
-echo "Running HelpSystemIntegration test..."
-npx jest src/tests/components/HelpSystemIntegration.test.jsx
+# Single entry point for tests, lint and type checks.
+#
+#   ./run_tests.sh             backend + frontend: lint, types, tests (default)
+#   ./run_tests.sh backend     backend only
+#   ./run_tests.sh frontend    frontend only
+#   ./run_tests.sh coverage    like default, with coverage reports and gates
+#   ./run_tests.sh help-system the original three help-system suites
+#
+# Backend tools come from the repository's .venv (see backend/requirements-dev.txt).
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MODE="${1:-all}"
+PYTHON="${PYTHON:-$ROOT/.venv/bin/python}"
+export SECRET_KEY="${SECRET_KEY:-test-only-secret-key}"
+export DJANGO_SETTINGS_MODULE="libremetronome_backend.test_settings"
+
+run_backend() {
+  local with_coverage="$1"
+  echo "== backend: ruff, mypy, bandit =="
+  (
+    cd "$ROOT/backend"
+    "$PYTHON" -m ruff check .
+    "$PYTHON" -m ruff format --check .
+    "$PYTHON" -m mypy .
+    "$PYTHON" -m bandit -c pyproject.toml -q -r .
+  )
+  echo "== backend: tests =="
+  (
+    cd "$ROOT/backend"
+    if [ "$with_coverage" = "yes" ]; then
+      "$PYTHON" -m coverage run manage.py test
+      "$PYTHON" -m coverage report --fail-under=100
+    else
+      "$PYTHON" manage.py test
+    fi
+  )
+}
+
+run_frontend() {
+  local with_coverage="$1"
+  cd "$ROOT/frontend"
+  echo "== frontend: eslint =="
+  npm run --silent lint
+  echo "== frontend: tests =="
+  if [ "$with_coverage" = "yes" ]; then
+    npm run --silent coverage
+  else
+    npm run --silent test:ci
+  fi
+}
+
+case "$MODE" in
+  all)        run_backend no;  run_frontend no ;;
+  backend)    run_backend no ;;
+  frontend)   run_frontend no ;;
+  coverage)   run_backend yes; run_frontend yes ;;
+  help-system)
+    cd "$ROOT/frontend"
+    CI=true npx react-scripts test --watchAll=false \
+      src/tests/components/HelpButton.test.jsx \
+      src/tests/useKeyboardShortcuts.test.js \
+      src/tests/components/HelpSystemIntegration.test.jsx
+    ;;
+  *) echo "Unknown mode: $MODE" >&2; exit 2 ;;
+esac

@@ -98,11 +98,9 @@ describe('Comprehensive Keyboard Shortcuts Test', () => {
       
       fireEvent.keyDown(component, { code: mapping.code });
       
-      if (mapping.args) {
-        expect(mockFunctions[mapping.func]).toHaveBeenCalledWith(...mapping.args);
-      } else {
-        expect(mockFunctions[mapping.func]).toHaveBeenCalledTimes(1);
-      }
+      const expectedArgs = mapping.args || [];
+      expect(mockFunctions[mapping.func]).toHaveBeenCalledTimes(1);
+      expect(mockFunctions[mapping.func]).toHaveBeenCalledWith(...expectedArgs);
     });
   });
   

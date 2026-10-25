@@ -1,8 +1,7 @@
 // src/tests/metronome/EditableSliders.test.js
 import React from 'react';
-import { render, fireEvent, act, screen, waitFor } from '@testing-library/react';
+import { render, fireEvent, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import userEvent from '@testing-library/user-event';
 
 // Import components
 import EditableSliderInput from '../../components/metronome/Controls/EditableSliderInput';
@@ -203,10 +202,8 @@ describe('EditableSliderInput Component', () => {
     expect(input).toBeInTheDocument();
     
     // Change the value
-    await act(async () => {
-      fireEvent.change(input, { target: { value: '75 Units' } });
-      fireEvent.blur(input);
-    });
+    fireEvent.change(input, { target: { value: '75 Units' } });
+    fireEvent.blur(input);
     
     // Check if setValue was called with the correct value
     expect(mockSetValue).toHaveBeenCalledWith(75);
@@ -233,10 +230,8 @@ describe('EditableSliderInput Component', () => {
     
     // Change the value to something above max
     const input = screen.getByTestId('editable-input');
-    await act(async () => {
-      fireEvent.change(input, { target: { value: '150 Units' } });
-      fireEvent.blur(input);
-    });
+    fireEvent.change(input, { target: { value: '150 Units' } });
+    fireEvent.blur(input);
     
     // Check if setValue was called with clamped value
     expect(mockSetValue).toHaveBeenCalledWith(100);
@@ -287,11 +282,9 @@ describe('PolyrhythmEditableSlider Component', () => {
     expect(input).toBeInTheDocument();
     
     // Change the value
-    await act(async () => {
-      fireEvent.change(input, { target: { value: '75 Units' } });
-      // Simulate pressing Enter to commit the value
-      fireEvent.keyDown(input, { key: 'Enter' });
-    });
+    fireEvent.change(input, { target: { value: '75 Units' } });
+    // Simulate pressing Enter to commit the value
+    fireEvent.keyDown(input, { key: 'Enter' });
     
     // Check if setValue was called with the correct value
     expect(mockSetValue).toHaveBeenCalledWith(75);
@@ -301,7 +294,7 @@ describe('PolyrhythmEditableSlider Component', () => {
     const mockSetValue = jest.fn();
     const mockParentClick = jest.fn();
     
-    const { container } = render(
+    render(
       <div onClick={mockParentClick}>
         <PolyrhythmEditableSlider
           label="Test"
@@ -348,10 +341,8 @@ describe('Editable Slider Edge Cases', () => {
     
     // Enter non-numeric input
     const input = screen.getByTestId('editable-input');
-    await act(async () => {
-      fireEvent.change(input, { target: { value: 'abc' } });
-      fireEvent.blur(input);
-    });
+    fireEvent.change(input, { target: { value: 'abc' } });
+    fireEvent.blur(input);
     
     // Check that setValue was not called with invalid input
     expect(mockSetValue).not.toHaveBeenCalled();
@@ -383,10 +374,8 @@ describe('Editable Slider Edge Cases', () => {
     
     // Clear the input and don't enter anything
     const input = screen.getByTestId('editable-input');
-    await act(async () => {
-      fireEvent.change(input, { target: { value: '' } });
-      fireEvent.blur(input);
-    });
+    fireEvent.change(input, { target: { value: '' } });
+    fireEvent.blur(input);
     
     // Check that setValue was not called with empty input
     expect(mockSetValue).not.toHaveBeenCalled();
@@ -418,10 +407,8 @@ describe('Editable Slider Edge Cases', () => {
     
     // Change the value but then press Escape
     const input = screen.getByTestId('editable-input');
-    await act(async () => {
-      fireEvent.change(input, { target: { value: '75 Units' } });
-      fireEvent.keyDown(input, { key: 'Escape' });
-    });
+    fireEvent.change(input, { target: { value: '75 Units' } });
+    fireEvent.keyDown(input, { key: 'Escape' });
     
     // Check that setValue was not called when Escape is pressed
     expect(mockSetValue).not.toHaveBeenCalled();
