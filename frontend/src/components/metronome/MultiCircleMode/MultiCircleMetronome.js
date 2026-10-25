@@ -17,6 +17,7 @@ const PHONE_MAX_WIDTH = 600;
 // Room around the circles, the stepper row above them, and the mark size range.
 const SEQ_PAD = 12;
 const SEQ_HEADER = 56;
+const SEQ_ART = 12; // room above and below the rings for the accent marks
 const SEQ_MARK_MIN = 16;
 const SEQ_MARK_MAX = 22;
 const SEQ_RING_MAX = 260;
@@ -316,7 +317,7 @@ function MultiCircleMetronome(props) {
     // Beat marks sit on the ring and overhang it by half a mark, so each
     // column reserves one mark plus 6px and each row one mark plus 4px.
     const availW = vizSize.width - 2 * SEQ_PAD;
-    const availH = vizSize.height - SEQ_HEADER - SEQ_PAD;
+    const availH = vizSize.height - SEQ_HEADER - SEQ_PAD - 2 * SEQ_ART;
     let best = { ring: 0, columns: 1, mark: SEQ_MARK_MAX };
     for (let c = 1; c <= circleCount; c += 1) {
       const rows = Math.ceil(circleCount / c);
@@ -325,13 +326,13 @@ function MultiCircleMetronome(props) {
       for (let i = 0; i < 5; i += 1) {
         mark = Math.min(SEQ_MARK_MAX, Math.max(SEQ_MARK_MIN, candidate * 0.2));
         const fromW = availW / c - mark - 6;
-        const fromH = (availH - mark - (rows - 1) * (mark + 10)) / rows;
+        const fromH = (availH - mark - (rows - 1) * (mark + 10 + 2 * SEQ_ART)) / rows;
         candidate = Math.min(fromW, fromH);
       }
       if (candidate > best.ring) best = { ring: candidate, columns: c, mark };
     }
     columns = best.columns;
-    rowGap = Math.round(best.mark + 10);
+    rowGap = Math.round(best.mark + 10 + 2 * SEQ_ART);
     ring = Math.max(64, Math.floor(Math.min(SEQ_RING_MAX, best.ring)));
   }
 

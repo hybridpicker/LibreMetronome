@@ -6,11 +6,9 @@ import { useVizCardSize } from '../../../utils/layoutSize';
 import useWindowDimensions from '../../../hooks/useWindowDimensions';
 import AccelerateButton from '../Controls/AccelerateButton';
 import { manualTempoAcceleration } from '../../../hooks/useMetronomeLogic/trainingLogic';
+import { BeatMark, AccentGlyph } from '../ScoreGlyphs';
+import gridLayout from '../Score/gridLayout';
 
-// Room around the grid and height of the beat-number row, in CSS pixels.
-const GRID_MARGIN = 16;
-const GRID_NUMBER_HEIGHT = 28;
-const MAX_CELL = 120;
 
 const GridModeMetronome = (props) => {
   // Re-render on resize/rotation so the cell size follows the window.
@@ -278,13 +276,14 @@ const GridModeMetronome = (props) => {
     };
   }, [props.isPaused, animateCurrentBeat]);
 
-  // The grid fills its visualisation area: a cell is as wide as the area allows
-  // and three rows plus the beat number must fit its height.
+  // The grid fills its visualisation area; the columns wrap onto a second
+  // block when they would be narrower than a finger.
   const [vizRef, vizSize] = useVizCardSize();
   const vizReady = vizSize.width > 0 && vizSize.height > 0;
-  const fromWidth = Math.floor((vizSize.width - 2 * GRID_MARGIN) / props.subdivisions);
-  const fromHeight = Math.floor((vizSize.height - 2 * GRID_MARGIN - GRID_NUMBER_HEIGHT) / 3);
-  const squareSize = vizReady ? Math.max(24, Math.min(MAX_CELL, fromWidth, fromHeight)) : 0;
+  const minHit = typeof window !== 'undefined' && window.innerHeight < 760 ? 40 : 44;
+  const layout = vizReady
+    ? gridLayout({ width: vizSize.width, height: vizSize.height, beats: props.subdivisions, minHit })
+    : null;
 
   // Responsive behavior for mobile devices and tablets (modified threshold)
   // Handler for manual tempo acceleration
@@ -298,56 +297,62 @@ const GridModeMetronome = (props) => {
     }
   }, [props.isPaused, props.tempo, props.tempoIncreasePercent, props.setTempo]);
 
-  // A column is three stacked cells; the level fills them from the bottom.
-  // Level 1 normal, 2 accent (middle cell gets a teal contour), 3 first beat.
-  const renderGridSquares = () => {
-    return Array.from({ length: props.subdivisions }, (_, colIndex) => {
-      const isCurrentBeat = colIndex === animationFrame && !props.isPaused;
-      const columnLevel = gridConfig[colIndex];
-      const activeRows = columnLevel === 0 ? [] :
-                          columnLevel === 1 ? [2] :
-                          columnLevel === 2 ? [1, 2] :
-                          [0, 1, 2];
-      const levelLabel = columnLevel === 3 ? 'first beat' : columnLevel === 2 ? 'accent' : 'normal';
+  // A column is three stacked cells; the level fills them from the bottom with
+  // filled noteheads. Level 1 normal, 2 accent (">" above, two heads), 3 first
+  // beat ("^" above, three heads), 0 muted (a quarter rest in the bottom cell).
+  const renderColumn = (colIndex) => {
+    const { cellW, cellH, k } = layout;
+    const isCurrentBeat = colIndex === animationFrame && !props.isPaused;
+    const columnLevel = gridConfig[colIndex] == null ? 1 : gridConfig[colIndex];
+    const levelLabel = columnLevel === 3 ? 'first beat' : columnLevel === 2 ? 'accent' : 'normal';
+    const filled = columnLevel === 0 ? 0 : columnLevel === 1 ? 1 : columnLevel === 2 ? 2 : 3;
 
-      return (
-        <button
-          type="button"
-          key={colIndex}
-          onClick={() => handleColumnClick(colIndex)}
-          className={`grid-beat-control${colIndex === 0 ? ' is-first' : ''}${isCurrentBeat ? ' is-current' : ''}`}
-          aria-label={columnLevel === 0
-            ? `Beat ${colIndex + 1}: muted. Activate to change accent.`
-            : `Beat ${colIndex + 1}: ${levelLabel}. Activate to change accent.`}
-          aria-pressed={columnLevel > 1}
-          style={{ width: `${squareSize}px` }}
-        >
-          {[0, 1, 2].map((rowIndex) => {
-            const isActive = activeRows.includes(rowIndex);
-            let squareType = '';
-            if (isActive) {
-              if (rowIndex === 0 && columnLevel === 3) squareType = 'first-beat';
-              else if (rowIndex === 1 && columnLevel >= 2) squareType = 'accent';
-              else squareType = 'normal';
-            }
-            const classNames = [
-              'grid-cell',
-              isActive ? 'is-on' : '',
-              squareType ? `grid-square-${squareType}` : ''
-            ].filter(Boolean).join(' ');
-            return (
-              <span
-                key={rowIndex}
-                className={classNames}
-                aria-hidden="true"
-                style={{ width: `${squareSize}px`, height: `${squareSize}px` }}
-              />
-            );
-          })}
-          <span className="grid-number" aria-hidden="true">{colIndex + 1}</span>
-        </button>
-      );
-    });
+    return (
+      <button
+        type="button"
+        key={colIndex}
+        onClick={() => handleColumnClick(colIndex)}
+        className={`grid-beat-control${colIndex === 0 ? ' is-first' : ''}${isCurrentBeat ? ' is-current' : ''}${columnLevel === 0 ? ' is-muted' : ''}`}
+        aria-label={columnLevel === 0
+          ? `Beat ${colIndex + 1}: muted. Activate to change accent.`
+          : `Beat ${colIndex + 1}: ${levelLabel}. Activate to change accent.`}
+        aria-pressed={columnLevel > 1}
+        style={{ width: `${cellW}px` }}
+      >
+        <span className="grid-mark" aria-hidden="true" style={{ height: layout.markH }}>
+          {columnLevel === 3 && <AccentGlyph kind="first" size={16} />}
+          {columnLevel === 2 && <AccentGlyph kind="accent" size={16} />}
+        </span>
+        {[0, 1, 2].map((rowIndex) => {
+          // rowIndex 2 is the bottom cell; the fill grows upwards.
+          const isOn = rowIndex >= 3 - filled;
+          const isRest = columnLevel === 0 && rowIndex === 2;
+          return (
+            <span
+              key={rowIndex}
+              className={`grid-cell${isOn ? ' is-on' : ''}`}
+              aria-hidden="true"
+              style={{ width: `${cellW}px`, height: `${cellH}px` }}
+            >
+              {(isOn || isRest) && (
+                <svg width={cellW} height={cellH} focusable="false">
+                  <BeatMark
+                    cx={cellW / 2}
+                    cy={cellH / 2}
+                    k={k}
+                    restK={Math.min(k, cellH / 30)}
+                    state={isRest ? 'muted' : 'normal'}
+                    stem={0}
+                    artY={false}
+                  />
+                </svg>
+              )}
+            </span>
+          );
+        })}
+        <span className="grid-number" aria-hidden="true">{colIndex + 1}</span>
+      </button>
+    );
   };
 
   return (
@@ -355,8 +360,12 @@ const GridModeMetronome = (props) => {
       className={`grid-visual ${!props.isPaused ? 'metronome-active' : ''} ${isFirstBeatPlaying ? 'first-beat-playing' : ''}`}
     >
       <div className="viz-card" ref={vizRef}>
-        <div className="grid-columns">
-          {vizReady && renderGridSquares()}
+        <div className="grid-blocks">
+          {layout && layout.blocks.map((block) => (
+            <div key={block.from} className="grid-columns">
+              {Array.from({ length: block.count }, (_, j) => renderColumn(block.from + j))}
+            </div>
+          ))}
         </div>
       </div>
 

@@ -355,9 +355,10 @@ body.reduced-motion *::after {
   background: var(--surface);
 }
 
-/* ---- Beat marks: Beat, Sequence, Polyrhythm share one vocabulary --------
- * current beat: teal fill | normal: grey ring | accent: teal ring |
- * first beat: teal ring with a teal dot | muted: pale dashed ring.        */
+/* ---- Beat marks: Beat, Grid, Sequence, Polyrhythm share one vocabulary ----
+ * hollow head = normal | ">" = accent | "^" = first beat | rest = muted |
+ * filled blue head = current. The marks are SVG (ScoreGlyphs.js), styled in
+ * score.css; here only the hit areas of the circles.                        */
 
 .beat-control {
   position: absolute;
@@ -373,69 +374,39 @@ body.reduced-motion *::after {
   z-index: 2;
 }
 
+.beat-control svg,
+.beat-note {
+  display: block;
+  overflow: visible;
+}
+
 .beat-control:disabled {
   cursor: default;
-}
-
-.beat-mark,
-.beat-dot {
-  position: relative;
-  width: var(--mark, 20px);
-  height: var(--mark, 20px);
-  border: var(--stroke-select) solid var(--ink-3);
-  border-radius: 50%;
-  background: var(--bg);
-  transition: background-color var(--t-fast), border-color var(--t-fast), transform var(--t-fast);
-}
-
-.beat-mark[data-state='accent'],
-.beat-mark[data-state='first'],
-.beat-dot.accent-beat,
-.beat-dot.first-beat {
-  border-color: var(--accent);
-}
-
-.beat-mark[data-state='first']::after,
-.beat-dot.first-beat::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 6px;
-  height: 6px;
-  margin: -3px 0 0 -3px;
-  border-radius: 50%;
-  background: var(--accent);
-}
-
-.beat-mark[data-state='muted'] {
-  border: var(--stroke-viz) dashed var(--ink-3);
-  background: transparent;
-  opacity: 0.55;
-}
-
-.beat-control.is-current .beat-mark,
-.beat-dot.active {
-  border-color: var(--beat-now);
-  background: var(--beat-now);
-}
-
-.beat-control.is-current .beat-mark[data-state='first']::after,
-.beat-dot.active.first-beat::after {
-  background: var(--on-accent);
 }
 
 .beat-control:focus-visible {
   outline-offset: 0;
 }
 
-@media (hover: hover) {
-  .beat-control:not(:disabled):hover .beat-mark {
-    border-color: var(--ink-2);
-  }
+/* Polyrhythm beats are marks without a button; they sit on the circle. */
+.beat-note {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
 }
 
-/* ---- Grid: hairline cells, filled cells grey, current column teal -------- */
+.beat-note.transitioning {
+  opacity: 0.7;
+}
+
+/* ---- Grid: hairline cells, filled noteheads, current column blue --------- */
+
+.grid-blocks {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+}
 
 .grid-columns {
   display: flex;
@@ -454,6 +425,10 @@ body.reduced-motion *::after {
   cursor: pointer;
 }
 
+.grid-beat-control {
+  margin-right: -1px;
+}
+
 .grid-cell {
   position: relative;
   display: block;
@@ -462,29 +437,38 @@ body.reduced-motion *::after {
   margin-bottom: -1px;
 }
 
-.grid-beat-control {
-  margin-right: -1px;
-}
-
-.grid-cell.is-on::after {
-  content: '';
+.grid-cell svg {
   position: absolute;
-  inset: 8px;
-  background: var(--ink-3);
+  top: 0;
+  left: 0;
+  display: block;
+  overflow: visible;
 }
 
-.grid-cell.grid-square-accent,
-.grid-cell.grid-square-first-beat {
-  outline: var(--stroke-select) solid var(--accent);
-  outline-offset: -1px;
+/* "On" is a filled notehead (ink); the current column fills blue. */
+.grid-cell .score-head {
+  fill: var(--ink);
+  stroke: var(--ink);
 }
 
-.grid-beat-control.is-current .grid-cell.is-on::after {
-  background: var(--accent);
+.grid-beat-control.is-current .score-head {
+  fill: var(--accent);
+  stroke: var(--accent);
+}
+
+.grid-beat-control.is-current .score-rest {
+  stroke: var(--accent);
+}
+
+/* The accent mark sits above the column: ">" accent, "^" first beat. */
+.grid-mark {
+  display: grid;
+  place-items: center;
+  width: 100%;
 }
 
 .grid-number {
-  margin-top: var(--sp-3);
+  margin-top: var(--sp-2);
   color: var(--ink-2);
   font-size: var(--fs-2);
   font-weight: var(--fw-regular);
@@ -510,19 +494,19 @@ body.reduced-motion *::after {
   align-items: center;
   justify-items: center;
   row-gap: var(--seq-gap, 12px);
-  padding: 56px var(--sp-3) var(--sp-3);
+  padding: calc(56px + var(--sp-3)) var(--sp-3) var(--sp-3);
 }
 
 .multi-circle-surface {
   position: relative;
   flex: 0 0 auto;
-  border: var(--stroke-viz) solid var(--ink-3);
+  border: var(--stroke) solid var(--line-strong);
   border-radius: 50%;
   background: var(--bg);
 }
 
 .multi-circle-surface.is-selected {
-  border: var(--stroke-select) solid var(--accent);
+  border: var(--stroke-viz) solid var(--accent);
 }
 
 .multi-circle-surface.is-silent {
@@ -624,7 +608,7 @@ body.reduced-motion *::after {
 .outer-circle {
   position: absolute;
   padding: 0;
-  border: var(--stroke-viz) solid var(--ink-3);
+  border: var(--stroke) solid var(--line-strong);
   border-radius: 50%;
   background: transparent;
   cursor: pointer;
@@ -632,21 +616,7 @@ body.reduced-motion *::after {
 
 .inner-circle.active,
 .outer-circle.active {
-  border: var(--stroke-select) solid var(--accent);
-}
-
-.beat-dot {
-  position: absolute;
-  --mark: 20px;
-}
-
-.beat-dot.muted {
-  opacity: 0.55;
-}
-
-.beat-dot.transitioning,
-.transitioning {
-  opacity: 0.7;
+  border: var(--stroke-viz) solid var(--accent);
 }
 
 .polyrhythm-ratio .ratio-label {
@@ -1072,50 +1042,10 @@ input[type='range']:focus-visible::-moz-range-thumb {
   cursor: pointer;
 }
 
-/* ---- Finishing touches: quiet, precise, a little poetic ------------------ */
-
-/* The current beat gets a hairline halo (an outline, not a shadow). */
-.beat-control.is-current .beat-mark,
-.beat-dot.active {
-  outline: var(--stroke-viz) solid var(--accent);
-  outline-offset: 3px;
-}
-
-.beat-control.is-current .beat-mark {
-  transform: scale(1.25);
-}
-
 /* Guide: the beat types use the same marks as the instrument. */
-.info-modal .beat-indicator {
-  position: relative;
-  box-sizing: border-box;
-  width: 20px;
-  height: 20px;
-  border: var(--stroke-select) solid var(--ink-3);
-  border-radius: 50%;
-  background: var(--bg);
-  box-shadow: none;
+.legend-mark {
+  display: block;
+  flex: 0 0 auto;
+  overflow: visible;
 }
 
-.info-modal .beat-indicator.muted { border: var(--stroke-viz) dashed var(--ink-3); background: transparent; }
-.info-modal .beat-indicator.accent,
-.info-modal .beat-indicator.first { border-color: var(--accent); }
-
-.info-modal .beat-indicator.current {
-  border-color: var(--accent);
-  background: var(--accent);
-  outline: var(--stroke-viz) solid var(--accent);
-  outline-offset: 2px;
-}
-
-.info-modal .beat-indicator.first::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 6px;
-  height: 6px;
-  margin: -3px 0 0 -3px;
-  border-radius: 50%;
-  background: var(--accent);
-}

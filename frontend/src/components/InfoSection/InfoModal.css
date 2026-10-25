@@ -2,7 +2,7 @@
  * Guide dialog. A flat white sheet over the faded page: a Light title,
  * hairline-separated sections, text tabs with a 2 px underline, no tinted boxes. Tokens only (see colors.css); the
  * accessibility modes re-map the tokens. The beat marks in the "Beat Types"
- * list are drawn in instrument-system.css (.info-modal .beat-indicator).
+ * list are drawn in instrument-system.css (.legend-mark).
  */
 
 .info-modal-overlay {
@@ -364,9 +364,8 @@
   color: var(--ink-2);
 }
 
-/* The mark itself is in instrument-system.css; reserve its room here. */
-.beat-type .beat-indicator {
-  flex: 0 0 auto;
+/* The mark itself is SVG (see .legend-mark in instrument-system.css). */
+.beat-type .legend-mark {
   margin: 0 var(--sp-1);
 }
 

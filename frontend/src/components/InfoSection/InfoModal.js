@@ -4,6 +4,14 @@ import packageJson from '../../../package.json';
 import InterfaceIcon from '../common/InterfaceIcon';
 import { IS_NATIVE_APP } from '../../nativeApp';
 import { SupportButton } from '../Support';
+import { BeatMark } from '../metronome/ScoreGlyphs';
+
+// A beat mark as the legend shows it: the same notation as on the staff.
+const LegendMark = ({ state }) => (
+  <svg className="legend-mark" width="32" height="56" viewBox="0 0 32 56" aria-hidden="true" focusable="false">
+    <BeatMark cx={13} cy={36} k={1} state={state} stem={30} artY={50} />
+  </svg>
+);
 
 const InfoModal = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState('about');
@@ -246,24 +254,24 @@ const InfoModal = ({ isOpen, onClose }) => {
             <h3>Beat Types</h3>
             <div className="beat-types">
               <div className="beat-type">
-                <div className="beat-indicator normal" aria-hidden="true"></div>
-                <span><strong>Normal beat</strong> Plain (grey) ring</span>
+                <LegendMark state="normal" />
+                <span><strong>Normal beat</strong> A hollow notehead</span>
               </div>
               <div className="beat-type">
-                <div className="beat-indicator accent" aria-hidden="true"></div>
-                <span><strong>Accented beat</strong> Accent (teal) ring</span>
+                <LegendMark state="accent" />
+                <span><strong>Accented beat</strong> A hollow notehead with &gt; under the staff</span>
               </div>
               <div className="beat-type">
-                <div className="beat-indicator first" aria-hidden="true"></div>
-                <span><strong>First beat</strong> Accent ring with a dot</span>
+                <LegendMark state="first" />
+                <span><strong>First beat</strong> A hollow notehead with ^ under the staff</span>
               </div>
               <div className="beat-type">
-                <div className="beat-indicator muted" aria-hidden="true"></div>
-                <span><strong>Muted beat</strong> Dashed ring</span>
+                <LegendMark state="muted" />
+                <span><strong>Muted beat</strong> A quarter rest</span>
               </div>
-              <div className="beat-type">
-                <div className="beat-indicator current" aria-hidden="true"></div>
-                <span><strong>Current beat</strong> Filled while it sounds</span>
+              <div className="beat-type is-current">
+                <LegendMark state="normal" />
+                <span><strong>Current beat</strong> The notehead fills blue while it sounds</span>
               </div>
             </div>
             
