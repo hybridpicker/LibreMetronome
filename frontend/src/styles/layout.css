@@ -408,9 +408,7 @@ html.capacitor-native .app-container .transport-row {
   }
 
   .app-container .header-logo { height: 28px; }
-  .app-container .mode-option { font-size: var(--fs-2); }
   .app-container .viz-card { margin-top: var(--sp-4); }
-  .app-container .transport-button { height: 60px; }
   .app-container .transport-row { margin-top: var(--sp-4); }
 }
 
