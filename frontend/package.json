@@ -75,5 +75,18 @@
         "lines": 98
       }
     }
+  },
+  "overrides": {
+    "nth-check": "^2.1.1",
+    "postcss": "^8.5.23",
+    "serialize-javascript": "^7.1.3",
+    "node-forge": "^1.4.0",
+    "underscore": "^1.13.8",
+    "tar": "^7.5.21",
+    "uuid": "^11.1.1",
+    "svgo": "^3.3.2",
+    "css-select": "^5.1.0",
+    "bfj": "^9.1.3",
+    "jsonpath": "^1.3.0"
   }
 }
