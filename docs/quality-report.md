@@ -177,9 +177,7 @@ decision.
   bundle (`npm audit --omit=dev`: 0). Fixing it means moving off CRA (e.g. Vite); that is a product/infra decision.
 * **Native apps not rebuilt**: Capacitor 8.4.2 -> 8.4.3 (security advisory) was applied in `package.json`/lock, but the iOS,
   Android, macOS and Electron shells were not rebuilt or smoke-tested in this pass.
-* **`backup/`** (253 files, an old `src` copy from the accessibility branch) is referenced by no build, test or document
-  and was left in place; remove it once the owner confirms the branch no longer needs it (it stays in git history).
-  **`test-webhook.txt`** is the deploy-webhook trigger noted in `docs/app-release.md`; kept.
+* **`backup/`** (253 files, an old `src` copy from the accessibility branch) was removed on request after confirming that nothing referenced it; it stays in git history. **`test-webhook.txt`** is the deploy-webhook trigger noted in `docs/app-release.md`; kept.
 * **Orphaned stylesheets** left from the removed components (`InfoSection.css`, `FeedbackOverlay.css`,
   `TrainingOverlay.css`, `ModalContainer.css`) and CSS of deleted components: design material, owner decision.
 * **Debug logging**: production code still contains many `console.log` calls; `index.js` silences the console outside
