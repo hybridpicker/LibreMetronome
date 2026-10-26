@@ -290,7 +290,7 @@ Contributions to Libre Metronome are welcome! The workflow, quality gates and re
 
 ## Status
 
-Version 0.8.0 ("Score" design: white interface, one blue accent, notation-style beat display) is built for web, Android, iPad, macOS and Linux desktop. The web deployment, the Google Play upload and the App Store release are pending. See `docs/app-release.md`, section 17, for what is verified and what is not.
+Quality gates (lint, types, tests, coverage, audits) run in CI for every pull request; see [`docs/quality-report.md`](docs/quality-report.md). Version 0.8.0 ("Score" design: white interface, one blue accent, notation-style beat display) is built for web, Android, iPad, macOS and Linux desktop. The web deployment, the Google Play upload and the App Store release are pending. See `docs/app-release.md`, section 17, for what is verified and what is not.
 
 ## License
 

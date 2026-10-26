@@ -81,6 +81,13 @@ Frontend per area (lines / branches, before any change):
 - Backend needs `SECRET_KEY` in the environment (settings refuse to boot otherwise).
 - `run_tests.sh` only ran three frontend suites before this pass.
 
+## Outcome
+
+Delivered in pull request #100 (branch `chore/quality-night-2026-10-25`), merged to `main` on the owner's instruction
+on 2026-10-26 after both CI jobs (backend, frontend) were green. The merge deploys the website; the native apps were
+not rebuilt. The `backup/` directory was removed in the same pull request. Review rounds: one `/code-review` (high) and
+one `/simplify` pass, fixes applied; the second improvement round only re-measured and changed no metric.
+
 ## Phase log
 
 | Phase | Result |
