@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { SupportPage } from '../../components/Support';
 import * as supportUtils from '../../utils/supportUtils';
 
@@ -30,9 +30,7 @@ describe('SupportPage Component', () => {
   });
 
   test('renders page structure correctly', async () => {
-    await act(async () => {
-      render(<SupportPage />);
-    });
+    render(<SupportPage />);
     
     // Wait for content to load
     await waitFor(() => {
@@ -47,9 +45,7 @@ describe('SupportPage Component', () => {
   });
 
   test('button opens payment link when clicked', async () => {
-    await act(async () => {
-      render(<SupportPage />);
-    });
+    render(<SupportPage />);
     
     // Wait for button to load and be enabled
     const button = await waitFor(() => {
@@ -70,15 +66,11 @@ describe('SupportPage Component', () => {
   });
 
   test('features section displays correctly', async () => {
-    await act(async () => {
-      render(<SupportPage />);
-    });
+    render(<SupportPage />);
     
     // Check that feature cards are displayed
-    await waitFor(() => {
-      expect(screen.getByText(/Premium Sounds/i)).toBeInTheDocument();
-      expect(screen.getByText(/Mobile Apps/i)).toBeInTheDocument();
-      expect(screen.getByText(/Advanced Training/i)).toBeInTheDocument();
-    });
+    expect(await screen.findByText(/Premium Sounds/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Mobile Apps/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Advanced Training/i)).toBeInTheDocument();
   });
 });

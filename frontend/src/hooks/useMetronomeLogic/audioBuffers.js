@@ -148,153 +148,149 @@ export async function resumeSharedAudioContexts() {
   return contexts.length > 0 && results.every(Boolean);
 }
 
+// Bundled clicks, also the fallback when a custom sound cannot be loaded
+export const DEFAULT_SOUND_PATHS = {
+  normal: '/assets/audio/click_new.wav',
+  accent: '/assets/audio/click_new_accent.wav',
+  first: '/assets/audio/click_new_first.wav'
+};
+
+const SOUND_FETCH_TIMEOUT_MS = 10000;
+// Anything smaller cannot be a valid encoded audio file
+const MIN_AUDIO_BYTES = 100;
+const BACKEND_SOUND_DIR = '/metronome_sounds/';
+
+/**
+ * Backend sound URLs are relative to the Django server (or point at the local dev server).
+ */
+function resolveSoundUrl(url) {
+  if (!url.includes(BACKEND_SOUND_DIR)) return url;
+  // The dev server URLs are replaced by the backend
+  if (url.startsWith('http://localhost:3000') || url.startsWith('http://localhost:3001')) {
+    return url.replace(/http:\/\/localhost:(3000|3001)/, BACKEND_URL);
+  }
+  // Relative paths go to the backend; absolute http(s) URLs stay as they are
+  if (!(url.startsWith('http://') || url.startsWith('https://'))) {
+    return `${BACKEND_URL}${url}`;
+  }
+  return url;
+}
+
+/** Bundled click that stands in for a backend sound which cannot be loaded. */
+function fallbackClickPath(url) {
+  if (url.includes('first_')) return DEFAULT_SOUND_PATHS.first;
+  if (url.includes('accent_') || url.includes('second_')) return DEFAULT_SOUND_PATHS.accent;
+  return DEFAULT_SOUND_PATHS.normal;
+}
+
+async function fetchSound(fetchUrl) {
+  const fetchOptions = {
+    headers: {
+      // Request audio content explicitly
+      'Accept': 'audio/mpeg,audio/*;q=0.8,*/*;q=0.5'
+    },
+    // Ensure credentials are included for cross-origin requests if needed
+    credentials: 'include',
+    mode: 'cors',
+    // Use high priority for audio files to ensure they load quickly
+    priority: 'high',
+    signal: AbortSignal.timeout(SOUND_FETCH_TIMEOUT_MS)
+  };
+
+  // Remove priority if not supported by the browser to avoid errors
+  if (!('priority' in Request.prototype)) {
+    delete fetchOptions.priority;
+  }
+
+  const response = await fetch(fetchUrl, fetchOptions);
+  if (!response.ok) {
+    throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
+  }
+  return response;
+}
+
+async function decodeSound(response, audioCtx, fetchUrl, url) {
+  const buffer = await response.arrayBuffer();
+
+  if (!buffer || buffer.byteLength < MIN_AUDIO_BYTES) {
+    throw new Error('Invalid audio buffer (too small)');
+  }
+
+  let decodedBuffer;
+  try {
+    // Use promise with a higher priority if available
+    if (typeof Promise.withPriority === 'function') {
+      decodedBuffer = await Promise.withPriority(audioCtx.decodeAudioData(buffer), 'high');
+    } else {
+      decodedBuffer = await audioCtx.decodeAudioData(buffer);
+    }
+  } catch (decodeError) {
+    console.error(`Error decoding audio data for ${fetchUrl}:`, decodeError);
+    throw decodeError;
+  }
+
+  if (!decodedBuffer) {
+    throw new Error('Decoded buffer is null or undefined');
+  }
+
+  // Store key properties directly on the buffer to avoid repeated access costs
+  Object.defineProperties(decodedBuffer, {
+    '_optimizedForExpertTiming': { value: true },
+    '_duration': { value: decodedBuffer.duration },
+    '_sampleRate': { value: decodedBuffer.sampleRate }
+  });
+  console.log(`Sound loaded successfully: ${url}, duration: ${decodedBuffer.duration.toFixed(2)}s`);
+  return decodedBuffer;
+}
+
 /**
  * Loads a single audio file and decodes it into a Web Audio buffer.
+ * Backend sounds fall back to the bundled clicks when fetching or decoding fails.
  */
-function loadSound(url, audioCtx) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      console.log(`Loading sound: ${url}`);
-      
-      // Handle null or undefined URLs
-      if (!url) {
-        console.error("Null or undefined URL provided to loadSound");
-        throw new Error("Invalid URL provided");
-      }
-      
-      // Convert relative URLs to use the backend when they're API sound files
-      let fetchUrl = url;
+async function loadSound(url, audioCtx) {
+  try {
+    console.log(`Loading sound: ${url}`);
 
-      if (url.includes('/metronome_sounds/')) {
-        // If the URL starts with http://localhost:3000 or http://localhost:3001, replace with BACKEND_URL
-        if (url.startsWith('http://localhost:3000') || url.startsWith('http://localhost:3001')) {
-          fetchUrl = url.replace(/http:\/\/localhost:(3000|3001)/, BACKEND_URL);
-        }
-        // If the URL doesn't start with http/https, prepend BACKEND_URL
-        else if (!(url.startsWith('http://') || url.startsWith('https://'))) {
-          fetchUrl = `${BACKEND_URL}${url}`;
-        } else {
-          // URL is already absolute (http/https), so we keep it as is
-          fetchUrl = url;
-        }
-      } else {
-        // Non-metronome_sounds paths remain unchanged
-        fetchUrl = url;
-      }
-
-      // Add a timestamp to bust cache if needed
-      const cacheBuster = `${fetchUrl.includes('?') ? '&' : '?'}cb=${Date.now()}`;
-      fetchUrl = `${fetchUrl}${cacheBuster}`;
-      
-      console.log(`Fetching sound from: ${fetchUrl}`);
-
-      // Use priority fetch when available for better performance
-      const fetchOptions = {
-        headers: {
-          // Request audio content explicitly
-          'Accept': 'audio/mpeg,audio/*;q=0.8,*/*;q=0.5'
-        },
-        // Ensure credentials are included for cross-origin requests if needed
-        credentials: 'include',
-        mode: 'cors',
-        // Use high priority for audio files to ensure they load quickly
-        priority: 'high',
-        // Add timeout for fetch
-        signal: AbortSignal.timeout(10000) // 10 second timeout
-      };
-
-      // Remove priority if not supported by the browser to avoid errors
-      if (!('priority' in Request.prototype)) {
-        delete fetchOptions.priority;
-      }
-
-      let response;
-      try {
-        response = await fetch(fetchUrl, fetchOptions);
-        if (!response.ok) {
-          throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
-        }
-      } catch (fetchError) {
-        console.error(`Fetch error for ${fetchUrl}:`, fetchError);
-        // If the URL is from metronome_sounds, try a direct fallback
-        if (url.includes('/metronome_sounds/')) {
-          let fallbackPath;
-          if (url.includes('first_')) {
-            fallbackPath = '/assets/audio/click_new_first.wav';
-          } else if (url.includes('accent_') || url.includes('second_')) {
-            fallbackPath = '/assets/audio/click_new_accent.wav';
-          } else {
-            fallbackPath = '/assets/audio/click_new.wav';
-          }
-          console.log(`Fetch failed. Falling back to default sound: ${fallbackPath}`);
-          resolve(await loadSound(fallbackPath, audioCtx));
-          return;
-        }
-        throw fetchError;
-      }
-
-      try {
-        const buffer = await response.arrayBuffer();
-        
-        // Check if buffer is empty or too small to be valid audio
-        if (!buffer || buffer.byteLength < 100) {
-          throw new Error('Invalid audio buffer (too small)');
-        }
-        
-        // Decode the audio data
-        let decodedBuffer;
-        try {
-          // Use promise with a higher priority if available
-          if (typeof Promise.withPriority === 'function') {
-            decodedBuffer = await Promise.withPriority(
-              audioCtx.decodeAudioData(buffer), 
-              'high'
-            );
-          } else {
-            decodedBuffer = await audioCtx.decodeAudioData(buffer);
-          }
-        } catch (decodeError) {
-          console.error(`Error decoding audio data for ${fetchUrl}:`, decodeError);
-          throw decodeError;
-        }
-        
-        // Pre-calculate and cache buffer properties to optimize runtime performance
-        if (decodedBuffer) {
-          // Store key properties directly on the buffer to avoid repeated access costs
-          Object.defineProperties(decodedBuffer, {
-            '_optimizedForExpertTiming': { value: true },
-            '_duration': { value: decodedBuffer.duration },
-            '_sampleRate': { value: decodedBuffer.sampleRate }
-          });
-          console.log(`Sound loaded successfully: ${url}, duration: ${decodedBuffer.duration.toFixed(2)}s`);
-          resolve(decodedBuffer);
-        } else {
-          throw new Error('Decoded buffer is null or undefined');
-        }
-      } catch (processError) {
-        console.error(`Error processing sound ${url}:`, processError);
-        
-        // Fall back to default sounds if loading fails
-        if (url.includes('/metronome_sounds/')) {
-          let fallbackPath;
-          if (url.includes('first_')) {
-            fallbackPath = '/assets/audio/click_new_first.wav';
-          } else if (url.includes('accent_') || url.includes('second_')) {
-            fallbackPath = '/assets/audio/click_new_accent.wav';
-          } else {
-            fallbackPath = '/assets/audio/click_new.wav';
-          }
-          console.log(`Processing failed. Falling back to default sound: ${fallbackPath}`);
-          resolve(await loadSound(fallbackPath, audioCtx));
-          return;
-        }
-        reject(processError);
-      }
-    } catch (error) {
-      console.error(`Critical error loading sound ${url}:`, error);
-      reject(error);
+    // Handle null or undefined URLs
+    if (!url) {
+      console.error("Null or undefined URL provided to loadSound");
+      throw new Error("Invalid URL provided");
     }
-  });
+
+    // Add a timestamp to bust cache if needed
+    const resolvedUrl = resolveSoundUrl(url);
+    const fetchUrl = `${resolvedUrl}${resolvedUrl.includes('?') ? '&' : '?'}cb=${Date.now()}`;
+    console.log(`Fetching sound from: ${fetchUrl}`);
+
+    const isBackendSound = url.includes(BACKEND_SOUND_DIR);
+
+    let response;
+    try {
+      response = await fetchSound(fetchUrl);
+    } catch (fetchError) {
+      console.error(`Fetch error for ${fetchUrl}:`, fetchError);
+      if (!isBackendSound) throw fetchError;
+      const fallbackPath = fallbackClickPath(url);
+      console.log(`Fetch failed. Falling back to default sound: ${fallbackPath}`);
+      return await loadSound(fallbackPath, audioCtx);
+    }
+
+    try {
+      return await decodeSound(response, audioCtx, fetchUrl, url);
+    } catch (processError) {
+      console.error(`Error processing sound ${url}:`, processError);
+      if (!isBackendSound) {
+        // Returned (not awaited) on purpose: it must not reach the "critical error" log below
+        return Promise.reject(processError);
+      }
+      const fallbackPath = fallbackClickPath(url);
+      console.log(`Processing failed. Falling back to default sound: ${fallbackPath}`);
+      return await loadSound(fallbackPath, audioCtx);
+    }
+  } catch (error) {
+    console.error(`Critical error loading sound ${url}:`, error);
+    throw error;
+  }
 }
 
 /**
@@ -317,6 +313,108 @@ function getActiveSoundSetIdFromCookie() {
   return cookieValue;
 }
 
+// Built-in sound sets that are selectable by cookie without an API record
+const BUILT_IN_SOUND_SETS = {
+  'default-woodblock': { label: 'woodblock', prefix: 'wood' },
+  woodblock: { label: 'woodblock', prefix: 'wood' },
+  'default-drums': { label: 'drum', prefix: 'drum' },
+  drums: { label: 'drum', prefix: 'drum' }
+};
+
+const builtInSoundPaths = (prefix) => ({
+  normal: `/metronome_sounds/${prefix}_normal_sound.mp3`,
+  accent: `/metronome_sounds/${prefix}_accent_sound.mp3`,
+  first: `/metronome_sounds/${prefix}_first_sound.mp3`
+});
+
+const soundSetPaths = (soundSet) => ({
+  normal: soundSet.normal_beat_sound_url || DEFAULT_SOUND_PATHS.normal,
+  accent: soundSet.accent_sound_url || DEFAULT_SOUND_PATHS.accent,
+  first: soundSet.first_beat_sound_url || DEFAULT_SOUND_PATHS.first
+});
+
+/**
+ * Decide which three sound files to load. A cookie preference wins over the
+ * provided sound set; without either the bundled clicks are used.
+ */
+function resolveSoundPaths(soundSet, cookieSoundSetId) {
+  if (cookieSoundSetId) {
+    const cookieId = cookieSoundSetId.toString();
+    const matchesProvidedSet = Boolean(soundSet && soundSet.id) && soundSet.id.toString() === cookieId;
+
+    if (soundSet && soundSet.id && !matchesProvidedSet) {
+      console.log(`Cookie sound set ID (${cookieId}) doesn't match provided sound set (${soundSet.id}), using cookie preference`);
+    }
+
+    const builtIn = BUILT_IN_SOUND_SETS[cookieId];
+    if (builtIn) {
+      console.log(`Using ${builtIn.label} sounds from cookie preference`);
+      return builtInSoundPaths(builtIn.prefix);
+    }
+    if (matchesProvidedSet) {
+      console.log(`Using sound set (${soundSet.name}) from API that matches cookie ID: ${cookieId}`);
+      return soundSetPaths(soundSet);
+    }
+    // Cookie refers to a custom sound set but we don't have its details:
+    // try the standard API paths directly
+    console.log(`Using direct path construction for cookie sound set ID: ${cookieId}`);
+    return {
+      normal: `/api/sound-sets/${cookieId}/normal-beat-sound/`,
+      accent: `/api/sound-sets/${cookieId}/accent-sound/`,
+      first: `/api/sound-sets/${cookieId}/first-beat-sound/`
+    };
+  }
+
+  if (soundSet) {
+    console.log(`Loading sound set from API: ${soundSet.name}`);
+    return soundSetPaths(soundSet);
+  }
+  return { ...DEFAULT_SOUND_PATHS };
+}
+
+const PROCEDURAL_CLICK_SECONDS = 0.045;
+const PROCEDURAL_CLICK_DECAY = 95;
+// Frequency (Hz) and amplitude of the synthesized fallback clicks
+const PROCEDURAL_CLICKS = {
+  normal: { frequency: 1650, amplitude: 0.64 },
+  accent: { frequency: 2150, amplitude: 0.78 },
+  first: { frequency: 2700, amplitude: 0.9 }
+};
+
+function createProceduralClick(audioCtx, frequency, amplitude) {
+  const frameCount = Math.ceil(audioCtx.sampleRate * PROCEDURAL_CLICK_SECONDS);
+  const buffer = audioCtx.createBuffer(1, frameCount, audioCtx.sampleRate);
+  const channel = buffer.getChannelData(0);
+  for (let frame = 0; frame < frameCount; frame += 1) {
+    const time = frame / audioCtx.sampleRate;
+    const envelope = Math.exp(-time * PROCEDURAL_CLICK_DECAY);
+    channel[frame] = amplitude * envelope * (
+      0.82 * Math.sin(2 * Math.PI * frequency * time) +
+      0.18 * Math.sin(2 * Math.PI * frequency * 2.03 * time)
+    );
+  }
+  return buffer;
+}
+
+/**
+ * The bundled samples should always be available, but a procedural click
+ * prevents a professional practice session from failing silently if WebKit
+ * cannot fetch or decode an asset.
+ */
+function loadProceduralClicks(audioCtx, normalBufferRef, accentBufferRef, firstBufferRef) {
+  try {
+    const { normal, accent, first } = PROCEDURAL_CLICKS;
+    normalBufferRef.current = createProceduralClick(audioCtx, normal.frequency, normal.amplitude);
+    accentBufferRef.current = createProceduralClick(audioCtx, accent.frequency, accent.amplitude);
+    firstBufferRef.current = createProceduralClick(audioCtx, first.frequency, first.amplitude);
+    console.warn('Using procedural metronome clicks as an audio fallback');
+    return true;
+  } catch (fallbackError) {
+    console.error('Unable to create procedural fallback clicks:', fallbackError);
+    return false;
+  }
+}
+
 /**
  * Loads your standard metronome click buffers (normal, accent, first).
  * Supports custom sound sets from the API with enhanced error handling.
@@ -336,59 +434,11 @@ export async function loadClickBuffers({
     return false;
   }
 
-  // Default paths (fallback)
-  let normalPath = '/assets/audio/click_new.wav';
-  let accentPath = '/assets/audio/click_new_accent.wav';
-  let firstPath = '/assets/audio/click_new_first.wav';
-
   // Check cookie first for most consistent sound selection
   const cookieSoundSetId = ignorePreferences ? null : getActiveSoundSetIdFromCookie();
   if (ignorePreferences) soundSet = null;
-  
-  // If we have a cookie set, ensure our sound set matches it
-  // This is vital for proper sound reloading with cookies
-  if (cookieSoundSetId) {
-    const cookieId = cookieSoundSetId.toString();
-    
-    if (soundSet && soundSet.id && soundSet.id.toString() !== cookieId) {
-      console.log(`Cookie sound set ID (${cookieId}) doesn't match provided sound set (${soundSet.id}), using cookie preference`);
-      // We'll continue and handle this in the path selection below
-    }
-    
-    // Cookie-based sound set selection
-    if (cookieId === 'default-woodblock' || cookieId === 'woodblock') {
-      console.log('Using woodblock sounds from cookie preference');
-      normalPath = '/metronome_sounds/wood_normal_sound.mp3';
-      accentPath = '/metronome_sounds/wood_accent_sound.mp3';
-      firstPath = '/metronome_sounds/wood_first_sound.mp3';
-    } else if (cookieId === 'default-drums' || cookieId === 'drums') {
-      console.log('Using drum sounds from cookie preference');
-      normalPath = '/metronome_sounds/drum_normal_sound.mp3';
-      accentPath = '/metronome_sounds/drum_accent_sound.mp3';
-      firstPath = '/metronome_sounds/drum_first_sound.mp3';
-    } else if (soundSet && soundSet.id && soundSet.id.toString() === cookieId) {
-      // Use the provided sound set if it matches the cookie
-      console.log(`Using sound set (${soundSet.name}) from API that matches cookie ID: ${cookieId}`);
-      normalPath = soundSet.normal_beat_sound_url || normalPath;
-      accentPath = soundSet.accent_sound_url || accentPath;
-      firstPath = soundSet.first_beat_sound_url || firstPath;
-    } else {
-      // Cookie refers to a custom sound set but we don't have its details
-      // We'll try to load it directly from standard API paths
-      console.log(`Using direct path construction for cookie sound set ID: ${cookieId}`);
-      // Typically each sound set has its own directory structure
-      normalPath = `/api/sound-sets/${cookieId}/normal-beat-sound/`;
-      accentPath = `/api/sound-sets/${cookieId}/accent-sound/`;
-      firstPath = `/api/sound-sets/${cookieId}/first-beat-sound/`;
-    }
-  } else if (soundSet) {
-    // No cookie set, use the provided sound set
-    console.log(`Loading sound set from API: ${soundSet.name}`);
-    normalPath = soundSet.normal_beat_sound_url || normalPath;
-    accentPath = soundSet.accent_sound_url || accentPath;
-    firstPath = soundSet.first_beat_sound_url || firstPath;
-  }
-  
+
+  const { normal: normalPath, accent: accentPath, first: firstPath } = resolveSoundPaths(soundSet, cookieSoundSetId);
   console.log(`Sound paths:`, { normalPath, accentPath, firstPath });
 
   try {
@@ -414,11 +464,7 @@ export async function loadClickBuffers({
     
     // Make the loaded buffers available for the debug helper
     if (window.metronomeDebug) {
-      window.metronomeDebug.audioBuffers = {
-        normal: normal,
-        accent: accent,
-        first: first
-      };
+      window.metronomeDebug.audioBuffers = { normal, accent, first };
       window.metronomeDebug.audioContext = audioCtx;
     }
     
@@ -445,34 +491,6 @@ export async function loadClickBuffers({
         return false;
       }
     }
-    // The bundled samples should always be available, but a procedural click
-    // prevents a professional practice session from failing silently if WebKit
-    // cannot fetch or decode an asset.
-    try {
-      const createClick = (frequency, amplitude) => {
-        const duration = 0.045;
-        const frameCount = Math.ceil(audioCtx.sampleRate * duration);
-        const buffer = audioCtx.createBuffer(1, frameCount, audioCtx.sampleRate);
-        const channel = buffer.getChannelData(0);
-        for (let frame = 0; frame < frameCount; frame += 1) {
-          const time = frame / audioCtx.sampleRate;
-          const envelope = Math.exp(-time * 95);
-          channel[frame] = amplitude * envelope * (
-            0.82 * Math.sin(2 * Math.PI * frequency * time) +
-            0.18 * Math.sin(2 * Math.PI * frequency * 2.03 * time)
-          );
-        }
-        return buffer;
-      };
-
-      normalBufferRef.current = createClick(1650, 0.64);
-      accentBufferRef.current = createClick(2150, 0.78);
-      firstBufferRef.current = createClick(2700, 0.9);
-      console.warn('Using procedural metronome clicks as an audio fallback');
-      return true;
-    } catch (fallbackError) {
-      console.error('Unable to create procedural fallback clicks:', fallbackError);
-      return false;
-    }
+    return loadProceduralClicks(audioCtx, normalBufferRef, accentBufferRef, firstBufferRef);
   }
 }

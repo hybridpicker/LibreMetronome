@@ -1,5 +1,15 @@
 // src/hooks/useMetronomeLogic/trainingLogic.js - Enhanced Version
 
+// Speed training never goes beyond this tempo (lower than TEMPO_MAX on purpose)
+const MAX_TRAINING_TEMPO = 180;
+// Largest tempo jump per step in BPM
+const AUTO_SPEEDUP_MAX_STEP = 5;
+const MANUAL_SPEEDUP_MAX_STEP = 10;
+const DEFAULT_MANUAL_INCREASE_PERCENT = 5;
+// Note: used with `||`, so a configured probability of 0 also falls back to this value (known quirk,
+// pinned by tests, see docs/quality-report.md).
+const DEFAULT_MUTE_PROBABILITY = 0.3;
+
 /**
  * Special utility to force training UI updates across all metronome modes.
  * This creates and dispatches events that notify the training container.
@@ -65,7 +75,7 @@ export function shouldMuteThisBeat({ macroMode, isSilencePhaseRef, muteProbabili
   // Random silence (mode 2)
   if (macroMode === 2) {
     // Generate random mute based on probability
-    const randomMute = Math.random() < (muteProbability || 0.3);
+    const randomMute = Math.random() < (muteProbability || DEFAULT_MUTE_PROBABILITY);
     
     // Update the silence phase for UI components to read
     if (isSilencePhaseRef) {
@@ -85,6 +95,104 @@ export function shouldMuteThisBeat({ macroMode, isSilencePhaseRef, muteProbabili
   }
   
   return false;
+}
+
+/**
+ * Switch the silence phase of fixed-interval macro timing on or off and announce it
+ * immediately (a critical state change: the UI must not wait for the next poll).
+ */
+function setSilencePhase(isSilencePhaseRef, silent) {
+  console.log(silent ? `[Training] 🔇 STARTING SILENCE PHASE 🔇` : `[Training] 🔊 ENDING SILENCE PHASE 🔊`);
+
+  const prevState = isSilencePhaseRef.current;
+  isSilencePhaseRef.current = silent;
+  window.isSilencePhaseRef = isSilencePhaseRef;
+
+  forceTrainingUpdate({
+    event: silent ? 'silence-start' : 'silence-end',
+    prevState,
+    newState: silent
+  });
+}
+
+/**
+ * Fixed silence intervals: play N measures, then stay silent for M measures.
+ * @returns {boolean} - Whether the training UI needs an update because a counter moved
+ */
+function advanceFixedSilence({
+  isSilencePhaseRef,
+  measureCountRef,
+  muteMeasureCountRef,
+  measuresUntilMute,
+  muteDurationMeasures
+}) {
+  if (!isSilencePhaseRef) return false;
+
+  if (!isSilencePhaseRef.current) {
+    if (measureCountRef && measureCountRef.current >= measuresUntilMute) {
+      if (muteMeasureCountRef) {
+        muteMeasureCountRef.current = 0;
+      }
+      setSilencePhase(isSilencePhaseRef, true);
+    }
+    return false;
+  }
+
+  // Already in the silence phase: count it and check whether it is over
+  if (!muteMeasureCountRef) return false;
+  muteMeasureCountRef.current += 1;
+  if (muteMeasureCountRef.current >= muteDurationMeasures) {
+    muteMeasureCountRef.current = 0;
+    if (measureCountRef) {
+      measureCountRef.current = 0;
+    }
+    setSilencePhase(isSilencePhaseRef, false);
+  }
+  return true;
+}
+
+/**
+ * Raise the tempo by a percentage, capped at MAX_TRAINING_TEMPO and at +maxStep BPM.
+ * @returns {{currentTempo: number, newTempo: number, cappedNewTempo: number}}
+ */
+function computeTrainingTempo(currentTempo, increasePercent, maxStep) {
+  const factor = 1 + increasePercent / 100;
+  const newTempo = Math.min(Math.round(currentTempo * factor), MAX_TRAINING_TEMPO);
+  const cappedNewTempo = Math.min(newTempo, currentTempo + maxStep);
+  return { currentTempo, newTempo, cappedNewTempo };
+}
+
+/**
+ * Automatic speed-up: after N measures outside a silence phase raise the tempo and restart the count.
+ * @returns {boolean} - Whether the measure counter was reset
+ */
+function applyAutoSpeedUp({
+  isSilencePhaseRef,
+  measureCountRef,
+  measuresUntilSpeedUp,
+  tempoRef,
+  setTempo,
+  tempoIncreasePercent
+}) {
+  // Only process when not in silence phase
+  if (isSilencePhaseRef && isSilencePhaseRef.current) return false;
+  if (!measureCountRef || measureCountRef.current < measuresUntilSpeedUp) return false;
+
+  if (tempoRef && setTempo) {
+    const { currentTempo, cappedNewTempo } = computeTrainingTempo(
+      tempoRef.current,
+      tempoIncreasePercent,
+      AUTO_SPEEDUP_MAX_STEP
+    );
+    // Only increase if it would change by at least 1 BPM
+    if (cappedNewTempo > currentTempo) {
+      console.log(`[Training] ⏩ AUTO INCREASING TEMPO from ${currentTempo} to ${cappedNewTempo} BPM`);
+      setTempo(cappedNewTempo);
+    }
+  }
+
+  measureCountRef.current = 0;
+  return true;
 }
 
 /**
@@ -128,107 +236,30 @@ export function handleMeasureBoundary({
   
   // Increment measure counter at the start of each measure
   let shouldForceUpdate = false;
-  
   if (measureCountRef) {
     measureCountRef.current += 1;
     shouldForceUpdate = true;
   }
   
-  // Handle macro timing training (fixed silence intervals)
   if (macroMode === 1) {
-    if (isSilencePhaseRef && !isSilencePhaseRef.current) {
-      // Check if we should enter silence phase
-      if (measureCountRef && measureCountRef.current >= measuresUntilMute) {
-        console.log(`[Training] 🔇 STARTING SILENCE PHASE 🔇`);
-        
-        // Store previous state for comparison
-        const prevState = isSilencePhaseRef.current;
-        
-        // Set the silence phase
-        isSilencePhaseRef.current = true;
-        
-        // Update global reference
-        window.isSilencePhaseRef = isSilencePhaseRef;
-        
-        // Reset mute measure counter
-        if (muteMeasureCountRef) {
-          muteMeasureCountRef.current = 0;
-        }
-        
-        // Force an immediate update since this is a critical state change
-        forceTrainingUpdate({ 
-          event: 'silence-start',
-          prevState,
-          newState: true
-        });
-      }
-    } else if (isSilencePhaseRef && isSilencePhaseRef.current) {
-      // Already in silence phase, increment counter
-      if (muteMeasureCountRef) {
-        muteMeasureCountRef.current += 1;
-        shouldForceUpdate = true;
-        
-        // Check if we should exit silence phase
-        if (muteMeasureCountRef.current >= muteDurationMeasures) {
-          console.log(`[Training] 🔊 ENDING SILENCE PHASE 🔊`);
-          
-          // Store previous state for comparison
-          const prevState = isSilencePhaseRef.current;
-          
-          // Set the silence phase
-          isSilencePhaseRef.current = false;
-          
-          // Update global reference 
-          window.isSilencePhaseRef = isSilencePhaseRef;
-          
-          // Reset both counters
-          muteMeasureCountRef.current = 0;
-          if (measureCountRef) {
-            measureCountRef.current = 0;
-          }
-          
-          // Force an immediate update since this is a critical state change
-          forceTrainingUpdate({
-            event: 'silence-end',
-            prevState,
-            newState: false
-          });
-        }
-      }
-    }
+    shouldForceUpdate = advanceFixedSilence({
+      isSilencePhaseRef,
+      measureCountRef,
+      muteMeasureCountRef,
+      measuresUntilMute,
+      muteDurationMeasures
+    }) || shouldForceUpdate;
   }
   
-  // Handle speed training (auto tempo increase)
   if (speedMode === 1) {
-    // Only process when not in silence phase
-    if (!isSilencePhaseRef || !isSilencePhaseRef.current) {
-      if (measureCountRef && measureCountRef.current >= measuresUntilSpeedUp) {
-        // Calculate new tempo with percentage increase
-        if (tempoRef && setTempo) {
-          const factor = 1 + tempoIncreasePercent / 100;
-          const currentTempo = tempoRef.current;
-          
-          // Cap the new tempo at a reasonable maximum
-          const maxAllowedTempo = 180; // Same as in manual mode
-          const newTempo = Math.min(Math.round(currentTempo * factor), maxAllowedTempo);
-          
-          // Ensure the tempo doesn't jump too much at once (max +5 BPM per auto-increase)
-          const cappedNewTempo = Math.min(newTempo, currentTempo + 5);
-          
-          // Only increase if it would change by at least 1 BPM
-          if (cappedNewTempo > currentTempo) {
-            console.log(`[Training] ⏩ AUTO INCREASING TEMPO from ${currentTempo} to ${cappedNewTempo} BPM`);
-            setTempo(cappedNewTempo);
-          }
-        }
-        
-        // Reset measure counter after tempo increase
-        if (measureCountRef) {
-          measureCountRef.current = 0;
-          shouldForceUpdate = true;
-        }
-      }
-    }
+    shouldForceUpdate = applyAutoSpeedUp({
+      isSilencePhaseRef,
+      measureCountRef,
+      measuresUntilSpeedUp,
+      tempoRef,
+      setTempo,
+      tempoIncreasePercent
+    }) || shouldForceUpdate;
   }
   
   // If any counters changed, force a training UI update
@@ -263,16 +294,12 @@ export function manualTempoAcceleration({
     throw new Error('setTempo must be a function');
   }
   
-  // Calculate new tempo with percentage increase
-  const factor = 1 + (tempoIncreasePercent || 5) / 100;
-  const currentTempo = tempoRef.current;
-  
-  // Cap the new tempo at a reasonable maximum (lower than 240 for manual increases)
-  const maxAllowedTempo = 180; // More reasonable maximum tempo 
-  const newTempo = Math.min(Math.round(currentTempo * factor), maxAllowedTempo);
-  
-  // Ensure the tempo doesn't jump too much at once (max +10 BPM per click)
-  const cappedNewTempo = Math.min(newTempo, currentTempo + 10);
+  // Cap the new tempo at a reasonable maximum and limit the jump per click
+  const { currentTempo, newTempo, cappedNewTempo } = computeTrainingTempo(
+    tempoRef.current,
+    tempoIncreasePercent || DEFAULT_MANUAL_INCREASE_PERCENT,
+    MANUAL_SPEEDUP_MAX_STEP
+  );
   
   console.log(`[Training] ⏩ MANUAL TEMPO INCREASE from ${currentTempo} to ${cappedNewTempo} BPM (original calc: ${newTempo})`);
   

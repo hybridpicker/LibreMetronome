@@ -76,8 +76,8 @@ A modern, open-source metronome application that merges classic musical function
 
 ### Prerequisites
 
-- Node.js (v14+) and npm
-- Python 3.8+ with pip and venv
+- Node.js 22+ and npm (the web app alone builds on older versions; the Capacitor CLI needs 22)
+- Python 3.10+ with pip and venv (Django 5.2 requires it)
 - Git
 
 ### Local Development
@@ -161,32 +161,26 @@ enrollment; a free public app is being considered.
 #### Backend Setup
 
 ```bash
-# Navigate to backend directory from project root
+# From the project root: create the virtual environment and install dependencies
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r backend/requirements-dev.txt   # runtime + test/lint tools
+
 cd backend
-
-# Create and activate virtual environment
-python -m venv venv
-
-# On Windows
-venv\Scripts\activate
-
-# On macOS/Linux
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
+export SECRET_KEY="<any random string for local development>"   # settings refuse to start without it
 
 # Run migrations
 python manage.py migrate
 
-# Load default sound sets
+# Check the sound sets (copies missing default sounds if the frontend assets are present)
 python manage.py check_sounds
 
 # Start the Django development server
 python manage.py runserver
 ```
 
-The backend will run at http://localhost:8000
+The backend will run at http://localhost:8000. The `SECRET_KEY` can also live in a `.env` file in the
+project root (never commit it).
 
 #### API Endpoints
 
@@ -195,7 +189,41 @@ The backend will run at http://localhost:8000
 | `/api/active-sound-set/` | Get currently active sound set |
 | `/api/sound-sets/` | List all available sound sets |
 | `/api/sound-sets/<id>/` | Get specific sound set details |
-| `/api/sound-sets/<id>/set-active/` | Set sound set as active |
+| `/api/sound-sets/<id>/set-active/` | Validate a sound set (POST); the selection itself is stored in a cookie by the frontend |
+| `/api/default-sound-set/` | First sound set in the database |
+| `/api/support-info/` | Payment link used by the support page |
+
+## Tests, Lint and Coverage
+
+One command runs everything (ruff, mypy, bandit, Django tests, ESLint, Jest):
+
+```bash
+./run_tests.sh              # backend + frontend
+./run_tests.sh backend      # backend only
+./run_tests.sh frontend     # frontend only
+./run_tests.sh coverage     # with coverage reports and coverage gates
+```
+
+The individual tools, if you want them one by one:
+
+```bash
+# backend (from backend/, with the .venv active and SECRET_KEY set)
+ruff check . && ruff format --check .
+mypy .
+bandit -c pyproject.toml -r .
+python manage.py test                   # or: coverage run manage.py test && coverage report
+pip-audit -r ../requirements.txt        # dependency audit
+
+# frontend (from frontend/)
+npm run lint                            # ESLint, zero warnings allowed
+npm run test:ci                         # Jest once, no watch mode
+npm run coverage                        # Jest with coverage (frontend/coverage/)
+npm audit --omit=dev                    # dependency audit of shipped code
+```
+
+Quality numbers, decisions and open items are tracked in [`docs/quality-report.md`](docs/quality-report.md);
+the module overview is in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md); see
+[`CONTRIBUTING.md`](CONTRIBUTING.md) before opening a pull request.
 
 ## Keyboard Shortcuts
 
@@ -233,7 +261,8 @@ The earlier visual reference remains available at
 
 ## Contributing
 
-Contributions to Libre Metronome are welcome! Please feel free to:
+Contributions to Libre Metronome are welcome! The workflow, quality gates and review checklist are in
+[`CONTRIBUTING.md`](CONTRIBUTING.md). In short:
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -261,7 +290,7 @@ Contributions to Libre Metronome are welcome! Please feel free to:
 
 ## Status
 
-Version 0.8.0 ("Score" design: white interface, one blue accent, notation-style beat display) is built for web, Android, iPad, macOS and Linux desktop. The web deployment, the Google Play upload and the App Store release are pending. See `docs/app-release.md`, section 17, for what is verified and what is not.
+Quality gates (lint, types, tests, coverage, audits) run in CI for every pull request; see [`docs/quality-report.md`](docs/quality-report.md). Version 0.8.0 ("Score" design: white interface, one blue accent, notation-style beat display) is built for web, Android, iPad, macOS and Linux desktop. The web deployment, the Google Play upload and the App Store release are pending. See `docs/app-release.md`, section 17, for what is verified and what is not.
 
 ## License
 
@@ -274,5 +303,3 @@ Libre Metronome includes a "Support Me" feature that allows users to contribute 
 ---
 
 © 2025 Libre Metronome | GPL v3 License
-# Webhook test - Mon Nov 24 06:49:43 PM CET 2025
-# Webhook retest - Mon Nov 24 06:50:11 PM CET 2025

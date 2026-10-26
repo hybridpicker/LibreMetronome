@@ -68,7 +68,7 @@ jest.mock('./hooks/useMetronomeLogic', () => ({
     setTempo: jest.fn(),
     setBeatCount: jest.fn(),
     setSubdivision: jest.fn(),
-    audioCtx: globalThis._audioContextInit,
+    audioCtx: global._audioContextInit,
     normalBufferRef: { current: {} },
     accentBufferRef: { current: {} },
     firstBufferRef: { current: {} },

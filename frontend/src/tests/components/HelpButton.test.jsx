@@ -48,14 +48,4 @@ describe('HelpButton Component', () => {
     const button = screen.getByRole('button', { name: /help & guide/i });
     expect(button).toHaveClass('help-button');
   });
-
-  test('has correct teal color styling', () => {
-    // This is a visual test that relies on CSS, but we can check the class is applied
-    const { container } = render(<HelpButton onClick={mockOnClick} />);
-    
-    // While we can't directly test CSS properties in Jest, we can check the class is there
-    // which would apply the teal styling from CSS
-    const buttonElement = container.querySelector('.help-button');
-    expect(buttonElement).toBeInTheDocument();
-  });
 });

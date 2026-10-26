@@ -4,34 +4,40 @@ This is the Django backend server for the LibreMetronome application.
 
 ## Development Setup
 
-1. **Create and activate the virtual environment** (from the repository root, requires [uv](https://docs.astral.sh/uv/)):
+1. **Create and activate the virtual environment** (from the repository root):
    ```bash
-   uv venv --python 3.12 .venv
+   python3 -m venv .venv
    source .venv/bin/activate
-   uv pip install -r requirements.txt
+   pip install -r backend/requirements-dev.txt
    ```
 
-2. **Use development settings**:
-   Create a `local_settings.py` file in the `libremetronome_backend` directory with the following content:
+2. **Provide a secret key** (settings refuse to start without it). Either export it or put it in a
+   `.env` file in the repository root (never commit that file):
+   ```bash
+   export SECRET_KEY="<any random string for local development>"
+   ```
+
+3. **Use development settings** (optional): create `libremetronome_backend/local_settings.py` with
    ```python
-   # Import development settings
    from .dev_settings import *
    ```
 
-3. **Run migrations**:
-   ```bash
-   python manage.py migrate
-   ```
+4. **Run migrations**: `python manage.py migrate`
+5. **Create a superuser** (optional, for the admin): `python manage.py createsuperuser`
+6. **Run the development server**: `python manage.py runserver`
 
-4. **Create a superuser** (optional, for admin access):
-   ```bash
-   python manage.py createsuperuser
-   ```
+## Checks
 
-5. **Run the development server**:
-   ```bash
-   python manage.py runserver
-   ```
+```bash
+ruff check . && ruff format --check .
+mypy .
+bandit -c pyproject.toml -r .
+coverage run manage.py test --settings=libremetronome_backend.test_settings && coverage report
+pip-audit -r ../requirements.txt
+mutmut run          # optional mutation testing of views.py and models.py (needs pytest, see requirements-dev.txt)
+```
+
+`../run_tests.sh backend` runs the same checks.
 
 ## Sound Sets
 
@@ -41,7 +47,9 @@ The MetronomeSoundSet model supports different sound configurations for the metr
 - Accent sound: Used for accented beats (State 2)
 - Normal beat sound: Used for regular beats (State 1)
 
-Only one sound set can be active at a time. The active sound set will be used by the metronome in the frontend application.
+Several sound sets can exist at the same time. The legacy `is_active` flag is kept for compatibility but
+is no longer used: the frontend stores the selected sound set id in a cookie. Files must be `.wav`,
+`.mp3` or `.ogg`; a set saved without files falls back to the bundled default sounds.
 
 ### Creating a Sound Set
 
@@ -49,14 +57,15 @@ Only one sound set can be active at a time. The active sound set will be used by
 2. Log in with the superuser credentials
 3. Select "Metronome Sound Sets" from the sidebar
 4. Click "Add Metronome Sound Set"
-5. Fill in the required information and upload audio files
-6. Check "Is Active" to make this the current sound set for the metronome
+5. Fill in the required information and upload audio files (the list view offers audio previews)
 
 ### API Endpoints
 
 - `GET /api/sound-sets/`: List all sound sets
-- `GET /api/active-sound-set/`: Get the currently active sound set
-- `GET /api/default-sound-set/`: Get the default sound set
-- `POST /api/set-active-sound-set/<id>/`: Set a specific sound set as active
+- `GET /api/sound-sets/<id>/`: One sound set
+- `GET /api/active-sound-set/` and `GET /api/default-sound-set/`: The first sound set in the database
+- `POST /api/sound-sets/<id>/set-active/`: Validate that a sound set exists and return it (does not change the database)
+- `GET /api/support-info/`: Payment link for the support page (`STRIPE_PAYMENT_LINK` setting)
+- `GET /metronome_sounds/<file>` and `GET /assets/audio/<file>`: Sound files from `MEDIA_ROOT`
 
-The frontend automatically syncs with these endpoints to use the correct sounds for each metronome beat state.
+Unexpected errors in the JSON endpoints return `{"error": "Internal server error"}` with status 500.

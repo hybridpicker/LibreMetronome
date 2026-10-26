@@ -20,6 +20,47 @@ const getAudioContext = () => {
   return audioContext;
 };
 
+// Feedback through the metronome's own samples: [sample, volume]
+const METRONOME_FEEDBACK = {
+  click: ['normal', 0.3],
+  start: ['first', 0.4],
+  stop: ['accent', 0.3]
+};
+const DEFAULT_METRONOME_FEEDBACK = ['normal', 0.2];
+const WARNING_REPEAT_DELAY_MS = 150;
+
+// Fallback beeps: frequency (Hz), gain and duration (s) per feedback type
+const OSCILLATOR_FEEDBACK = {
+  click: { frequency: 800, gain: 0.1, duration: 0.05 },
+  start: { frequency: 440, gain: 0.2, duration: 0.15 },
+  stop: { frequency: 330, gain: 0.2, duration: 0.15 },
+  warning: { frequency: 220, gain: 0.3, duration: 0.3 }
+};
+const DEFAULT_OSCILLATOR_FEEDBACK = { frequency: 600, gain: 0.1, duration: 0.1 };
+
+/**
+ * Try to play the feedback with the metronome's samples.
+ * @returns {boolean} - true when the sound was handed to the metronome
+ */
+const playMetronomeFeedback = (type) => {
+  if (!window.metronomeDebug || typeof window.metronomeDebug.playSound !== 'function') return false;
+  try {
+    if (type === 'warning') {
+      // Play first sound twice for warning
+      window.metronomeDebug.playSound('first', 0.3);
+      setTimeout(() => window.metronomeDebug.playSound('first', 0.3), WARNING_REPEAT_DELAY_MS);
+      return true;
+    }
+    const [sample, volume] = METRONOME_FEEDBACK[type] || DEFAULT_METRONOME_FEEDBACK;
+    window.metronomeDebug.playSound(sample, volume);
+    return true;
+  } catch (e) {
+    console.error('Failed to use metronome sound API:', e);
+    // Fall back to oscillator if metronome sound fails
+    return false;
+  }
+};
+
 /**
  * Play a sound for interface feedback
  * @param {string} type - The type of sound to play ('click', 'start', 'stop', 'warning')
@@ -31,33 +72,7 @@ export const playAudioFeedback = (type) => {
   const context = getAudioContext();
   if (!context) return;
   
-  // If we can use the metronome's sound function via the window global
-  if (window.metronomeDebug && typeof window.metronomeDebug.playSound === 'function') {
-    try {
-      switch (type) {
-        case 'click':
-          window.metronomeDebug.playSound('normal', 0.3);
-          return;
-        case 'start':
-          window.metronomeDebug.playSound('first', 0.4);
-          return;
-        case 'stop':
-          window.metronomeDebug.playSound('accent', 0.3);
-          return;
-        case 'warning':
-          // Play first sound twice for warning
-          window.metronomeDebug.playSound('first', 0.3);
-          setTimeout(() => window.metronomeDebug.playSound('first', 0.3), 150);
-          return;
-        default:
-          window.metronomeDebug.playSound('normal', 0.2);
-          return;
-      }
-    } catch (e) {
-      console.error('Failed to use metronome sound API:', e);
-      // Fall back to oscillator if metronome sound fails
-    }
-  }
+  if (playMetronomeFeedback(type)) return;
   
   // Fall back to oscillator if metronome sound isn't available
   if (!context.createOscillator || typeof context.createOscillator !== 'function') {
@@ -68,49 +83,14 @@ export const playAudioFeedback = (type) => {
   try {
     const oscillator = context.createOscillator();
     const gainNode = context.createGain();
-    
-    // Configure sound based on type
-    switch (type) {
-      case 'click':
-        oscillator.frequency.value = 800;
-        gainNode.gain.value = 0.1;
-        oscillator.connect(gainNode);
-        gainNode.connect(context.destination);
-        oscillator.start();
-        oscillator.stop(context.currentTime + 0.05);
-        break;
-      case 'start':
-        oscillator.frequency.value = 440;
-        gainNode.gain.value = 0.2;
-        oscillator.connect(gainNode);
-        gainNode.connect(context.destination);
-        oscillator.start();
-        oscillator.stop(context.currentTime + 0.15);
-        break;
-      case 'stop':
-        oscillator.frequency.value = 330;
-        gainNode.gain.value = 0.2;
-        oscillator.connect(gainNode);
-        gainNode.connect(context.destination);
-        oscillator.start();
-        oscillator.stop(context.currentTime + 0.15);
-        break;
-      case 'warning':
-        oscillator.frequency.value = 220;
-        gainNode.gain.value = 0.3;
-        oscillator.connect(gainNode);
-        gainNode.connect(context.destination);
-        oscillator.start();
-        oscillator.stop(context.currentTime + 0.3);
-        break;
-      default:
-        oscillator.frequency.value = 600;
-        gainNode.gain.value = 0.1;
-        oscillator.connect(gainNode);
-        gainNode.connect(context.destination);
-        oscillator.start();
-        oscillator.stop(context.currentTime + 0.1);
-    }
+    const { frequency, gain, duration } = OSCILLATOR_FEEDBACK[type] || DEFAULT_OSCILLATOR_FEEDBACK;
+
+    oscillator.frequency.value = frequency;
+    gainNode.gain.value = gain;
+    oscillator.connect(gainNode);
+    gainNode.connect(context.destination);
+    oscillator.start();
+    oscillator.stop(context.currentTime + duration);
   } catch (e) {
     console.error('Failed to create oscillator:', e);
   }
@@ -176,188 +156,171 @@ export const announceToScreenReader = (message, priority = 'polite') => {
   }
 };
 
+const BODY_CLASSES = [
+  'high-contrast', 'large-text', 'reduced-motion', 'focus-visible-enabled',
+  'color-blind', 'protanopia', 'deuteranopia', 'tritanopia', 'monochromacy'
+];
+
+const DEFAULT_SETTINGS = {
+  highContrast: false,
+  largeText: false,
+  reducedMotion: false,
+  audioFeedback: false,
+  screenReaderMessages: true,
+  focusIndicators: true,
+  hapticFeedback: false,
+  colorBlindMode: 'none'
+};
+
+// localStorage key -> default value, evaluated only when the key is missing
+const STORAGE_DEFAULTS = {
+  'accessibility-high-contrast': () => 'false',
+  'accessibility-large-text': () => 'false',
+  'accessibility-reduced-motion': () => detectSystemPreferences().reducedMotion.toString(),
+  'accessibility-audio-feedback': () => 'false',
+  'accessibility-screen-reader-messages': () => 'true',
+  'accessibility-focus-indicators': () => 'true',
+  // Default to true on mobile devices that support vibration
+  'accessibility-haptic-feedback': () => {
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const hasVibration = 'vibrate' in navigator;
+    return (isTouch && hasVibration).toString();
+  },
+  'accessibility-color-blind-mode': () => 'none'
+};
+
+const addClassToAll = (selector, ...classNames) => {
+  document.querySelectorAll(selector).forEach(el => el.classList.add(...classNames));
+};
+
+const applyHighContrast = () => {
+  document.body.classList.add('high-contrast');
+  addClassToAll('.metronome-container, .metronome-canvas, .metronome-controls, header, footer, canvas, svg', 'high-contrast');
+
+  // Handle SVGs and Canvas specifically for high contrast mode
+  document.querySelectorAll('svg').forEach(svg => {
+    svg.style.filter = 'brightness(2) contrast(1.5)';
+
+    svg.querySelectorAll('path, circle, rect, line, polygon').forEach(path => {
+      path.setAttribute('stroke', '#FFFFFF');
+      path.setAttribute('stroke-width', '2');
+      if (!path.getAttribute('fill') || path.getAttribute('fill') === 'none') {
+        path.setAttribute('fill', 'none');
+      } else {
+        path.setAttribute('fill', '#000000');
+      }
+    });
+  });
+
+  document.querySelectorAll('canvas').forEach(canvas => {
+    canvas.style.filter = 'brightness(2) contrast(1.5) invert(1)';
+  });
+};
+
+const applyLargeText = () => {
+  document.body.classList.add('large-text');
+  addClassToAll('.control-section, .tempo-display, .beats-display, header, footer', 'large-text');
+};
+
+const applyReducedMotion = () => {
+  document.body.classList.add('reduced-motion');
+  addClassToAll('.metronome-container, .metronome-canvas, .circle-display, .analog-display', 'reduced-motion');
+};
+
+/** Force a repaint without changing dimensions by toggling a GPU transform. */
+const repaintOnNextTick = (element) => {
+  element.style.transform = 'translateZ(0)';
+  setTimeout(() => {
+    element.style.transform = '';
+  }, 0);
+};
+
+const applyColorBlindMode = (mode) => {
+  document.body.classList.add('color-blind');
+  document.body.classList.add(mode);
+
+  addClassToAll(
+    '.metronome-container, .metronome-canvas, .metronome-controls, header, footer, .circle-display, .analog-display, .beat-grid',
+    'color-blind',
+    mode
+  );
+
+  // Preserve the app's viewport/scaling in color blind mode
+  document.body.classList.add('preserve-viewport');
+
+  // Trigger a repaint to ensure SVG filters are applied
+  setTimeout(() => {
+    try {
+      const svgElements = document.querySelectorAll('svg');
+      svgElements.forEach(repaintOnNextTick);
+
+      const canvasElements = document.querySelectorAll('canvas');
+      canvasElements.forEach(repaintOnNextTick);
+
+      // Force metronome container repaint without scaling issues
+      const metronomeContainer = document.querySelector('.metronome-container');
+      if (metronomeContainer) {
+        metronomeContainer.style.width = '';
+        metronomeContainer.style.height = '';
+        repaintOnNextTick(metronomeContainer);
+      }
+
+      console.log(`Applied color blind mode: ${mode} to ${svgElements.length} SVG elements and ${canvasElements.length} canvas elements`);
+    } catch (e) {
+      console.error('Error applying color blind mode to elements:', e);
+    }
+  }, 50);
+};
+
+const readStoredSettings = () => {
+  const stored = (key) => localStorage.getItem(`accessibility-${key}`);
+  const settings = {
+    highContrast: stored('high-contrast') === 'true',
+    largeText: stored('large-text') === 'true',
+    reducedMotion: stored('reduced-motion') === 'true',
+    audioFeedback: stored('audio-feedback') === 'true',
+    screenReaderMessages: stored('screen-reader-messages') !== 'false',
+    focusIndicators: stored('focus-indicators') !== 'false',
+    hapticFeedback: stored('haptic-feedback') === 'true',
+    colorBlindMode: stored('color-blind-mode')
+  };
+
+  // Apply system preferences if user hasn't explicitly overridden them
+  const systemPreferences = detectSystemPreferences();
+  if (stored('reduced-motion') !== 'false' && systemPreferences.reducedMotion) {
+    settings.reducedMotion = true;
+  }
+  if (stored('high-contrast') !== 'false' && systemPreferences.highContrast) {
+    settings.highContrast = true;
+  }
+  return settings;
+};
+
 /**
  * Load accessibility settings from localStorage
  * Sets default values if not previously set
  */
 export const loadAccessibilitySettings = () => {
   try {
-    // First, ensure localStorage has been initialized with defaults if needed
-    if (localStorage.getItem('accessibility-high-contrast') === null) {
-      localStorage.setItem('accessibility-high-contrast', 'false');
-    }
-    if (localStorage.getItem('accessibility-large-text') === null) {
-      localStorage.setItem('accessibility-large-text', 'false');
-    }
-    if (localStorage.getItem('accessibility-reduced-motion') === null) {
-      const systemPrefs = detectSystemPreferences();
-      localStorage.setItem('accessibility-reduced-motion', systemPrefs.reducedMotion.toString());
-    }
-    if (localStorage.getItem('accessibility-audio-feedback') === null) {
-      localStorage.setItem('accessibility-audio-feedback', 'false');
-    }
-    if (localStorage.getItem('accessibility-screen-reader-messages') === null) {
-      localStorage.setItem('accessibility-screen-reader-messages', 'true');
-    }
-    if (localStorage.getItem('accessibility-focus-indicators') === null) {
-      localStorage.setItem('accessibility-focus-indicators', 'true');
-    }
-    if (localStorage.getItem('accessibility-haptic-feedback') === null) {
-      // Default to true on mobile devices that support vibration
-      const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      const hasVibration = 'vibrate' in navigator;
-      const defaultHaptic = isTouch && hasVibration;
-      localStorage.setItem('accessibility-haptic-feedback', defaultHaptic.toString());
-    }
-    if (localStorage.getItem('accessibility-color-blind-mode') === null) {
-      localStorage.setItem('accessibility-color-blind-mode', 'none');
-    }
-    
-    // Get settings from localStorage
-    const settings = {
-      highContrast: localStorage.getItem('accessibility-high-contrast') === 'true',
-      largeText: localStorage.getItem('accessibility-large-text') === 'true',
-      reducedMotion: localStorage.getItem('accessibility-reduced-motion') === 'true',
-      audioFeedback: localStorage.getItem('accessibility-audio-feedback') === 'true',
-      screenReaderMessages: localStorage.getItem('accessibility-screen-reader-messages') !== 'false',
-      focusIndicators: localStorage.getItem('accessibility-focus-indicators') !== 'false',
-      hapticFeedback: localStorage.getItem('accessibility-haptic-feedback') === 'true',
-      colorBlindMode: localStorage.getItem('accessibility-color-blind-mode')
-    };
-    
-    // Check for system preferences
-    const systemPreferences = detectSystemPreferences();
-    
-    // Apply system preferences if user hasn't explicitly overridden them
-    if (localStorage.getItem('accessibility-reduced-motion') !== 'false' && systemPreferences.reducedMotion) {
-      settings.reducedMotion = true;
-    }
-    if (localStorage.getItem('accessibility-high-contrast') !== 'false' && systemPreferences.highContrast) {
-      settings.highContrast = true;
-    }
-    
+    Object.entries(STORAGE_DEFAULTS).forEach(([key, getDefault]) => {
+      if (localStorage.getItem(key) === null) {
+        localStorage.setItem(key, getDefault());
+      }
+    });
+
+    const settings = readStoredSettings();
+
     // First remove all classes to ensure clean state
-    document.body.classList.remove(
-      'high-contrast', 
-      'large-text', 
-      'reduced-motion', 
-      'focus-visible-enabled',
-      'color-blind',
-      'protanopia',
-      'deuteranopia',
-      'tritanopia',
-      'monochromacy'
-    );
-    
-    // Apply settings to document and specific elements
-    if (settings.highContrast) {
-      document.body.classList.add('high-contrast');
-      
-      // Apply to specific elements as well
-      document.querySelectorAll('.metronome-container, .metronome-canvas, .metronome-controls, header, footer, canvas, svg').forEach(el => {
-        el.classList.add('high-contrast');
-      });
-      
-      // Handle SVGs and Canvas specifically for high contrast mode
-      document.querySelectorAll('svg').forEach(svg => {
-        // Apply styles directly to SVG elements
-        svg.style.filter = 'brightness(2) contrast(1.5)';
-        
-        // For each individual SVG element
-        const paths = svg.querySelectorAll('path, circle, rect, line, polygon');
-        paths.forEach(path => {
-          path.setAttribute('stroke', '#FFFFFF');
-          path.setAttribute('stroke-width', '2');
-          if (!path.getAttribute('fill') || path.getAttribute('fill') === 'none') {
-            path.setAttribute('fill', 'none');
-          } else {
-            path.setAttribute('fill', '#000000');
-          }
-        });
-      });
-      
-      // Apply high contrast mode to Canvas
-      document.querySelectorAll('canvas').forEach(canvas => {
-        canvas.style.filter = 'brightness(2) contrast(1.5) invert(1)';
-      });
-    }
-    
-    if (settings.largeText) {
-      document.body.classList.add('large-text');
-      
-      // Apply to text elements
-      document.querySelectorAll('.control-section, .tempo-display, .beats-display, header, footer').forEach(el => {
-        el.classList.add('large-text');
-      });
-    }
-    
-    if (settings.reducedMotion) {
-      document.body.classList.add('reduced-motion');
-      
-      // Apply to animation elements
-      document.querySelectorAll('.metronome-container, .metronome-canvas, .circle-display, .analog-display').forEach(el => {
-        el.classList.add('reduced-motion');
-      });
-    }
-    
+    document.body.classList.remove(...BODY_CLASSES);
+
+    if (settings.highContrast) applyHighContrast();
+    if (settings.largeText) applyLargeText();
+    if (settings.reducedMotion) applyReducedMotion();
     if (settings.focusIndicators) {
       document.body.classList.add('focus-visible-enabled');
     }
-    
-    // Apply color blind mode if set
     if (settings.colorBlindMode && settings.colorBlindMode !== 'none') {
-      document.body.classList.add('color-blind');
-      document.body.classList.add(settings.colorBlindMode);
-      
-      // Apply to specific elements
-      const elements = document.querySelectorAll('.metronome-container, .metronome-canvas, .metronome-controls, header, footer, .circle-display, .analog-display, .beat-grid');
-      elements.forEach(el => {
-        el.classList.add('color-blind', settings.colorBlindMode);
-      });
-      
-      // Preserve the app's viewport/scaling in color blind mode
-      // Add a specific class to control the viewport scaling
-      document.body.classList.add('preserve-viewport');
-      
-      // Trigger a repaint to ensure SVG filters are applied
-      setTimeout(() => {
-        try {
-          // Force SVG elements to repaint by triggering a style recalculation
-          const svgElements = document.querySelectorAll('svg');
-          svgElements.forEach(svg => {
-            // This forces a repaint without modifying dimensions
-            svg.style.transform = 'translateZ(0)';
-            setTimeout(() => {
-              svg.style.transform = '';
-            }, 0);
-          });
-          
-          // Force canvas elements to repaint
-          const canvasElements = document.querySelectorAll('canvas');
-          canvasElements.forEach(canvas => {
-            canvas.style.transform = 'translateZ(0)';
-            setTimeout(() => {
-              canvas.style.transform = '';
-            }, 0);
-          });
-          
-          // Force metronome container repaint without scaling issues
-          const metronomeContainer = document.querySelector('.metronome-container');
-          if (metronomeContainer) {
-            // Ensure proper dimensions are maintained
-            metronomeContainer.style.transform = 'translateZ(0)';
-            metronomeContainer.style.width = '';
-            metronomeContainer.style.height = '';
-            setTimeout(() => {
-              metronomeContainer.style.transform = '';
-            }, 0);
-          }
-          
-          console.log(`Applied color blind mode: ${settings.colorBlindMode} to ${svgElements.length} SVG elements and ${canvasElements.length} canvas elements`);
-        } catch (e) {
-          console.error('Error applying color blind mode to elements:', e);
-        }
-      }, 50);
+      applyColorBlindMode(settings.colorBlindMode);
     }
     
     // Set global flags for other components to use
@@ -370,7 +333,6 @@ export const loadAccessibilitySettings = () => {
     if (settings.focusIndicators) {
       ensureStylesheetLoaded('focus-indicators');
     }
-    
     if (settings.colorBlindMode !== 'none') {
       ensureStylesheetLoaded('color-blindness');
       ensureStylesheetLoaded('play-button-colorblind-fix');
@@ -391,16 +353,7 @@ export const loadAccessibilitySettings = () => {
     console.error('Error loading accessibility settings:', e);
     
     // Return default settings if there was an error
-    return {
-      highContrast: false,
-      largeText: false,
-      reducedMotion: false,
-      audioFeedback: false,
-      screenReaderMessages: true,
-      focusIndicators: true,
-      hapticFeedback: false,
-      colorBlindMode: 'none'
-    };
+    return { ...DEFAULT_SETTINGS };
   }
 };
 
