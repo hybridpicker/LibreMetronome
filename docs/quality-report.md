@@ -179,9 +179,11 @@ decision.
 
 ## Blocked / Open
 
-* **Development-toolchain vulnerabilities**: `npm audit` (all dependencies) reports 79 findings (6 critical) that all come
-  from `react-scripts` 5 (Create React App, unmaintained) and its webpack/jest/postcss tree. Nothing of it ships in the
-  bundle (`npm audit --omit=dev`: 0). Fixing it means moving off CRA (e.g. Vite); that is a product/infra decision.
+* **Development-toolchain vulnerabilities**: GitHub listed 163 open Dependabot alerts (119 in `frontend/package-lock.json`, 44
+  for Electron in `desktop/package.json`, all dev scope). `npm audit fix` and `overrides` in `frontend/package.json` cut the
+  frontend findings from 79 to 42 and Electron was raised to 45. The remaining 42 (6 high: `webpack-dev-server`,
+  `webpack-dev-middleware`, `selfsigned`/`node-forge`, `sharp` via `@capacitor/assets`) only go away by leaving
+  `react-scripts` 5 (Create React App, unmaintained), e.g. for Vite. `npm audit --omit=dev` is 0 and the production bundle is unchanged.
 * **Native apps not rebuilt**: Capacitor 8.4.2 -> 8.4.3 (security advisory) was applied in `package.json`/lock, but the iOS,
   Android, macOS and Electron shells were not rebuilt or smoke-tested in this pass.
 * **`backup/`** (253 files, an old `src` copy from the accessibility branch) was removed on request after confirming that nothing referenced it; it stays in git history. **`test-webhook.txt`** is the deploy-webhook trigger noted in `docs/app-release.md`; kept.

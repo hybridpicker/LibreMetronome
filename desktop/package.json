@@ -5,5 +5,5 @@
   "main": "main.js",
   "license": "GPL-3.0-or-later",
   "scripts": { "start": "electron ." },
-  "devDependencies": { "electron": "^37.0.0" }
+  "devDependencies": { "electron": "^45.0.0" }
 }
