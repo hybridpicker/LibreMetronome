@@ -28,7 +28,6 @@ bundle, the click sounds and a few small JSON endpoints.
 | `macos/` | native Swift wrapper, built with `macos/build.sh` |
 | `desktop/` | Electron wrapper for Linux, installed with `desktop/install.sh` |
 | `docs/` | release plans, design system, store material, this file, the quality report |
-| `backup/` | frozen copy of an older `src` (accessibility branch), unreferenced by any build or test |
 | `run_tests.sh` | single entry point for lint, type checks and tests |
 
 ## Backend
