@@ -4,6 +4,25 @@ import { useEffect, useRef } from 'react';
 const MIN_TAP_INTERVAL = 100; // Milliseconds
 const MAX_TAP_INTERVAL = 2000; // Milliseconds
 const COMMON_TEMPOS = [60, 90, 100, 120, 140, 160, 180]; // Common tempos for snap-to
+const SPACE_DEBOUNCE_MS = 300; // Ignore a second Space press within this window
+
+// Digit1..Digit9 and Numpad1..Numpad9 set the number of beats
+const SUBDIVISION_KEY = /^(?:Digit|Numpad)([1-9])$/;
+
+// Key code -> name of the callback it triggers
+const CALLBACK_KEYS = {
+  KeyR: 'onToggleTrainingOverlay',
+  ArrowUp: 'onIncreaseTempo',
+  ArrowRight: 'onIncreaseTempo',
+  ArrowDown: 'onDecreaseTempo',
+  ArrowLeft: 'onDecreaseTempo',
+  KeyA: 'onSwitchToAnalog',
+  KeyC: 'onSwitchToCircle',
+  KeyG: 'onSwitchToGrid',
+  KeyI: 'onToggleInfoOverlay',
+  KeyM: 'onSwitchToMulti',
+  KeyY: 'onSwitchToPolyrhythm' // Y for polYrhythm
+};
 
 const processTapTimesForTempo = (tapTimes) => {
   // Filter out times that are too close together
@@ -141,6 +160,91 @@ const useKeyboardShortcuts = ({
   const lastTapKeyTimeRef = useRef(0);
 
   useEffect(() => {
+    const dispatchTogglePlay = () => {
+      window.dispatchEvent(new CustomEvent('metronome-toggle-play', {
+        detail: { timestamp: performance.now() }
+      }));
+    };
+
+    const handleSpace = () => {
+      const now = Date.now();
+      if (now - lastSpaceKeyTimeRef.current < SPACE_DEBOUNCE_MS) {
+        return;
+      }
+      lastSpaceKeyTimeRef.current = now;
+
+      if (!togglePlayRef.current) {
+        console.log("[KEYBOARD] Spacebar: No handler provided, using global event");
+        dispatchTogglePlay();
+        return;
+      }
+      console.log("[KEYBOARD] Spacebar: Using provided callback");
+      try {
+        togglePlayRef.current();
+      } catch (err) {
+        console.error("[KEYBOARD] Error in play/pause handler:", err);
+        console.log("[KEYBOARD] Spacebar: Falling back to global event");
+        dispatchTogglePlay();
+      }
+    };
+
+    // Returns false when the key press was ignored as a double tap.
+    const handleTapKey = () => {
+      console.log("[KEYBOARD] 'T' key pressed for tap tempo");
+
+      // Preferred handlers: the global one, the global ref, then the component's own
+      if (window.handleGlobalTapTempo) {
+        console.log("[KEYBOARD] Using global tap tempo handler");
+        window.handleGlobalTapTempo();
+        return true;
+      }
+      if (window.tapTempoRef && typeof window.tapTempoRef.current === 'function') {
+        console.log("[KEYBOARD] Using global tapTempoRef.current");
+        window.tapTempoRef.current();
+        return true;
+      }
+      if (tapTempoRef.current) {
+        console.log("[KEYBOARD] Using metronome's tapTempo function");
+        tapTempoRef.current();
+        return true;
+      }
+
+      // Fallback to the built-in implementation
+      console.log("[KEYBOARD] No tapTempo function provided, using fallback implementation");
+      const now = Date.now();
+      if (now - lastTapKeyTimeRef.current < MIN_TAP_INTERVAL) {
+        console.log("[KEYBOARD] Tap too soon after previous tap, ignoring");
+        return false;
+      }
+      lastTapKeyTimeRef.current = now;
+      const tapTime = performance.now();
+      tapTimesRef.current.push(tapTime);
+      console.log(`[KEYBOARD] Tap recorded: ${tapTimesRef.current.length} total taps`);
+
+      // Always dispatch a global tap tempo event to ensure it's caught
+      window.dispatchEvent(
+        new CustomEvent("metronome-tap-tempo", {
+          detail: { timestamp: tapTime }
+        })
+      );
+
+      processTapTimesForTempo(tapTimesRef.current);
+      return true;
+    };
+
+    // Shortcut -> callback; the key counts as handled even when the callback is missing.
+    const callbacks = {
+      onToggleTrainingOverlay,
+      onIncreaseTempo,
+      onDecreaseTempo,
+      onSwitchToAnalog,
+      onSwitchToCircle,
+      onSwitchToGrid,
+      onToggleInfoOverlay,
+      onSwitchToMulti,
+      onSwitchToPolyrhythm
+    };
+
     const handleKeyDown = (event) => {
       if (
         event.target.tagName === 'INPUT' ||
@@ -158,171 +262,31 @@ const useKeyboardShortcuts = ({
 
       if (event.code === 'Space') {
         event.preventDefault();
-        const now = Date.now();
-        if (now - lastSpaceKeyTimeRef.current < 300) {
-          return;
-        }
-        lastSpaceKeyTimeRef.current = now;
-        
-        // Enhanced spacebar handling with fallbacks
-        if (togglePlayRef.current) {
-          console.log("[KEYBOARD] Spacebar: Using provided callback");
-          
-          // Add a try-catch block to prevent errors
-          try {
-            togglePlayRef.current();
-          } catch (err) {
-            console.error("[KEYBOARD] Error in play/pause handler:", err);
-            
-            // Fallback: dispatch a global event
-            console.log("[KEYBOARD] Spacebar: Falling back to global event");
-            window.dispatchEvent(new CustomEvent('metronome-toggle-play', {
-              detail: { timestamp: performance.now() }
-            }));
-          }
-        } else {
-          // Fallback if no handler is provided
-          console.log("[KEYBOARD] Spacebar: No handler provided, using global event");
-          window.dispatchEvent(new CustomEvent('metronome-toggle-play', {
-            detail: { timestamp: performance.now() }
-          }));
-        }
+        handleSpace();
+        return;
       }
 
       // Handled keys are marked as consumed. Otherwise the browser scrolls on
       // arrow keys, and the macOS app passes the key on to AppKit, which plays
       // the system alert sound.
-      let handled = true;
-      switch (event.code) {
-        case 'Enter':
-          // Add Enter key support for manual acceleration in training mode
-          if (onManualTempoIncrease) {
-            onManualTempoIncrease();
-          } else {
-            handled = false;
-          }
-          break;
-        case 'KeyT':
-          console.log("[KEYBOARD] 'T' key pressed for tap tempo");
-          event.preventDefault();
-          
-          // Try the global handler first
-          if (window.handleGlobalTapTempo) {
-            console.log("[KEYBOARD] Using global tap tempo handler");
-            window.handleGlobalTapTempo();
-            break;
-          }
-          
-          // Check for global tapTempoRef (added for AdvancedMetronome)
-          if (window.tapTempoRef && typeof window.tapTempoRef.current === 'function') {
-            console.log("[KEYBOARD] Using global tapTempoRef.current");
-            window.tapTempoRef.current();
-            break;
-          }
-          
-          // Then try the component's handler
-          if (tapTempoRef.current) {
-            console.log("[KEYBOARD] Using metronome's tapTempo function");
-            tapTempoRef.current();
-            break;
-          }
-          
-          // Fallback to the built-in implementation
-          console.log("[KEYBOARD] No tapTempo function provided, using fallback implementation");
-          const now = Date.now();
-          if (now - lastTapKeyTimeRef.current < 100) {
-            console.log("[KEYBOARD] Tap too soon after previous tap, ignoring");
-            return;
-          }
-          lastTapKeyTimeRef.current = now;
-          const tapTime = performance.now();
-          tapTimesRef.current.push(tapTime);
-          console.log(`[KEYBOARD] Tap recorded: ${tapTimesRef.current.length} total taps`);
-          
-          // Always dispatch a global tap tempo event to ensure it's caught
-          window.dispatchEvent(
-            new CustomEvent("metronome-tap-tempo", {
-              detail: { timestamp: tapTime }
-            })
-          );
-          
-          processTapTimesForTempo(tapTimesRef.current);
-          break;
-        case 'KeyR':
-          if (onToggleTrainingOverlay) onToggleTrainingOverlay();
-          break;
-        case 'Digit1':
-        case 'Numpad1':
-          if (onSetSubdivisions) onSetSubdivisions(1);
-          break;
-        case 'Digit2':
-        case 'Numpad2':
-          if (onSetSubdivisions) onSetSubdivisions(2);
-          break;
-        case 'Digit3':
-        case 'Numpad3':
-          if (onSetSubdivisions) onSetSubdivisions(3);
-          break;
-        case 'Digit4':
-        case 'Numpad4':
-          if (onSetSubdivisions) onSetSubdivisions(4);
-          break;
-        case 'Digit5':
-        case 'Numpad5':
-          if (onSetSubdivisions) onSetSubdivisions(5);
-          break;
-        case 'Digit6':
-        case 'Numpad6':
-          if (onSetSubdivisions) onSetSubdivisions(6);
-          break;
-        case 'Digit7':
-        case 'Numpad7':
-          if (onSetSubdivisions) onSetSubdivisions(7);
-          break;
-        case 'Digit8':
-        case 'Numpad8':
-          if (onSetSubdivisions) onSetSubdivisions(8);
-          break;
-        case 'Digit9':
-        case 'Numpad9':
-          if (onSetSubdivisions) onSetSubdivisions(9);
-          break;
-        case 'ArrowUp':
-        case 'ArrowRight':
-          if (onIncreaseTempo) onIncreaseTempo();
-          break;
-        case 'ArrowDown':
-        case 'ArrowLeft':
-          if (onDecreaseTempo) onDecreaseTempo();
-          break;
-        case 'KeyA':
-          if (onSwitchToAnalog) onSwitchToAnalog();
-          break;
-        case 'KeyC':
-          if (onSwitchToCircle) onSwitchToCircle();
-          break;
-        case 'KeyG':
-          if (onSwitchToGrid) onSwitchToGrid();
-          break;
-        case 'KeyI':
-          if (onToggleInfoOverlay) onToggleInfoOverlay();
-          break;
-        case 'KeyM':
-          if (onSwitchToMulti) onSwitchToMulti();
-          break;
-        case 'KeyY':
-          // Y for polYrhythm mode
-          if (onSwitchToPolyrhythm) onSwitchToPolyrhythm();
-          break;
-        // KeyI case removed - now using G for guide
-        default:
-          handled = false;
-          break;
+      const subdivisionMatch = SUBDIVISION_KEY.exec(event.code);
+      if (subdivisionMatch) {
+        if (onSetSubdivisions) onSetSubdivisions(Number(subdivisionMatch[1]));
+      } else if (event.code === 'Enter') {
+        // Enter accelerates manually in training mode
+        if (!onManualTempoIncrease) return;
+        onManualTempoIncrease();
+      } else if (event.code === 'KeyT') {
+        event.preventDefault();
+        if (!handleTapKey()) return;
+      } else if (Object.prototype.hasOwnProperty.call(CALLBACK_KEYS, event.code)) {
+        const callback = callbacks[CALLBACK_KEYS[event.code]];
+        if (callback) callback();
+      } else {
+        return;
       }
 
-      if (handled) {
-        event.preventDefault();
-      }
+      event.preventDefault();
     };
 
     window.addEventListener('keydown', handleKeyDown);

@@ -1,7 +1,48 @@
 // src/components/metronome/MultiCircleMode/hooks/useAudioContext.js
 import { useCallback } from 'react';
-import { initAudioContext, loadClickBuffers } from '../../../../hooks/useMetronomeLogic/audioBuffers';
+import { initAudioContext, loadClickBuffers, DEFAULT_SOUND_PATHS } from '../../../../hooks/useMetronomeLogic/audioBuffers';
 import { getActiveSoundSet } from '../../../../services/soundSetService';
+
+/**
+ * Resume a suspended context; a failure is logged and otherwise ignored.
+ */
+async function resumeIfSuspended(ctx, label) {
+  if (ctx.state !== 'suspended') return;
+  console.log(`[MultiCircle] Resuming ${label}...`);
+  try {
+    await ctx.resume();
+    console.log(`[MultiCircle] Successfully resumed ${label}`);
+  } catch (err) {
+    console.warn(`[MultiCircle] Could not resume ${label}:`, err);
+  }
+}
+
+/**
+ * Fetch and decode one bundled click; resolves to null when anything fails.
+ */
+async function loadDirectSound(audioCtx, path) {
+  try {
+    const response = await fetch(path);
+    if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+    return await audioCtx.decodeAudioData(await response.arrayBuffer());
+  } catch (e) {
+    console.error(`[MultiCircle] Error loading direct sound ${path}:`, e);
+    return null;
+  }
+}
+
+/**
+ * Fill every empty buffer ref straight from the bundled clicks.
+ */
+async function loadMissingDirectSounds(audioCtx, { normalBufferRef, accentBufferRef, firstBufferRef }) {
+  const targets = [['normal', normalBufferRef], ['accent', accentBufferRef], ['first', firstBufferRef]];
+  for (const [name, bufferRef] of targets) {
+    if (!bufferRef.current) {
+      console.log(`[MultiCircle] Loading ${name} click directly`);
+      bufferRef.current = await loadDirectSound(audioCtx, DEFAULT_SOUND_PATHS[name]);
+    }
+  }
+}
 
 /**
  * Hook to manage audio context initialization and sound loading
@@ -15,37 +56,17 @@ export function useAudioContext(audioCtxRef, normalBufferRef, accentBufferRef, f
     console.log("[MultiCircle] Initializing audio context...");
     
     try {
-      // First check if we have a shared context available
       if (window._multiCircleAudioContext && window._multiCircleAudioContext.state !== 'closed') {
+        // A shared context is available
         console.log("[MultiCircle] Found shared audio context");
         audioCtxRef.current = window._multiCircleAudioContext;
-        
-        if (audioCtxRef.current.state === 'suspended') {
-          console.log("[MultiCircle] Resuming shared audio context...");
-          try {
-            await audioCtxRef.current.resume();
-            console.log("[MultiCircle] Successfully resumed shared audio context");
-          } catch (err) {
-            console.warn("[MultiCircle] Could not resume shared audio context:", err);
-          }
-        }
-      } 
-      // Check if we already have our own context
-      else if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
+        await resumeIfSuspended(audioCtxRef.current, 'shared audio context');
+      } else if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
+        // We already have our own context
         console.log("[MultiCircle] Using existing audio context");
-        
-        if (audioCtxRef.current.state === 'suspended') {
-          console.log("[MultiCircle] Resuming existing audio context...");
-          try {
-            await audioCtxRef.current.resume();
-            console.log("[MultiCircle] Successfully resumed existing audio context");
-          } catch (err) {
-            console.warn("[MultiCircle] Could not resume existing audio context:", err);
-          }
-        }
-      } 
-      // Create a new context if needed
-      else {
+        await resumeIfSuspended(audioCtxRef.current, 'existing audio context');
+      } else {
+        // Create a new context if needed
         console.log("[MultiCircle] Creating new audio context");
         try {
           const newCtx = initAudioContext();
@@ -55,16 +76,7 @@ export function useAudioContext(audioCtxRef, normalBufferRef, accentBufferRef, f
           
           audioCtxRef.current = newCtx;
           window._multiCircleAudioContext = newCtx;
-          
-          if (newCtx.state === 'suspended') {
-            console.log("[MultiCircle] Attempting to resume new audio context...");
-            try {
-              await newCtx.resume();
-              console.log("[MultiCircle] Successfully resumed new audio context");
-            } catch (err) {
-              console.warn("[MultiCircle] Could not resume new audio context:", err);
-            }
-          }
+          await resumeIfSuspended(newCtx, 'new audio context');
         } catch (err) {
           console.error("[MultiCircle] Error creating audio context:", err);
           throw err;
@@ -111,35 +123,7 @@ export function useAudioContext(audioCtxRef, normalBufferRef, accentBufferRef, f
           // One final attempt with hardcoded default paths
           console.log("[MultiCircle] Making one final attempt with hardcoded paths");
           
-          const loadDirectSound = async (path) => {
-            try {
-              return await new Promise((resolve, reject) => {
-                fetch(path)
-                  .then(response => response.arrayBuffer())
-                  .then(arrayBuffer => audioCtxRef.current.decodeAudioData(arrayBuffer))
-                  .then(audioBuffer => resolve(audioBuffer))
-                  .catch(error => reject(error));
-              });
-            } catch (e) {
-              console.error(`Error loading direct sound ${path}:`, e);
-              return null;
-            }
-          };
-          
-          if (!normalBufferRef.current) {
-            console.log("[MultiCircle] Loading normal click directly");
-            normalBufferRef.current = await loadDirectSound('/assets/audio/click_new.wav');
-          }
-          
-          if (!accentBufferRef.current) {
-            console.log("[MultiCircle] Loading accent click directly");
-            accentBufferRef.current = await loadDirectSound('/assets/audio/click_new_accent.wav');
-          }
-          
-          if (!firstBufferRef.current) {
-            console.log("[MultiCircle] Loading first click directly");
-            firstBufferRef.current = await loadDirectSound('/assets/audio/click_new_first.wav');
-          }
+          await loadMissingDirectSounds(audioCtxRef.current, { normalBufferRef, accentBufferRef, firstBufferRef });
         }
       } catch (error) {
         console.error('[MultiCircle] Error loading sound buffers:', error);
@@ -189,17 +173,8 @@ export function useAudioContext(audioCtxRef, normalBufferRef, accentBufferRef, f
       }
     }
     
-    // Make sure audio context is running
-    if (audioCtxRef.current.state === 'suspended') {
-      console.log("[MultiCircle] Resuming audio context before loading sounds");
-      try {
-        await audioCtxRef.current.resume();
-        console.log("[MultiCircle] Successfully resumed audio context");
-      } catch (err) {
-        console.warn("[MultiCircle] Could not resume audio context:", err);
-        // Continue anyway, as decodeAudioData might still work
-      }
-    }
+    // Make sure audio context is running (decodeAudioData might still work if resuming fails)
+    await resumeIfSuspended(audioCtxRef.current, 'audio context');
     
     // First try with active sound set
     let soundLoaded = false;
@@ -248,39 +223,8 @@ export function useAudioContext(audioCtxRef, normalBufferRef, accentBufferRef, f
     if (!soundLoaded || !normalBufferRef.current || !accentBufferRef.current || !firstBufferRef.current) {
       console.log("[MultiCircle] Making final attempt with direct loading");
       
-      const loadDirectSound = async (path) => {
-        try {
-          return await new Promise((resolve, reject) => {
-            fetch(path)
-              .then(response => {
-                if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
-                return response.arrayBuffer();
-              })
-              .then(arrayBuffer => audioCtxRef.current.decodeAudioData(arrayBuffer))
-              .then(audioBuffer => resolve(audioBuffer))
-              .catch(error => reject(error));
-          });
-        } catch (e) {
-          console.error(`[MultiCircle] Error loading direct sound ${path}:`, e);
-          return null;
-        }
-      };
-      
       try {
-        if (!normalBufferRef.current) {
-          console.log("[MultiCircle] Loading normal click directly");
-          normalBufferRef.current = await loadDirectSound('/assets/audio/click_new.wav');
-        }
-        
-        if (!accentBufferRef.current) {
-          console.log("[MultiCircle] Loading accent click directly");
-          accentBufferRef.current = await loadDirectSound('/assets/audio/click_new_accent.wav');
-        }
-        
-        if (!firstBufferRef.current) {
-          console.log("[MultiCircle] Loading first click directly");
-          firstBufferRef.current = await loadDirectSound('/assets/audio/click_new_first.wav');
-        }
+        await loadMissingDirectSounds(audioCtxRef.current, { normalBufferRef, accentBufferRef, firstBufferRef });
         
         // Check if we have all required buffers now
         soundLoaded = normalBufferRef.current && accentBufferRef.current && firstBufferRef.current;

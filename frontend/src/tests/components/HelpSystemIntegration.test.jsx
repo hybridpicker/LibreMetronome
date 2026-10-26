@@ -1,6 +1,12 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { HelpButton, InfoModal } from '../../components/InfoSection';
+import { getPaymentLink } from '../../utils/supportUtils';
+
+// the guide embeds a SupportButton that would otherwise fetch the payment link
+jest.mock('../../utils/supportUtils', () => ({
+  getPaymentLink: jest.fn()
+}));
 
 // This is a simple wrapper component that simulates the behavior of these components
 // in the actual application
@@ -38,6 +44,11 @@ const HelpSystem = () => {
 };
 
 describe('Help System Integration', () => {
+  beforeEach(() => {
+    // never resolves: no late state updates after a test finished
+    getPaymentLink.mockReturnValue(new Promise(() => {}));
+  });
+
   test('clicking the help button opens the modal', () => {
     render(<HelpSystem />);
     

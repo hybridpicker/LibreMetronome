@@ -1,0 +1,18 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "testRunner": "jest",
+  "jest": { "projectType": "create-react-app", "enableFindRelatedTests": true },
+  "mutate": [
+    "src/hooks/useMetronomeLogic/trainingLogic.js",
+    "src/hooks/useMetronomeLogic/tapTempo.js",
+    "src/components/metronome/Score/staffLayout.js",
+    "src/components/metronome/Score/gridLayout.js",
+    "src/components/metronome/Score/tempoWord.js"
+  ],
+  "reporters": ["clear-text"],
+  "coverageAnalysis": "perTest",
+  "concurrency": 4,
+  "timeoutMS": 20000,
+  "tempDirName": ".stryker-tmp",
+  "cleanTempDir": true
+}

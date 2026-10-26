@@ -7,3 +7,6 @@ export const TEMPO_MAX = 240;
 export const SCHEDULE_AHEAD_TIME = 0.1;
 export const SCHEDULER_INTERVAL = 20;
 export const STARTUP_LEAD_TIME = 0.025;
+
+// Clamp a tempo to the supported range
+export const clampTempo = (tempo) => Math.min(Math.max(tempo, TEMPO_MIN), TEMPO_MAX);

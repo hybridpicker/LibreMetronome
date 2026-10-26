@@ -27,18 +27,18 @@ WHAT YOU GET FOR EUR 1.99
 • No ads, no upsells, no locked content, no later paywall
 • Free updates and bug fixes
 
-FIVE WAYS TO SEE AND FEEL THE BEAT
+FIVE MODES
 • Beat mode: quarter notes on a staff, with tempo, beats per bar and note value
 • Analog mode: a pendulum metronome on screen
 • Grid mode: shape rhythms on a grid and hear them looped
-• Sequencer mode: program your own pattern step by step
+• Sequence mode: chain several bars with their own beats per bar, one after another
 • Polyrhythm mode: layer several cycles, for example 3 against 4
 
 BUILT FOR REAL PRACTICE
-• Tempo, volume, time signature and subdivisions with accented first beat
+• Tempo, volume, beats per bar, note value and swing
+• Tap any beat to silence or accent it; Tap Tempo to find a tempo
 • Training options to build speed gradually
 • Keyboard shortcuts when a keyboard is connected
-• Keeps playing when the screen is off (see note below)
 
 ACCESSIBLE
 • High-contrast and large-text options
@@ -58,7 +58,7 @@ Questions or bug reports: see the support link on this page.
 ```
 
 Before publishing, check every claim against the final build. Open points:
-- "Keeps playing when the screen is off" — keep only if the emulator and phone tests confirm it (see docs/app-release.md section 12).
+- "Keeps playing when the screen is off" was removed from the description because it is not verified; add it back only after the emulator and phone tests confirm it (see docs/app-release.md section 12).
 - Mode names and training options must match the in-app labels.
 - "The bundled Classic click sound": the app currently ships one sound set. Do not promise "all sounds" until more are bundled.
 
@@ -69,7 +69,7 @@ Before publishing, check every claim against the final build. Open points:
 | Icon | 512 x 512 PNG, 32 bit | created: docs/store/icon-512.png (pendulum, no alpha); check in Console |
 | Feature graphic | 1024 x 500 PNG/JPEG, no alpha | created: docs/store/feature-graphic-1024x500.png (white, icon, name, no shadows) |
 | Phone screenshots | min. 4, 1080 x 1920 or larger, invented example values only | created: docs/store/screenshots/phone-1..5 (1236 x 2415, app UI of the store build rendered in Chrome at 412 x 805 @3x; no emulator or device frame) |
-| Tablet screenshots | min. 2 | created: docs/store/screenshots/tablet-1-beat.png, tablet-2-sequence.png (1536 x 2048) |
+| Tablet screenshots | min. 2 | created: docs/store/screenshots/tablet-1-beat.png, tablet-2-sequence.png (1536 x 2730, 9:16; Play rejects other ratios for tablets) |
 | Modes to show | Beat, Analog, Grid, Sequencer, Polyrhythm | all five in the phone set |
 
 ## Forms (declarations are made by the owner)

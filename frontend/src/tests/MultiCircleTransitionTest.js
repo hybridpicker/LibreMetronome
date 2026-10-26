@@ -1,6 +1,6 @@
 // File: frontend/src/tests/MultiCircleTransitionTest.js
 
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 /**
  * Test utility to verify MultiCircle transition behavior

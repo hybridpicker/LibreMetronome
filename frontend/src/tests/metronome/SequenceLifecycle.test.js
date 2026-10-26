@@ -32,7 +32,7 @@ test('visual rerenders do not restart or reorder the audio sequence', async () =
     const logic = useMultiCircleMetronomeLogic({ tempo: 120, setTempo: () => {}, isPaused: false, swing: 0, volume: 0.5, circleSettings: circles, playingCircle, onCircleChange: setPlayingCircle });
     return { logic, playingCircle };
   });
-  await act(async () => {});
+  await act(async () => { await Promise.resolve(); });
   for (let tick = 1; tick <= 590; tick++) {
     await act(async () => {
       mockContext.currentTime = tick * 0.02;

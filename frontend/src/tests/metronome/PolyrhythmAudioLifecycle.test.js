@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, cleanup, renderHook } from '@testing-library/react';
 import usePolyrhythmLogic from '../../components/metronome/PolyrhythmMode/usePolyrhythmLogic';
 import { initAudioContext, loadClickBuffers, resumeAudioContext } from '../../hooks/useMetronomeLogic/audioBuffers';
 
@@ -8,8 +8,10 @@ const props = { tempo: 120, innerBeats: 3, outerBeats: 2, isPaused: true, volume
 
 describe('polyrhythm shared audio lifecycle', () => {
   let context;
+  let consoleSpies;
   beforeEach(() => {
     jest.useFakeTimers();
+    consoleSpies = ['log', 'warn', 'error'].map(m => jest.spyOn(console, m).mockImplementation(() => {}));
     context = { state: 'running', currentTime: 0, close: jest.fn(), suspend: jest.fn() };
     initAudioContext.mockReturnValue(context);
     resumeAudioContext.mockImplementation(async ctx => { ctx.state = 'running'; return true; });
@@ -21,6 +23,8 @@ describe('polyrhythm shared audio lifecycle', () => {
     });
   });
   afterEach(() => {
+    cleanup();
+    consoleSpies.forEach(spy => spy.mockRestore());
     jest.clearAllTimers();
     jest.useRealTimers();
     jest.clearAllMocks();

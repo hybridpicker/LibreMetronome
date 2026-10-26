@@ -1,0 +1,11 @@
+-r ../requirements.txt
+coverage==7.17.0
+ruff==0.17.2
+mypy==2.4.0
+django-stubs==6.1.2
+djangorestframework-stubs==3.18.1
+bandit==1.9.4
+pip-audit==2.10.1
+mutmut==3.8.0
+pytest==9.1.1
+pytest-django==4.14.0
