@@ -11,7 +11,7 @@ rm -rf "$DEST/build"
 cp -r "$REPO/frontend/build" "$DEST/build"
 cp "$HERE/main.js" "$HERE/package.json" "$DEST/"
 cp "$HERE/icon.png" "$DEST/icon.png"
-( cd "$DEST" && npm install --omit=dev --no-audit --no-fund && npm install --no-save --no-audit --no-fund electron@^37 )
+( cd "$DEST" && npm install --omit=dev --no-audit --no-fund && npm install --no-save --no-audit --no-fund electron@^45 )
 
 # electron's own installer silently fails to extract on very new Node versions; fall back to unzip
 ensure_electron() {
