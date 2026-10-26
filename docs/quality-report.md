@@ -84,8 +84,11 @@ Frontend per area (lines / branches, before any change):
 ## Outcome
 
 Delivered in pull request #100 (branch `chore/quality-night-2026-10-25`), merged to `main` on the owner's instruction
-on 2026-10-26 after both CI jobs (backend, frontend) were green. The merge deploys the website; the native apps were
-not rebuilt. The `backup/` directory was removed in the same pull request. Review rounds: one `/code-review` (high) and
+on 2026-10-26 after both CI jobs (backend, frontend) were green. The `backup/` directory was removed in the same pull
+request. Follow-up pull request #101 (merged the same day) reduced the dependency advisories (see "Blocked / Open") and
+pinned the Capacitor Swift package to 8.4.3. The iPad development build was made from that state (Debug, installed and
+launched; no on-device review yet). Old branches: the merged ones and the superseded `agent/...` and `dependabot/...`
+branches are deleted; `accessibility`, `accessibility-new` and `devel` still hold unmerged commits and were kept. Review rounds: one `/code-review` (high) and
 one `/simplify` pass, fixes applied; the second improvement round only re-measured and changed no metric.
 
 ## Phase log
@@ -184,8 +187,8 @@ decision.
   frontend findings from 79 to 42 and Electron was raised to 45. The remaining 42 (6 high: `webpack-dev-server`,
   `webpack-dev-middleware`, `selfsigned`/`node-forge`, `sharp` via `@capacitor/assets`) only go away by leaving
   `react-scripts` 5 (Create React App, unmaintained), e.g. for Vite. `npm audit --omit=dev` is 0 and the production bundle is unchanged.
-* **Native apps not rebuilt**: Capacitor 8.4.2 -> 8.4.3 (security advisory) was applied in `package.json`/lock, but the iOS,
-  Android, macOS and Electron shells were not rebuilt or smoke-tested in this pass.
+* **Native apps**: Capacitor 8.4.2 -> 8.4.3 (security advisory). The iPad Debug build was rebuilt, installed and launched;
+  Android, macOS and the Linux Electron app (now Electron 45, smoke-tested on macOS only) were not rebuilt or tested on devices.
 * **`backup/`** (253 files, an old `src` copy from the accessibility branch) was removed on request after confirming that nothing referenced it; it stays in git history. **`test-webhook.txt`** is the deploy-webhook trigger noted in `docs/app-release.md`; kept.
 * **Orphaned stylesheets** left from the removed components (`InfoSection.css`, `FeedbackOverlay.css`,
   `TrainingOverlay.css`, `ModalContainer.css`) and CSS of deleted components: design material, owner decision.

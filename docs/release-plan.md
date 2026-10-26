@@ -1,13 +1,13 @@
 # Web and App Store Release
 
-Updated October 25, 2026.
+Updated October 26, 2026. The quality pass (PR #100) and the dependency advisory update (PR #101) were merged to `main`, which deploys the website; the live state was not re-checked afterwards.
 
 ## Release status
 
 | Target | Verified state | Next step |
 | --- | --- | --- |
 | Android (Play internal test) | 0.8.0, versionCode 8 (7 was already used): signed AAB uploaded and published to the internal test by the owner on 2026-10-25; no INTERNET permission; store listing en-US saved as draft (texts, graphics, screenshots) | Update on the Samsung and check; closed test with 12 testers, privacy page, declarations, then production access |
-| iPad development app | Debug build with the 0.8.0 Score design installed and launched on the iPad; simulator screenshot (portrait, Analog) only | Look at all modes and both orientations on the device |
+| iPad development app | Debug build of `main` (0.8.0 Score design, Capacitor 8.4.3) installed and launched on the iPad on 2026-10-26; simulator screenshot (portrait, Analog) only | Look at all modes and both orientations on the device |
 | Public website | 0.8.0 with the new icon is live (auto-deploy on push); manifest icon paths fixed in 7bce1f7, live state not re-checked | Confirm manifest.json serves absolute icon paths and the 7 icons return 200 |
 | macOS app | 0.8.0 with the new icon built, installed to /Applications, ad-hoc signed; new Dock icon confirmed by the owner | Check Dock badge, menu, global shortcut |
 | Linux desktop | `icon.png` and build path read; nothing built | Run `desktop/install.sh` on a Linux host |
