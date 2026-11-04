@@ -15,6 +15,7 @@ import ModeSelector from './components/ModeSelector'; // Import the new ModeSele
 import { SupportPage } from './components/Support';
 import { InfoModal } from './components/InfoSection'; // Import the Help components
 import { initAudioContext, resumeAudioContext } from './hooks/useMetronomeLogic/audioBuffers';
+import { getOutputNode } from './hooks/useMetronomeLogic/outputNode';
 import { setScreenAwake } from './mobile';
 import { DESKTOP_COMMAND_EVENT, reportDesktopState } from './desktop';
 import { manualTempoAcceleration } from './hooks/useMetronomeLogic/trainingLogic';
@@ -82,7 +83,7 @@ window.metronomeDebug = {
       const gainNode = this.audioContext.createGain();
       gainNode.gain.value = volume;
       source.connect(gainNode);
-      gainNode.connect(this.audioContext.destination);
+      gainNode.connect(getOutputNode(this.audioContext));
       source.start(0);
       return true;
     } catch (error) {

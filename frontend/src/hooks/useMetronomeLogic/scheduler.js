@@ -1,6 +1,7 @@
 // src/hooks/useMetronomeLogic/scheduler.js
 
 import { SCHEDULE_AHEAD_TIME } from './constants';
+import { getOutputNode } from './outputNode';
 
 /**
  * Run visual/state work when a scheduled sound reaches the output device.
@@ -65,7 +66,7 @@ function schedulePlay({
   // If you used ramping, keep or remove it as you like:
   gainNode.gain.setValueAtTime(volumeRef.current, when);
 
-  source.connect(gainNode).connect(audioCtx.destination);
+  source.connect(gainNode).connect(getOutputNode(audioCtx));
   source.start(when);
 
   // Keep track of the source for cleanup:
