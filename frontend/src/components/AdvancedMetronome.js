@@ -9,6 +9,7 @@ import BeatStaff from "./metronome/Score/BeatStaff";
 import withTrainingContainer from "./Training/withTrainingContainer";
 import AccelerateButton from "./metronome/Controls/AccelerateButton";
 import { manualTempoAcceleration } from "../hooks/useMetronomeLogic/trainingLogic";
+import { getOutputNode } from "../hooks/useMetronomeLogic/outputNode";
 
 
 export function AdvancedMetronomeWithCircle({
@@ -391,7 +392,7 @@ export function AdvancedMetronomeWithCircle({
         const gainNode = logic.audioCtx.createGain();
         gainNode.gain.value = volume || 1.0;
         source.connect(gainNode);
-        gainNode.connect(logic.audioCtx.destination);
+        gainNode.connect(getOutputNode(logic.audioCtx));
         source.start(0);
       }
     };
@@ -415,7 +416,7 @@ export function AdvancedMetronomeWithCircle({
           const gainNode = logic.audioCtx.createGain();
           gainNode.gain.value = volume || 1.0;
           source.connect(gainNode);
-          gainNode.connect(logic.audioCtx.destination);
+          gainNode.connect(getOutputNode(logic.audioCtx));
           source.start(0);
         }, index * beatDuration * 1000);
       });

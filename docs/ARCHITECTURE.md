@@ -62,6 +62,9 @@ Entry: `src/index.js` mounts `App` and initialises the native runtimes (`mobile.
 3. **Timing engine** (`hooks/useMetronomeLogic/*`) - the hook used by the single-pattern modes:
    * `audioBuffers.js` - creates/unlocks the shared `AudioContext`, loads and decodes the click buffers
      (sound set from the API with built-in fallbacks).
+   * `outputNode.js` - shared output stage: every click's gain node feeds a `WaveShaperNode`
+     soft clipper (`tanh`, drive 3) in front of the destination, which lifts the short clicks by
+     about 9 dB without hard clipping; without a wave shaper the clicks go to the destination.
    * `scheduler.js` - look-ahead scheduler: a 20 ms timer schedules every click that falls into the
      next 100 ms on the audio clock (`SCHEDULE_AHEAD_TIME`, `SCHEDULER_INTERVAL`), applies swing and
      defers visual callbacks until the sound leaves the output (`outputLatency`).
