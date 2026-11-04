@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { initAudioContext, loadClickBuffers, resumeAudioContext } from '../../../hooks/useMetronomeLogic/audioBuffers';
 import { getActiveSoundSet } from '../../../services/soundSetService';
 import { SCHEDULE_AHEAD_TIME } from '../../../hooks/useMetronomeLogic/constants';
+import { getOutputNode } from '../../../hooks/useMetronomeLogic/outputNode';
 import { shouldMuteThisBeat } from '../../../hooks/useMetronomeLogic/trainingLogic';
 
 // Import the animation sync utilities
@@ -456,7 +457,7 @@ export default function usePolyrhythmLogic({
     }
     
     // Connect the audio nodes
-    source.connect(gainNode).connect(ctx.destination);
+    source.connect(gainNode).connect(getOutputNode(ctx));
 
     try {
       source.start(safeTime);

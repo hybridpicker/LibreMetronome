@@ -204,6 +204,15 @@ describe('scheduleSubdivision: timing, gain and bookkeeping', () => {
     expect(ctx.gains[0].connect).toHaveBeenCalledWith(ctx.destination);
   });
 
+  test('routes the click through the soft-clip output stage when the context has a wave shaper', () => {
+    const ctx = createFakeAudioContext({ currentTime: 1 });
+    const shaper = { curve: null, oversample: 'none', connect: jest.fn() };
+    ctx.createWaveShaper = jest.fn(() => shaper);
+    scheduleSubdivision(baseParams(ctx, { when: 1.5 }));
+    expect(ctx.gains[0].connect).toHaveBeenCalledWith(shaper);
+    expect(shaper.connect).toHaveBeenCalledWith(ctx.destination);
+  });
+
   test.each([
     ['in the past', 0.5],
     ['exactly now', 1]
