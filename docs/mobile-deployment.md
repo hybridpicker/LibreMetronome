@@ -1,6 +1,13 @@
 # Mobile Deployment
 
-## Current Status — October 25, 2026
+## Update — October 26, 2026
+
+After the quality pass (Capacitor 8.4.3 security patch, dependency clean-up) the iPad Debug build was rebuilt from `main`,
+installed on the 13-inch iPad Air and launched. No on-device review of all modes yet. The Swift package pin in
+`frontend/ios/App/CapApp-SPM/Package.swift` follows `npm run mobile:sync`. Android and macOS were not rebuilt.
+Signing from the command line needs the team passed explicitly (`DEVELOPMENT_TEAM=<id>`); do not commit it.
+
+## Earlier Status — October 25, 2026
 
 Release 0.8.0 (build 7) carries the "Score" design to every target. Signed
 Android AAB and APK are built (no INTERNET permission). The iPad Debug build
