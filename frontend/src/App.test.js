@@ -73,6 +73,8 @@ jest.mock('./hooks/useMetronomeLogic', () => ({
     accentBufferRef: { current: {} },
     firstBufferRef: { current: {} },
     reloadSounds: jest.fn().mockResolvedValue(true),
+    prepareStart: jest.fn().mockResolvedValue(true),
+    firstBeatAtRef: { current: null },
     startScheduler: jest.fn(),
     stopScheduler: jest.fn()
   })

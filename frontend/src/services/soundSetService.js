@@ -245,6 +245,41 @@ export const setActiveSoundSet = async (id) => {
  * @returns {Promise<Object>} - The active sound set
  */
 export const getActiveSoundSet = async () => {
+  const soundSet = await findActiveSoundSet();
+  rememberActiveSoundSet(soundSet);
+  return soundSet;
+};
+
+const ACTIVE_SOUND_SET_STORAGE_KEY = 'activeSoundSetCache';
+
+function rememberActiveSoundSet(soundSet) {
+  if (!soundSet || soundSet.id === undefined || soundSet.id === null) return;
+  try {
+    localStorage.setItem(ACTIVE_SOUND_SET_STORAGE_KEY, JSON.stringify(soundSet));
+  } catch (error) {
+    // Storage may be full or disabled; the next start asks the server again
+  }
+}
+
+/**
+ * The active sound set as last seen, from this device, without a network
+ * request. Null when nothing is stored or the stored set is no longer the
+ * selected one.
+ * @returns {Object|null}
+ */
+export function getRememberedActiveSoundSet() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(ACTIVE_SOUND_SET_STORAGE_KEY));
+    if (!stored || stored.id === undefined || stored.id === null) return null;
+    const selectedId = getActiveSoundSetIdFromCookie() || localStorage.getItem('activeSoundSetId');
+    if (selectedId && selectedId.toString() !== stored.id.toString()) return null;
+    return stored;
+  } catch (error) {
+    return null;
+  }
+}
+
+const findActiveSoundSet = async () => {
   try {
     // Get all available sound sets (might return defaults if API fails)
     const sets = await getAllSoundSets();
