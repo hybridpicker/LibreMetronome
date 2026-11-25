@@ -76,6 +76,8 @@ const makeLogic = (overrides = {}) => ({
   accentBufferRef: { current: {} },
   firstBufferRef: { current: {} },
   reloadSounds: jest.fn().mockResolvedValue(true),
+  prepareStart: jest.fn().mockResolvedValue(true),
+  firstBeatAtRef: { current: null },
   startScheduler: jest.fn(),
   stopScheduler: jest.fn(),
   tapTempo: jest.fn(),
@@ -248,15 +250,16 @@ describe('accents', () => {
 });
 
 describe('play / pause', () => {
-  test('starting resumes nothing when running, sets isPaused=false and starts the scheduler', async () => {
+  test('starting wakes the audio within the tap and shows playing at once', async () => {
     const props = baseProps();
     render(<AdvancedMetronomeWithCircle {...props} />);
     fireEvent.click(screen.getByRole('button', { name: 'Start' }));
-    await flush();
+    // both happen synchronously inside the tap, before any await
+    expect(logic.prepareStart).toHaveBeenCalledTimes(1);
     expect(props.setIsPaused).toHaveBeenCalledWith(false);
-    expect(logic.startScheduler).toHaveBeenCalledTimes(1);
-    expect(logic.audioCtx.resume).not.toHaveBeenCalled();
-    expect(logic.reloadSounds).not.toHaveBeenCalled();
+    await flush();
+    // the isPaused effect of the logic hook starts the scheduler, not the button
+    expect(logic.startScheduler).not.toHaveBeenCalled();
   });
 
   test('pausing sets isPaused=true and stops the scheduler; button reflects state', () => {
@@ -270,96 +273,17 @@ describe('play / pause', () => {
     expect(logic.startScheduler).not.toHaveBeenCalled();
   });
 
-  test('a suspended context is resumed before starting', async () => {
-    logic.audioCtx.state = 'suspended';
-    logic.audioCtx.resume = jest.fn().mockImplementation(() => {
-      logic.audioCtx.state = 'running';
-      return Promise.resolve();
-    });
+  test('a failing preparation is only warned about and playback still starts', async () => {
+    logic.prepareStart = jest.fn().mockRejectedValue(new Error('denied'));
     const props = baseProps();
     render(<AdvancedMetronomeWithCircle {...props} />);
     fireEvent.click(screen.getByRole('button', { name: 'Start' }));
     await flush();
-    expect(logic.audioCtx.resume).toHaveBeenCalledTimes(1);
-    expect(logic.startScheduler).toHaveBeenCalledTimes(1);
-  });
-
-  test('a failing resume is tolerated (warned) and playback still starts', async () => {
-    logic.audioCtx.state = 'suspended';
-    logic.audioCtx.resume = jest.fn().mockRejectedValue(new Error('denied'));
-    const props = baseProps();
-    render(<AdvancedMetronomeWithCircle {...props} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Start' }));
-    await flush();
-    await flush();
-    // first resume + final attempt because the state is still not running
-    expect(logic.audioCtx.resume).toHaveBeenCalledTimes(2);
     expect(console.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Error resuming audio context'),
-      expect.any(Error)
-    );
-    expect(console.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Final resume attempt failed'),
+      expect.stringContaining('Error preparing audio'),
       expect.any(Error)
     );
     expect(props.setIsPaused).toHaveBeenCalledWith(false);
-    expect(logic.startScheduler).toHaveBeenCalled();
-  });
-
-  test('without an audio context sounds are initialised via reloadSounds first', async () => {
-    logic.audioCtx = null;
-    const props = baseProps();
-    render(<AdvancedMetronomeWithCircle {...props} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Start' }));
-    await flush();
-    expect(logic.reloadSounds).toHaveBeenCalledTimes(1);
-    expect(logic.startScheduler).toHaveBeenCalledTimes(1);
-  });
-
-  test('missing buffers trigger a reload; a rejected reload is only warned about', async () => {
-    logic.normalBufferRef = { current: null };
-    logic.reloadSounds = jest.fn().mockRejectedValue(new Error('boom'));
-    const props = baseProps();
-    render(<AdvancedMetronomeWithCircle {...props} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Start' }));
-    await flush();
-    expect(logic.reloadSounds).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Error loading sounds'),
-      expect.any(Error)
-    );
-    expect(logic.startScheduler).toHaveBeenCalled();
-  });
-
-  test('a rejected initial reload (no context) is only warned about', async () => {
-    logic.audioCtx = null;
-    logic.reloadSounds = jest.fn().mockRejectedValue(new Error('nope'));
-    const props = baseProps();
-    render(<AdvancedMetronomeWithCircle {...props} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Start' }));
-    await flush();
-    expect(console.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Error initializing sounds'),
-      expect.any(Error)
-    );
-    expect(props.setIsPaused).toHaveBeenCalledWith(false);
-  });
-
-  test('an unexpected error still ends with playback being started', async () => {
-    // Accessing audioCtx.state throws -> caught by the outer try/catch.
-    logic.audioCtx = {
-      get state() { throw new Error('exploded'); }
-    };
-    const props = baseProps();
-    render(<AdvancedMetronomeWithCircle {...props} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Start' }));
-    await flush();
-    expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('Error starting playback'),
-      expect.any(Error)
-    );
-    expect(props.setIsPaused).toHaveBeenCalledWith(false);
-    expect(logic.startScheduler).toHaveBeenCalledTimes(1);
   });
 
   test('registerTogglePlay receives a handler that toggles playback', async () => {
@@ -370,7 +294,8 @@ describe('play / pause', () => {
     await act(async () => {
       await registerTogglePlay.mock.calls[0][0]();
     });
-    expect(logic.startScheduler).toHaveBeenCalledTimes(1);
+    expect(logic.prepareStart).toHaveBeenCalledTimes(1);
+    expect(props.setIsPaused).toHaveBeenCalledWith(false);
   });
 });
 

@@ -1,6 +1,9 @@
 import { createFakeAudioContext, silenceConsole } from '../../helpers/metronome-fakeAudio';
 
+import packageJson from '../../../../package.json';
+
 const BACKEND = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
+const APP_VERSION = packageJson.version;
 
 let mod;
 let restoreConsole;
@@ -257,16 +260,16 @@ describe('loadClickBuffers', () => {
     expect(global.fetch).not.toHaveBeenCalled();
   });
 
-  test('loads the bundled default clicks sequentially with cache busting', async () => {
+  test('loads the three bundled clicks at once, tagged with the app version', async () => {
     const ctx = createFakeAudioContext();
     const refs = makeRefs();
     const decoded = [{ duration: 0.1, sampleRate: 48000 }, { duration: 0.2, sampleRate: 48000 }, { duration: 0.3, sampleRate: 48000 }];
     ctx.decodeAudioData.mockImplementation(async () => decoded.shift());
     await expect(mod.loadClickBuffers({ audioCtx: ctx, ...refs })).resolves.toBe(true);
     expect(fetchedUrls()).toEqual([
-      '/assets/audio/click_new.wav?cb=1700000000000',
-      '/assets/audio/click_new_accent.wav?cb=1700000000000',
-      '/assets/audio/click_new_first.wav?cb=1700000000000'
+      `/assets/audio/click_new.wav?v=${APP_VERSION}`,
+      `/assets/audio/click_new_accent.wav?v=${APP_VERSION}`,
+      `/assets/audio/click_new_first.wav?v=${APP_VERSION}`
     ]);
     expect(refs.normalBufferRef.current.duration).toBe(0.1);
     expect(refs.accentBufferRef.current.duration).toBe(0.2);
@@ -316,6 +319,57 @@ describe('loadClickBuffers', () => {
     expect(window.metronomeDebug.audioContext).toBe(ctx);
   });
 
+  test('all three files are requested before the first one arrives', async () => {
+    const pending = [];
+    global.fetch = jest.fn((url) => new Promise((resolve) => pending.push(() => resolve(okResponse()))));
+    const load = mod.loadClickBuffers({ audioCtx: createFakeAudioContext(), ...makeRefs() });
+    for (let i = 0; i < 10; i += 1) await Promise.resolve();
+    expect(global.fetch).toHaveBeenCalledTimes(3);
+    pending.forEach((finish) => finish());
+    await expect(load).resolves.toBe(true);
+  });
+
+  test('a loaded set is decoded once per context and shared by later loads', async () => {
+    const ctx = createFakeAudioContext();
+    const first = makeRefs();
+    const second = makeRefs();
+    await mod.loadClickBuffers({ audioCtx: ctx, ...first });
+    await mod.loadClickBuffers({ audioCtx: ctx, ...second });
+    expect(global.fetch).toHaveBeenCalledTimes(3);
+    expect(second.normalBufferRef.current).toBe(first.normalBufferRef.current);
+    // another context decodes its own buffers
+    await mod.loadClickBuffers({ audioCtx: createFakeAudioContext(), ...makeRefs() });
+    expect(global.fetch).toHaveBeenCalledTimes(6);
+  });
+
+  test('a failed load is not cached, so the next load tries again', async () => {
+    const ctx = createFakeAudioContext();
+    const soundSet = { id: 5, name: 'Remote', normal_beat_sound_url: 'https://cdn.example/n.mp3' };
+    global.fetch = jest.fn(async () => { throw new Error('offline'); });
+    await expect(mod.loadClickSet({ audioCtx: ctx, soundSet })).rejects.toThrow('offline');
+    global.fetch = jest.fn(async () => okResponse());
+    await expect(mod.loadClickSet({ audioCtx: ctx, soundSet })).resolves.toEqual({
+      normal: expect.anything(), accent: expect.anything(), first: expect.anything()
+    });
+  });
+
+  test('a sound set with an update time tags its files with it', async () => {
+    const soundSet = {
+      id: 3,
+      name: 'Tagged',
+      updated_at: '2026-11-20T10:00:00Z',
+      normal_beat_sound_url: 'https://cdn.example/n.mp3',
+      accent_sound_url: 'https://cdn.example/a.mp3?x=1',
+      first_beat_sound_url: '/assets/audio/click_new_first.wav'
+    };
+    await mod.loadClickBuffers({ audioCtx: createFakeAudioContext(), soundSet, ...makeRefs() });
+    expect(fetchedUrls()).toEqual([
+      'https://cdn.example/n.mp3?v=2026-11-20T10%3A00%3A00Z',
+      'https://cdn.example/a.mp3?x=1&v=2026-11-20T10%3A00%3A00Z',
+      `/assets/audio/click_new_first.wav?v=${APP_VERSION}`
+    ]);
+  });
+
   describe('sound set selection', () => {
     const soundSet = {
       id: 7,
@@ -328,18 +382,18 @@ describe('loadClickBuffers', () => {
     test('uses the provided sound set when there is no cookie', async () => {
       await mod.loadClickBuffers({ audioCtx: createFakeAudioContext(), soundSet, ...makeRefs() });
       expect(fetchedUrls()).toEqual([
-        'https://cdn.example/normal.mp3?cb=1700000000000',
-        'https://cdn.example/accent.mp3?cb=1700000000000',
-        'https://cdn.example/first.mp3?cb=1700000000000'
+        'https://cdn.example/normal.mp3',
+        'https://cdn.example/accent.mp3',
+        'https://cdn.example/first.mp3'
       ]);
     });
 
     test('missing urls in the sound set keep the bundled defaults', async () => {
       await mod.loadClickBuffers({ audioCtx: createFakeAudioContext(), soundSet: { id: 1, name: 'Partial', accent_sound_url: 'https://cdn.example/a.mp3' }, ...makeRefs() });
       expect(fetchedUrls()).toEqual([
-        '/assets/audio/click_new.wav?cb=1700000000000',
-        'https://cdn.example/a.mp3?cb=1700000000000',
-        '/assets/audio/click_new_first.wav?cb=1700000000000'
+        `/assets/audio/click_new.wav?v=${APP_VERSION}`,
+        'https://cdn.example/a.mp3',
+        `/assets/audio/click_new_first.wav?v=${APP_VERSION}`
       ]);
     });
 
@@ -352,9 +406,9 @@ describe('loadClickBuffers', () => {
       setCookie(cookie);
       await mod.loadClickBuffers({ audioCtx: createFakeAudioContext(), soundSet, ...makeRefs() });
       expect(fetchedUrls()).toEqual([
-        `${BACKEND}/metronome_sounds/${prefix}_normal_sound.mp3?cb=1700000000000`,
-        `${BACKEND}/metronome_sounds/${prefix}_accent_sound.mp3?cb=1700000000000`,
-        `${BACKEND}/metronome_sounds/${prefix}_first_sound.mp3?cb=1700000000000`
+        `${BACKEND}/metronome_sounds/${prefix}_normal_sound.mp3`,
+        `${BACKEND}/metronome_sounds/${prefix}_accent_sound.mp3`,
+        `${BACKEND}/metronome_sounds/${prefix}_first_sound.mp3`
       ]);
     });
 
@@ -362,23 +416,23 @@ describe('loadClickBuffers', () => {
       document.cookie = 'other=1; path=/';
       setCookie('7');
       await mod.loadClickBuffers({ audioCtx: createFakeAudioContext(), soundSet, ...makeRefs() });
-      expect(fetchedUrls()[0]).toBe('https://cdn.example/normal.mp3?cb=1700000000000');
+      expect(fetchedUrls()[0]).toBe('https://cdn.example/normal.mp3');
     });
 
     test('cookie for an unknown custom set builds the API paths', async () => {
       setCookie('42');
       await mod.loadClickBuffers({ audioCtx: createFakeAudioContext(), soundSet, ...makeRefs() });
       expect(fetchedUrls()).toEqual([
-        '/api/sound-sets/42/normal-beat-sound/?cb=1700000000000',
-        '/api/sound-sets/42/accent-sound/?cb=1700000000000',
-        '/api/sound-sets/42/first-beat-sound/?cb=1700000000000'
+        '/api/sound-sets/42/normal-beat-sound/',
+        '/api/sound-sets/42/accent-sound/',
+        '/api/sound-sets/42/first-beat-sound/'
       ]);
     });
 
     test('ignorePreferences skips both cookie and sound set', async () => {
       setCookie('drums');
       await mod.loadClickBuffers({ audioCtx: createFakeAudioContext(), soundSet, ignorePreferences: true, ...makeRefs() });
-      expect(fetchedUrls()[0]).toBe('/assets/audio/click_new.wav?cb=1700000000000');
+      expect(fetchedUrls()[0]).toBe(`/assets/audio/click_new.wav?v=${APP_VERSION}`);
     });
   });
 
@@ -391,17 +445,17 @@ describe('loadClickBuffers', () => {
 
     test('relative path gets the backend host', async () => {
       await loadWith('/metronome_sounds/a_normal.mp3');
-      expect(fetchedUrls()[0]).toBe(`${BACKEND}/metronome_sounds/a_normal.mp3?cb=1700000000000`);
+      expect(fetchedUrls()[0]).toBe(`${BACKEND}/metronome_sounds/a_normal.mp3`);
     });
 
     test.each(['http://localhost:3000', 'http://localhost:3001'])('dev-server origin %s is replaced by the backend', async (origin) => {
       await loadWith(`${origin}/metronome_sounds/a_normal.mp3`);
-      expect(fetchedUrls()[0]).toBe(`${BACKEND}/metronome_sounds/a_normal.mp3?cb=1700000000000`);
+      expect(fetchedUrls()[0]).toBe(`${BACKEND}/metronome_sounds/a_normal.mp3`);
     });
 
-    test('other absolute urls stay untouched and an existing query gets &cb', async () => {
+    test('other absolute urls stay untouched, including their query', async () => {
       await loadWith('https://static.example/metronome_sounds/a_normal.mp3?v=2');
-      expect(fetchedUrls()[0]).toBe('https://static.example/metronome_sounds/a_normal.mp3?v=2&cb=1700000000000');
+      expect(fetchedUrls()[0]).toBe('https://static.example/metronome_sounds/a_normal.mp3?v=2');
     });
   });
 
@@ -419,7 +473,7 @@ describe('loadClickBuffers', () => {
       const refs = makeRefs();
       const soundSet = { id: 1, name: 'x', normal_beat_sound_url: `/metronome_sounds/${kind}one.mp3`, accent_sound_url: '/assets/audio/click_new_accent.wav', first_beat_sound_url: '/assets/audio/click_new_first.wav' };
       await expect(mod.loadClickBuffers({ audioCtx: createFakeAudioContext(), soundSet, ...refs })).resolves.toBe(true);
-      expect(fetchedUrls()[1]).toBe(`${fallback}?cb=1700000000000`);
+      expect(fetchedUrls()).toContain(`${fallback}?v=${APP_VERSION}`);
       expect(refs.normalBufferRef.current).toBeTruthy();
     });
 
@@ -437,7 +491,7 @@ describe('loadClickBuffers', () => {
       const soundSet = { id: 1, name: 'x', normal_beat_sound_url: '/metronome_sounds/n.mp3' };
       const refs = makeRefs();
       await expect(mod.loadClickBuffers({ audioCtx: createFakeAudioContext(), soundSet, ...refs })).resolves.toBe(true);
-      expect(fetchedUrls()[1]).toBe('/assets/audio/click_new.wav?cb=1700000000000');
+      expect(fetchedUrls()).toContain(`/assets/audio/click_new.wav?v=${APP_VERSION}`);
 
       global.fetch = jest.fn(async () => okResponse());
       const ctx = createFakeAudioContext();
@@ -453,7 +507,7 @@ describe('loadClickBuffers', () => {
       global.fetch = jest.fn(async (url) => (url.includes('/metronome_sounds/') ? okResponse(10) : okResponse()));
       const soundSet = { id: 1, name: 'x', normal_beat_sound_url: `/metronome_sounds/${kind}one.mp3` };
       await expect(mod.loadClickBuffers({ audioCtx: createFakeAudioContext(), soundSet, ...makeRefs() })).resolves.toBe(true);
-      expect(fetchedUrls()[1]).toBe(`${fallback}?cb=1700000000000`);
+      expect(fetchedUrls()).toContain(`${fallback}?v=${APP_VERSION}`);
     });
 
     test('a null decode result is an error', async () => {
@@ -474,11 +528,14 @@ describe('loadClickBuffers', () => {
       const soundSet = { id: 9, name: 'Broken', normal_beat_sound_url: 'https://broken.example/n.mp3' };
       const refs = makeRefs();
       await expect(mod.loadClickBuffers({ audioCtx: createFakeAudioContext(), soundSet, ...refs })).resolves.toBe(true);
+      // The three files of the custom set load together, then the bundled set
       expect(fetchedUrls()).toEqual([
-        'https://broken.example/n.mp3?cb=1700000000000',
-        '/assets/audio/click_new.wav?cb=1700000000000',
-        '/assets/audio/click_new_accent.wav?cb=1700000000000',
-        '/assets/audio/click_new_first.wav?cb=1700000000000'
+        'https://broken.example/n.mp3',
+        `/assets/audio/click_new_accent.wav?v=${APP_VERSION}`,
+        `/assets/audio/click_new_first.wav?v=${APP_VERSION}`,
+        `/assets/audio/click_new.wav?v=${APP_VERSION}`,
+        `/assets/audio/click_new_accent.wav?v=${APP_VERSION}`,
+        `/assets/audio/click_new_first.wav?v=${APP_VERSION}`
       ]);
       expect(refs.firstBufferRef.current).toBeTruthy();
     });
@@ -490,7 +547,7 @@ describe('loadClickBuffers', () => {
         return okResponse();
       });
       await expect(mod.loadClickBuffers({ audioCtx: createFakeAudioContext(), ...makeRefs() })).resolves.toBe(true);
-      expect(fetchedUrls()[1]).toBe('/assets/audio/click_new.wav?cb=1700000000000');
+      expect(fetchedUrls()).toContain(`/assets/audio/click_new.wav?v=${APP_VERSION}`);
     });
 
     test('when even the defaults fail, procedural clicks are generated', async () => {

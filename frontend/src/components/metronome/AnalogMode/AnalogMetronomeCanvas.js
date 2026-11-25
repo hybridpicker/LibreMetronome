@@ -25,7 +25,8 @@ export default function AnalogMetronomeCanvas({
   height,
   tempo,
   isPaused,
-  beatMultiplier = 1
+  beatMultiplier = 1,
+  firstBeatAtRef = null
 }) {
   const canvasRef = useRef(null);
   const startTimeRef = useRef(null);
@@ -67,7 +68,7 @@ export default function AnalogMetronomeCanvas({
       ctx.restore();
     };
 
-    const draw = (angleRad) => {
+    const draw = (angleRad, atRest = false) => {
       const w = width;
       const h = height;
       const margin = Math.round(clamp(w * 0.03, 16, 28));
@@ -168,7 +169,7 @@ export default function AnalogMetronomeCanvas({
       // The weight: a hollow ring at rest, filled blue while it swings.
       ctx.beginPath();
       ctx.arc(0, -armLength * 0.78, weightR, 0, Math.PI * 2);
-      if (isPaused) {
+      if (atRest) {
         ctx.fillStyle = colors.bg;
         ctx.fill();
         ctx.lineWidth = 1.5;
@@ -188,13 +189,17 @@ export default function AnalogMetronomeCanvas({
     };
 
     const animate = () => {
-      if (isPaused) {
+      const now = performance.now();
+      // Without a first beat time (older callers) the swing starts at once
+      const firstBeatAt = firstBeatAtRef ? firstBeatAtRef.current : now;
+      if (isPaused || firstBeatAt === null || now < firstBeatAt) {
+        // At rest until the first beat sounds
         startTimeRef.current = null;
         prevAngle = 0;
-        draw(0);
+        draw(0, true);
       } else {
-        if (startTimeRef.current === null) startTimeRef.current = performance.now();
-        const elapsed = performance.now() - startTimeRef.current;
+        if (startTimeRef.current === null) startTimeRef.current = firstBeatAt;
+        const elapsed = now - startTimeRef.current;
         const beatInterval = (60 / (tempo * beatMultiplier)) * 1000;
         const period = 2 * beatInterval;
         const phase = (elapsed % period) / period;
@@ -207,7 +212,7 @@ export default function AnalogMetronomeCanvas({
 
     animationId = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationId);
-  }, [isPaused, tempo, beatMultiplier, width, height, dpr]);
+  }, [isPaused, tempo, beatMultiplier, width, height, dpr, firstBeatAtRef]);
 
   return (
     <canvas

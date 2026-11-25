@@ -36,6 +36,7 @@ const makeAudioCtx = (state = 'running') => {
 const makeLogic = (overrides = {}) => ({
   audioCtx: makeAudioCtx(),
   reloadSounds: jest.fn().mockResolvedValue(true),
+  prepareStart: jest.fn().mockResolvedValue(true),
   startScheduler: jest.fn(),
   stopScheduler: jest.fn(),
   tapTempo: jest.fn(),
@@ -242,12 +243,10 @@ describe('GridModeMetronome logic wiring', () => {
     expect(args.beatConfig).toEqual([3, 1, 1, 1]);
   });
 
-  test('sounds are preloaded on mount, and a failure is logged without crashing', async () => {
-    logic.reloadSounds = jest.fn().mockRejectedValue(new Error('offline'));
+  test('mounting does not reload the sounds; the app preloads them once', async () => {
     renderGrid();
     await flushPromises();
-    expect(logic.reloadSounds).toHaveBeenCalled();
-    expect(console.error).toHaveBeenCalledWith('Error preloading sounds:', expect.any(Error));
+    expect(logic.reloadSounds).not.toHaveBeenCalled();
   });
 
   test('works when the logic has no reloadSounds', () => {
@@ -293,90 +292,23 @@ describe('GridModeMetronome play / pause', () => {
     expect(screen.getByRole('button', { name: 'Pause' })).toHaveAttribute('aria-pressed', 'true');
   });
 
-  test('starting: reloads sounds, resumes a suspended context, unlocks with a silent buffer, starts', async () => {
-    logic.audioCtx = makeAudioCtx('suspended');
+  test('starting wakes the audio within the tap and shows playing at once', async () => {
     const { props } = renderGrid();
-    logic.reloadSounds.mockClear();
-    await clickPlay('Start');
-    expect(logic.reloadSounds).toHaveBeenCalledTimes(1);
-    expect(logic.audioCtx.resume).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+    // both happen synchronously inside the tap, before any await
+    expect(logic.prepareStart).toHaveBeenCalledTimes(1);
     expect(props.setIsPaused).toHaveBeenCalledWith(false);
-    expect(logic.audioCtx.createBuffer).toHaveBeenCalledWith(1, 1, 22050);
-    expect(logic.audioCtx.source.buffer).toEqual({ id: 'silent' });
-    expect(logic.audioCtx.source.connect).toHaveBeenCalledWith(logic.audioCtx.destination);
-    expect(logic.audioCtx.source.start).toHaveBeenCalledWith(0);
-    expect(logic.startScheduler).toHaveBeenCalledTimes(1);
-    expect(logic.stopScheduler).not.toHaveBeenCalled();
-  });
-
-  test('a running context is not resumed', async () => {
-    renderGrid();
-    await clickPlay('Start');
-    expect(logic.audioCtx.resume).not.toHaveBeenCalled();
-    expect(logic.startScheduler).toHaveBeenCalledTimes(1);
-  });
-
-  test('warns after 100 ms when the context still is not running', async () => {
-    logic.audioCtx = makeAudioCtx('suspended');
-    renderGrid();
-    await clickPlay('Start');
-    expect(console.warn).toHaveBeenCalledWith('[GridMode] Audio context still not running, state: suspended');
-    act(() => { jest.advanceTimersByTime(100); });
-    expect(console.warn).toHaveBeenCalledWith('[GridMode] Audio context still not running after attempted start');
-  });
-
-  test('still starts when reloading the sounds fails', async () => {
-    const { props } = renderGrid();
-    logic.reloadSounds.mockRejectedValue(new Error('sound set missing'));
-    await clickPlay('Start');
-    expect(console.error).toHaveBeenCalledWith('[GridMode] Error reloading sounds:', expect.any(Error));
-    expect(props.setIsPaused).toHaveBeenCalledWith(false);
-    expect(logic.startScheduler).toHaveBeenCalledTimes(1);
-  });
-
-  test('still starts when resuming the context fails', async () => {
-    logic.audioCtx = makeAudioCtx('suspended');
-    logic.audioCtx.resume.mockRejectedValue(new Error('blocked'));
-    const { props } = renderGrid();
-    await clickPlay('Start');
-    expect(props.setIsPaused).toHaveBeenCalledWith(false);
-    expect(logic.startScheduler).toHaveBeenCalledTimes(1);
-  });
-
-  test('without any audio context it alerts and neither unpauses nor starts', async () => {
-    logic.audioCtx = null;
-    const { props } = renderGrid();
-    await clickPlay('Start');
-    expect(window.alert).toHaveBeenCalledWith(
-      'Unable to start audio system. Please try clicking the play button again or refresh the page.'
-    );
-    expect(props.setIsPaused).not.toHaveBeenCalled();
+    await flushPromises();
+    // the isPaused effect of the logic hook starts the scheduler, not the button
     expect(logic.startScheduler).not.toHaveBeenCalled();
   });
 
-  test('a failing silent unlock sound does not prevent the start', async () => {
-    logic.audioCtx.createBuffer.mockImplementation(() => { throw new Error('no buffer'); });
-    renderGrid();
-    await clickPlay('Start');
-    expect(console.warn).toHaveBeenCalledWith('[GridMode] Failed to play silent sound:', expect.any(Error));
-    expect(logic.startScheduler).toHaveBeenCalledTimes(1);
-  });
-
-  test('a failing scheduler start is retried once, then the UI returns to paused', async () => {
-    logic.startScheduler.mockImplementation(() => { throw new Error('boom'); });
+  test('a failing preparation is logged and playback still starts', async () => {
+    logic.prepareStart = jest.fn().mockRejectedValue(new Error('denied'));
     const { props } = renderGrid();
     await clickPlay('Start');
-    expect(logic.startScheduler).toHaveBeenCalledTimes(2);
-    expect(props.setIsPaused.mock.calls.map((c) => c[0])).toEqual([false, false, true]);
-    expect(console.error).toHaveBeenCalledWith('[GridMode] Failed to start after error:', expect.any(Error));
-  });
-
-  test('a scheduler that fails only once ends up running', async () => {
-    logic.startScheduler.mockImplementationOnce(() => { throw new Error('first time'); });
-    const { props } = renderGrid();
-    await clickPlay('Start');
-    expect(logic.startScheduler).toHaveBeenCalledTimes(2);
-    expect(props.setIsPaused.mock.calls.map((c) => c[0])).toEqual([false, false]);
+    expect(console.error).toHaveBeenCalledWith('[GridMode] Error preparing audio:', expect.any(Error));
+    expect(props.setIsPaused).toHaveBeenCalledWith(false);
   });
 
   test('pausing stops the scheduler and pauses the UI', async () => {
@@ -414,7 +346,8 @@ describe('GridModeMetronome registration and global events', () => {
   test('the registered toggle handler starts playback', async () => {
     const { props } = renderGrid();
     await act(async () => { await props.registerTogglePlay.mock.calls[0][0](); });
-    expect(logic.startScheduler).toHaveBeenCalledTimes(1);
+    expect(logic.prepareStart).toHaveBeenCalledTimes(1);
+    expect(props.setIsPaused).toHaveBeenCalledWith(false);
   });
 
   test('the global metronome-toggle-play event toggles playback', async () => {
@@ -424,7 +357,7 @@ describe('GridModeMetronome registration and global events', () => {
       await Promise.resolve();
     });
     await flushPromises();
-    expect(logic.startScheduler).toHaveBeenCalledTimes(1);
+    expect(logic.prepareStart).toHaveBeenCalledTimes(1);
   });
 
   test('an error escaping the play handler is caught and logged by the global listener', async () => {

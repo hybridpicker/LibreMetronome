@@ -1,11 +1,20 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import { initAudioContext, loadClickBuffers, resumeAudioContext } from './audioBuffers';
+import { initAudioContext, resumeAudioContext } from './audioBuffers';
+import { prepareClickBuffers, reloadClickBuffers } from './soundPreload';
 import { useMetronomeRefs } from './references';
 import { createTapTempoLogic } from './tapTempo';
 import { handleMeasureBoundary, shouldMuteThisBeat } from './trainingLogic';
 import { runScheduler, scheduleSubdivision } from './scheduler';
-import { TEMPO_MIN, TEMPO_MAX, SCHEDULER_INTERVAL, STARTUP_LEAD_TIME } from './constants';
-import { getActiveSoundSet } from '../../services/soundSetService';
+import {
+  TEMPO_MIN,
+  TEMPO_MAX,
+  SCHEDULER_INTERVAL,
+  STARTUP_LEAD_TIME,
+  COLD_START_LEAD_TIME
+} from './constants';
+
+// No beat is shown until the first beat sounds
+const NO_BEAT = -1;
 
 export default function useMetronomeLogic({
   tempo,
@@ -53,7 +62,14 @@ export default function useMetronomeLogic({
     // Removed unused ref
   } = useMetronomeRefs();
 
-  const [currentSubdivision, setCurrentSubdivision] = useState(0);
+  const [currentSubdivision, setCurrentSubdivision] = useState(NO_BEAT);
+  // performance.now() at which the first beat reaches the speaker, null when stopped
+  const firstBeatAtRef = useRef(null);
+  // The output just woke up, so the first beat gets a longer lead time
+  const coldStartRef = useRef(false);
+  const startPromiseRef = useRef(null);
+  // Bumped by every stop, so a start that is still preparing knows it was cancelled
+  const startGenerationRef = useRef(0);
 
   // For training mode
   const measureCountRef = useRef(0);
@@ -340,7 +356,7 @@ export default function useMetronomeLogic({
   ]);
   
   // Define audio loading functions first
-  const loadAudioSystem = useCallback(async function() {
+  const loadAudioSystem = useCallback(async function({ force = false } = {}) {
     try {
       // Initialize audio context if needed
       if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
@@ -355,6 +371,7 @@ export default function useMetronomeLogic({
       
       // Resume the context if suspended
       if (audioCtxRef.current.state !== 'running') {
+        coldStartRef.current = true;
         try {
           console.log('Resuming suspended audio context');
           await resumeAudioContext(audioCtxRef.current);
@@ -364,66 +381,26 @@ export default function useMetronomeLogic({
           // Continue anyway, we'll try again later
         }
       }
-      
-      // Load sound buffers if needed
-      if (!normalBufferRef.current || !accentBufferRef.current || !firstBufferRef.current) {
-        console.log('Loading sound buffers');
-        
-        let retryCount = 0;
-        const maxRetries = 2;
-        let soundsLoaded = false;
-        
-        while (!soundsLoaded && retryCount <= maxRetries) {
-          try {
-            // Get sound set (try-catch to handle failure)
-            let soundSet;
-            try {
-              soundSet = await getActiveSoundSet();
-              console.log('Retrieved sound set:', soundSet ? soundSet.name : 'default');
-            } catch (err) {
-              console.warn('Error getting active sound set, using default:', err);
-            }
-            
-            // Load sounds with the context
-            const loadResult = await loadClickBuffers({
-              audioCtx: audioCtxRef.current,
-              normalBufferRef,
-              accentBufferRef,
-              firstBufferRef,
-              soundSet
-            });
-            
-            if (loadResult) {
-              soundsLoaded = true;
-              console.log('Sound buffers loaded successfully');
-              
-              // Try to play a silent sound to help unlock audio
-              try {
-                const silentBuffer = audioCtxRef.current.createBuffer(1, 1, 22050);
-                const source = audioCtxRef.current.createBufferSource();
-                source.buffer = silentBuffer;
-                source.connect(audioCtxRef.current.destination);
-                source.start();
-                source.stop(0.001);
-              } catch (unlockErr) {
-                console.warn('Audio unlock attempt failed:', unlockErr);
-              }
-            } else {
-              console.error(`Sound loading attempt ${retryCount + 1} failed`);
-              retryCount++;
-            }
-          } catch (err) {
-            console.error(`Error in sound loading attempt ${retryCount + 1}:`, err);
-            retryCount++;
-          }
-        }
-        
-        if (!soundsLoaded) {
-          console.error('Failed to load sounds after multiple attempts');
-          return false;
-        }
+
+      const refs = { audioCtx: audioCtxRef.current, normalBufferRef, accentBufferRef, firstBufferRef };
+      const soundsReady = force ? await reloadClickBuffers(refs) : await prepareClickBuffers(refs);
+      if (!soundsReady) {
+        console.error('No click sounds could be prepared');
+        return false;
       }
-      
+
+      // Try to play a silent sound to help unlock audio
+      try {
+        const silentBuffer = audioCtxRef.current.createBuffer(1, 1, 22050);
+        const source = audioCtxRef.current.createBufferSource();
+        source.buffer = silentBuffer;
+        source.connect(audioCtxRef.current.destination);
+        source.start();
+        source.stop(0.001);
+      } catch (unlockErr) {
+        console.warn('Audio unlock attempt failed:', unlockErr);
+      }
+
       return true;
     } catch (err) {
       console.error('Error in loadAudioSystem:', err);
@@ -437,6 +414,8 @@ export default function useMetronomeLogic({
       lookaheadRef.current = null;
     }
     schedulerRunningRef.current = false;
+    startGenerationRef.current += 1;
+    firstBeatAtRef.current = null;
     for (const node of nodeRefs.current) {
       try {
         if (node.cancel) {
@@ -453,93 +432,117 @@ export default function useMetronomeLogic({
     nodeRefs.current = [];
   }, [lookaheadRef, nodeRefs, schedulerRunningRef]);
   
-  const startScheduler = useCallback(async function() {
-    if (schedulerRunningRef.current) return;
-    stopScheduler();
-    
-    try {
-      // Initialize audio system
-      const audioReady = await loadAudioSystem();
-      if (!audioReady) {
-        console.warn('Audio initialization was not fully successful');
-        // We'll continue anyway and try our best
-      }
-      
-      // Verify audio context exists
-      if (!audioCtxRef.current) {
-        console.error('No audio context after initialization');
-        return;
-      }
-      
-      // Try to resume audio one more time if needed
-      if (audioCtxRef.current.state !== 'running') {
-        try {
-          await resumeAudioContext(audioCtxRef.current);
-          console.log('Audio context final state:', audioCtxRef.current.state);
-        } catch (e) {
-          console.warn('Final resume attempt failed:', e);
-          // Continue anyway
-        }
-      }
-      
-      // Start the scheduler with what we have
-      console.log('Starting scheduler (audio state:', audioCtxRef.current.state,
-                 ', buffers ready:', !!normalBufferRef.current && !!accentBufferRef.current && !!firstBufferRef.current, ')');
-      
-      schedulerRunningRef.current = true;
-      const now = audioCtxRef.current ? audioCtxRef.current.currentTime : performance.now()/1000;
-      currentSubRef.current = 0;
-      setCurrentSubdivision(0);
-      nextNoteTimeRef.current = now + STARTUP_LEAD_TIME;
-      currentSubStartRef.current = nextNoteTimeRef.current;
-      currentSubIntervalRef.current = getCurrentSubIntervalSec(0);
-      playedBeatTimesRef.current = [];
-      
-      lookaheadRef.current = setInterval(
-        () => doSchedulerLoopRef.current && doSchedulerLoopRef.current(),
-        SCHEDULER_INTERVAL
-      );
-    } catch (err) {
-      console.error('Error starting metronome:', err);
-      
-      // Try to recover with minimal setup
-      try {
-        schedulerRunningRef.current = true;
-        const now = performance.now()/1000;
-        currentSubRef.current = 0;
-        setCurrentSubdivision(0);
-        nextNoteTimeRef.current = now + STARTUP_LEAD_TIME;
-        currentSubStartRef.current = nextNoteTimeRef.current;
-        
-        lookaheadRef.current = setInterval(
-          () => doSchedulerLoopRef.current && doSchedulerLoopRef.current(),
-          SCHEDULER_INTERVAL
-        );
-      } catch (recoveryErr) {
-        console.error('Failed to recover after scheduler error:', recoveryErr);
-      }
-    }
+  const beginScheduling = useCallback(function(audioCtx) {
+    const leadTime = coldStartRef.current ? COLD_START_LEAD_TIME : STARTUP_LEAD_TIME;
+    coldStartRef.current = false;
+    const now = audioCtx ? audioCtx.currentTime : performance.now() / 1000;
+    schedulerRunningRef.current = true;
+    currentSubRef.current = 0;
+    setCurrentSubdivision(NO_BEAT);
+    nextNoteTimeRef.current = now + leadTime;
+    currentSubStartRef.current = nextNoteTimeRef.current;
+    currentSubIntervalRef.current = getCurrentSubIntervalSec(0);
+    playedBeatTimesRef.current = [];
+
+    // The pendulum starts swinging when the first beat leaves the speaker
+    const outputLatency = audioCtx && Number.isFinite(audioCtx.outputLatency)
+      ? audioCtx.outputLatency
+      : (audioCtx && Number.isFinite(audioCtx.baseLatency) ? audioCtx.baseLatency : 0);
+    firstBeatAtRef.current = performance.now() + (leadTime + outputLatency) * 1000;
+
+    lookaheadRef.current = setInterval(
+      () => doSchedulerLoopRef.current && doSchedulerLoopRef.current(),
+      SCHEDULER_INTERVAL
+    );
   }, [
-    audioCtxRef, 
     currentSubIntervalRef,
     currentSubRef,
     currentSubStartRef,
     doSchedulerLoopRef,
     getCurrentSubIntervalSec,
-    loadAudioSystem,
     lookaheadRef,
     nextNoteTimeRef,
+    playedBeatTimesRef,
+    schedulerRunningRef
+  ]);
+
+  const startScheduler = useCallback(function() {
+    if (schedulerRunningRef.current) return Promise.resolve();
+    // Play and the isPaused effect both start the scheduler; they share one start
+    if (startPromiseRef.current) return startPromiseRef.current;
+    stopScheduler();
+    const generation = startGenerationRef.current;
+
+    const start = (async () => {
+      try {
+        // Initialize audio system
+        const audioReady = await loadAudioSystem();
+        if (!audioReady) {
+          console.warn('Audio initialization was not fully successful');
+          // We'll continue anyway and try our best
+        }
+
+        // Verify audio context exists
+        if (!audioCtxRef.current) {
+          console.error('No audio context after initialization');
+          return;
+        }
+
+        // Try to resume audio one more time if needed
+        if (audioCtxRef.current.state !== 'running') {
+          try {
+            await resumeAudioContext(audioCtxRef.current);
+            console.log('Audio context final state:', audioCtxRef.current.state);
+          } catch (e) {
+            console.warn('Final resume attempt failed:', e);
+            // Continue anyway
+          }
+        }
+
+        // Stopped while the audio was still getting ready
+        if (generation !== startGenerationRef.current) return;
+
+        console.log('Starting scheduler (audio state:', audioCtxRef.current.state,
+                   ', buffers ready:', !!normalBufferRef.current && !!accentBufferRef.current && !!firstBufferRef.current, ')');
+        beginScheduling(audioCtxRef.current);
+      } catch (err) {
+        console.error('Error starting metronome:', err);
+        if (generation !== startGenerationRef.current) return;
+        // Try to recover with minimal setup on the performance.now() clock
+        try {
+          beginScheduling(null);
+        } catch (recoveryErr) {
+          console.error('Failed to recover after scheduler error:', recoveryErr);
+        }
+      }
+    })().finally(() => {
+      if (startPromiseRef.current === start) startPromiseRef.current = null;
+    });
+    startPromiseRef.current = start;
+    return start;
+  }, [
+    audioCtxRef,
+    beginScheduling,
+    loadAudioSystem,
     normalBufferRef,
     accentBufferRef,
     firstBufferRef,
-    playedBeatTimesRef,
     schedulerRunningRef,
     stopScheduler
   ]);
 
+  /**
+   * Wakes the audio output and gets the clicks ready. Call it straight from the
+   * play gesture: iOS and Android only start audio inside a user gesture.
+   */
+  const prepareStart = useCallback(async function() {
+    const ready = await loadAudioSystem();
+    return ready && audioCtxRef.current?.state === 'running';
+  }, [audioCtxRef, loadAudioSystem]);
+
   const reloadSounds = useCallback(async function() {
     console.log('Reloading sounds...');
-    return await loadAudioSystem();
+    return await loadAudioSystem({ force: true });
   }, [loadAudioSystem]);
 
   // Use useMemo to create the tapTempo handler only once so that its internal state (tapTimes) persists
@@ -579,6 +582,8 @@ export default function useMetronomeLogic({
     currentSubIntervalRef,
     startScheduler,
     stopScheduler,
+    prepareStart,
+    firstBeatAtRef,
     measureCountRef,
     muteMeasureCountRef,
     isSilencePhaseRef,

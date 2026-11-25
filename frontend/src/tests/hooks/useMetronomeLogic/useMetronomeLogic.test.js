@@ -1,20 +1,16 @@
 import { renderHook, act } from '@testing-library/react';
 import useMetronomeLogic from '../../../hooks/useMetronomeLogic';
-import {
-  initAudioContext,
-  loadClickBuffers,
-  resumeAudioContext
-} from '../../../hooks/useMetronomeLogic/audioBuffers';
-import { getActiveSoundSet } from '../../../services/soundSetService';
+import { initAudioContext, resumeAudioContext } from '../../../hooks/useMetronomeLogic/audioBuffers';
+import { prepareClickBuffers, reloadClickBuffers } from '../../../hooks/useMetronomeLogic/soundPreload';
 import { createFakeAudioContext, silenceConsole } from '../../helpers/metronome-fakeAudio';
 
 jest.mock('../../../hooks/useMetronomeLogic/audioBuffers', () => ({
   initAudioContext: jest.fn(),
-  resumeAudioContext: jest.fn(),
-  loadClickBuffers: jest.fn()
+  resumeAudioContext: jest.fn()
 }));
-jest.mock('../../../services/soundSetService', () => ({
-  getActiveSoundSet: jest.fn()
+jest.mock('../../../hooks/useMetronomeLogic/soundPreload', () => ({
+  prepareClickBuffers: jest.fn(),
+  reloadClickBuffers: jest.fn()
 }));
 
 // Capture the real refs object so tests can inspect the tracked audio nodes.
@@ -99,13 +95,14 @@ beforeEach(() => {
     c.state = 'running';
     return true;
   });
-  loadClickBuffers.mockImplementation(async ({ normalBufferRef, accentBufferRef, firstBufferRef }) => {
+  const fillBuffers = async ({ normalBufferRef, accentBufferRef, firstBufferRef }) => {
     normalBufferRef.current = { name: 'normal' };
     accentBufferRef.current = { name: 'accent' };
     firstBufferRef.current = { name: 'first' };
     return true;
-  });
-  getActiveSoundSet.mockImplementation(async () => ({ id: 'set-1', name: 'Set One' }));
+  };
+  prepareClickBuffers.mockImplementation(fillBuffers);
+  reloadClickBuffers.mockImplementation(fillBuffers);
   delete window.isSilencePhaseRef;
 });
 
@@ -483,13 +480,12 @@ describe('training: speed trainer', () => {
 });
 
 describe('audio system loading', () => {
-  test('creates the context, loads the buffers once and plays a silent unlock buffer', async () => {
+  test('creates the context, prepares the clicks once and plays a silent unlock buffer', async () => {
     await start();
     expect(initAudioContext).toHaveBeenCalledTimes(1);
-    expect(getActiveSoundSet).toHaveBeenCalledTimes(1);
-    expect(loadClickBuffers).toHaveBeenCalledTimes(1);
-    expect(loadClickBuffers.mock.calls[0][0].soundSet).toEqual({ id: 'set-1', name: 'Set One' });
-    expect(loadClickBuffers.mock.calls[0][0].audioCtx).toBe(ctx);
+    expect(prepareClickBuffers).toHaveBeenCalledTimes(1);
+    expect(prepareClickBuffers.mock.calls[0][0].audioCtx).toBe(ctx);
+    expect(reloadClickBuffers).not.toHaveBeenCalled();
     expect(ctx.createBuffer).toHaveBeenCalledWith(1, 1, 22050);
     expect(ctx.sources[0].start).toHaveBeenCalledWith();
     expect(ctx.sources[0].stop).toHaveBeenCalledWith(0.001);
@@ -549,38 +545,24 @@ describe('audio system loading', () => {
     expect(console.error).toHaveBeenCalledWith('Error in loadAudioSystem:', expect.any(Error));
   });
 
-  test('retries loading three times in total, then gives up but still runs the scheduler without clicks', async () => {
-    loadClickBuffers.mockImplementation(async () => false);
+  test('without any clicks the scheduler still runs, silently, with the visual beat', async () => {
+    prepareClickBuffers.mockImplementation(async () => false);
     const beatEvents = listen('metronome-beat');
     await start();
-    expect(loadClickBuffers).toHaveBeenCalledTimes(3);
+    expect(console.error).toHaveBeenCalledWith('No click sounds could be prepared');
     expect(console.warn).toHaveBeenCalledWith('Audio initialization was not fully successful');
     advance(1.2);
     expect(clicks()).toHaveLength(0); // no buffers, nothing audible
     expect(beatEvents.length).toBeGreaterThanOrEqual(2); // but the visual beat continues
   });
 
-  test('a throwing loader is retried and a later success is accepted', async () => {
-    loadClickBuffers
-      .mockImplementationOnce(async () => { throw new Error('decode failed'); })
-      .mockImplementation(async ({ normalBufferRef, accentBufferRef, firstBufferRef }) => {
-        normalBufferRef.current = { name: 'normal' };
-        accentBufferRef.current = { name: 'accent' };
-        firstBufferRef.current = { name: 'first' };
-        return true;
-      });
+  test('a throwing preparation is contained', async () => {
+    reloadClickBuffers.mockImplementation(async () => { throw new Error('decode failed'); });
     const { result } = await start({ isPaused: true });
     let ok;
     await act(async () => { ok = await result.current.reloadSounds(); });
-    expect(ok).toBe(true);
-    expect(loadClickBuffers).toHaveBeenCalledTimes(2);
-  });
-
-  test('falls back to the default sound set when the active set cannot be read', async () => {
-    getActiveSoundSet.mockImplementation(async () => { throw new Error('api down'); });
-    await start();
-    expect(console.warn).toHaveBeenCalledWith('Error getting active sound set, using default:', expect.any(Error));
-    expect(loadClickBuffers.mock.calls[0][0].soundSet).toBeUndefined();
+    expect(ok).toBe(false);
+    expect(console.error).toHaveBeenCalledWith('Error in loadAudioSystem:', expect.any(Error));
   });
 
   test('a failing unlock buffer is only a warning', async () => {
@@ -592,14 +574,78 @@ describe('audio system loading', () => {
     expect(console.warn).toHaveBeenCalledWith('Audio unlock attempt failed:', expect.any(Error));
   });
 
-  test('reloadSounds skips loading when all buffers are present and reloads when one is missing', async () => {
+  test('reloadSounds loads the active sound set without the start time limit', async () => {
     const { result } = await start();
-    loadClickBuffers.mockClear();
     await act(async () => { await result.current.reloadSounds(); });
-    expect(loadClickBuffers).not.toHaveBeenCalled();
-    mockCaptured.refs.accentBufferRef.current = null;
-    await act(async () => { await result.current.reloadSounds(); });
-    expect(loadClickBuffers).toHaveBeenCalledTimes(1);
+    expect(reloadClickBuffers).toHaveBeenCalledTimes(1);
+    expect(reloadClickBuffers.mock.calls[0][0].audioCtx).toBe(ctx);
+    expect(prepareClickBuffers).toHaveBeenCalledTimes(1); // only the start
+  });
+
+  test('prepareStart wakes the context and reports whether audio runs', async () => {
+    ctx.state = 'suspended';
+    const { result } = await start({ isPaused: true });
+    let ready;
+    await act(async () => { ready = await result.current.prepareStart(); });
+    expect(ready).toBe(true);
+    expect(resumeAudioContext).toHaveBeenCalledWith(ctx);
+    expect(prepareClickBuffers).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('the first beat', () => {
+  test('no beat is shown until the first beat sounds', async () => {
+    const { result } = await start({ tempo: 120 });
+    expect(result.current.currentSubdivision).toBe(-1);
+    advance(0.04);
+    expect(result.current.currentSubdivision).toBe(0);
+  });
+
+  test('firstBeatAtRef is the moment the first beat reaches the speaker', async () => {
+    jest.spyOn(performance, 'now').mockReturnValue(1000);
+    ctx.outputLatency = 0.05;
+    const { result, rerender } = await start({ tempo: 120 });
+    expect(result.current.firstBeatAtRef.current).toBeCloseTo(1000 + (LEAD + 0.05) * 1000, 6);
+    rerender(baseProps({ isPaused: true }));
+    expect(result.current.firstBeatAtRef.current).toBeNull();
+  });
+
+  test('after the context was just woken up the first beat gets 100 ms lead time', async () => {
+    ctx.state = 'suspended';
+    await start({ tempo: 120 });
+    advance(0.2);
+    expect(clicks()[0].when).toBeCloseTo(T0 + 0.1, 6);
+  });
+
+  test('play and the isPaused effect share one start, so pausing really stops', async () => {
+    const view = renderHook((p) => useMetronomeLogic(p), { initialProps: baseProps() });
+    act(() => { view.result.current.startScheduler(); });
+    await flush();
+    expect(prepareClickBuffers).toHaveBeenCalledTimes(1);
+    advance(0.6);
+    view.rerender(baseProps({ isPaused: true }));
+    const startedBefore = clicks().length;
+    advance(2);
+    expect(clicks()).toHaveLength(startedBefore);
+  });
+
+  test('a pause while the audio is still getting ready cancels the start', async () => {
+    let finishPreparing;
+    prepareClickBuffers.mockImplementation((refs) => new Promise((resolve) => {
+      finishPreparing = () => {
+        refs.normalBufferRef.current = { name: 'normal' };
+        refs.accentBufferRef.current = { name: 'accent' };
+        refs.firstBufferRef.current = { name: 'first' };
+        resolve(true);
+      };
+    }));
+    const { rerender } = await start({ tempo: 120 });
+    rerender(baseProps({ isPaused: true }));
+    finishPreparing();
+    await flush();
+    advance(1);
+    expect(clicks()).toHaveLength(0);
+    expect(mockCaptured.refs.schedulerRunningRef.current).toBe(false);
   });
 });
 

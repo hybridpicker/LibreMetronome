@@ -1,4 +1,5 @@
 // src/hooks/useMetronomeLogic/audioBuffers.js
+import packageJson from '../../../package.json';
 
 // Use an environment variable with a fallback to localhost for development
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
@@ -155,6 +156,10 @@ export const DEFAULT_SOUND_PATHS = {
   first: '/assets/audio/click_new_first.wav'
 };
 
+const BUNDLED_SOUND_DIR = '/assets/audio/';
+// Bundled clicks change only with an app release
+const APP_VERSION = packageJson.version;
+
 const SOUND_FETCH_TIMEOUT_MS = 10000;
 // Anything smaller cannot be a valid encoded audio file
 const MIN_AUDIO_BYTES = 100;
@@ -174,6 +179,11 @@ function resolveSoundUrl(url) {
     return `${BACKEND_URL}${url}`;
   }
   return url;
+}
+
+function withVersion(url, version) {
+  if (version === undefined || version === null || version === '') return url;
+  return `${url}${url.includes('?') ? '&' : '?'}v=${encodeURIComponent(version)}`;
 }
 
 /** Bundled click that stands in for a backend sound which cannot be loaded. */
@@ -247,7 +257,7 @@ async function decodeSound(response, audioCtx, fetchUrl, url) {
  * Loads a single audio file and decodes it into a Web Audio buffer.
  * Backend sounds fall back to the bundled clicks when fetching or decoding fails.
  */
-async function loadSound(url, audioCtx) {
+async function loadSound(url, audioCtx, version) {
   try {
     console.log(`Loading sound: ${url}`);
 
@@ -257,9 +267,8 @@ async function loadSound(url, audioCtx) {
       throw new Error("Invalid URL provided");
     }
 
-    // Add a timestamp to bust cache if needed
-    const resolvedUrl = resolveSoundUrl(url);
-    const fetchUrl = `${resolvedUrl}${resolvedUrl.includes('?') ? '&' : '?'}cb=${Date.now()}`;
+    // A version tag lets the browser cache a sound until it changes
+    const fetchUrl = withVersion(resolveSoundUrl(url), url.startsWith(BUNDLED_SOUND_DIR) ? APP_VERSION : version);
     console.log(`Fetching sound from: ${fetchUrl}`);
 
     const isBackendSound = url.includes(BACKEND_SOUND_DIR);
@@ -330,7 +339,9 @@ const builtInSoundPaths = (prefix) => ({
 const soundSetPaths = (soundSet) => ({
   normal: soundSet.normal_beat_sound_url || DEFAULT_SOUND_PATHS.normal,
   accent: soundSet.accent_sound_url || DEFAULT_SOUND_PATHS.accent,
-  first: soundSet.first_beat_sound_url || DEFAULT_SOUND_PATHS.first
+  first: soundSet.first_beat_sound_url || DEFAULT_SOUND_PATHS.first,
+  // The sound set changes its files only together with its update time
+  version: soundSet.updated_at
 });
 
 /**
@@ -397,21 +408,86 @@ function createProceduralClick(audioCtx, frequency, amplitude) {
 }
 
 /**
- * The bundled samples should always be available, but a procedural click
- * prevents a professional practice session from failing silently if WebKit
- * cannot fetch or decode an asset.
+ * Synthesized clicks need no file, so they are ready at once. They stand in
+ * when not even the bundled samples could be fetched or decoded.
+ * @returns {{normal: AudioBuffer, accent: AudioBuffer, first: AudioBuffer}|null}
  */
-function loadProceduralClicks(audioCtx, normalBufferRef, accentBufferRef, firstBufferRef) {
+export function createProceduralClickSet(audioCtx) {
   try {
     const { normal, accent, first } = PROCEDURAL_CLICKS;
-    normalBufferRef.current = createProceduralClick(audioCtx, normal.frequency, normal.amplitude);
-    accentBufferRef.current = createProceduralClick(audioCtx, accent.frequency, accent.amplitude);
-    firstBufferRef.current = createProceduralClick(audioCtx, first.frequency, first.amplitude);
+    const clicks = {
+      normal: createProceduralClick(audioCtx, normal.frequency, normal.amplitude),
+      accent: createProceduralClick(audioCtx, accent.frequency, accent.amplitude),
+      first: createProceduralClick(audioCtx, first.frequency, first.amplitude)
+    };
     console.warn('Using procedural metronome clicks as an audio fallback');
-    return true;
+    return clicks;
   } catch (fallbackError) {
     console.error('Unable to create procedural fallback clicks:', fallbackError);
-    return false;
+    return null;
+  }
+}
+
+// Decoded click sets per AudioContext, keyed by their files and version.
+// Every mode reuses them, so each set is fetched and decoded once per session.
+const clickSetCache = new WeakMap();
+
+function cacheFor(audioCtx) {
+  let cache = clickSetCache.get(audioCtx);
+  if (!cache) {
+    cache = new Map();
+    clickSetCache.set(audioCtx, cache);
+  }
+  return cache;
+}
+
+/**
+ * Fetches and decodes the three files of one click set, all at once. Concurrent
+ * and later calls for the same files share one load; a failed load is dropped
+ * from the cache so the next call tries again.
+ * @returns {Promise<{normal: AudioBuffer, accent: AudioBuffer, first: AudioBuffer}>}
+ */
+function loadClickFiles(audioCtx, { normal, accent, first, version }) {
+  const cache = cacheFor(audioCtx);
+  const key = JSON.stringify([normal, accent, first, version ?? null]);
+  if (cache.has(key)) return cache.get(key);
+
+  const load = Promise.all([
+    loadSound(normal, audioCtx, version),
+    loadSound(accent, audioCtx, version),
+    loadSound(first, audioCtx, version)
+  ]).then(([normalBuffer, accentBuffer, firstBuffer]) => {
+    if (!normalBuffer || !accentBuffer || !firstBuffer) {
+      throw new Error('Failed to load one or more sound buffers');
+    }
+    return { normal: normalBuffer, accent: accentBuffer, first: firstBuffer };
+  });
+  cache.set(key, load);
+  load.catch(() => {
+    if (cache.get(key) === load) cache.delete(key);
+  });
+  return load;
+}
+
+/**
+ * Loads one click set: the given sound set, the cookie preference, or with
+ * `ignorePreferences` the bundled clicks. Rejects when a file cannot be loaded.
+ */
+export function loadClickSet({ audioCtx, soundSet = null, ignorePreferences = false }) {
+  const cookieSoundSetId = ignorePreferences ? null : getActiveSoundSetIdFromCookie();
+  const paths = resolveSoundPaths(ignorePreferences ? null : soundSet, cookieSoundSetId);
+  console.log(`Sound paths:`, paths);
+  return loadClickFiles(audioCtx, paths);
+}
+
+/** Puts a click set into the three buffer refs the schedulers read. */
+export function applyClickSet(clicks, { normalBufferRef, accentBufferRef, firstBufferRef }) {
+  normalBufferRef.current = clicks.normal;
+  accentBufferRef.current = clicks.accent;
+  firstBufferRef.current = clicks.first;
+  // Make the loaded buffers available for the debug helper
+  if (window.metronomeDebug) {
+    window.metronomeDebug.audioBuffers = { ...clicks };
   }
 }
 
@@ -433,64 +509,28 @@ export async function loadClickBuffers({
     console.error("No audio context provided to loadClickBuffers");
     return false;
   }
-
-  // Check cookie first for most consistent sound selection
-  const cookieSoundSetId = ignorePreferences ? null : getActiveSoundSetIdFromCookie();
-  if (ignorePreferences) soundSet = null;
-
-  const { normal: normalPath, accent: accentPath, first: firstPath } = resolveSoundPaths(soundSet, cookieSoundSetId);
-  console.log(`Sound paths:`, { normalPath, accentPath, firstPath });
+  const refs = { normalBufferRef, accentBufferRef, firstBufferRef };
 
   try {
-    // Load sounds sequentially instead of in parallel for better reliability
-    console.log("Loading normal beat sound...");
-    const normal = await loadSound(normalPath, audioCtx);
-    
-    console.log("Loading accent sound...");
-    const accent = await loadSound(accentPath, audioCtx);
-    
-    console.log("Loading first beat sound...");
-    const first = await loadSound(firstPath, audioCtx);
-
-    if (!normal || !accent || !first) {
-      throw new Error('Failed to load one or more sound buffers');
-    }
-
-    normalBufferRef.current = normal;
-    accentBufferRef.current = accent;
-    firstBufferRef.current = first;
-    
+    const clicks = await loadClickSet({ audioCtx, soundSet, ignorePreferences });
+    applyClickSet(clicks, refs);
+    if (window.metronomeDebug) window.metronomeDebug.audioContext = audioCtx;
     console.log("All sound buffers loaded successfully!");
-    
-    // Make the loaded buffers available for the debug helper
-    if (window.metronomeDebug) {
-      window.metronomeDebug.audioBuffers = { normal, accent, first };
-      window.metronomeDebug.audioContext = audioCtx;
-    }
-    
     return true;
   } catch (error) {
     console.error("Error loading sound buffers:", error);
-    
+
     // Try loading default sounds as fallback if something failed with custom sounds
-    if (!ignorePreferences && (soundSet || cookieSoundSetId)) {
+    const hadPreference = Boolean(soundSet) || Boolean(getActiveSoundSetIdFromCookie());
+    if (!ignorePreferences && hadPreference) {
       console.log("Falling back to default sounds...");
-      try {
-        // Ignore a stale preference on this retry. Without this guard, a
-        // missing custom set recursively requests the same unavailable URL.
-        return await loadClickBuffers({
-          audioCtx,
-          normalBufferRef,
-          accentBufferRef,
-          firstBufferRef,
-          soundSet: null,
-          ignorePreferences: true
-        });
-      } catch (fallbackError) {
-        console.error("Even fallback sounds failed to load:", fallbackError);
-        return false;
-      }
+      // Ignore a stale preference on this retry. Without this guard, a
+      // missing custom set recursively requests the same unavailable URL.
+      return loadClickBuffers({ ...refs, audioCtx, soundSet: null, ignorePreferences: true });
     }
-    return loadProceduralClicks(audioCtx, normalBufferRef, accentBufferRef, firstBufferRef);
+    const procedural = createProceduralClickSet(audioCtx);
+    if (!procedural) return false;
+    applyClickSet(procedural, refs);
+    return true;
   }
 }
