@@ -1,6 +1,6 @@
 # LibreMetronome Privacy Policy — DRAFT for https://libremetronome.com/privacy
 
-Status: draft in the repo. Publishing on the server is a separate task for a session on the server (the server), not done from this checkout. The owner must review the draft and fill in the controller details. Not legal advice.
+Status: draft in the repo. Publishing on the server is a separate task for a session on the server, not done from this checkout. The owner must review the draft and fill in the controller details. Not legal advice.
 
 ---
 

@@ -44,7 +44,7 @@ Befunde aus dem Code, Stand 2026-10-22. **Erledigt am 2026-10-24 (Android, lokal
 1. **Klänge und API ohne Server:** `config.js`, `audioBuffers.js` und `soundSetService.js` nehmen `REACT_APP_BACKEND_URL`, sonst `http://localhost:8000` bzw. in Produktion `window.location.origin`. In der App ist der Ursprung `capacitor://localhost` (iOS) bzw. `https://localhost` (Android), Anfragen an `/api/…` laufen ins Leere. Vorschlag: für App-Builds die Klangsätze fest mitliefern, API-Aufrufe abschalten (Build-Schalter, z. B. `REACT_APP_NATIVE=1` oder `Capacitor.isNativePlatform()`), damit die App **keine Netzanfragen** macht. Falls doch online nachgeladen werden soll: nur von `https://libremetronome.com`, und dann ändern sich die Datenschutzangaben (Abschnitt 5).
 2. **Spenden ausblenden:** `SupportButton`, `SupportPage` und `supportUtils.js` (Stripe-Zahlungslink) im App-Build nicht anzeigen (Abschnitt 6).
 3. **Hintergrundmodi iOS:** `Info.plist` meldet `audio` und `bluetooth-central`. `audio` ist für ein Metronom begründbar. `bluetooth-central` nutzt die App nicht (kein Bluetooth-Plugin, keine `NSBluetoothAlwaysUsageDescription`); nicht benötigte Hintergrundmodi sind ein häufiger Ablehnungsgrund (Richtlinie 2.5.4). Vorschlag: entfernen.
-4. **Versionen:** Android `versionCode 1`/`versionName "1.0"` fest in `android/app/build.gradle`, iOS `MARKETING_VERSION = 1.0`, `package.json` sagt `0.6.0`. Vorschlag: eine Quelle (z. B. `package.json`), Build-Nummer wächst mit jedem Upload, gemeinsam für beide Plattformen (wie bei another app Connect).
+4. **Versionen:** Android `versionCode 1`/`versionName "1.0"` fest in `android/app/build.gradle`, iOS `MARKETING_VERSION = 1.0`, `package.json` sagt `0.6.0`. Vorschlag: eine Quelle (z. B. `package.json`), Build-Nummer wächst mit jedem Upload, gemeinsam für beide Plattformen.
 5. **Release-Signatur Android:** heute nur Debug-Signatur. Signatur aus einer `key.properties` außerhalb des Repos (Abschnitt 7), nie im Repo.
 6. **Exportkontrolle iOS:** `ITSAppUsesNonExemptEncryption` fehlt in `Info.plist`, App Store Connect fragt dann bei jedem Upload. Die App verschlüsselt nichts selbst (höchstens HTTPS des Betriebssystems); nach Apples Tabelle wäre `false` passend (11.1, Einordnung ohne rechtliche Bewertung).
 7. **Privacy Manifest:** prüfen, ob das App-Target ein `PrivacyInfo.xcprivacy` braucht (z. B. für `UserDefaults` über Capacitor-Plugins). Erster Upload zeigt Beanstandungen.
@@ -93,7 +93,7 @@ Ablage für Store-Texte und Screenshots: `docs/store/` im Repo (keine Geheimniss
 
 **Exportkontrolle:** siehe Abschnitt 2, Punkt 6.
 
-**EU-Händlerstatus (DSA):** Apple verlangt von jedem Konto eine Erklärung „Händler“ oder „kein Händler“. Händler zeigen Adresse (oder Postfach), Telefon und E-Mail öffentlich auf der Produktseite in der EU. Apple nennt als Anzeichen für Händler u. a. Einnahmen aus der App; Hobby-Apps ohne Absicht zur Vermarktung sind „vielleicht“ keine Händler. Die Erklärung gilt für das ganze Konto, also auch für another app Connect. Google Play hat eine ähnliche Abfrage; die Play-Hilfeseite dazu wurde nicht gefunden **[offen]**. **Entscheidung des Eigentümers**, bei Zweifel mit Beratung.
+**EU-Händlerstatus (DSA):** Apple verlangt von jedem Konto eine Erklärung „Händler“ oder „kein Händler“. Händler zeigen Adresse (oder Postfach), Telefon und E-Mail öffentlich auf der Produktseite in der EU. Apple nennt als Anzeichen für Händler u. a. Einnahmen aus der App; Hobby-Apps ohne Absicht zur Vermarktung sind „vielleicht“ keine Händler. Die Erklärung gilt für das ganze Konto, also für alle Apps darin. Google Play hat eine ähnliche Abfrage; die Play-Hilfeseite dazu wurde nicht gefunden **[offen]**. **Entscheidung des Eigentümers**, bei Zweifel mit Beratung.
 
 ## 6. Spenden und Zahlungen
 
@@ -110,7 +110,7 @@ Vorschlag Ablageort: `~/libremetronome-release/` (`chmod 700`, nicht in iCloud/D
 
 **Android**
 - Play App Signing (Standard für neue Apps): Google erzeugt und verwahrt den App-Signaturschlüssel, der Eigentümer hat nur den **Upload-Schlüssel**; ein verlorener Upload-Schlüssel lässt sich in der Play Console zurücksetzen.
-- Eigenen Upload-Schlüssel je App erzeugen (einmalig, Eigentümer; nicht den von another app Connect wiederverwenden):
+- Eigenen Upload-Schlüssel je App erzeugen (einmalig, Eigentümer; nicht den einer anderen App wiederverwenden):
   ```bash
   keytool -genkeypair -v -keystore ~/libremetronome-release/upload.jks -alias upload -keyalg RSA -keysize 4096 -validity 10000
   ```
@@ -128,7 +128,7 @@ Kein CI mit Schlüsseln, solange nicht ausdrücklich entschieden.
 ### Google Play
 
 1. Play Console (Konto „Schoensgibl.com“): App anlegen (Name, Standardsprache Englisch, App, **bezahlt**). Preis 1,99 € setzen; Händlerprofil muss aktiv sein (Abschnitt 13). **Ab dem ersten Upload ist die Kennung belegt.**
-2. **Interner Test:** E-Mail-Liste (bis 100), AAB hochladen, veröffentlichen, Teilnahme-Link verschicken. Keine Standardprüfung, kein Datensicherheitsformular nötig. Bis die App eingerichtet und geprüft ist, zeigt Play einen vorläufigen Namen wie „com.hybridpicker.libremetronome (unreviewed)“ (bei another app Connect so beobachtet).
+2. **Interner Test:** E-Mail-Liste (bis 100), AAB hochladen, veröffentlichen, Teilnahme-Link verschicken. Keine Standardprüfung, kein Datensicherheitsformular nötig. Bis die App eingerichtet und geprüft ist, zeigt Play einen vorläufigen Namen wie „com.hybridpicker.libremetronome (unreviewed)“.
 3. **Geschlossener Test (Pflicht für private Konten, die nach 2023-11-13 angelegt wurden):** mindestens **12 Testpersonen**, die **14 Tage ununterbrochen** eingetragen sind. Wer austritt und wieder eintritt, beginnt neu. Dafür müssen Store-Eintrag, Datensicherheitsformular, Altersfreigabe und Datenschutz-URL fertig sein. Der interne Test zählt nicht. Tipp: dieselbe Testgruppe (z. B. eine Google Group) für LibreMetronome und Guitar Positions nutzen und beide geschlossenen Tests gleichzeitig laufen lassen. Ob die Pflicht je App gilt, sagt die Hilfeseite nicht ausdrücklich („for their app“); vorsichtshalber je App einplanen.
 4. **Zugriff auf Produktion beantragen** im Dashboard (drei Abschnitte: geschlossener Test, App, Bereitschaft). Prüfung meist bis 7 Tage; Google kann längeres Testen verlangen.
 5. Produktions-Release, gestaffelt (z. B. 20 %) oder voll.
@@ -149,7 +149,7 @@ AAB-Upload macht der Eigentümer selbst in der Play Console (Claude in Chrome l�
 
 | Posten | Betrag | Bemerkung |
 |---|---|---|
-| Apple Developer Program | 99 USD pro Jahr (Landeswährung je nach Region) | schon für another app Connect bezahlt, gilt für alle Apps des Kontos; läuft die Mitgliedschaft aus, verschwinden die Apps aus dem Store |
+| Apple Developer Program | 99 USD pro Jahr (Landeswährung je nach Region) | schon bezahlt, gilt für alle Apps des Kontos; läuft die Mitgliedschaft aus, verschwinden die Apps aus dem Store |
 | Google Play Konto | 25 USD einmalig | schon bezahlt |
 | Store-Provision | Anteil von Google am Verkaufspreis (aktuellen Satz in der Console prüfen, nicht hier festgeschrieben) | bezahlte App, keine In-App-Käufe; Play erstattet auf Wunsch innerhalb von 2 Stunden automatisch, das ist normal |
 | Geräte zum Testen | vorhanden (iPad, Android-Emulator) | **echtes Android-Telefon Pflicht vor Produktion** (Latenz, Hintergrund-Audio) |
@@ -167,7 +167,7 @@ Ursprüngliche Liste (zur Nachvollziehbarkeit):
 1. **App-Kennung** (Abschnitt 3): `com.hybridpicker.libremetronome` beibehalten oder `com.libremetronome.app`.
 2. **Offline oder online:** App ohne Netz (Vorschlag) oder Klangsätze vom Server nachladen (dann andere Datenschutzangaben).
 3. **Spenden:** in den Apps weglassen (Vorschlag) oder später Trinkgeld per In-App-Kauf.
-4. **DSA-Händlerstatus** des Apple-Kontos (gilt für alle Apps inkl. another app Connect) und des Play-Kontos; bei Zweifel Beratung.
+4. **DSA-Händlerstatus** des Apple-Kontos (gilt für alle Apps des Kontos) und des Play-Kontos; bei Zweifel Beratung.
 5. **GPL v3 im App Store:** Die FSF hält die Nutzungsbedingungen des App Store für unvereinbar mit der GPL (bekannt aus dem VLC-Fall 2011; hier nicht nachgelesen, keine rechtliche Bewertung). Laut Git-Verlauf stammen alle Beiträge vom Eigentümer (plus Dependabot); als Rechteinhaber kann er die App trotzdem selbst einreichen. Beiträge Dritter brauchen künftig eine Zustimmung (z. B. Hinweis in `CONTRIBUTING`) oder eine Ausnahme-Klausel. Entscheidung, ob und wie.
 6. **Name und Untertitel**, Store-Sprachen (Deutsch, Englisch).
 7. **Geräte:** iPhone und iPad (heute beides), Android Telefon und Tablet.
@@ -177,7 +177,7 @@ Ursprüngliche Liste (zur Nachvollziehbarkeit):
 
 ## 11. Store-Regeln (Quellen)
 
-Gelesen am **2026-10-22**, außer wo „2026-10-21“ steht (Recherche für another app Connect, `another-project/docs/chat-app-pilot-release.md` Abschnitt 9). Keine rechtliche Bewertung.
+Gelesen am **2026-10-22**, außer wo „2026-10-21“ steht. Keine rechtliche Bewertung.
 
 ### 11.1 Apple
 
@@ -268,7 +268,7 @@ Hinweis zur Umgebung: In der Claude-Shell sind `npm`/`node` als nvm-Funktionen d
 ### Was der Eigentümer vor „App anlegen“ klären und selbst eintragen muss
 
 1. **Händlerprofil (Zahlungsprofil)** in der Play Console: Das ist Voraussetzung für den Verkauf. Eintragen: Bankverbindung, Steuer- und Adressangaben, Kontaktdaten. Ich trage nichts davon ein. Danach prüfe ich nur, ob der Status „aktiv“ ist. Menüpunkte (Namen können sich ändern): *Play Console → Einstellungen → Zahlungsprofil* bzw. *Berichte → Finanzen*; genaue Pfade bei der Durchsicht der Hilfe prüfen.
-2. **DSA-Händlerstatus** (Play Console, Kontoeinstellungen): Entscheidung des Eigentümers. **Frage für den Steuerberater:** „Ich verkaufe als Privatperson ohne Gewerbeschein eine Android-App (1,99 € inkl. MwSt.) an Verbraucher in der EU, abgewickelt über Google Play. Gilt das als Gewerbe beziehungsweise ‚Honorarnote ohne Gewerbe‘, und bin ich damit ‚Händler‘ im Sinne des DSA? Dann stehen meine Adresse, Telefonnummer und E-Mail öffentlich im Eintrag; das gilt kontoweit, auch für another app Connect.“ Ohne Antwort wird nichts veröffentlicht.
+2. **DSA-Händlerstatus** (Play Console, Kontoeinstellungen): Entscheidung des Eigentümers. **Frage für den Steuerberater:** „Ich verkaufe als Privatperson ohne Gewerbeschein eine Android-App (1,99 € inkl. MwSt.) an Verbraucher in der EU, abgewickelt über Google Play. Gilt das als Gewerbe beziehungsweise ‚Honorarnote ohne Gewerbe‘, und bin ich damit ‚Händler‘ im Sinne des DSA? Dann stehen meine Adresse, Telefonnummer und E-Mail öffentlich im Eintrag; das gilt kontoweit, für alle Apps.“ Ohne Antwort wird nichts veröffentlicht.
 3. **Play-Hilfe:** geprüft am 2026-10-24, Ergebnis in Abschnitt 13.1. Kurz: bezahlt muss von Anfang an gewählt werden, auch für den internen Test (siehe dort).
 4. **Kennung bestätigen**: `com.libremetronome`, unumkehrbar.
 
@@ -523,7 +523,7 @@ Version 0.8.0, `buildNumber` 8. `versionCode` 7 war in der Play Console schon ve
 - **Web live:** nicht deployt; Asset-Hashes, Favicon, `manifest.json`, Audio-Start, Tap Tempo, Tastatur und Fokusring auf dem Server offen.
 - Beat-Planung und Audio nicht angefasst, nicht neu gemessen.
 
-### Web-Deploy (Server-Session auf the server, 2026-10-25, Bericht des Eigentümers)
+### Web-Deploy (Server-Session, 2026-10-25, Bericht des Eigentümers)
 
 - Checkout `libreMetronome/` unter dem App-Ordner, Stand sauber, `main`, HEAD war `45948c4`. Rollback-Kopie vor dem Deploy angelegt (`release-backups/pre-581143e-…`, 9,6 MB); vorher live: `main.0e8aeeb6.js` / `main.c6eee00a.css`.
 - Build erfolgreich, Kopie nach `static_cdn` (assets, js, css, media). Nicht angefasst: sudo, Nginx, Datenbank, Zertifikate, gunicorn, andere Projekte.
