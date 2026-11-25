@@ -327,6 +327,40 @@ describe('soundSetService', () => {
     });
   });
 
+  describe('getRememberedActiveSoundSet', () => {
+    test('is null until the active set was looked up once', () => {
+      const svc = loadService();
+      expect(svc.getRememberedActiveSoundSet()).toBeNull();
+    });
+
+    test('returns the last looked-up active set without asking the server', async () => {
+      global.fetch.mockResolvedValue(okJson(SERVER_SETS));
+      document.cookie = 'activeSoundSetId=9;path=/';
+      const svc = loadService();
+      await svc.getActiveSoundSet();
+      global.fetch.mockClear();
+
+      expect(svc.getRememberedActiveSoundSet()).toMatchObject({ id: 9, name: 'Nine' });
+      expect(global.fetch).not.toHaveBeenCalled();
+    });
+
+    test('forgets the stored set once another set is selected', async () => {
+      global.fetch.mockResolvedValue(okJson(SERVER_SETS));
+      document.cookie = 'activeSoundSetId=9;path=/';
+      const svc = loadService();
+      await svc.getActiveSoundSet();
+
+      document.cookie = 'activeSoundSetId=7;path=/';
+      expect(svc.getRememberedActiveSoundSet()).toBeNull();
+    });
+
+    test('ignores unreadable stored data', () => {
+      localStorage.setItem('activeSoundSetCache', '{not json');
+      const svc = loadService();
+      expect(svc.getRememberedActiveSoundSet()).toBeNull();
+    });
+  });
+
   describe('getActiveSoundSet', () => {
     test('returns the set named by the cookie', async () => {
       global.fetch.mockResolvedValue(okJson(SERVER_SETS));

@@ -15,6 +15,7 @@ import ModeSelector from './components/ModeSelector'; // Import the new ModeSele
 import { SupportPage } from './components/Support';
 import { InfoModal } from './components/InfoSection'; // Import the Help components
 import { initAudioContext, resumeAudioContext } from './hooks/useMetronomeLogic/audioBuffers';
+import { preloadClickSounds } from './hooks/useMetronomeLogic/soundPreload';
 import { getOutputNode } from './hooks/useMetronomeLogic/outputNode';
 import { setScreenAwake } from './mobile';
 import { DESKTOP_COMMAND_EVENT, reportDesktopState } from './desktop';
@@ -149,6 +150,14 @@ function App() {
       resumeAudioContext(context).catch((error) => {
         console.error("Failed to unlock audio output:", error);
       });
+
+      // Load the clicks now, not at the first play. Repeated calls share the
+      // same cached loads.
+      Promise.resolve()
+        .then(() => preloadClickSounds(context))
+        .catch((error) => {
+          console.error("Failed to preload the click sounds:", error);
+        });
     } catch (err) {
       console.error("Error initializing audio context:", err);
     }

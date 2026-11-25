@@ -28,6 +28,9 @@ jest.mock('../../hooks/useMetronomeLogic/audioBuffers', () => ({
   initAudioContext: jest.fn(),
   resumeAudioContext: jest.fn()
 }));
+jest.mock('../../hooks/useMetronomeLogic/soundPreload', () => ({
+  preloadClickSounds: jest.fn(() => Promise.resolve(null))
+}));
 jest.mock('../../utils/layoutSize', () => ({
   useVizCardSize: () => [{ current: null }, { width: 300, height: 200 }]
 }));
@@ -129,6 +132,8 @@ beforeEach(() => {
     accentBufferRef: { current: {} },
     firstBufferRef: { current: {} },
     reloadSounds: jest.fn().mockResolvedValue(true),
+    prepareStart: jest.fn().mockResolvedValue(true),
+    firstBeatAtRef: { current: null },
     startScheduler: jest.fn(),
     stopScheduler: jest.fn(),
     tapTempo: jest.fn(),
@@ -358,7 +363,7 @@ describe('playback and mode transitions', () => {
     render(<App />);
     press('Space');
     await flush();
-    expect(logic.startScheduler).toHaveBeenCalledTimes(1);
+    expect(logic.prepareStart).toHaveBeenCalledTimes(1);
     expect(status()).toHaveTextContent('Metronome playing');
     expect(status()).toHaveTextContent('Metronome playing');
     expect(screen.getByTestId('analog-canvas')).toHaveAttribute('data-paused', 'false');
@@ -377,7 +382,7 @@ describe('playback and mode transitions', () => {
     press('Space');
     press('Space');
     await flush();
-    expect(logic.startScheduler).toHaveBeenCalledTimes(1);
+    expect(logic.prepareStart).toHaveBeenCalledTimes(1);
   });
 
   test('clicking the transport button toggles playback', async () => {
@@ -772,16 +777,16 @@ describe('native desktop commands', () => {
     expect(logic.stopScheduler).not.toHaveBeenCalled();
     nativeCommand('play');
     await flush();
-    expect(logic.startScheduler).toHaveBeenCalledTimes(1);
+    expect(logic.prepareStart).toHaveBeenCalledTimes(1);
     nativeCommand('play');
     await flush();
-    expect(logic.startScheduler).toHaveBeenCalledTimes(1);
+    expect(logic.prepareStart).toHaveBeenCalledTimes(1);
     nativeCommand('pause');
     await flush();
     expect(logic.stopScheduler).toHaveBeenCalledTimes(1);
     nativeCommand('togglePlay');
     await flush();
-    expect(logic.startScheduler).toHaveBeenCalledTimes(2);
+    expect(logic.prepareStart).toHaveBeenCalledTimes(2);
   });
 
   test('adjustTempo is relative and clamped', () => {
