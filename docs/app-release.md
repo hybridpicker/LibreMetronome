@@ -548,3 +548,35 @@ Blocker für die Veröffentlichung: (1) privates Konto, daher geschlossener Test
 ### Offen beim Eigentümer
 
 - Play (Tor c): AAB mit `versionCode` 8 am 2026-10-25 vom Eigentümer hochgeladen, gespeichert und veröffentlicht (interner Test). Noch offen: Update auf dem Samsung installieren und prüfen, Samsung anschließen, Simulator-Zugriff freigeben, Manifest auf dem Server prüfen.
+
+## 18. Build 10: erster Schlag ohne Ladeverzögerung (Stand 2026-11-25)
+
+Version 0.8.0, `buildNumber` 10 (PR #107 Fix, PR #108 Build-Nummer). Build 9 (PR #104) wurde geschlossen: ob Code 9 schon in Play liegt, war unklar, 10 ist in jedem Fall frei.
+
+### Fix
+
+Beim Druck auf Play lief die Anzeige sofort los, der Ton kam erst nach dem Laden der Klänge (Web und Android). Jetzt:
+
+- Die Klänge werden beim Öffnen der App geladen, die drei Dateien parallel, einmal pro AudioContext dekodiert und von allen Modi geteilt. Statt `?cb=<Zeitstempel>` tragen die Adressen `?v=<Version>` (App-Version für die mitgelieferten Klicks, `updated_at` für einen Klangsatz des Servers), der Browser darf sie also speichern.
+- Das aktive Klangset wird auf dem Gerät gemerkt; Play wartet nicht auf den Server. Ist es nach 300 ms nicht bereit, startet Play mit den mitgelieferten Klicks, beim nächsten Start kommt das gewählte Set.
+- Die Schlag-Anzeige folgt der Audio-Uhr: kein Schlag leuchtet und das Pendel ruht, bis der erste Schlag aus dem Lautsprecher kommt. Nach dem Aufwecken des Audio-Ausgangs bekommt der erste Schlag 100 ms Vorlauf (Vorsicht, nicht gemessen).
+- Play und der `isPaused`-Effekt teilen sich einen Start; eine Pause während des Starts bricht ihn ab.
+- Begriffe: `GLOSSARY.md` (erster Schlag, Klangset, mitgelieferte Klicks, Schlag-Anzeige).
+
+Nachweis: 77 Suiten, 1741 Tests grün, Lint und `npm run build` sauber, AAB signiert (`jarsigner -verify`), 3,9 MB. **Nicht geprüft:** Hörtest auf Gerät oder im Browser; Multi-Kreis und Polyrhythmus laden nur schneller, ihre Anzeige ist unverändert.
+
+### Upload per Skript
+
+`frontend/scripts/upload-android.py` lädt eine AAB über die Google-Play-Developer-API in einen Test-Track (nur Python-Standardbibliothek und `openssl`):
+
+- `--status`: listet Tracks und vorhandene Versionscodes, ändert nichts.
+- Ohne `--run`: Probelauf (prüft `SHA256SUMS` und `build-info.txt`, öffnet und verwirft eine Bearbeitung).
+- Mit `--run`: Upload in den internen Test; mit `--track "<Name>"` denselben Build in den geschlossenen Test. Produktion lehnt das Skript ab.
+- Der Schlüssel des Dienstkontos liegt außerhalb des Repos (Rechte 600) und wird nie ausgegeben. Das Dienstkonto braucht in der Play Console unter *Nutzer und Berechtigungen* für LibreMetronome das Recht „Releases für Test-Tracks verwalten“.
+- Build-Ordner: `~/libremetronome-release/builds/android-<version>-<code>-<commit>/` mit AAB, `SHA256SUMS`, `build-info.txt`.
+
+### Offen
+
+- Zugriff des Dienstkontos auf LibreMetronome in der Play Console freigeben (Eigentümer), danach Upload von Build 10 in den internen und den geschlossenen Test.
+- Hörtest des ersten Schlags auf dem Telefon im geschlossenen Test.
+- Web: der Fix ist erst live, wenn das Frontend auf dem Server gebaut und nach `static_cdn` kopiert wird (Server-Session).
